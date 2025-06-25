@@ -76,7 +76,7 @@ The `mlchem.chem.manipulation` module offers a variety of tools for creating, co
 To install **mlchem**, open your command prompt and use the following command:
 
 ```bash
-git clone https://SEAC-Projects@dev.azure.com/SEAC-Projects/mlchem/_git/mlchem
+pip install https://github.com/seacunilever/mlchem.git
 ```
 
 ## Usage
