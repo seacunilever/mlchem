@@ -79,6 +79,18 @@ To install **mlchem**, open your command prompt and use the following command:
 pip install https://github.com/seacunilever/mlchem.git
 ```
 
+Alternatively, go to your favourite Python version directory/Lib/site-packages and open your command prompt. Once done, use the following command:
+
+```bash
+git clone https://github.com/seacunilever/mlchem.git
+```
+
+Subsequently, use the following command to install requirements:
+
+```bash
+pip install -r mlchem/requirements.txt
+```
+
 ## Usage
 
 Here's a basic example of how to use **mlchem** (this calculates rdkit descriptors for two molecules):
