@@ -1,6 +1,0 @@
-﻿mlchem.ml.feature\_selection.wrappers.generate\_combination\_cascade
-====================================================================
-
-.. currentmodule:: mlchem.ml.feature_selection.wrappers
-
-.. autofunction:: generate_combination_cascade
