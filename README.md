@@ -119,9 +119,6 @@ This project uses the https://github.com/aspuru-guzik-group/selfies Python packa
 SELFIES is licensed under the [Apache License 2.0](https://www.apache.org/). In accordance with its license, the relevant license and NOTICE files are included in this repository.
 This project uses and adapts code from the [RDKit](https://www.rdkit.org) cheminformatics toolkit, which is licensed under the BSD 3-Clause License.
 
-
-## License
-
 ## License
 
 This project is licensed under the BSD-3 License.
