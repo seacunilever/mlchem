@@ -1,0 +1,6 @@
+﻿mlchem.ml.preprocessing.scaling.scale\_df\_robust
+=================================================
+
+.. currentmodule:: mlchem.ml.preprocessing.scaling
+
+.. autofunction:: scale_df_robust
