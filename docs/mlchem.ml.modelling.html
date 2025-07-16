@@ -1,0 +1,932 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>mlchem.ml.modelling package &#8212; mlchem 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=390bf028" />
+    
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mlchem.ml.preprocessing package" href="mlchem.ml.preprocessing.html" />
+    <link rel="prev" title="mlchem.ml.feature_selection package" href="mlchem.ml.feature_selection.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.preprocessing.html" title="mlchem.ml.preprocessing package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.feature_selection.html" title="mlchem.ml.feature_selection package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="mlchem.ml.html" accesskey="U"><strong>mlchem.ml package</strong></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mlchem-ml-modelling-package">
+<h1>mlchem.ml.modelling package<a class="headerlink" href="#mlchem-ml-modelling-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2><em>Submodules</em><a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<section id="module-mlchem.ml.modelling.model_evaluation">
+<span id="mlchem-ml-modelling-model-evaluation-module"></span><h3>mlchem.ml.modelling.model_evaluation module<a class="headerlink" href="#module-mlchem.ml.modelling.model_evaluation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.ApplicabilityDomain">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ApplicabilityDomain</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to calculate the leverage of data points in a dataset for
+applicability domain analysis.</p>
+<p>The leverage is a measure of the influence of a data point in a
+regression model. It helps identify
+data points that have a significant impact on the model’s
+predictions. This class provides a method to calculate the leverage
+values for a given dataset and determine whether each data point is
+within the applicability domain based on a threshold.</p>
+<section id="methods">
+<h4>Methods:<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>leverage(X: np.ndarray):</dt><dd><p>Calculates the leverage values for the
+given dataset and determines whether each data point is within the
+applicability domain based on a threshold.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">leverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate leverage values for a dataset and determine applicability domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>numpy.ndarray</em>) – Feature matrix of shape (n_samples, n_features).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Dictionary containing:
+- ‘leverages’: list of float</p>
+<blockquote>
+<div><p>Leverage values for each data point.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>’results’: list of bool</dt><dd><p>Boolean flags indicating whether each point is within the domain.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>’threshold’: float</dt><dd><p>Threshold used to determine domain inclusion.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict of str to list or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.MajorityVote">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MajorityVote</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.MajorityVote" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>MajorityVote(train_set, test_set, y_train, y_test, task_type,
+estimator_list, column_list, estimator_names=[])</p>
+<p>Ensemble model using majority voting (for classification) or averaging (for regression).</p>
+<p>This class combines predictions from multiple estimators to
+improve model performance and robustness by leveraging the strengths of
+different models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_set</strong> (<em>pandas.DataFrame</em>) – The training dataset.</p></li>
+<li><p><strong>test_set</strong> (<em>pandas.DataFrame</em>) – The testing dataset.</p></li>
+<li><p><strong>y_train</strong> (<em>iterable</em>) – Target values for the training dataset.</p></li>
+<li><p><strong>y_test</strong> (<em>iterable</em>) – Target values for the testing dataset.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em>) – The type of task to perform.</p></li>
+<li><p><strong>estimator_list</strong> (<em>list</em>) – A list of fitted scikit-learn estimators.</p></li>
+<li><p><strong>column_list</strong> (<em>list</em><em> of </em><em>str</em>) – A list of feature columns for each estimator.</p></li>
+<li><p><strong>estimator_names</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – A list of names for the estimators. Defaults to an empty list.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.MajorityVote.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.__init__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.MajorityVote.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Fit the estimators on the training data and store predictions.</p>
+<p>For classification tasks, both hard (class labels) and soft (probabilities)
+predictions are stored. For regression tasks, predicted values are stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.MajorityVote.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_estimators_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.predict" title="Link to this definition">¶</a></dt>
+<dd><p>Generate ensemble predictions and evaluate performance using a
+specified metric.</p>
+<p>For classification, both hard and soft voting are evaluated.
+For regression, predictions are averaged. Results are stored for each
+combination of estimators up to a specified maximum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric</strong> (<em>callable</em>) – A scoring function that takes (y_true, y_pred) as input and returns a float.</p></li>
+<li><p><strong>metric_name</strong> (<em>str</em>) – Name of the metric used for evaluation.</p></li>
+<li><p><strong>n_estimators_max</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of estimators to consider in combinations. Default is 5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.crossval">
+<span class="sig-name descname"><span class="pre">crossval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_fold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.crossval" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluate an estimator using cross-validation.</p>
+<p>This function performs K-fold cross-validation on the given dataset using
+the specified estimator and metric function. It supports both classification
+and regression tasks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<em>object</em>) – A scikit-learn compatible estimator.</p></li>
+<li><p><strong>X</strong> (<em>numpy.ndarray</em><em> or </em><em>pandas.DataFrame</em>) – Feature matrix of shape (n_samples, n_features).</p></li>
+<li><p><strong>y</strong> (<em>numpy.ndarray</em><em> or </em><em>pandas.DataFrame</em>) – Target vector of shape (n_samples,) or (n_samples, 1).</p></li>
+<li><p><strong>metric_function</strong> (<em>callable</em>) – A scoring function that accepts (y_true, y_pred) as arguments.</p></li>
+<li><p><strong>n_fold</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – Number of folds for cross-validation. If equal to n_samples, performs
+leave-one-out cross-validation.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em><em> (</em><em>default='classification'</em><em>)</em>) – Type of task to determine the cross-validation strategy.</p></li>
+<li><p><strong>random_state</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – Random seed for reproducibility.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array of cross-validation scores.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.y_scrambling">
+<span class="sig-name descname"><span class="pre">y_scrambling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.y_scrambling" title="Link to this definition">¶</a></dt>
+<dd><p>Perform y-scrambling to assess model performance due to chance.</p>
+<p>This function evaluates the robustness of a model by randomly shuffling
+the target variable multiple times and measuring performance on the test set.
+It compares the distribution of scores from scrambled targets to the actual
+model performance. More explained at <a class="reference external" href="https://doi.org/10.1021/ci700157b">https://doi.org/10.1021/ci700157b</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<em>object</em>) – A scikit-learn compatible estimator.</p></li>
+<li><p><strong>train_set</strong> (<em>numpy.ndarray</em><em> or </em><em>pandas.DataFrame</em>) – Training feature matrix.</p></li>
+<li><p><strong>y_train</strong> (<em>iterable</em>) – Target values for training.</p></li>
+<li><p><strong>test_set</strong> (<em>numpy.ndarray</em><em> or </em><em>pandas.DataFrame</em>) – Testing feature matrix.</p></li>
+<li><p><strong>y_test</strong> (<em>iterable</em>) – Target values for testing.</p></li>
+<li><p><strong>metric_function</strong> (<em>callable</em>) – A scoring function that accepts (y_true, y_pred) as arguments.</p></li>
+<li><p><strong>n_iter</strong> (<em>int</em>) – Number of shuffling iterations.</p></li>
+<li><p><strong>plot</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=True</em><em>)</em>) – Whether to display a histogram of the scrambled scores.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mlchem.ml.modelling.model_interpretation">
+<span id="mlchem-ml-modelling-model-interpretation-module"></span><h3>mlchem.ml.modelling.model_interpretation module<a class="headerlink" href="#module-mlchem.ml.modelling.model_interpretation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DescriptorExplainer</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to perform feature selection and model evaluation using
+combinatorial selection methods.</p>
+<p>This class provides methods to fit and evaluate machine learning models
+using combinatorial feature selection. It supports both classification
+and regression tasks, offering tools to identify the best feature
+subsets and visualise model performance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_train">
+<span class="sig-name descname"><span class="pre">df_train</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_train" title="Link to this definition">¶</a></dt>
+<dd><p>The training dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_test">
+<span class="sig-name descname"><span class="pre">df_test</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_test" title="Link to this definition">¶</a></dt>
+<dd><p>The testing dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_train">
+<span class="sig-name descname"><span class="pre">target_train</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_train" title="Link to this definition">¶</a></dt>
+<dd><p>The target values for the training dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_test">
+<span class="sig-name descname"><span class="pre">target_test</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_test" title="Link to this definition">¶</a></dt>
+<dd><p>The target values for the testing dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_name">
+<span class="sig-name descname"><span class="pre">target_name</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_name" title="Link to this definition">¶</a></dt>
+<dd><p>The name of the target variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.estimator">
+<span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.estimator" title="Link to this definition">¶</a></dt>
+<dd><p>The machine learning model to be used for feature selection and evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.metric">
+<span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.metric" title="Link to this definition">¶</a></dt>
+<dd><p>The metric function to evaluate the model performance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.logic">
+<span class="sig-name descname"><span class="pre">logic</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.logic" title="Link to this definition">¶</a></dt>
+<dd><p>The logic to determine whether to minimise or maximise the metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{‘lower’, ‘greater’}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.task_type">
+<span class="sig-name descname"><span class="pre">task_type</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.task_type" title="Link to this definition">¶</a></dt>
+<dd><p>The type of task to perform.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{‘classification’, ‘regression’}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'regression'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialise the DescriptorExplainer with training/testing data, model,
+and evaluation settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_train</strong> (<em>pandas.DataFrame</em>) – The training dataset.</p></li>
+<li><p><strong>df_test</strong> (<em>pandas.DataFrame</em>) – The testing dataset.</p></li>
+<li><p><strong>target_train</strong> (<em>pandas.DataFrame</em>) – The target values for the training dataset.</p></li>
+<li><p><strong>target_test</strong> (<em>pandas.DataFrame</em>) – The target values for the testing dataset.</p></li>
+<li><p><strong>estimator</strong> (<em>object</em>) – The machine learning model to be used.</p></li>
+<li><p><strong>metric</strong> (<em>callable</em>) – The evaluation metric function.</p></li>
+<li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em><em>, </em><em>optional</em><em> (</em><em>default='greater'</em><em>)</em>) – Whether to minimise or maximise the metric.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em><em> (</em><em>default='regression'</em><em>)</em>) – The type of task to perform.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subset_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.display" title="Link to this definition">¶</a></dt>
+<dd><p>Display the performance of the model using a selected feature subset.</p>
+<p>This method visualises model performance using the selected feature subset.
+For regression tasks, it plots true vs. predicted values and prints model
+coefficients and adjusted R². For classification, it shows a confusion matrix
+and prints performance metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>subset_index</strong> (<em>int</em>) – The index of the feature subset to use for evaluation.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_1">
+<span class="sig-name descname"><span class="pre">fit_stage_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_train_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_1" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the first stage of combinatorial feature selection.</p>
+<p>This method evaluates combinations of features using cross-validation
+and filters subsets based on a training score threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=2</em><em>)</em>) – The number of features to combine.</p></li>
+<li><p><strong>training_threshold</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=1.5</em><em>)</em>) – The threshold for the training score to consider a subset.</p></li>
+<li><p><strong>cv_train_ratio</strong> (<em>float</em><em>, </em><em>optional</em><em> (</em><em>default=0.8</em><em>)</em>) – The minimum accepted cv score/train score ratio.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – The number of cross-validation iterations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_2">
+<span class="sig-name descname"><span class="pre">fit_stage_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_n_subsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_2" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the second stage of combinatorial feature selection.</p>
+<p>This method evaluates the top feature subsets from stage 1 using
+cross-validation to identify the best-performing combinations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>top_n_subsets</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=10</em><em>)</em>) – The number of top feature subsets to consider.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – The number of cross-validation iterations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapExplainer</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to generate SHAP (SHapley Additive exPlanations) values for
+model interpretability.</p>
+<p>This class provides methods to explain the output of machine learning
+models using SHAP values. It supports both tree-based models and general
+estimators, and offers a variety of visualisation tools to understand
+the impact of each feature on model predictions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.model_type">
+<span class="sig-name descname"><span class="pre">model_type</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.model_type" title="Link to this definition">¶</a></dt>
+<dd><p>The type of model (‘tree’ or other).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.data" title="Link to this definition">¶</a></dt>
+<dd><p>The dataset used for generating SHAP values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.y" title="Link to this definition">¶</a></dt>
+<dd><p>The target values corresponding to the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator">
+<span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator" title="Link to this definition">¶</a></dt>
+<dd><p>The machine learning model to be explained.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.explain">
+<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain" title="Link to this definition">¶</a></dt>
+<dd><p>Generates SHAP values for the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shap_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load" title="Link to this definition">¶</a></dt>
+<dd><p>Loads precomputed SHAP values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save" title="Link to this definition">¶</a></dt>
+<dd><p>Saves the SHAP values to the specified path.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot">
+<span class="sig-name descname"><span class="pre">force_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a force plot to visualise SHAP values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single">
+<span class="sig-name descname"><span class="pre">force_plot_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a force plot for a single instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot">
+<span class="sig-name descname"><span class="pre">dependence_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a dependence plot for a specified feature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all">
+<span class="sig-name descname"><span class="pre">dependence_plot_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all" title="Link to this definition">¶</a></dt>
+<dd><p>Generates dependence plots for all features.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot">
+<span class="sig-name descname"><span class="pre">summary_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dot'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a summary plot of SHAP values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot">
+<span class="sig-name descname"><span class="pre">waterfall_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a waterfall plot for a single instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot">
+<span class="sig-name descname"><span class="pre">bar_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a bar plot of SHAP values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance">
+<span class="sig-name descname"><span class="pre">feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance" title="Link to this definition">¶</a></dt>
+<dd><p>Calculates and returns feature importance based on SHAP values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot">
+<span class="sig-name descname"><span class="pre">decision_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_lower</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_upper</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a decision plot for a specified probability interval.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialise the ShapExplainer with a model, dataset, and target values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<em>object</em>) – The machine learning model to be explained.</p></li>
+<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The dataset used for generating SHAP values.</p></li>
+<li><p><strong>y</strong> (<em>Iterable</em>) – The target values corresponding to the dataset.</p></li>
+<li><p><strong>is_tree</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – Whether the model is a tree-based model (e.g., XGBoost, LightGBM).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">bar_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a bar plot of SHAP values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">decision_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_lower</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_upper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a decision plot for a specified probability interval.</p>
+<p>This method creates a SHAP decision plot to visualise how features contribute
+to model predictions for samples within a given probability interval. It also
+prints classification statistics for the selected interval.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently only supported for tree-based models.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interval_lower</strong> (<em>float</em>) – The lower bound of the probability interval.</p></li>
+<li><p><strong>interval_upper</strong> (<em>float</em>) – The upper bound of the probability interval.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">dependence_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a dependence plot for a specified feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>column</strong> (<em>int</em>) – The index of the feature to visualise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">dependence_plot_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd><p>Generate dependence plots for all features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd><p>Generate SHAP values for the model.</p>
+<p>This method creates a SHAP explainer based on the model type and
+computes the SHAP values for the provided dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate and visualise feature importance based on SHAP values.</p>
+<p>This method computes feature importance by summing the absolute SHAP values
+for each feature. It also calculates the Spearman correlation between each
+feature and its SHAP values, and derives an overall impact score. The results
+are visualised using a color-coded bar plot and returned as a DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A DataFrame containing the feature importance weights, correlations,
+and overall impact scores for each feature.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">force_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">HTML</span></span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a force plot to visualise SHAP values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An HTML object containing the SHAP force plot.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>IPython.core.display.HTML</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">force_plot_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">HTML</span></span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a force plot for a single instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – The index of the instance to visualise.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An HTML object containing the SHAP force plot for the specified instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IPython.core.display.HTML</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap">
+<span class="sig-name descname"><span class="pre">heatmap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a heatmap of SHAP values.</p>
+<p>This method creates a heatmap to visualise the SHAP values for the model’s
+predictions. It initialises the SHAP JavaScript visualisation and displays
+the plot.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Heatmaps are not available for tree-based models.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shap_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd><p>Load precomputed SHAP values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_values</strong> (<em>numpy.ndarray</em>) – The precomputed base values.</p></li>
+<li><p><strong>shap_values</strong> (<em>numpy.ndarray</em>) – The precomputed SHAP values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd><p>Save SHAP values to the specified path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – The directory path where the SHAP values will be saved.</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – The base filename for the saved SHAP values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">summary_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'dot'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bar'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'violin'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layered_violin'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'compact_dot'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dot'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a summary plot of SHAP values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plot_type</strong> (<em>{'dot'</em><em>, </em><em>'bar'</em><em>, </em><em>'violin'</em><em>, </em><em>'layered_violin'</em><em>, </em><em>'compact_dot'}</em><em>,</em>)</p></li>
+<li><p><strong>(</strong><strong>default='dot'</strong><strong>)</strong> (<em>optional</em>) – The type of plot to generate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">waterfall_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id11" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a waterfall plot for a single instance.</p>
+<p>Note: Not available for tree-based models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>i</strong> (<em>int</em>) – The index of the instance to visualise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">mlchem.ml.modelling package</a><ul>
+<li><a class="reference internal" href="#submodules"><em>Submodules</em></a><ul>
+<li><a class="reference internal" href="#module-mlchem.ml.modelling.model_evaluation">mlchem.ml.modelling.model_evaluation module</a><ul>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain"><code class="docutils literal notranslate"><span class="pre">ApplicabilityDomain</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage"><code class="docutils literal notranslate"><span class="pre">ApplicabilityDomain.leverage()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote"><code class="docutils literal notranslate"><span class="pre">MajorityVote</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.__init__"><code class="docutils literal notranslate"><span class="pre">MajorityVote.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.fit"><code class="docutils literal notranslate"><span class="pre">MajorityVote.fit()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.predict"><code class="docutils literal notranslate"><span class="pre">MajorityVote.predict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.crossval"><code class="docutils literal notranslate"><span class="pre">crossval()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.y_scrambling"><code class="docutils literal notranslate"><span class="pre">y_scrambling()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mlchem.ml.modelling.model_interpretation">mlchem.ml.modelling.model_interpretation module</a><ul>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_train"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.df_train</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_test"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.df_test</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_train"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.target_train</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_test"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.target_test</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_name"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.target_name</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.estimator</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.metric"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.metric</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.logic"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.logic</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.task_type"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.task_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.display"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.display()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.fit_stage_1()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_2"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.fit_stage_2()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer"><code class="docutils literal notranslate"><span class="pre">ShapExplainer</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.model_type"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.model_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.data"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.data</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.y"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.y</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.estimator</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.explain()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.load()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.save()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot_single()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot_all()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.summary_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.waterfall_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.bar_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.feature_importance()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.decision_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.bar_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.decision_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot_all()</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.explain()</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.feature_importance()</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot_single()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.heatmap()</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.load()</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.save()</span></code></a></li>
+<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.summary_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.waterfall_plot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="mlchem.ml.feature_selection.html"
+                          title="previous chapter">mlchem.ml.feature_selection package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="mlchem.ml.preprocessing.html"
+                          title="next chapter">mlchem.ml.preprocessing package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mlchem.ml.modelling.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.preprocessing.html" title="mlchem.ml.preprocessing package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.feature_selection.html" title="mlchem.ml.feature_selection package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="mlchem.ml.html" ><strong>mlchem.ml package</strong></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    </div>
+  </body>
+</html>
