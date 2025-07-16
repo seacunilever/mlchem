@@ -1,0 +1,12 @@
+
+.. currentmodule:: mlchem.ml.modelling.model_evaluation
+
+mlchem.ml.modelling.model_evaluation module
+-------------------------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   crossval
+   y_scrambling

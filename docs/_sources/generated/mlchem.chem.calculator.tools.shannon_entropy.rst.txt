@@ -1,0 +1,6 @@
+﻿mlchem.chem.calculator.tools.shannon\_entropy
+=============================================
+
+.. currentmodule:: mlchem.chem.calculator.tools
+
+.. autofunction:: shannon_entropy
