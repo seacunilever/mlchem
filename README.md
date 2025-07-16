@@ -113,9 +113,19 @@ More examples in the **examples** folder.
 
 We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests.
 
+## Third-Party Dependencies
+
+This project uses the https://github.com/aspuru-guzik-group/selfies Python package for molecular string representations.  
+SELFIES is licensed under the [Apache License 2.0](https://www.apache.org/licensescordance with its license, the relevant license and NOTICE files are included in this repository.
+
+## License
+
 ## License
 
 This project is licensed under the BSD-3 License.
+
+Note: This project includes components licensed under the Apache License 2.0 (e.g., the SELFIES package).  
+
 
 ## Acknowledgements
 
