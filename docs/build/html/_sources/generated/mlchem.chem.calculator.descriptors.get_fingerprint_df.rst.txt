@@ -1,0 +1,6 @@
+﻿mlchem.chem.calculator.descriptors.get\_fingerprint\_df
+=======================================================
+
+.. currentmodule:: mlchem.chem.calculator.descriptors
+
+.. autofunction:: get_fingerprint_df

@@ -1,0 +1,6 @@
+﻿mlchem.chem.manipulation.mol\_to\_binary
+========================================
+
+.. currentmodule:: mlchem.chem.manipulation
+
+.. autofunction:: mol_to_binary
