@@ -3,6 +3,10 @@
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.11, 3.12 and 3.13.
 
+## Documentation
+
+Available at https://ubiquitous-adventure-ggl1ng1.pages.github.io/
+
 ## Features
 
 - **Data Handling**: Efficiently manage and process chemical data, including loading, cleaning, and transforming datasets.
