@@ -282,6 +282,8 @@ Generate a similarity map visualisation from atomic weights.
 This method overlays a similarity map on a molecule using atomic weights,
 with optional contour lines and colour maps.
 
+Adapted from RDKit (https://www.rdkit.org), originally licensed under the BSD 3-Clause License.
+
 Parameters
 ----------
 mol : rdkit.Chem.rdchem.Mol
