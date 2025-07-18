@@ -115,7 +115,7 @@ We welcome contributions to **mlchem**. Users are free to propose new functional
 
 ## Third-Party Dependencies
 
-This project uses the https://github.com/aspuru-guzik-group/selfies Python package for molecular string representations.  
+This project uses the [SELFIES](https://github.com/aspuru-guzik-group/selfies) Python package for molecular string representations.  
 SELFIES is licensed under the [Apache License 2.0](https://www.apache.org/). In accordance with its license, the relevant license is included in this repository.
 
 This project uses and adapts code from the [RDKit](https://www.rdkit.org) cheminformatics toolkit, which is licensed under the [BSD 3-Clause License](https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-clear-license).
