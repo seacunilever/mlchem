@@ -83,16 +83,25 @@ To install **mlchem**, open your command prompt and use the following command:
 pip install git+https://github.com/seacunilever/mlchem.git
 ```
 
-Alternatively, go to your favourite Python version directory/Lib/site-packages and open your command prompt. Once done, use the following command:
+Alternatively, latest release from PiPy (not available yet):
 
 ```bash
-git clone https://github.com/seacunilever/mlchem.git
+pip install mlchem
 ```
 
-Subsequently, use the following command to install requirements:
+Development installation, to modify the code or contribute with some changes:
 
 ```bash
-pip install -r mlchem/requirements.txt
+# Clone the repository
+git clone https://github.com/seacunilever/mlchem
+cd mlchem
+
+# (Optional: create a virtual environment)
+python3 -m venv _venv
+. ./_venv/bin/activate
+
+# Make an editable install of mlchem from the source tree
+pip install -e .
 ```
 
 ## Usage
