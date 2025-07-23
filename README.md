@@ -1,7 +1,7 @@
 # mlchem
 
 [![Static Badge](https://img.shields.io/badge/python_version-3.11,3.12,3.13-limegreen)](https://www.python.org/)
-[![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA)](www.rdkit.org)
+[![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black)](www.rdkit.org)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.11, 3.12 and 3.13.
