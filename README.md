@@ -100,8 +100,14 @@ cd mlchem
 python3 -m venv _venv
 . ./_venv/bin/activate
 
+# On Windows:
+use .\_venv\Scripts\activate
+
 # Make an editable install of mlchem from the source tree
 pip install -e .
+
+# and install requirements
+pip install -r requirements.txt
 ```
 
 ## Usage
