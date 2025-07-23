@@ -80,7 +80,7 @@ The `mlchem.chem.manipulation` module offers a variety of tools for creating, co
 To install **mlchem**, open your command prompt and use the following command:
 
 ```bash
-pip install https://github.com/seacunilever/mlchem.git
+pip install git+https://github.com/seacunilever/mlchem.git
 ```
 
 Alternatively, go to your favourite Python version directory/Lib/site-packages and open your command prompt. Once done, use the following command:
