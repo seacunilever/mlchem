@@ -2610,7 +2610,7 @@ Alternatively:
 
     def __init__(self,
                  input_smiles_list: list[str],
-                 id_list: list[int] = None) -> None:
+                 id_list: Optional[list[int]] = None) -> None:
         """
 Initialise the MolCleaner instance.
 
