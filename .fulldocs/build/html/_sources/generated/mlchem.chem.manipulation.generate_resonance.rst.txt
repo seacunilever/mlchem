@@ -1,0 +1,6 @@
+﻿mlchem.chem.manipulation.generate\_resonance
+============================================
+
+.. currentmodule:: mlchem.chem.manipulation
+
+.. autofunction:: generate_resonance
