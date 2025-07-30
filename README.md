@@ -21,7 +21,7 @@ Available at https://ubiquitous-adventure-ggl1ng1.pages.github.io/
 
 ## Architecture
 
-assets/figure1.png
+![image](https://github.com/seacunilever/mlchem/blob/master/assets/figure1.png)
 
 ## Modules
 
