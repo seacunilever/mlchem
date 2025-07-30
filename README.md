@@ -94,8 +94,9 @@ pip install -r requirements.txt
 
 ## Usage
 
-Here's a basic example of how to use **mlchem** (this calculates rdkit descriptors for two molecules):
+Here's some basic examples of how to use **mlchem**:
 
+### calculate rdkit descriptors for two molecules
 ```python
 from mlchem.chem.manipulation import create_molecule
 from mlchem.chem.calculator import descriptors
@@ -103,19 +104,17 @@ mol1 = create_molecule('c1ccccc1CCCO')
 mol2 = create_molecule('CCCCCN')
 desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ```
+### pattern recognition
 ![image](assets/figure2.png)
 
+### de novo molecule generation and cleaning
 ![image](assets/figure3.png)
 
+### show pre-defined colour palette
 ![image](assets/figure4.png)
 
+### explore molecule drawing options
 ![image](assets/figure5.png)
-
-![image](assets/figure6.png)
-
-![image](assets/figure7.png)
-
-![image](assets/figure8.png)
 
 More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
