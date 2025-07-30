@@ -125,11 +125,11 @@ mol2 = create_molecule('CCCCCN')
 desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ```
 
-More examples in the **examples** folder.
+More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
 ## Contributing
 
-We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests.
+We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the guide (work in progress) on how to properly submit pull requests.
 
 ## Third-Party Dependencies
 
