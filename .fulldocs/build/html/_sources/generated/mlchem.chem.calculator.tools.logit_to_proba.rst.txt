@@ -1,0 +1,6 @@
+﻿mlchem.chem.calculator.tools.logit\_to\_proba
+=============================================
+
+.. currentmodule:: mlchem.chem.calculator.tools
+
+.. autofunction:: logit_to_proba

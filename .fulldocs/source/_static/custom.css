@@ -1,0 +1,10 @@
+/* Reduce font size of sidebar menu */
+div.sphinxsidebarwrapper {
+    font-size: 8px;  /* Adjust this value as needed */
+}
+
+/* Reduce main content font size */
+body {
+    font-size: 12px;  /* Adjust as needed */
+}
+

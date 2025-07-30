@@ -1,0 +1,6 @@
+﻿mlchem.chem.manipulation.create\_molecule
+=========================================
+
+.. currentmodule:: mlchem.chem.manipulation
+
+.. autofunction:: create_molecule

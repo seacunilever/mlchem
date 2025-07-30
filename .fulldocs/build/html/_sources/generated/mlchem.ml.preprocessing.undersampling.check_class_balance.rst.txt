@@ -1,0 +1,6 @@
+﻿mlchem.ml.preprocessing.undersampling.check\_class\_balance
+===========================================================
+
+.. currentmodule:: mlchem.ml.preprocessing.undersampling
+
+.. autofunction:: check_class_balance

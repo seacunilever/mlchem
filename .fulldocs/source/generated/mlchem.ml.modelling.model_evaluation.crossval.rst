@@ -1,0 +1,6 @@
+﻿mlchem.ml.modelling.model\_evaluation.crossval
+==============================================
+
+.. currentmodule:: mlchem.ml.modelling.model_evaluation
+
+.. autofunction:: crossval
