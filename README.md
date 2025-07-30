@@ -103,6 +103,19 @@ mol1 = create_molecule('c1ccccc1CCCO')
 mol2 = create_molecule('CCCCCN')
 desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ```
+![image](assets/figure2.png)
+
+![image](assets/figure3.png)
+
+![image](assets/figure4.png)
+
+![image](assets/figure5.png)
+
+![image](assets/figure6.png)
+
+![image](assets/figure7.png)
+
+![image](assets/figure8.png)
 
 More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
