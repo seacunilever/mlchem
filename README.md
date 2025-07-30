@@ -21,28 +21,7 @@ Available at https://ubiquitous-adventure-ggl1ng1.pages.github.io/
 
 ## Architecture
 
-### mlchem
-#### chem/
-##### calculator/
-###### descriptors.py
-###### tools.py
-##### visualise/
-###### drawing.py
-###### simmaps.py
-###### space.py
-##### manipulation.py
-#### ml/
-##### feature_selection/
-###### filters.py
-###### wrappers.py
-##### modelling/
-###### model_evaluation.py
-###### model_interpretation.py
-##### preprocessing/
-###### dimensional_reduction.py
-###### feature_transformation.py
-###### scaling.py 
-###### undersampling.py
+assets/figure1.png
 
 ## Modules
 
