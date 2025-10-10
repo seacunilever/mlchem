@@ -1,7 +1,7 @@
 # mlchem
 
 [![Static Badge](https://img.shields.io/badge/python_version-3.11,3.12,3.13-limegreen)](https://www.python.org/)
-[![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black)](www.rdkit.org)
+[![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black)](https://www.rdkit.org/)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.11, 3.12 and 3.13.
@@ -22,6 +22,7 @@ Available at https://ubiquitous-adventure-ggl1ng1.pages.github.io/
 ## Architecture
 
 ![image](assets/figure1.png)
+
 
 ## Modules
 
@@ -116,7 +117,7 @@ desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ### explore molecule drawing options
 ![image](assets/figure5.png)
 
-More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
+More examples in the [examples](https://dev.azure.com/SEAC-Projects/_git/mlchem?path=/examples&version=GBmaster) folder.
 
 ## Contributing
 
@@ -139,5 +140,3 @@ Note: This project includes components licensed under the Apache License 2.0 (e.
 ## Acknowledgements
 
 Special thanks to the Safety, Environmental & Regulatory Science (SERS) Department at Unilever.
-
-
