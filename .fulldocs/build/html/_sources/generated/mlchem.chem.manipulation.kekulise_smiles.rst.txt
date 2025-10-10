@@ -1,6 +1,0 @@
-﻿mlchem.chem.manipulation.kekulise\_smiles
-=========================================
-
-.. currentmodule:: mlchem.chem.manipulation
-
-.. autofunction:: kekulise_smiles

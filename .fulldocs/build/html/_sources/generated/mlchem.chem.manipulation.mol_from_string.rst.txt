@@ -1,6 +1,0 @@
-﻿mlchem.chem.manipulation.mol\_from\_string
-==========================================
-
-.. currentmodule:: mlchem.chem.manipulation
-
-.. autofunction:: mol_from_string

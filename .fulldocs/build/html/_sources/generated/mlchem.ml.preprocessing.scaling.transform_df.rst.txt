@@ -1,6 +1,0 @@
-﻿mlchem.ml.preprocessing.scaling.transform\_df
-=============================================
-
-.. currentmodule:: mlchem.ml.preprocessing.scaling
-
-.. autofunction:: transform_df
