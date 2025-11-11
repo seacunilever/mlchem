@@ -117,7 +117,7 @@ desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ### explore molecule drawing options
 ![image](assets/figure5.png)
 
-More examples in the [examples](https://dev.azure.com/SEAC-Projects/_git/mlchem?path=/examples&version=GBmaster) folder.
+More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
 ## Contributing
 
@@ -140,4 +140,5 @@ Note: This project includes components licensed under the Apache License 2.0 (e.
 ## Acknowledgements
 
 Special thanks to the Safety, Environmental & Regulatory Science (SERS) Department at Unilever.
+
 
