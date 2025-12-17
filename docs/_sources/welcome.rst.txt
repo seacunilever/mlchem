@@ -4,11 +4,48 @@ Welcome to mlchem documentation!
 
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
-The library has been tested for python  3.11 and 3.12. 
+The library has been tested for python  3.11, 3.12 and 3.13. GitHub repository is available at https://github.com/seacunilever/mlchem
 
-=========
+============
+Installation
+============
+
+To install **mlchem**, open your command prompt and use the following command:
+
+.. code-block:: bash
+
+   pip install git+https://github.com/seacunilever/mlchem.git
+
+Alternatively, latest release from PiPy (not available yet):
+
+.. code-block:: bash
+
+   pip install mlchem
+
+Development installation, to modify the code or contribute with some changes:
+
+.. code-block:: bash
+
+   # Clone the repository
+   git clone https://github.com/seacunilever/mlchem
+   cd mlchem
+
+   # (Optional: create a virtual environment)
+   python3 -m venv _venv
+   . ./_venv/bin/activate
+
+   # On Windows:
+   .\_venv\Scripts\activate
+
+   # Make an editable install of mlchem from the source tree
+   pip install -e .
+
+   # and install requirements
+   pip install -r requirements.txt
+
+========
 Features
-=========
+========
 
 - **Data Handling**: Efficiently manage and process chemical data, including loading, cleaning, and transforming datasets.
 - **Molecule Manipulation**: Tools for manipulating molecular structures, such as adding or removing atoms, modifying bonds, and generating molecular conformations.
@@ -33,7 +70,8 @@ More examples in the **examples** folder.
 ============
 Contributing
 ============
-We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests.
+
+We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the guide in the respository (work in progress) on how to properly submit pull requests.
 
 =======
 License
@@ -50,4 +88,5 @@ Special thanks to the Safety, Environmental & Regulatory Science (SERS) Departme
 .. note::
 
    This project is under active development.
+   This project includes components licensed under the Apache License 2.0 (e.g., the SELFIES package), as well as source code taken and adapted from RDKit library.
 
