@@ -95,16 +95,17 @@ pip install mlchem
 Development installation, to modify the code or contribute with some changes:
 
 ```bash
-# Clone the repository
-git clone https://github.com/seacunilever/mlchem
-cd mlchem
 
-# (Optional: create a virtual environment)
+# Create a virtual environment
 python3 -m venv _venv
 . ./_venv/bin/activate
 
 # On Windows:
 use .\_venv\Scripts\activate
+
+# Clone the repository
+git clone https://github.com/seacunilever/mlchem
+cd mlchem
 
 # Make an editable install of mlchem from the source tree
 pip install -e .
