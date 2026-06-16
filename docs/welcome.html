@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Welcome to mlchem documentation! &#8212; mlchem 0.1 documentation</title>
+    <title>mlchem &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=390bf028" />
@@ -40,7 +40,7 @@
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Welcome to mlchem documentation!</a></li> 
+        <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
 
@@ -49,13 +49,78 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="welcome-to-mlchem-documentation">
-<h1>Welcome to mlchem documentation!<a class="headerlink" href="#welcome-to-mlchem-documentation" title="Link to this heading">¶</a></h1>
+  <section id="mlchem">
+<h1>mlchem<a class="headerlink" href="#mlchem" title="Link to this heading">¶</a></h1>
+<p><a class="reference external" href="https://www.python.org/"><img alt="Static Badge" src="https://img.shields.io/badge/python_version-3.11,3.12,3.13-limegreen" /></a>
+<a class="reference external" href="https://www.rdkit.org/"><img alt="Static Badge" src="https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black" /></a></p>
 <p><strong>mlchem</strong> is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
-The library has been tested for python  3.11, 3.12 and 3.13. GitHub repository is available at <a class="reference external" href="https://github.com/seacunilever/mlchem">https://github.com/seacunilever/mlchem</a></p>
+The library has been tested for python 3.11, 3.12 and 3.13.</p>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h2>
+<p>Available at <a href="https://seacunilever.github.io/mlchem/"></a>https://seacunilever.github.io/mlchem/</a></p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Data Handling</strong>: Efficiently manage and process chemical data, including loading, cleaning, and transforming datasets.</p></li>
+<li><p><strong>Molecule Manipulation</strong>: Tools for manipulating molecular structures, such as adding or removing atoms, modifying bonds, and generating molecular conformations.</p></li>
+<li><p><strong>Pattern Recognition</strong>: An extensive list of functions to search for specific structural patterns.</p></li>
+<li><p><strong>Molecule Drawing</strong>: Visualise molecules with customisable drawing options, creating high-quality images for presentations and publications.</p></li>
+<li><p><strong>Machine Learning</strong>: Implement machine learning models for cheminformatics, including training, evaluating, and deploying models to predict chemical properties and activities.</p></li>
+<li><p><strong>Feature Analysis and Interpretation</strong>: Interpret model features and provide insightful plots.</p></li>
+</ul>
+</section>
+<section id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">¶</a></h2>
+<p><img alt="image" src="_images/figure1.png" /></p>
+</section>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading">¶</a></h2>
+<section id="chem-visualise">
+<h3>chem.visualise/<a class="headerlink" href="#chem-visualise" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>space.py</strong>: Computes and visualises datasets in a lower-dimensional space.</p></li>
+<li><p><strong>simmaps.py</strong>: Generates “rdkit-like” similarity maps based on atomic importance weights.</p></li>
+<li><p><strong>drawing.py</strong>: Handles the drawing of molecular structures with many customisable options.</p></li>
+</ul>
+</section>
+<section id="chem-calculator">
+<h3>chem.calculator/<a class="headerlink" href="#chem-calculator" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>tools.py</strong>: Provides numerous tools for chemical calculations.</p></li>
+<li><p><strong>descriptors.py</strong>: Calculates various descriptors for molecules, including RDKit and Mordred descriptors, atomic descriptors, chemotypes, fingerprints, and some quantum chemistry properties.</p></li>
+</ul>
+</section>
+<section id="chem-manipulation-py">
+<h3>chem.manipulation.py<a class="headerlink" href="#chem-manipulation-py" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">mlchem.chem.manipulation</span></code> module offers a variety of tools for creating, converting, manipulating molecular structures, generate new molecules and recognise molecular patterns.</p>
+</section>
+<section id="ml-feature-selection">
+<h3>ml.feature_selection/<a class="headerlink" href="#ml-feature-selection" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>filters.py</strong>: Provides functionalities for filtering features.</p></li>
+<li><p><strong>wrappers.py</strong>: Offers simplified interfaces for feature selection.</p></li>
+</ul>
+</section>
+<section id="ml-modelling">
+<h3>ml.modelling/<a class="headerlink" href="#ml-modelling" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>model_interpretation.py</strong>: Provides tools for interpreting machine learning models.</p></li>
+<li><p><strong>model_evaluation.py</strong>: Contains tools for evaluating machine learning models.</p></li>
+</ul>
+</section>
+<section id="ml-preprocessing">
+<h3>ml.preprocessing/<a class="headerlink" href="#ml-preprocessing" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>dimensional_reduction.py</strong>: Provides functionalities for compressing dataframes using various dimensionality reduction techniques.</p></li>
+<li><p><strong>feature_transformation.py</strong>: Expands features to polynomial features.</p></li>
+<li><p><strong>scaling.py</strong>: Provides functionalities for scaling dataframes using different scaling techniques.</p></li>
+<li><p><strong>undersampling.py</strong>: Contains techniques for handling imbalanced datasets.</p></li>
+</ul>
+</section>
 </section>
 <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
 <p>To install <strong>mlchem</strong>, open your command prompt and use the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/seacunilever/mlchem.git
 </pre></div>
@@ -74,7 +139,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </
 .<span class="w"> </span>./_venv/bin/activate
 
 <span class="c1"># On Windows:</span>
-.<span class="se">\_</span>venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
+use<span class="w"> </span>.<span class="se">\_</span>venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
 
 <span class="c1"># Make an editable install of mlchem from the source tree</span>
 pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
@@ -84,42 +149,92 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 </pre></div>
 </div>
 </section>
-<section id="features">
-<h1>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h1>
-<ul class="simple">
-<li><p><strong>Data Handling</strong>: Efficiently manage and process chemical data, including loading, cleaning, and transforming datasets.</p></li>
-<li><p><strong>Molecule Manipulation</strong>: Tools for manipulating molecular structures, such as adding or removing atoms, modifying bonds, and generating molecular conformations.</p></li>
-<li><p><strong>Pattern Recognition</strong>: An extensive list of functions to search for specific structural patterns.</p></li>
-<li><p><strong>Molecule Drawing</strong>: Visualise molecules with customisable drawing options, creating high-quality images for presentations and publications.</p></li>
-<li><p><strong>Machine Learning</strong>: Implement machine learning models for cheminformatics, including training, evaluating, and deploying models to predict chemical properties and activities.</p></li>
-<li><p><strong>Feature Analysis and Interpretation</strong>: Interpret model features and provide insightful plots.</p></li>
-</ul>
-<p>Here’s a basic example of how to use <strong>mlchem</strong> (this calculates rdkit descriptors for two molecules):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<p>Here’s some basic examples of how to use <strong>mlchem</strong>:</p>
+<section id="calculate-rdkit-descriptors-for-two-molecules">
+<h3>calculate rdkit descriptors for two molecules<a class="headerlink" href="#calculate-rdkit-descriptors-for-two-molecules" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
 <span class="n">mol1</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="s1">&#39;c1ccccc1CCCO&#39;</span><span class="p">)</span>
 <span class="n">mol2</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="s1">&#39;CCCCCN&#39;</span><span class="p">)</span>
 <span class="n">desc_df</span> <span class="o">=</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">get_rdkitDesc</span><span class="p">([</span><span class="n">mol1</span><span class="p">,</span> <span class="n">mol2</span><span class="p">],</span><span class="n">include_3D</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>More examples in the <strong>examples</strong> folder.</p>
+</section>
+<section id="pattern-recognition">
+<h3>pattern recognition<a class="headerlink" href="#pattern-recognition" title="Link to this heading">¶</a></h3>
+<p><img alt="image" src="_images/figure2.png" /></p>
+</section>
+<section id="de-novo-molecule-generation-and-cleaning">
+<h3>de novo molecule generation and cleaning<a class="headerlink" href="#de-novo-molecule-generation-and-cleaning" title="Link to this heading">¶</a></h3>
+<p><img alt="image" src="_images/figure3.png" /></p>
+</section>
+<section id="show-pre-defined-colour-palette">
+<h3>show pre-defined colour palette<a class="headerlink" href="#show-pre-defined-colour-palette" title="Link to this heading">¶</a></h3>
+<p><img alt="image" src="_images/figure4.png" /></p>
+</section>
+<section id="explore-molecule-drawing-options">
+<h3>explore molecule drawing options<a class="headerlink" href="#explore-molecule-drawing-options" title="Link to this heading">¶</a></h3>
+<p><img alt="image" src="_images/figure5.png" /></p>
+<p>More examples in the <a class="reference external" href="https://github.com/seacunilever/mlchem/tree/main/examples">examples</a> folder.</p>
+</section>
+</section>
+<section id="building-the-documentation">
+<h2>Building the documentation<a class="headerlink" href="#building-the-documentation" title="Link to this heading">¶</a></h2>
+<p>The documentation is built with <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> using the <code class="docutils literal notranslate"><span class="pre">autodoc</span></code> and <a class="reference external" href="https://myst-parser.readthedocs.io/"><code class="docutils literal notranslate"><span class="pre">myst-parser</span></code></a> extensions. Source files live under <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code>, build output lands in <code class="docutils literal notranslate"><span class="pre">docs/build/html/</span></code>, and a small post-build script (<code class="docutils literal notranslate"><span class="pre">docs/_publish.py</span></code>) mirrors that build into <code class="docutils literal notranslate"><span class="pre">docs/</span></code> so GitHub Pages always serves the latest version.</p>
+<blockquote>
+<div><p>Single-source content: <code class="docutils literal notranslate"><span class="pre">docs/source/welcome.md</span></code> <code class="docutils literal notranslate"><span class="pre">{include}</span></code>s this README, so you only edit <code class="docutils literal notranslate"><span class="pre">README.md</span></code> — never duplicate content into the welcome page.</p>
+</div></blockquote>
+<p>Prerequisites (one-off): the documentation toolchain is part of <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>, but if you only want the doc deps:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>sphinx<span class="w"> </span>myst-parser
+</pre></div>
+</div>
+<p>To rebuild and publish the docs, <strong>run the commands from the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> directory</strong> (NOT from <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> — <code class="docutils literal notranslate"><span class="pre">source</span></code> is the value of <code class="docutils literal notranslate"><span class="pre">SOURCEDIR</span></code> inside the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> / <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, not the working directory):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># from the repository root</span>
+<span class="nb">cd</span><span class="w"> </span>docs
+
+<span class="c1"># wipe previous build artefacts (clears docs/build/)</span>
+make<span class="w"> </span>clean
+
+<span class="c1"># build HTML and automatically mirror docs/build/html/ -&gt; docs/</span>
+make<span class="w"> </span>html
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> runs Sphinx and then invokes <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, which:</p>
+<ol class="arabic simple">
+<li><p>removes every stale published asset at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> (everything except <code class="docutils literal notranslate"><span class="pre">source/</span></code>, <code class="docutils literal notranslate"><span class="pre">build/</span></code>, <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code>);</p></li>
+<li><p>copies the freshly built site from <code class="docutils literal notranslate"><span class="pre">docs/build/html/</span></code> into <code class="docutils literal notranslate"><span class="pre">docs/</span></code>;</p></li>
+<li><p>ensures the <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code> marker is present so GitHub Pages keeps <code class="docutils literal notranslate"><span class="pre">_static/</span></code> and <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>.</p></li>
+</ol>
+<p>If you ever build with a raw <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> invocation, run the mirror step manually:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>publish
+</pre></div>
+</div>
+<p>On Windows the same targets are dispatched through <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, so the commands work in both <code class="docutils literal notranslate"><span class="pre">cmd</span></code> and PowerShell as long as <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> and <code class="docutils literal notranslate"><span class="pre">python</span></code> are on the <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
+<blockquote>
+<div><p>Common pitfalls: running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> from <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> (no <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> there → “no rule” / “missing Makefile” error), or typing <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">build</span></code> (the Sphinx target is <code class="docutils literal notranslate"><span class="pre">html</span></code>; <code class="docutils literal notranslate"><span class="pre">build</span></code> is the <em>output directory</em>, not a target).</p>
+</div></blockquote>
 </section>
 <section id="contributing">
-<h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h1>
-<p>We welcome contributions to <strong>mlchem</strong>. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the guide in the respository (work in progress) on how to properly submit pull requests.</p>
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
+<p>We welcome contributions to <strong>mlchem</strong>. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the guide (work in progress) on how to properly submit pull requests.</p>
+</section>
+<section id="third-party-dependencies">
+<h2>Third-Party Dependencies<a class="headerlink" href="#third-party-dependencies" title="Link to this heading">¶</a></h2>
+<p>This project uses the <a class="reference external" href="https://github.com/aspuru-guzik-group/selfies">SELFIES</a> Python package for molecular string representations.<br />
+SELFIES is licensed under the <a class="reference external" href="https://www.apache.org/">Apache License 2.0</a>. In accordance with its license, the relevant license is included in this repository.</p>
+<p>This project uses and adapts code from the <a class="reference external" href="https://www.rdkit.org">RDKit</a> cheminformatics toolkit, which is licensed under the <a class="reference external" href="https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-clear-license">BSD 3-Clause License</a>.</p>
 </section>
 <section id="license">
-<h1>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h1>
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
 <p>This project is licensed under the BSD-3 License.</p>
+<p>Note: This project includes components licensed under the Apache License 2.0 (e.g., the SELFIES package), as well as source code taken and adapted from RDKit library.</p>
 </section>
 <section id="acknowledgements">
-<h1>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading">¶</a></h1>
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading">¶</a></h2>
 <p>Special thanks to the Safety, Environmental &amp; Regulatory Science (SERS) Department at Unilever.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This project is under active development.
-This project includes components licensed under the Apache License 2.0 (e.g., the SELFIES package), as well as source code taken and adapted from RDKit library.</p>
-</div>
+</section>
 </section>
 
 
@@ -132,12 +247,35 @@ This project includes components licensed under the Apache License 2.0 (e.g., th
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Welcome to mlchem documentation!</a></li>
-<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#">mlchem</a><ul>
+<li><a class="reference internal" href="#documentation">Documentation</a></li>
 <li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#modules">Modules</a><ul>
+<li><a class="reference internal" href="#chem-visualise">chem.visualise/</a></li>
+<li><a class="reference internal" href="#chem-calculator">chem.calculator/</a></li>
+<li><a class="reference internal" href="#chem-manipulation-py">chem.manipulation.py</a></li>
+<li><a class="reference internal" href="#ml-feature-selection">ml.feature_selection/</a></li>
+<li><a class="reference internal" href="#ml-modelling">ml.modelling/</a></li>
+<li><a class="reference internal" href="#ml-preprocessing">ml.preprocessing/</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
+<li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
+<li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
+<li><a class="reference internal" href="#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>
+<li><a class="reference internal" href="#explore-molecule-drawing-options">explore molecule drawing options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#building-the-documentation">Building the documentation</a></li>
 <li><a class="reference internal" href="#contributing">Contributing</a></li>
+<li><a class="reference internal" href="#third-party-dependencies">Third-Party Dependencies</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+</li>
 </ul>
 
   </div>
@@ -154,7 +292,7 @@ This project includes components licensed under the Apache License 2.0 (e.g., th
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/welcome.rst.txt"
+      <li><a href="_sources/welcome.md.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -188,7 +326,7 @@ This project includes components licensed under the Apache License 2.0 (e.g., th
           <a href="index.html" title="Contents"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Welcome to mlchem documentation!</a></li> 
+        <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

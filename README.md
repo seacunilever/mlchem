@@ -60,29 +60,11 @@ The `mlchem.chem.manipulation` module offers a variety of tools for creating, co
 
 ## Installation
 
-### Option 1
-
-To install **mlchem**, open your command prompt and, after navigating to the folder where your python packages are usually installed: (change {your_user_name} and {3xx} with your user name and python version)
-
-```bash
-C:\Users\{your_user_name}\AppData\Roaming\Python\Python{3xx}\site-packages
-```
-
-And then install dependencies
-
-```bash
-pip install -r mlchem/requirements.txt
-```
-
-### Option 2
-
-use the following command:
+To install **mlchem**, open your command prompt and use the following command:
 
 ```bash
 pip install git+https://github.com/seacunilever/mlchem.git
 ```
-
-### Option 3
 
 Alternatively, latest release from PiPy (not available yet):
 
@@ -90,22 +72,19 @@ Alternatively, latest release from PiPy (not available yet):
 pip install mlchem
 ```
 
-### Option 4
-
 Development installation, to modify the code or contribute with some changes:
 
 ```bash
+# Clone the repository
+git clone https://github.com/seacunilever/mlchem
+cd mlchem
 
-# Create a virtual environment
+# (Optional: create a virtual environment)
 python3 -m venv _venv
 . ./_venv/bin/activate
 
 # On Windows:
 use .\_venv\Scripts\activate
-
-# Clone the repository
-git clone https://github.com/seacunilever/mlchem
-cd mlchem
 
 # Make an editable install of mlchem from the source tree
 pip install -e .
@@ -138,7 +117,48 @@ desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ### explore molecule drawing options
 ![image](assets/figure5.png)
 
-More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
+More examples in the [examples](https://github.com/seacunilever/mlchem/tree/main/examples) folder.
+
+## Building the documentation
+
+The documentation is built with [Sphinx](https://www.sphinx-doc.org/) using the `autodoc` and [`myst-parser`](https://myst-parser.readthedocs.io/) extensions. Source files live under `docs/source/`, build output lands in `docs/build/html/`, and a small post-build script (`docs/_publish.py`) mirrors that build into `docs/` so GitHub Pages always serves the latest version.
+
+> Single-source content: `docs/source/welcome.md` `{include}`s this README, so you only edit `README.md` — never duplicate content into the welcome page.
+
+Prerequisites (one-off): the documentation toolchain is part of `requirements.txt`, but if you only want the doc deps:
+
+```bash
+pip install sphinx myst-parser
+```
+
+To rebuild and publish the docs, **run the commands from the `docs/` directory** (NOT from `docs/source/` — `source` is the value of `SOURCEDIR` inside the `Makefile` / `make.bat`, not the working directory):
+
+```bash
+# from the repository root
+cd docs
+
+# wipe previous build artefacts (clears docs/build/)
+make clean
+
+# build HTML and automatically mirror docs/build/html/ -> docs/
+make html
+```
+
+`make html` runs Sphinx and then invokes `_publish.py`, which:
+
+1. removes every stale published asset at the root of `docs/` (everything except `source/`, `build/`, `Makefile`, `make.bat`, `_publish.py`, `.nojekyll`);
+2. copies the freshly built site from `docs/build/html/` into `docs/`;
+3. ensures the `.nojekyll` marker is present so GitHub Pages keeps `_static/` and `_sources/`.
+
+If you ever build with a raw `sphinx-build` invocation, run the mirror step manually:
+
+```bash
+make publish
+```
+
+On Windows the same targets are dispatched through `make.bat`, so the commands work in both `cmd` and PowerShell as long as `sphinx-build` and `python` are on the `PATH`.
+
+> Common pitfalls: running `make html` from `docs/source/` (no `Makefile` there → "no rule" / "missing Makefile" error), or typing `make build` (the Sphinx target is `html`; `build` is the *output directory*, not a target).
 
 ## Contributing
 
@@ -161,5 +181,3 @@ Note: This project includes components licensed under the Apache License 2.0 (e.
 ## Acknowledgements
 
 Special thanks to the Safety, Environmental & Regulatory Science (SERS) Department at Unilever.
-
-

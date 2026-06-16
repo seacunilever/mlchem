@@ -1,0 +1,23 @@
+**mlchem.chem package**
+=======================
+
+*Subpackages*
+_____________
+
+.. toctree::
+   :maxdepth: 4
+
+   mlchem.chem.calculator
+   mlchem.chem.visualise
+
+*Submodules*
+____________
+
+mlchem.chem.manipulation module
+-------------------------------
+
+.. automodule:: mlchem.chem.manipulation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+

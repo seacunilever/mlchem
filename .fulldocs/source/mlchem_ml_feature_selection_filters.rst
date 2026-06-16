@@ -1,0 +1,14 @@
+
+.. currentmodule:: mlchem.ml.feature_selection.filters
+
+mlchem.ml.feature_selection.filters module
+------------------------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   collinearity_filter
+   diversity_filter
+   shannon_entropy
+   suppress_warnings
