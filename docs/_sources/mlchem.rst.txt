@@ -22,7 +22,7 @@ mlchem.importables module
 
 Useful collections to perform various tasks:
    1. metal_list: List with all metals in SMILES notation.
-   2. chemical_dictionary: dictionary in the form {'fragment': int} to create a bag of fragments useful in :ref:`chem.manipulation`.
+   2. chemical_dictionary: dictionary in the form {'fragment': int} to create a bag of fragments useful in :py:mod:`mlchem.chem.manipulation`.
    3. colour_dictionary: dictionary of RGB tuples for a number of predefined colours.
    4. chemotype_dictionary: collection of many pattern recognition functions that will be used by :py:func:`chem.calculator.descriptors.get_chemotypes`.
    5. bokeh_dictionary: collection of predefined bokeh plotting parameters.
