@@ -8,7 +8,7 @@ The library has been tested for python 3.11, 3.12 and 3.13.
 
 ## Documentation
 
-Available at https://ubiquitous-adventure-ggl1ng1.pages.github.io/
+Available at https://seacunilever.github.io/mlchem/
 
 ## Features
 
