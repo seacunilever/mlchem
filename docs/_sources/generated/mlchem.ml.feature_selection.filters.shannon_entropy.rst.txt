@@ -1,6 +1,0 @@
-﻿mlchem.ml.feature\_selection.filters.shannon\_entropy
-=====================================================
-
-.. currentmodule:: mlchem.ml.feature_selection.filters
-
-.. autofunction:: shannon_entropy
