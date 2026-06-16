@@ -8,7 +8,7 @@ The library has been tested for python 3.11, 3.12 and 3.13.
 
 ## Documentation
 
-Available at https://seacunilever.github.io/mlchem/
+Available at (https://seacunilever.github.io/mlchem/)https://seacunilever.github.io/mlchem/
 
 ## Features
 
@@ -117,7 +117,7 @@ desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ### explore molecule drawing options
 ![image](assets/figure5.png)
 
-More examples in the [examples](https://github.com/seacunilever/mlchem/tree/main/examples) folder.
+More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
 ## Building the documentation
 
