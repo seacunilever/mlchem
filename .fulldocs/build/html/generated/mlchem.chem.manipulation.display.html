@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>mlchem.chem.manipulation.display &#8212; mlchem 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=390bf028" />
+    
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation.display</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mlchem-chem-manipulation-display">
+<h1>mlchem.chem.manipulation.display<a class="headerlink" href="#mlchem-chem-manipulation-display" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.chem.manipulation.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">objs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.manipulation.display" title="Link to this definition">¶</a></dt>
+<dd><p>Display a Python object in all frontends.</p>
+<p>By default all representations will be computed and sent to the frontends.
+Frontends can decide which representation is used and how.</p>
+<p>In terminal IPython this will be similar to using <code class="xref py py-func docutils literal notranslate"><span class="pre">print()</span></code>, for use in richer
+frontends see Jupyter notebook examples with rich display logic.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*objs</strong> (<em>object</em>) – The Python objects to display.</p></li>
+<li><p><strong>raw</strong> (<em>bool</em><em>, </em><em>optional</em>) – Are the objects to be displayed already mimetype-keyed dicts of raw display data,
+or Python objects that need to be formatted before display? [default: False]</p></li>
+<li><p><strong>include</strong> (<em>list</em><em>, </em><em>tuple</em><em> or </em><em>set</em><em>, </em><em>optional</em>) – A list of format type strings (MIME types) to include in the
+format data dict. If this is set <em>only</em> the format types included
+in this list will be computed.</p></li>
+<li><p><strong>exclude</strong> (<em>list</em><em>, </em><em>tuple</em><em> or </em><em>set</em><em>, </em><em>optional</em>) – A list of format type strings (MIME types) to exclude in the format
+data dict. If this is set all format types will be computed,
+except for those included in this argument.</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em><em>, </em><em>optional</em>) – A dictionary of metadata to associate with the output.
+mime-type keys in this dictionary will be associated with the individual
+representation formats, if they exist.</p></li>
+<li><p><strong>transient</strong> (<em>dict</em><em>, </em><em>optional</em>) – A dictionary of transient data to associate with the output.
+Data in this dict should not be persisted to files (e.g. notebooks).</p></li>
+<li><p><strong>display_id</strong> (<em>str</em><em>, </em><em>bool optional</em>) – Set an id for the display.
+This id can be used for updating this display area later via update_display.
+If given as <cite>True</cite>, generate a new <cite>display_id</cite></p></li>
+<li><p><strong>clear</strong> (<em>bool</em><em>, </em><em>optional</em>) – Should the output area be cleared before displaying anything? If True,
+this will wait for additional output before clearing. [default: False]</p></li>
+<li><p><strong>**kwargs</strong> (<em>additional keyword-args</em><em>, </em><em>optional</em>) – Additional keyword-arguments are passed through to the display publisher.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>handle</strong> – Returns a handle on updatable displays for use with <code class="xref py py-func docutils literal notranslate"><span class="pre">update_display()</span></code>,
+if <cite>display_id</cite> is given. Returns <code class="xref any docutils literal notranslate"><span class="pre">None</span></code> if no <cite>display_id</cite> is given
+(default).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DisplayHandle</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Json</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">json</span> <span class="o">=</span> <span class="n">json</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="gp">... </span>        <span class="n">pp</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Json</span><span class="p">({</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="p">{</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">}})</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">{1: 2, 3: {4: 5}}</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">display</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">{</span>
+<span class="go">  &quot;1&quot;: 2,</span>
+<span class="go">  &quot;3&quot;: {</span>
+<span class="go">    &quot;4&quot;: 5</span>
+<span class="go">  }</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">int_formatter</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">pp</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="o">*</span><span class="n">integer</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">plain</span> <span class="o">=</span> <span class="n">get_ipython</span><span class="p">()</span><span class="o">.</span><span class="n">display_formatter</span><span class="o">.</span><span class="n">formatters</span><span class="p">[</span><span class="s1">&#39;text/plain&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plain</span><span class="o">.</span><span class="n">for_type</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">int_formatter</span><span class="p">)</span>
+<span class="go">&lt;function _repr_pprint at 0x...&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">display</span><span class="p">(</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">II</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">plain</span><span class="o">.</span><span class="n">type_printers</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">display</span><span class="p">(</span><span class="mi">7</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">update_display()</span></code></p>
+</div>
+<p class="rubric">Notes</p>
+<p>In Python, objects can declare their textual representation using the
+<cite>__repr__</cite> method. IPython expands on this idea and allows objects to declare
+other, rich representations including:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>HTML</p></li>
+<li><p>JSON</p></li>
+<li><p>PNG</p></li>
+<li><p>JPEG</p></li>
+<li><p>SVG</p></li>
+<li><p>LaTeX</p></li>
+</ul>
+</div></blockquote>
+<p>A single object can declare some or all of these representations; all are
+handled by IPython’s display system.</p>
+<p>The main idea of the first approach is that you have to implement special
+display methods when you define your class, one for each representation you
+want to use. Here is a list of the names of the special methods and the
+values they must return:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>_repr_html_</cite>: return raw HTML as a string, or a tuple (see below).</p></li>
+<li><p><cite>_repr_json_</cite>: return a JSONable dict, or a tuple (see below).</p></li>
+<li><p><cite>_repr_jpeg_</cite>: return raw JPEG data, or a tuple (see below).</p></li>
+<li><p><cite>_repr_png_</cite>: return raw PNG data, or a tuple (see below).</p></li>
+<li><p><cite>_repr_svg_</cite>: return raw SVG data as a string, or a tuple (see below).</p></li>
+<li><dl class="simple">
+<dt><cite>_repr_latex_</cite>: return LaTeX commands in a string surrounded by “$”,</dt><dd><p>or a tuple (see below).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>_repr_mimebundle_</cite>: return a full mimebundle containing the mapping</dt><dd><p>from all mimetypes to data.
+Use this for any mime-type not listed above.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>The above functions may also return the object’s metadata alonside the
+data.  If the metadata is available, the functions will return a tuple
+containing the data and metadata, in that order.  If there is no metadata
+available, then the functions will return the data only.</p>
+<p>When you are directly writing your own classes, you can adapt them for
+display in IPython by following the above approach. But in practice, you
+often need to work with existing classes that you can’t easily modify.</p>
+<p>You can refer to the documentation on integrating with the display system in
+order to register custom formatters for already existing types
+(<span class="xref std std-ref">integrating_rich_display</span>).</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 5.4: </span>display available without import</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 6.1: </span>display available without import</p>
+</div>
+<p>Since IPython 5.4 and 6.1 <a class="reference internal" href="#mlchem.chem.manipulation.display" title="mlchem.chem.manipulation.display"><code class="xref py py-func docutils literal notranslate"><span class="pre">display()</span></code></a> is automatically made available to
+the user without import. If you are using display in a document that might
+be used in a pure python context or with older version of IPython, use the
+following import at the top of your file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">mlchem.chem.manipulation.display</a><ul>
+<li><a class="reference internal" href="#mlchem.chem.manipulation.display"><code class="docutils literal notranslate"><span class="pre">display()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/mlchem.chem.manipulation.display.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation.display</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+
+.. currentmodule:: mlchem.ml.preprocessing.undersampling
+
+mlchem.ml.preprocessing.undersampling module
+---------------------------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   check_class_balance
+   undersample

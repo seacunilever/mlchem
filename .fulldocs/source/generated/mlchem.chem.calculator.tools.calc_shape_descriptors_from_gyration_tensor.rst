@@ -1,0 +1,6 @@
+﻿mlchem.chem.calculator.tools.calc\_shape\_descriptors\_from\_gyration\_tensor
+=============================================================================
+
+.. currentmodule:: mlchem.chem.calculator.tools
+
+.. autofunction:: calc_shape_descriptors_from_gyration_tensor

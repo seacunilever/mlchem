@@ -1,0 +1,6 @@
+﻿mlchem.chem.calculator.tools.calc\_gyration\_tensor
+===================================================
+
+.. currentmodule:: mlchem.chem.calculator.tools
+
+.. autofunction:: calc_gyration_tensor

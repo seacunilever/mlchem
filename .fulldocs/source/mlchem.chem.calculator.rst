@@ -1,0 +1,22 @@
+mlchem.chem.calculator package
+==============================
+
+*Submodules*
+____________
+
+mlchem.chem.calculator.descriptors module
+-----------------------------------------
+
+.. automodule:: mlchem.chem.calculator.descriptors
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+mlchem.chem.calculator.tools module
+-----------------------------------
+
+.. automodule:: mlchem.chem.calculator.tools
+   :members:
+   :show-inheritance:
+   :undoc-members:
+

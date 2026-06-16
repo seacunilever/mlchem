@@ -1,0 +1,6 @@
+﻿mlchem.chem.calculator.tools.calc\_logD\_HH
+===========================================
+
+.. currentmodule:: mlchem.chem.calculator.tools
+
+.. autofunction:: calc_logD_HH
