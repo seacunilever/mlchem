@@ -1,0 +1,644 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>mlchem.ml.feature_selection package &#8212; mlchem 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=390bf028" />
+    
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mlchem.ml.modelling package" href="mlchem.ml.modelling.html" />
+    <link rel="prev" title="mlchem.ml package" href="mlchem.ml.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.modelling.html" title="mlchem.ml.modelling package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.html" title="mlchem.ml package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="mlchem.ml.html" accesskey="U"><strong>mlchem.ml package</strong></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mlchem-ml-feature-selection-package">
+<h1>mlchem.ml.feature_selection package<a class="headerlink" href="#mlchem-ml-feature-selection-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2><em>Submodules</em><a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<section id="module-mlchem.ml.feature_selection.filters">
+<span id="mlchem-ml-feature-selection-filters-module"></span><h3>mlchem.ml.feature_selection.filters module<a class="headerlink" href="#module-mlchem.ml.feature_selection.filters" title="Link to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.filters.collinearity_filter">
+<span class="sig-name descname"><span class="pre">collinearity_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'pearson'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kendall'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'spearman'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pearson'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numeric_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.filters.collinearity_filter" title="Link to this definition">¶</a></dt>
+<dd><p>Filter features based on collinearity threshold.</p>
+<p>Returns a subset of DataFrame columns whose squared correlation (R²)
+values are below the specified threshold. If a target variable is
+provided, the function retains the feature with the higher correlation
+to the target when multiple features are collinear.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pandas.DataFrame</em>) – The input dataset.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The maximum allowed squared correlation between features.</p></li>
+<li><p><strong>target_variable</strong> (<em>str</em><em>, </em><em>optional</em>) – The name of the target variable. If provided, it is used to resolve
+collinearity conflicts.</p></li>
+<li><p><strong>method</strong> (<em>{'pearson'</em><em>, </em><em>'kendall'</em><em>, </em><em>'spearman'}</em><em>, </em><em>optional</em>) – The correlation method to use. Default is ‘pearson’.</p></li>
+<li><p><strong>numeric_only</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include only numeric columns. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the filtered columns.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.filters.diversity_filter">
+<span class="sig-name descname"><span class="pre">diversity_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.filters.diversity_filter" title="Link to this definition">¶</a></dt>
+<dd><p>Filter features based on diversity ratio using Shannon entropy.</p>
+<p>Calculates the diversity ratio of each feature by comparing its
+Shannon entropy to that of an ideal uniform distribution. Retains
+features with diversity ratios above the specified threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pandas.DataFrame</em>) – The input dataset.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The minimum diversity ratio required to retain a feature.</p></li>
+<li><p><strong>target_variable</strong> (<em>str</em><em>, </em><em>optional</em>) – The name of the target variable to retain regardless of its
+diversity score.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the filtered columns with diversity
+higher than the threshold.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mlchem.ml.feature_selection.wrappers">
+<span id="mlchem-ml-feature-selection-wrappers-module"></span><h3>mlchem.ml.feature_selection.wrappers module<a class="headerlink" href="#module-mlchem.ml.feature_selection.wrappers" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CombinatorialSelection</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Combinatorial feature selection using a given estimator and metric.</p>
+<p>This class performs a two-stage combinatorial feature selection process
+to identify optimal feature subsets based on model performance.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator">
+<span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator" title="Link to this definition">¶</a></dt>
+<dd><p>The machine learning estimator used to fit the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.metric">
+<span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.metric" title="Link to this definition">¶</a></dt>
+<dd><p>A metric function to evaluate estimator performance. Must accept
+(y_true, y_pred).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.logic">
+<span class="sig-name descname"><span class="pre">logic</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.logic" title="Link to this definition">¶</a></dt>
+<dd><p>Determines whether a higher or lower score is considered better.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{‘greater’, ‘lower’}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.task_type">
+<span class="sig-name descname"><span class="pre">task_type</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.task_type" title="Link to this definition">¶</a></dt>
+<dd><p>Specifies the type of task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{‘classification’, ‘regression’}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_classification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cs</span> <span class="o">=</span> <span class="n">CombinatorialSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
+<span class="gp">... </span>                             <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:</span><span class="mi">350</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="mi">350</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">350</span><span class="p">:],</span> <span class="n">y</span><span class="p">[</span><span class="mi">350</span><span class="p">:]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">train_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results_stage_1</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">fit_stage_1</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">train_set</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">training_threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results_stage_2</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">fit_stage_2</span><span class="p">(</span><span class="n">top_n_subsets</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">cv_iter</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialise the CombinatorialSelection object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<em>object</em>) – The machine learning estimator used to fit the data.</p></li>
+<li><p><strong>metric</strong> (<em>callable</em>) – A metric function to evaluate estimator performance.</p></li>
+<li><p><strong>logic</strong> (<em>{'greater'</em><em>, </em><em>'lower'}</em><em>, </em><em>optional</em>) – Determines whether a higher or lower score is considered better.
+Default is ‘greater’.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em>) – Specifies the type of task. Default is ‘classification’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.display_best">
+<span class="sig-name descname"><span class="pre">display_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.display_best" title="Link to this definition">¶</a></dt>
+<dd><p>Display the best feature subset based on the specified row.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>row</strong> (<em>int</em><em>, </em><em>optional</em>) – Row index of the best feature subset to display. Default is 1.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Fits the estimator on the selected subset.</p></li>
+<li><p>Displays training, cross-validation, and test scores.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1">
+<span class="sig-name descname"><span class="pre">fit_stage_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_train_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the first stage of combinatorial feature selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_set</strong> (<em>pandas.DataFrame</em>) – The training dataset.</p></li>
+<li><p><strong>y_train</strong> (<em>iterable</em>) – Target values for the training dataset.</p></li>
+<li><p><strong>test_set</strong> (<em>pandas.DataFrame</em>) – The testing dataset.</p></li>
+<li><p><strong>y_test</strong> (<em>iterable</em>) – Target values for the testing dataset.</p></li>
+<li><p><strong>features</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – List of features to consider. Default is an empty list.</p></li>
+<li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of features to combine. Default is 2.</p></li>
+<li><p><strong>training_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum training score required to consider a subset.
+Default is 0.25.</p></li>
+<li><p><strong>cv_train_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum ratio of cross-validation to training score. Default
+is 0.7.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cross-validation iterations. Default is 5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the results of the first stage of
+feature selection.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Generates all possible feature subsets of size <cite>k</cite>.</p></li>
+<li><p>Evaluates each subset using training, cross-validation, and</p></li>
+</ul>
+<p>test scores.
+- Filters and ranks subsets based on geometric mean of scores.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_2">
+<span class="sig-name descname"><span class="pre">fit_stage_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_n_subsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_2" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the second stage of combinatorial feature selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>top_n_subsets</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of top feature subsets from stage 1 to consider.
+Default is 10.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cross-validation iterations. Default is 5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A DataFrame containing the results of the second stage of
+feature selection.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Identifies most recurrent features from top subsets.</p></li>
+<li><p>Generates new combinations and evaluates them.</p></li>
+<li><p>Filters and ranks based on geometric mean of scores.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SequentialForwardSelection</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Sequential Forward Feature Selection wrapper.</p>
+<p>This class performs Sequential Forward Feature Selection by iteratively
+adding features that yield the highest gain in cross-validation score.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator">
+<span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator" title="Link to this definition">¶</a></dt>
+<dd><p>The scikit-learn estimator used for feature selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string">
+<span class="sig-name descname"><span class="pre">estimator_string</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string" title="Link to this definition">¶</a></dt>
+<dd><p>A string representation of the estimator. If None, it is inferred from the estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric">
+<span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric" title="Link to this definition">¶</a></dt>
+<dd><p>A function to evaluate model performance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features">
+<span class="sig-name descname"><span class="pre">max_features</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum number of features to select. Default is 25.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter">
+<span class="sig-name descname"><span class="pre">cv_iter</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter" title="Link to this definition">¶</a></dt>
+<dd><p>Number of cross-validation iterations. Default is 5.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic">
+<span class="sig-name descname"><span class="pre">logic</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to minimize or maximize the cross-validation score. Default is ‘greater’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{‘lower’, ‘greater’}, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type">
+<span class="sig-name descname"><span class="pre">task_type</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type" title="Link to this definition">¶</a></dt>
+<dd><p>Type of task. Default is ‘classification’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{‘classfication’, ‘regression’}, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_classification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
+<span class="gp">... </span>                                 <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">max_features</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">cv_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">train_size</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">train_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">train_size</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:</span><span class="n">train_samples</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="n">train_samples</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">train_samples</span><span class="p">:],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_samples</span><span class="p">:]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">train_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">best_feature</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classfication'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialise the SequentialForwardSelection object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<em>object</em>) – The scikit-learn estimator used for feature selection.</p></li>
+<li><p><strong>estimator_string</strong> (<em>str</em><em>, </em><em>optional</em>) – A string representation of the estimator. If None, it is inferred from the estimator.</p></li>
+<li><p><strong>metric</strong> (<em>callable</em>) – A function to evaluate model performance.</p></li>
+<li><p><strong>max_features</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of features to select. Default is 25.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cross-validation iterations. Default is 5.</p></li>
+<li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em><em>, </em><em>optional</em>) – Whether to minimise or maximise the cross-validation score. Default is ‘greater’.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classfication'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em>) – Type of task. Default is ‘classification’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best">
+<span class="sig-name descname"><span class="pre">find_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best" title="Link to this definition">¶</a></dt>
+<dd><p>Find the best feature subset based on evaluation criteria.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>which</strong> (<em>int</em><em>, </em><em>optional</em>) – If specified, returns the feature subset at the given index.
+If None, the best subset is determined automatically using a
+scoring algorithm.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing:
+- ‘best_score’: float
+- ‘variability_contribution’: float
+- ‘geometric_contribution’: float
+- ‘train_test_difference’: float
+- ‘best_index’: int
+- ‘features’: list</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The automatic algorithm works as follows:</p>
+<p>1. Calculate the standard deviation of the training,
+cross-validation, and unseen test scores for each feature subset.
+2. Initialise the best score and best index to zero.
+3. Define coefficients for variability contribution, percentile,
+and contributions from training, cross-validation, and unseen test scores.
+4. Iterate through each feature subset up to the maximum number
+of features:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Add a variability contribution if the standard deviation is</p></li>
+</ul>
+<p>below a certain percentile.
+- Add a geometric contribution based on the product of the
+training, cross-validation, and unseen test scores.
+- Add the absolute difference between the training and unseen
+test scores.
+- Update the best score and best index if the current total
+score is higher than the best score.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Fit the Sequential Forward Selection model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_set</strong> (<em>pandas.DataFrame</em>) – Training dataset.</p></li>
+<li><p><strong>y_train</strong> (<em>iterable</em>) – Target values for the training set.</p></li>
+<li><p><strong>test_set</strong> (<em>pandas.DataFrame</em>) – Test dataset.</p></li>
+<li><p><strong>y_test</strong> (<em>iterable</em>) – Target values for the test set.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best_feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['steelblue',</span> <span class="pre">'orange',</span> <span class="pre">'green']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#</span> <span class="pre">of</span> <span class="pre">features'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the performance of the Sequential Forward Selection process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>best_feature</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of the best feature subset to highlight. If None, it
+is determined automatically.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – Size of the plot. Default is (10, 6).</p></li>
+<li><p><strong>colours</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Colours for training, validation, and test scores. Default is
+[‘steelblue’, ‘orange’, ‘green’].</p></li>
+<li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Title of the plot.</p></li>
+<li><p><strong>title_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Font size of the title. Default is 20.</p></li>
+<li><p><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for the x-axis. Default is ‘# of features’.</p></li>
+<li><p><strong>ylabel</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for the y-axis. Default is ‘Score’.</p></li>
+<li><p><strong>fontsize</strong> (<em>int</em><em>, </em><em>optional</em>) – Font size for axis labels. Default is 14.</p></li>
+<li><p><strong>legendsize</strong> (<em>int</em><em>, </em><em>optional</em>) – Font size for the legend. Default is 13.</p></li>
+<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to save the plot. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The automatic algorithm for determining the best feature subset
+is the same as described in <cite>find_best</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">mlchem.ml.feature_selection package</a><ul>
+<li><a class="reference internal" href="#submodules"><em>Submodules</em></a><ul>
+<li><a class="reference internal" href="#module-mlchem.ml.feature_selection.filters">mlchem.ml.feature_selection.filters module</a><ul>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.filters.collinearity_filter"><code class="docutils literal notranslate"><span class="pre">collinearity_filter()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.filters.diversity_filter"><code class="docutils literal notranslate"><span class="pre">diversity_filter()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mlchem.ml.feature_selection.wrappers">mlchem.ml.feature_selection.wrappers module</a><ul>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.estimator</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.metric"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.metric</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.logic"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.logic</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.task_type"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.task_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.display_best"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.display_best()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.fit_stage_1()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_2"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection.fit_stage_2()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.estimator</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.estimator_string</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.metric</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.max_features</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.cv_iter</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.logic</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.task_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.find_best()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.fit()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection.plot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="mlchem.ml.html"
+                          title="previous chapter"><strong>mlchem.ml package</strong></a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="mlchem.ml.modelling.html"
+                          title="next chapter">mlchem.ml.modelling package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mlchem.ml.feature_selection.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.modelling.html" title="mlchem.ml.modelling package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="mlchem.ml.html" title="mlchem.ml package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="mlchem.ml.html" ><strong>mlchem.ml package</strong></a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    </div>
+  </body>
+</html>

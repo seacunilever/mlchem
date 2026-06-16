@@ -1,0 +1,9 @@
+==================
+**mlchem package**
+==================
+
+.. toctree::
+   :maxdepth: 4
+
+   mlchem
+
