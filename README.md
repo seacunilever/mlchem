@@ -8,7 +8,7 @@ The library has been tested for python 3.11, 3.12 and 3.13.
 
 ## Documentation
 
-Available at (https://seacunilever.github.io/mlchem/)https://seacunilever.github.io/mlchem/
+Available at [seacunilever.github.io/mlchem](https://seacunilever.github.io/mlchem/).
 
 ## Features
 
