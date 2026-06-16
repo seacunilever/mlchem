@@ -1,6 +1,0 @@
-﻿mlchem.chem.manipulation.smiles\_to\_inchi
-==========================================
-
-.. currentmodule:: mlchem.chem.manipulation
-
-.. autofunction:: smiles_to_inchi

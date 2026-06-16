@@ -1,10 +1,62 @@
-/* Reduce font size of sidebar menu */
-div.sphinxsidebarwrapper {
-    font-size: 8px;  /* Adjust this value as needed */
+/* --- Sidebar repositioned to the right -------------------------------- */
+/* The bizstyle theme floats the sidebar to the left (width 210px) using a
+   negative-margin trick that doesn't mirror cleanly. Use absolute
+   positioning instead so the TOC sits on the right with a readable font. */
+
+div.document {
+    position: relative;
 }
 
-/* Reduce main content font size */
+div.documentwrapper {
+    float: none;
+    width: auto;
+    margin-right: 350px;
+}
+
+div.bodywrapper {
+    margin: 0;
+    border-left: none;
+    border-right: 1px solid #ccc;
+}
+
+div.sphinxsidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    float: none;
+    width: 320px;
+    margin: 0;
+    font-size: 14px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Sidebar contents: readable font and tidy wrapping for long names */
+div.sphinxsidebarwrapper {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+div.sphinxsidebarwrapper a {
+    word-break: break-word;
+}
+
+/* Main content font size */
 body {
-    font-size: 12px;  /* Adjust as needed */
+    font-size: 14px;
+}
+
+/* On narrower screens, fall back to a stacked layout */
+@media (max-width: 1024px) {
+    div.documentwrapper {
+        margin-right: 0;
+    }
+    div.sphinxsidebar {
+        position: static;
+        width: auto;
+    }
+    div.bodywrapper {
+        border-right: none;
+    }
 }
 
