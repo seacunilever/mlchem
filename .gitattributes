@@ -1,0 +1,5 @@
+# GitHub Linguist override:
+# the built Sphinx site (docs/) is generated documentation, not the
+# repository's actual codebase. Keep it tracked and served by GitHub Pages,
+# but exclude it from the language statistics on the repo home page.
+docs/**    linguist-generated=true
