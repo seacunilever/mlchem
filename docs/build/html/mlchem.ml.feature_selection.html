@@ -259,10 +259,10 @@ feature selection.</p>
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>Generates all possible feature subsets of size <cite>k</cite>.</p></li>
-<li><p>Evaluates each subset using training, cross-validation, and</p></li>
+<li><p>Evaluates each subset using training, cross-validation, and
+test scores.</p></li>
+<li><p>Filters and ranks subsets based on geometric mean of scores.</p></li>
 </ul>
-<p>test scores.
-- Filters and ranks subsets based on geometric mean of scores.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -455,25 +455,26 @@ scoring algorithm.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>The automatic algorithm works as follows:</p>
-<p>1. Calculate the standard deviation of the training,
-cross-validation, and unseen test scores for each feature subset.
-2. Initialise the best score and best index to zero.
-3. Define coefficients for variability contribution, percentile,
-and contributions from training, cross-validation, and unseen test scores.
-4. Iterate through each feature subset up to the maximum number
+<ol class="arabic simple">
+<li><p>Calculate the standard deviation of the training,
+cross-validation, and unseen test scores for each feature subset.</p></li>
+<li><p>Initialise the best score and best index to zero.</p></li>
+<li><p>Define coefficients for variability contribution, percentile,
+and contributions from training, cross-validation, and unseen test scores.</p></li>
+<li><p>Iterate through each feature subset up to the maximum number
 of features:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Add a variability contribution if the standard deviation is</p></li>
+<ul class="simple">
+<li><p>Add a variability contribution if the standard deviation is
+below a certain percentile.</p></li>
+<li><p>Add a geometric contribution based on the product of the
+training, cross-validation, and unseen test scores.</p></li>
+<li><p>Add the absolute difference between the training and unseen
+test scores.</p></li>
+<li><p>Update the best score and best index if the current total
+score is higher than the best score.</p></li>
 </ul>
-<p>below a certain percentile.
-- Add a geometric contribution based on the product of the
-training, cross-validation, and unseen test scores.
-- Add the absolute difference between the training and unseen
-test scores.
-- Update the best score and best index if the current total
-score is higher than the best score.</p>
-</div></blockquote>
+</li>
+</ol>
 </dd></dl>
 
 <dl class="py method">
