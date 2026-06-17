@@ -9,7 +9,7 @@
     <title>mlchem.ml.modelling package &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7c918e00" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=ede28aa2" />
     
     <script src="_static/documentation_options.js?v=2709fde1"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
@@ -799,13 +799,13 @@ the plot.</p>
 <li><a class="reference internal" href="#submodules"><em>Submodules</em></a><ul>
 <li><a class="reference internal" href="#module-mlchem.ml.modelling.model_evaluation">mlchem.ml.modelling.model_evaluation module</a><ul>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain"><code class="docutils literal notranslate"><span class="pre">ApplicabilityDomain</span></code></a><ul>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage"><code class="docutils literal notranslate"><span class="pre">ApplicabilityDomain.leverage()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage"><code class="docutils literal notranslate"><span class="pre">leverage()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote"><code class="docutils literal notranslate"><span class="pre">MajorityVote</span></code></a><ul>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.__init__"><code class="docutils literal notranslate"><span class="pre">MajorityVote.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.fit"><code class="docutils literal notranslate"><span class="pre">MajorityVote.fit()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.predict"><code class="docutils literal notranslate"><span class="pre">MajorityVote.predict()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.MajorityVote.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_evaluation.crossval"><code class="docutils literal notranslate"><span class="pre">crossval()</span></code></a></li>
@@ -814,52 +814,52 @@ the plot.</p>
 </li>
 <li><a class="reference internal" href="#module-mlchem.ml.modelling.model_interpretation">mlchem.ml.modelling.model_interpretation module</a><ul>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer</span></code></a><ul>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_train"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.df_train</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_test"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.df_test</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_train"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.target_train</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_test"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.target_test</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_name"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.target_name</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.estimator</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.metric"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.metric</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.logic"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.logic</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.task_type"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.task_type</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.display"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.display()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.fit_stage_1()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_2"><code class="docutils literal notranslate"><span class="pre">DescriptorExplainer.fit_stage_2()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_train"><code class="docutils literal notranslate"><span class="pre">df_train</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.df_test"><code class="docutils literal notranslate"><span class="pre">df_test</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_train"><code class="docutils literal notranslate"><span class="pre">target_train</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_test"><code class="docutils literal notranslate"><span class="pre">target_test</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_name"><code class="docutils literal notranslate"><span class="pre">target_name</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">estimator</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.metric"><code class="docutils literal notranslate"><span class="pre">metric</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.logic"><code class="docutils literal notranslate"><span class="pre">logic</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.task_type"><code class="docutils literal notranslate"><span class="pre">task_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.display"><code class="docutils literal notranslate"><span class="pre">display()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">fit_stage_1()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_2"><code class="docutils literal notranslate"><span class="pre">fit_stage_2()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer"><code class="docutils literal notranslate"><span class="pre">ShapExplainer</span></code></a><ul>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.model_type"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.model_type</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.data"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.data</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.y"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.y</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.estimator</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.explain()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.load()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.save()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot_single()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot_all()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.summary_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.waterfall_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.bar_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.feature_importance()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.decision_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.__init__()</span></code></a></li>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.bar_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.decision_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.dependence_plot_all()</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.explain()</span></code></a></li>
-<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.feature_importance()</span></code></a></li>
-<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.force_plot_single()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.heatmap()</span></code></a></li>
-<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.load()</span></code></a></li>
-<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.save()</span></code></a></li>
-<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.summary_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">ShapExplainer.waterfall_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.model_type"><code class="docutils literal notranslate"><span class="pre">model_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.data"><code class="docutils literal notranslate"><span class="pre">data</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.y"><code class="docutils literal notranslate"><span class="pre">y</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">estimator</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain"><code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load"><code class="docutils literal notranslate"><span class="pre">load()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save"><code class="docutils literal notranslate"><span class="pre">save()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot"><code class="docutils literal notranslate"><span class="pre">force_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single"><code class="docutils literal notranslate"><span class="pre">force_plot_single()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot"><code class="docutils literal notranslate"><span class="pre">dependence_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all"><code class="docutils literal notranslate"><span class="pre">dependence_plot_all()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot"><code class="docutils literal notranslate"><span class="pre">summary_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot"><code class="docutils literal notranslate"><span class="pre">waterfall_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot"><code class="docutils literal notranslate"><span class="pre">bar_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance"><code class="docutils literal notranslate"><span class="pre">feature_importance()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot"><code class="docutils literal notranslate"><span class="pre">decision_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">bar_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">decision_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">dependence_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">dependence_plot_all()</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">feature_importance()</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">force_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">force_plot_single()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap"><code class="docutils literal notranslate"><span class="pre">heatmap()</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">load()</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">save()</span></code></a></li>
+<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">summary_plot()</span></code></a></li>
+<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">waterfall_plot()</span></code></a></li>
 </ul>
 </li>
 </ul>
