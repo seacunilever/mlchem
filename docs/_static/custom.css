@@ -127,6 +127,25 @@ div.sphinxsidebarwrapper li.current > a {
     border-bottom: none;
 }
 
+/* Sidebar section headings ("Table of Contents", "Previous/Next topic",
+   "Quick search") sit on the bizstyle dark band, so keep their text white
+   like the non-linked h4s. */
+div.sphinxsidebar h3,
+div.sphinxsidebar h4,
+div.sphinxsidebar h3 a,
+div.sphinxsidebar h3 a:visited,
+div.sphinxsidebar h4 a,
+div.sphinxsidebar h4 a:visited {
+    color: #ffffff;
+    border-bottom: none;
+}
+
+div.sphinxsidebar h3 a:hover,
+div.sphinxsidebar h4 a:hover {
+    color: #ffffff;
+    border-bottom: 1px solid #ffffff;
+}
+
 /* --- Admonitions (note / warning / tip / seealso) -------------------- */
 div.admonition,
 div.note,
