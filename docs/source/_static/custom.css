@@ -1,3 +1,14 @@
+/* --- Design tokens ---------------------------------------------------- */
+:root {
+    --mlchem-accent:        #334155;   /* neutral slate */
+    --mlchem-accent-soft:   #475569;
+    --mlchem-muted:         #64748b;
+    --mlchem-border:        #e2e8f0;
+    --mlchem-surface:       #f8fafc;
+    --mlchem-surface-alt:   #f1f5f9;
+    --mlchem-ink:           #0f172a;
+}
+
 /* --- Sidebar repositioned to the right -------------------------------- */
 /* The bizstyle theme floats the sidebar to the left (width 210px) using a
    negative-margin trick that doesn't mirror cleanly. Use absolute
@@ -44,6 +55,40 @@ div.sphinxsidebarwrapper a {
 /* Main content font size */
 body {
     font-size: 14px;
+    line-height: 1.55;
+    color: var(--mlchem-ink);
+}
+
+/* Heading hierarchy: bizstyle keeps h1/h2/h3 visually similar, so lift the
+   contrast between them. */
+div.body h1 {
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    border-bottom: 2px solid var(--mlchem-accent);
+    padding-bottom: 0.25em;
+    margin-top: 0;
+}
+
+div.body h2 {
+    font-size: 1.45em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--mlchem-border);
+    padding-bottom: 0.2em;
+    margin-top: 1.6em;
+}
+
+div.body h3 {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: var(--mlchem-accent-soft);
+    margin-top: 1.4em;
+}
+
+div.body h4 {
+    font-size: 1.02em;
+    font-weight: 600;
+    color: var(--mlchem-muted);
 }
 
 /* On narrower screens, fall back to a stacked layout */
