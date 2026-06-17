@@ -9,7 +9,7 @@
     <title>mlchem &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=ede28aa2" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6b1a2ad2" />
     
     <script src="_static/documentation_options.js?v=2709fde1"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
@@ -186,11 +186,36 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <blockquote>
 <div><p>Single-source content: <code class="docutils literal notranslate"><span class="pre">docs/source/welcome.md</span></code> <code class="docutils literal notranslate"><span class="pre">{include}</span></code>s this README, so you only edit <code class="docutils literal notranslate"><span class="pre">README.md</span></code> — never duplicate content into the welcome page.</p>
 </div></blockquote>
-<p>Prerequisites (one-off): the documentation toolchain is part of <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>, but if you only want the doc deps:</p>
+<section id="what-is-tracked-what-is-not">
+<h3>What is tracked, what is not<a class="headerlink" href="#what-is-tracked-what-is-not" title="Link to this heading">¶</a></h3>
+<p>Only the inputs and the published output are tracked in git:</p>
+<ul class="simple">
+<li><p><strong>Tracked (do edit / commit)</strong></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> — Sphinx inputs (<code class="docutils literal notranslate"><span class="pre">conf.py</span></code>, <code class="docutils literal notranslate"><span class="pre">*.rst</span></code>, <code class="docutils literal notranslate"><span class="pre">welcome.md</span></code>, <code class="docutils literal notranslate"><span class="pre">_static/custom.css</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_publish.py</span></code> — build entry points.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/.nojekyll</span></code> — tells GitHub Pages to keep <code class="docutils literal notranslate"><span class="pre">_static/</span></code> and <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/*.html</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_static/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_sources/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_images/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/objects.inv</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/searchindex.js</span></code> — the <strong>published mirror</strong> that GitHub Pages serves; updated automatically by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> via <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>.</p></li>
+</ul>
+</li>
+<li><p><strong>Not tracked (regenerated on every build, ignored via <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code>)</strong></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/build/</span></code> — Sphinx scratch output, including <code class="docutils literal notranslate"><span class="pre">build/html/.doctrees/</span></code> and <code class="docutils literal notranslate"><span class="pre">build/html/.buildinfo</span></code> incremental-build caches.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/*warnings*.{log,txt}</span></code> — ad-hoc diagnostic logs.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h3>
+<p>The documentation toolchain is part of <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>. If you only want the doc deps:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>sphinx<span class="w"> </span>myst-parser
 </pre></div>
 </div>
-<p>To rebuild and publish the docs, <strong>run the commands from the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> directory</strong> (NOT from <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> — <code class="docutils literal notranslate"><span class="pre">source</span></code> is the value of <code class="docutils literal notranslate"><span class="pre">SOURCEDIR</span></code> inside the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> / <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, not the working directory):</p>
+</section>
+<section id="build-publish">
+<h3>Build &amp; publish<a class="headerlink" href="#build-publish" title="Link to this heading">¶</a></h3>
+<p>Run the commands from the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> directory (NOT from <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> — <code class="docutils literal notranslate"><span class="pre">source</span></code> is the value of <code class="docutils literal notranslate"><span class="pre">SOURCEDIR</span></code> inside the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> / <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, not the working directory):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># from the repository root</span>
 <span class="nb">cd</span><span class="w"> </span>docs
 
@@ -203,10 +228,11 @@ make<span class="w"> </span>html
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> runs Sphinx and then invokes <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, which:</p>
 <ol class="arabic simple">
-<li><p>removes every stale published asset at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> (everything except <code class="docutils literal notranslate"><span class="pre">source/</span></code>, <code class="docutils literal notranslate"><span class="pre">build/</span></code>, <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code>);</p></li>
+<li><p>removes every stale published asset at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> (everything except <code class="docutils literal notranslate"><span class="pre">source/</span></code>, <code class="docutils literal notranslate"><span class="pre">build/</span></code>, <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code>, <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code>);</p></li>
 <li><p>copies the freshly built site from <code class="docutils literal notranslate"><span class="pre">docs/build/html/</span></code> into <code class="docutils literal notranslate"><span class="pre">docs/</span></code>;</p></li>
 <li><p>ensures the <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code> marker is present so GitHub Pages keeps <code class="docutils literal notranslate"><span class="pre">_static/</span></code> and <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>.</p></li>
 </ol>
+<p>Then commit the regenerated files at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> — that is what gets published. <code class="docutils literal notranslate"><span class="pre">docs/build/</span></code> stays local.</p>
 <p>If you ever build with a raw <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> invocation, run the mirror step manually:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>publish
 </pre></div>
@@ -215,6 +241,7 @@ make<span class="w"> </span>html
 <blockquote>
 <div><p>Common pitfalls: running <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> from <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> (no <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> there → “no rule” / “missing Makefile” error), or typing <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">build</span></code> (the Sphinx target is <code class="docutils literal notranslate"><span class="pre">html</span></code>; <code class="docutils literal notranslate"><span class="pre">build</span></code> is the <em>output directory</em>, not a target).</p>
 </div></blockquote>
+</section>
 </section>
 <section id="contributing">
 <h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
@@ -269,7 +296,12 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#explore-molecule-drawing-options">explore molecule drawing options</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#building-the-documentation">Building the documentation</a></li>
+<li><a class="reference internal" href="#building-the-documentation">Building the documentation</a><ul>
+<li><a class="reference internal" href="#what-is-tracked-what-is-not">What is tracked, what is not</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#build-publish">Build &amp; publish</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#contributing">Contributing</a></li>
 <li><a class="reference internal" href="#third-party-dependencies">Third-Party Dependencies</a></li>
 <li><a class="reference internal" href="#license">License</a></li>

@@ -9,7 +9,7 @@
     <title>mlchem.ml.modelling package &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=ede28aa2" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6b1a2ad2" />
     
     <script src="_static/documentation_options.js?v=2709fde1"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
@@ -87,22 +87,14 @@ applicability domain based on a threshold.</p>
 <dd class="field-odd"><p><strong>X</strong> (<em>numpy.ndarray</em>) – Feature matrix of shape (n_samples, n_features).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>Dictionary containing:
-- ‘leverages’: list of float</p>
-<blockquote>
-<div><p>Leverage values for each data point.</p>
-</div></blockquote>
+<dd class="field-even"><p><p>Dictionary containing:</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt>’results’: list of bool</dt><dd><p>Boolean flags indicating whether each point is within the domain.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>’threshold’: float</dt><dd><p>Threshold used to determine domain inclusion.</p>
-</dd>
-</dl>
-</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'leverages'</span></code> (list of float): leverage values for each data
+point.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'results'</span></code> (list of bool): boolean flags indicating whether each
+point is within the domain.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'threshold'</span></code> (float): threshold used to determine domain
+inclusion.</p></li>
 </ul>
 </p>
 </dd>
@@ -484,78 +476,24 @@ the impact of each feature on model predictions.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.explain">
-<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain" title="Link to this definition">¶</a></dt>
-<dd><p>Generates SHAP values for the model.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shap_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load" title="Link to this definition">¶</a></dt>
-<dd><p>Loads precomputed SHAP values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save" title="Link to this definition">¶</a></dt>
-<dd><p>Saves the SHAP values to the specified path.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot">
-<span class="sig-name descname"><span class="pre">force_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a force plot to visualise SHAP values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single">
-<span class="sig-name descname"><span class="pre">force_plot_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a force plot for a single instance.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot">
-<span class="sig-name descname"><span class="pre">dependence_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a dependence plot for a specified feature.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all">
-<span class="sig-name descname"><span class="pre">dependence_plot_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all" title="Link to this definition">¶</a></dt>
-<dd><p>Generates dependence plots for all features.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot">
-<span class="sig-name descname"><span class="pre">summary_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dot'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a summary plot of SHAP values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot">
-<span class="sig-name descname"><span class="pre">waterfall_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a waterfall plot for a single instance.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot">
-<span class="sig-name descname"><span class="pre">bar_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a bar plot of SHAP values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance">
-<span class="sig-name descname"><span class="pre">feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance" title="Link to this definition">¶</a></dt>
-<dd><p>Calculates and returns feature importance based on SHAP values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot">
-<span class="sig-name descname"><span class="pre">decision_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_lower</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_upper</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a decision plot for a specified probability interval.</p>
-</dd></dl>
-
+<dl class="field-list simple">
+<dt class="field-odd">Methods<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>explain()</strong> – Generates SHAP values for the model.</p></li>
+<li><p><strong>load(base_values, shap_values)</strong> – Loads precomputed SHAP values.</p></li>
+<li><p><strong>save(path, filename)</strong> – Saves the SHAP values to the specified path.</p></li>
+<li><p><strong>force_plot()</strong> – Generates a force plot to visualise SHAP values.</p></li>
+<li><p><strong>force_plot_single(i)</strong> – Generates a force plot for a single instance.</p></li>
+<li><p><strong>dependence_plot(column)</strong> – Generates a dependence plot for a specified feature.</p></li>
+<li><p><strong>dependence_plot_all()</strong> – Generates dependence plots for all features.</p></li>
+<li><p><strong>summary_plot(plot_type=’dot’)</strong> – Generates a summary plot of SHAP values.</p></li>
+<li><p><strong>waterfall_plot(i)</strong> – Generates a waterfall plot for a single instance.</p></li>
+<li><p><strong>bar_plot()</strong> – Generates a bar plot of SHAP values.</p></li>
+<li><p><strong>feature_importance()</strong> – Calculates and returns feature importance based on SHAP values.</p></li>
+<li><p><strong>decision_plot(interval_lower, interval_upper)</strong> – Generates a decision plot for a specified probability interval.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__" title="Link to this definition">¶</a></dt>
@@ -573,8 +511,8 @@ the impact of each feature on model predictions.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">bar_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot">
+<span class="sig-name descname"><span class="pre">bar_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a bar plot of SHAP values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -584,8 +522,8 @@ the impact of each feature on model predictions.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">decision_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_lower</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_upper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot">
+<span class="sig-name descname"><span class="pre">decision_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_lower</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_upper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a decision plot for a specified probability interval.</p>
 <p>This method creates a SHAP decision plot to visualise how features contribute
 to model predictions for samples within a given probability interval. It also
@@ -608,8 +546,8 @@ prints classification statistics for the selected interval.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">dependence_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot">
+<span class="sig-name descname"><span class="pre">dependence_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a dependence plot for a specified feature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -622,8 +560,8 @@ prints classification statistics for the selected interval.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">dependence_plot_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all">
+<span class="sig-name descname"><span class="pre">dependence_plot_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all" title="Link to this definition">¶</a></dt>
 <dd><p>Generate dependence plots for all features.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -633,8 +571,8 @@ prints classification statistics for the selected interval.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.explain">
+<span class="sig-name descname"><span class="pre">explain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain" title="Link to this definition">¶</a></dt>
 <dd><p>Generate SHAP values for the model.</p>
 <p>This method creates a SHAP explainer based on the model type and
 computes the SHAP values for the provided dataset.</p>
@@ -646,8 +584,8 @@ computes the SHAP values for the provided dataset.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance">
+<span class="sig-name descname"><span class="pre">feature_importance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate and visualise feature importance based on SHAP values.</p>
 <p>This method computes feature importance by summing the absolute SHAP values
 for each feature. It also calculates the Spearman correlation between each
@@ -665,8 +603,8 @@ and overall impact scores for each feature.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">force_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">HTML</span></span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot">
+<span class="sig-name descname"><span class="pre">force_plot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">HTML</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a force plot to visualise SHAP values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -679,8 +617,8 @@ and overall impact scores for each feature.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">force_plot_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">HTML</span></span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single">
+<span class="sig-name descname"><span class="pre">force_plot_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">HTML</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a force plot for a single instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -714,8 +652,8 @@ the plot.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id8">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shap_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shap_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load" title="Link to this definition">¶</a></dt>
 <dd><p>Load precomputed SHAP values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -731,8 +669,8 @@ the plot.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id9">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save" title="Link to this definition">¶</a></dt>
 <dd><p>Save SHAP values to the specified path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -748,8 +686,8 @@ the plot.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id10">
-<span class="sig-name descname"><span class="pre">summary_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'dot'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bar'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'violin'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layered_violin'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'compact_dot'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dot'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot">
+<span class="sig-name descname"><span class="pre">summary_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'dot'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'bar'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'violin'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'layered_violin'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'compact_dot'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dot'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a summary plot of SHAP values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -765,8 +703,8 @@ the plot.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id11">
-<span class="sig-name descname"><span class="pre">waterfall_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id11" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot">
+<span class="sig-name descname"><span class="pre">waterfall_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a waterfall plot for a single instance.</p>
 <p>Note: Not available for tree-based models.</p>
 <dl class="field-list simple">
@@ -834,32 +772,20 @@ the plot.</p>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.data"><code class="docutils literal notranslate"><span class="pre">data</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.y"><code class="docutils literal notranslate"><span class="pre">y</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator"><code class="docutils literal notranslate"><span class="pre">estimator</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain"><code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load"><code class="docutils literal notranslate"><span class="pre">load()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save"><code class="docutils literal notranslate"><span class="pre">save()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot"><code class="docutils literal notranslate"><span class="pre">force_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single"><code class="docutils literal notranslate"><span class="pre">force_plot_single()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot"><code class="docutils literal notranslate"><span class="pre">bar_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot"><code class="docutils literal notranslate"><span class="pre">decision_plot()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot"><code class="docutils literal notranslate"><span class="pre">dependence_plot()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all"><code class="docutils literal notranslate"><span class="pre">dependence_plot_all()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain"><code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance"><code class="docutils literal notranslate"><span class="pre">feature_importance()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot"><code class="docutils literal notranslate"><span class="pre">force_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single"><code class="docutils literal notranslate"><span class="pre">force_plot_single()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap"><code class="docutils literal notranslate"><span class="pre">heatmap()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.load"><code class="docutils literal notranslate"><span class="pre">load()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.save"><code class="docutils literal notranslate"><span class="pre">save()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot"><code class="docutils literal notranslate"><span class="pre">summary_plot()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot"><code class="docutils literal notranslate"><span class="pre">waterfall_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot"><code class="docutils literal notranslate"><span class="pre">bar_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance"><code class="docutils literal notranslate"><span class="pre">feature_importance()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot"><code class="docutils literal notranslate"><span class="pre">decision_plot()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">bar_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">decision_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">dependence_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">dependence_plot_all()</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">explain()</span></code></a></li>
-<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">feature_importance()</span></code></a></li>
-<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">force_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">force_plot_single()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap"><code class="docutils literal notranslate"><span class="pre">heatmap()</span></code></a></li>
-<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">load()</span></code></a></li>
-<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">save()</span></code></a></li>
-<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">summary_plot()</span></code></a></li>
-<li><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">waterfall_plot()</span></code></a></li>
 </ul>
 </li>
 </ul>
