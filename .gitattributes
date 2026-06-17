@@ -2,4 +2,8 @@
 # the built Sphinx site (docs/) is generated documentation, not the
 # repository's actual codebase. Keep it tracked and served by GitHub Pages,
 # but exclude it from the language statistics on the repo home page.
-docs/**    linguist-generated=true
+
+docs/**    linguist-generated=true                # don't include html docs in stats
+tests/**           linguist-generated=true        # any test artifact
+tests/**/*.py      linguist-generated=false       # keep .py test files
+examples/**/.html        linguist-generated=true  # chemical space html files
