@@ -413,8 +413,8 @@ Parameters
 **args : dict
     Keyword arguments representing drawing options. These can include:
 
-    Colours
-    -------
+    **Colours**
+
     - atomPalette : str or dict, default='cdk'
         Atom colour scheme. Options: 'avalon', 'cdk', 'bw', or a dictionary
         mapping atomic numbers to RGB tuples.
@@ -429,8 +429,8 @@ Parameters
     - annotationColour : str or tuple, default='black'
         Colour for annotations (e.g., atom/bond notes).
 
-    Drawing Style Options
-    ---------------------
+    **Drawing Style Options**
+
     - dummiesAreAttachments : bool, default=False
     - addAtomIndices : bool, default=False
     - addBondIndices : bool, default=False
@@ -440,8 +440,9 @@ Parameters
     - useComplexQueryAtomSymbols : bool, default=True
     - singleColourWedgeBonds : bool, default=False
     - drawMolsSameScale : bool, default=False
-    Highlighting
-    ------------
+
+    **Highlighting**
+
     - continuousHighlight : bool, default=True
     - circleAtoms : bool, default=True
     - atomHighlightsAreCircles : bool, default=True
@@ -449,13 +450,13 @@ Parameters
     - highlightRadius : float, default=0.3
     - highlightBondWidthMultiplier : float, default=10
 
-    Stereochemistry
-    ---------------
+    **Stereochemistry**
+
     - addStereoAnnotation : bool, default=False
     - unspecifiedStereoIsUnknown : bool, default=False
 
-    Fonts and Text
-    --------------
+    **Fonts and Text**
+
     - baseFontSize : float, default=0.6
     - annotationFontScale : float, default=0.5
     - legendFontSize : int, default=25
@@ -465,8 +466,8 @@ Parameters
     - fontFile : str, default=''
         Path to a custom font file.
 
-    Bond Drawing Parameters
-    -----------------------
+    **Bond Drawing Parameters**
+
     - multipleBondOffset : float, default=0.15
     - additionalAtomLabelPadding : float, default=0
     - bondLineWidth : float, default=2
@@ -474,8 +475,8 @@ Parameters
     - scaleHighlightBondWidth : bool, default=True
     - fixedBondLength : float, default=-1
 
-    Similarity Maps Parameters
-    --------------------------
+    **Similarity Maps Parameters**
+
     - atomWeights : list, default=[]
     - mapStyle : {'GC', 'C'}, default='GC'
     - colourMap : str or list of RGB tuples, default=None
@@ -491,20 +492,21 @@ Parameters
     - contourWidth : float, default=1
     - dashNegative : bool, default=True
 
-    Optional Shapes
-    ---------------
+    **Optional Shapes**
+
     - shapeTypes : list, default=[]
     - shapeSizes : list, default=[]
     - shapeColours : list, default=[]
     - shapeCoords : list, default=[]
 
-    Miscellaneous
-    -------------
+    **Miscellaneous**
+
     - clearBackground : bool, default=True
     - prepareMolsBeforeDrawing : bool, default=True
     - rotate : float, default=0
     - padding : float, default=0.05
     - atomLabelDeuteriumTritium : bool, default=False
+
 Returns
 -------
 None

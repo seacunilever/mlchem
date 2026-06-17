@@ -527,12 +527,13 @@ Returns
 -------
 dict of str to list or float
     Dictionary containing:
-    - 'leverages': list of float
-        Leverage values for each data point.
-    - 'results': list of bool
-        Boolean flags indicating whether each point is within the domain.
-    - 'threshold': float
-        Threshold used to determine domain inclusion.
+
+    - ``'leverages'`` (list of float): leverage values for each data
+      point.
+    - ``'results'`` (list of bool): boolean flags indicating whether each
+      point is within the domain.
+    - ``'threshold'`` (float): threshold used to determine domain
+      inclusion.
 """
 
         threshold = 3 * X.shape[1] / X.shape[0]
