@@ -52,6 +52,51 @@ div.sphinxsidebarwrapper a {
     word-break: break-word;
 }
 
+/* Sidebar: highlight the current page entry and tighten sub-item spacing */
+div.sphinxsidebarwrapper a.current,
+div.sphinxsidebarwrapper li.current > a,
+div.sphinxsidebarwrapper li.toctree-l1.current > a,
+div.sphinxsidebarwrapper li.toctree-l2.current > a,
+div.sphinxsidebarwrapper li.toctree-l3.current > a {
+    font-weight: 700;
+    color: var(--mlchem-accent);
+    border-left: 2px solid var(--mlchem-accent);
+    padding-left: 0.4em;
+    margin-left: -0.4em;
+}
+
+div.sphinxsidebarwrapper ul ul {
+    margin-top: 0.15em;
+    margin-bottom: 0.35em;
+}
+
+div.sphinxsidebarwrapper li {
+    margin: 0.1em 0;
+}
+
+/* Anchor permalinks (the "¶" next to headings/dt entries): mute them so they
+   don't compete visually; brighten only on hover. */
+a.headerlink {
+    color: transparent;
+    margin-left: 0.3em;
+    transition: color 0.15s ease;
+    text-decoration: none;
+}
+
+h1:hover a.headerlink,
+h2:hover a.headerlink,
+h3:hover a.headerlink,
+h4:hover a.headerlink,
+dl.py > dt:hover a.headerlink,
+dl.field-list > dt:hover a.headerlink {
+    color: var(--mlchem-muted);
+}
+
+a.headerlink:hover {
+    color: var(--mlchem-accent) !important;
+    background: transparent;
+}
+
 /* Main content font size */
 body {
     font-size: 14px;
