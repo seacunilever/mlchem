@@ -1,6 +1,0 @@
-﻿mlchem.chem.calculator.tools.bernoulli
-======================================
-
-.. currentmodule:: mlchem.chem.calculator.tools
-
-.. autofunction:: bernoulli
