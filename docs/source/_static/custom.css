@@ -104,6 +104,64 @@ body {
     color: var(--mlchem-ink);
 }
 
+/* --- Links: a single slate accent across body + sidebar -------------- */
+div.body a,
+div.body a:visited,
+div.sphinxsidebarwrapper a,
+div.sphinxsidebarwrapper a:visited {
+    color: var(--mlchem-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--mlchem-border);
+}
+
+div.body a:hover,
+div.sphinxsidebarwrapper a:hover {
+    color: var(--mlchem-ink);
+    border-bottom-color: var(--mlchem-accent);
+}
+
+/* Anchor permalinks and TOC-current entries should not pick up the dotted
+   underline (they already have their own treatment). */
+a.headerlink,
+div.sphinxsidebarwrapper li.current > a {
+    border-bottom: none;
+}
+
+/* --- Admonitions (note / warning / tip / seealso) -------------------- */
+div.admonition,
+div.note,
+div.warning,
+div.tip,
+div.hint,
+div.seealso,
+div.important {
+    border: 1px solid var(--mlchem-border);
+    border-left: 4px solid var(--mlchem-accent);
+    background: var(--mlchem-surface);
+    border-radius: 3px;
+    padding: 0.6em 0.9em;
+    margin: 1em 0;
+}
+
+div.admonition > p.admonition-title,
+div.note > p.first,
+div.warning > p.first,
+div.tip > p.first {
+    font-variant: small-caps;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--mlchem-accent);
+    margin-bottom: 0.3em;
+}
+
+div.warning {
+    border-left-color: #b45309;
+}
+
+div.warning > p.admonition-title {
+    color: #b45309;
+}
+
 /* Heading hierarchy: bizstyle keeps h1/h2/h3 visually similar, so lift the
    contrast between them. */
 div.body h1 {
