@@ -133,57 +133,23 @@ legends, and visualising similarity or weight maps.</p>
 </dl>
 </dd></dl>
 
+<dl class="field-list simple">
+<dt class="field-odd">Methods<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>__init__(…)</strong> – Initialise the MolDrawer with molecule, size, highlights, and legend.</p></li>
+<li><p><strong>show_palette(…)</strong> – Display or save the colour palette used for drawing.</p></li>
+<li><p><strong>update_drawing_options(…)</strong> – Update drawing options using a dictionary or keyword arguments.</p></li>
+<li><p><strong>reset_drawing_options()</strong> – Reset drawing options to their default values.</p></li>
+<li><p><strong>draw_mol(…)</strong> – Render a single molecule with the current drawing settings.</p></li>
+<li><p><strong>load_images(…)</strong> – Load external images into the drawer.</p></li>
+<li><p><strong>load_mols(…)</strong> – Load molecules and generate their images.</p></li>
+<li><p><strong>show_images_grid(…)</strong> – Display all loaded images in a grid layout.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialise the MolDrawer with molecule, size, highlights, and legend.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.show_palette">
-<span class="sig-name descname"><span class="pre">show_palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.show_palette" title="Link to this definition">¶</a></dt>
-<dd><p>Display or save the colour palette used for drawing.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options">
-<span class="sig-name descname"><span class="pre">update_drawing_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options" title="Link to this definition">¶</a></dt>
-<dd><p>Update drawing options using a dictionary or keyword arguments.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options">
-<span class="sig-name descname"><span class="pre">reset_drawing_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options" title="Link to this definition">¶</a></dt>
-<dd><p>Reset drawing options to their default values.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.draw_mol">
-<span class="sig-name descname"><span class="pre">draw_mol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.draw_mol" title="Link to this definition">¶</a></dt>
-<dd><p>Render a single molecule with the current drawing settings.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.load_images">
-<span class="sig-name descname"><span class="pre">load_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.load_images" title="Link to this definition">¶</a></dt>
-<dd><p>Load external images into the drawer.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.load_mols">
-<span class="sig-name descname"><span class="pre">load_mols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.load_mols" title="Link to this definition">¶</a></dt>
-<dd><p>Load molecules and generate their images.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.show_images_grid">
-<span class="sig-name descname"><span class="pre">show_images_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.show_images_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Display all loaded images in a grid layout.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlightAtoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[300,</span> <span class="pre">300]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlightAtoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[300,</span> <span class="pre">300]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialise the MolDrawer class for molecular visualisation.</p>
 <p>This class sets up the molecule, drawing canvas, highlighting options,
 and default drawing styles for rendering molecular structures.</p>
@@ -203,8 +169,8 @@ and default drawing styles for rendering molecular structures.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">draw_mol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlightAtoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ACS1996_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.draw_mol">
+<span class="sig-name descname"><span class="pre">draw_mol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlightAtoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ACS1996_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.draw_mol" title="Link to this definition">¶</a></dt>
 <dd><p>Render and return an image of a single molecule using the current drawing options.</p>
 <p>This method draws a molecule with optional atom highlighting, legend text,
 custom canvas size, and support for ACS 1996-style rendering. It uses the
@@ -235,8 +201,8 @@ drawing configuration stored in the <cite>MolDrawer</cite> instance.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">load_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.load_images">
+<span class="sig-name descname"><span class="pre">load_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.load_images" title="Link to this definition">¶</a></dt>
 <dd><p>Load images into the drawer without adding molecules.</p>
 <p>This method allows you to load one or more pre-rendered images into the
 MolDrawer instance. These images can be used for visualisation, layout
@@ -263,8 +229,8 @@ This method is equivalent to overwrite the img_list attribute.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">load_mols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.load_mols">
+<span class="sig-name descname"><span class="pre">load_mols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.load_mols" title="Link to this definition">¶</a></dt>
 <dd><p>Load molecules and generate standard images in the drawer.</p>
 <p>This method accepts one or more RDKit molecule objects, stores them in the
 drawer, and generates their corresponding images using the default or
@@ -289,8 +255,8 @@ displayed later in a grid or individually.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">reset_drawing_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options">
+<span class="sig-name descname"><span class="pre">reset_drawing_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options" title="Link to this definition">¶</a></dt>
 <dd><p>Reset the drawing options to their default values.</p>
 <p>This method reinitialises the internal drawing options dictionary to the
 default configuration defined in a fresh instance of the <cite>MolDrawer</cite> class.
@@ -310,8 +276,8 @@ original visual style.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">show_images_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_tile_colour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.show_images_grid">
+<span class="sig-name descname"><span class="pre">show_images_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_tile_colour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.show_images_grid" title="Link to this definition">¶</a></dt>
 <dd><p>Display all images arranged in a grid layout.</p>
 <p>This method arranges a list of images into a grid and displays them using
 IPython. It supports customisation of the number of columns, image size,
@@ -352,8 +318,8 @@ default size from <cite>self.size</cite>.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id6">
-<span class="sig-name descname"><span class="pre">show_palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[1000,</span> <span class="pre">300]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.show_palette">
+<span class="sig-name descname"><span class="pre">show_palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[1000,</span> <span class="pre">300]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.show_palette" title="Link to this definition">¶</a></dt>
 <dd><p>Display the colour palette used for molecular drawings.</p>
 <p>This method visualises the colour palette as an image. If no palette is
 provided, the default <cite>colour_dictionary</cite> is used. The image can also be
@@ -384,8 +350,8 @@ default palette from <cite>self.colour_dictionary</cite>.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="id7">
-<span class="sig-name descname"><span class="pre">update_drawing_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options">
+<span class="sig-name descname"><span class="pre">update_drawing_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options" title="Link to this definition">¶</a></dt>
 <dd><p>Update the RDKit drawing options.</p>
 <p>This method allows customisation of the molecule rendering style by updating
 the internal drawing options dictionary. Users can pass either a full or
@@ -393,6 +359,7 @@ partial dictionary of options, or use keyword arguments directly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>**args</strong> (<em>dict</em>) – <p>Keyword arguments representing drawing options. These can include:</p>
+<p><strong>Colours</strong></p>
 <ul class="simple">
 <li><dl class="simple">
 <dt>atomPalette<span class="classifier">str or dict, default=’cdk’</span></dt><dd><p>Atom colour scheme. Options: ‘avalon’, ‘cdk’, ‘bw’, or a dictionary
@@ -426,6 +393,7 @@ mapping atomic numbers to RGB tuples.</p>
 </dl>
 </li>
 </ul>
+<p><strong>Drawing Style Options</strong></p>
 <ul class="simple">
 <li><p>dummiesAreAttachments : bool, default=False</p></li>
 <li><p>addAtomIndices : bool, default=False</p></li>
@@ -437,6 +405,7 @@ mapping atomic numbers to RGB tuples.</p>
 <li><p>singleColourWedgeBonds : bool, default=False</p></li>
 <li><p>drawMolsSameScale : bool, default=False</p></li>
 </ul>
+<p><strong>Highlighting</strong></p>
 <ul class="simple">
 <li><p>continuousHighlight : bool, default=True</p></li>
 <li><p>circleAtoms : bool, default=True</p></li>
@@ -445,10 +414,12 @@ mapping atomic numbers to RGB tuples.</p>
 <li><p>highlightRadius : float, default=0.3</p></li>
 <li><p>highlightBondWidthMultiplier : float, default=10</p></li>
 </ul>
+<p><strong>Stereochemistry</strong></p>
 <ul class="simple">
 <li><p>addStereoAnnotation : bool, default=False</p></li>
 <li><p>unspecifiedStereoIsUnknown : bool, default=False</p></li>
 </ul>
+<p><strong>Fonts and Text</strong></p>
 <ul class="simple">
 <li><p>baseFontSize : float, default=0.6</p></li>
 <li><p>annotationFontScale : float, default=0.5</p></li>
@@ -462,6 +433,7 @@ mapping atomic numbers to RGB tuples.</p>
 </dl>
 </li>
 </ul>
+<p><strong>Bond Drawing Parameters</strong></p>
 <ul class="simple">
 <li><p>multipleBondOffset : float, default=0.15</p></li>
 <li><p>additionalAtomLabelPadding : float, default=0</p></li>
@@ -470,6 +442,7 @@ mapping atomic numbers to RGB tuples.</p>
 <li><p>scaleHighlightBondWidth : bool, default=True</p></li>
 <li><p>fixedBondLength : float, default=-1</p></li>
 </ul>
+<p><strong>Similarity Maps Parameters</strong></p>
 <ul class="simple">
 <li><p>atomWeights : list, default=[]</p></li>
 <li><p>mapStyle : {‘GC’, ‘C’}, default=’GC’</p></li>
@@ -486,12 +459,14 @@ mapping atomic numbers to RGB tuples.</p>
 <li><p>contourWidth : float, default=1</p></li>
 <li><p>dashNegative : bool, default=True</p></li>
 </ul>
+<p><strong>Optional Shapes</strong></p>
 <ul class="simple">
 <li><p>shapeTypes : list, default=[]</p></li>
 <li><p>shapeSizes : list, default=[]</p></li>
 <li><p>shapeColours : list, default=[]</p></li>
 <li><p>shapeCoords : list, default=[]</p></li>
 </ul>
+<p><strong>Miscellaneous</strong></p>
 <ul class="simple">
 <li><p>clearBackground : bool, default=True</p></li>
 <li><p>prepareMolsBeforeDrawing : bool, default=True</p></li>
@@ -981,21 +956,13 @@ such as title properties, legend properties, and axis properties.</p>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.colour_dictionary"><code class="docutils literal notranslate"><span class="pre">colour_dictionary</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.drawing_options"><code class="docutils literal notranslate"><span class="pre">drawing_options</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.show_palette"><code class="docutils literal notranslate"><span class="pre">show_palette()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options"><code class="docutils literal notranslate"><span class="pre">update_drawing_options()</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options"><code class="docutils literal notranslate"><span class="pre">reset_drawing_options()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.draw_mol"><code class="docutils literal notranslate"><span class="pre">draw_mol()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.load_images"><code class="docutils literal notranslate"><span class="pre">load_images()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.load_mols"><code class="docutils literal notranslate"><span class="pre">load_mols()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options"><code class="docutils literal notranslate"><span class="pre">reset_drawing_options()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.show_images_grid"><code class="docutils literal notranslate"><span class="pre">show_images_grid()</span></code></a></li>
-<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">draw_mol()</span></code></a></li>
-<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">load_images()</span></code></a></li>
-<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">load_mols()</span></code></a></li>
-<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">reset_drawing_options()</span></code></a></li>
-<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">show_images_grid()</span></code></a></li>
-<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">show_palette()</span></code></a></li>
-<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">update_drawing_options()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.show_palette"><code class="docutils literal notranslate"><span class="pre">show_palette()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options"><code class="docutils literal notranslate"><span class="pre">update_drawing_options()</span></code></a></li>
 </ul>
 </li>
 </ul>
