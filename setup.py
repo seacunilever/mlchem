@@ -37,10 +37,15 @@ from setuptools import setup, find_packages
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
+# The repo is laid out flat: the workspace root *is* the `mlchem` package,
+# with `chem/`, `ml/`, etc. as subpackages. Tell setuptools that explicitly.
+_subpkgs = find_packages(exclude=['tests', 'tests.*', 'docs', 'docs.*'])
+
 setup(
     name='mlchem',
     version='0.1',
-    packages=find_packages(),
+    package_dir={'mlchem': '.'},
+    packages=['mlchem'] + [f'mlchem.{p}' for p in _subpkgs],
     install_requires=requirements,
     python_requires='>=3.10',
 )
