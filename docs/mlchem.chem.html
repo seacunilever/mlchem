@@ -9,7 +9,7 @@
     <title>mlchem.chem package &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=ede28aa2" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6b1a2ad2" />
     
     <script src="_static/documentation_options.js?v=2709fde1"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
@@ -1708,13 +1708,13 @@ returned as a single tuple.</p>
 <dd class="field-odd"><p><strong>target</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – A SMILES string or an RDKit molecule object.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>A tuple containing:
-- A boolean indicating whether any amine group was found.
-- A list of atom indices matching any of the amine group patterns.
-- A tuple of SMARTS strings representing the matched patterns for</p>
-<blockquote>
-<div><p>each type of amine group.</p>
-</div></blockquote>
+<dd class="field-even"><p><p>A tuple containing:</p>
+<ul class="simple">
+<li><p>A boolean indicating whether any amine group was found.</p></li>
+<li><p>A list of atom indices matching any of the amine group patterns.</p></li>
+<li><p>A tuple of SMARTS strings representing the matched patterns for
+each type of amine group.</p></li>
+</ul>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1868,7 +1868,7 @@ returned as a single tuple.</p>
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_anhydride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.PatternRecognition.MolPatterns.check_anhydride" title="Link to this definition">¶</a></dt>
 <dd><p>Check for anhydride groups in a molecule.</p>
 <p>The SMARTS pattern used to identify anhydride groups is
-<a href="#id2"><span class="problematic" id="id3">``</span></a>CX3[OX2][CX3].</p>
+<code class="docutils literal notranslate"><span class="pre">[CX3](=[OX1])[OX2][CX3](=[OX1])</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>target</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – A SMILES string or an RDKit molecule object.</p>
@@ -3530,8 +3530,8 @@ Reference: <a class="reference external" href="https://doi.org/10.1351/goldbook.
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[CX1-]#[NX2+]</span></code></p>
 <p>Isomeric forms of hydrocyanic acid and its derivatives (RN≡C).</p>
-<section id="id4">
-<h5>Reference<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h5>
+<section id="id2">
+<h5>Reference<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.I03270">https://doi.org/10.1351/goldbook.I03270</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -3564,8 +3564,8 @@ Reference: <a class="reference external" href="https://doi.org/10.1351/goldbook.
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[#7D2]=[#6]=[#16D1]</span></code></p>
 <p>Isothiocyanates are sulphur analogues of isocyanates (RN=C=S).</p>
-<section id="id5">
-<h5>Reference<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h5>
+<section id="id3">
+<h5>Reference<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.I03320">https://doi.org/10.1351/goldbook.I03320</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -3702,8 +3702,8 @@ Reference: <a class="reference external" href="https://doi.org/10.1351/goldbook.
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[$([#7X3H1,#7X3&amp;!#7X3H2,#7X3H0,#7X4+][#8]);</span> <span class="pre">!$(#7~[O]);</span> <span class="pre">!$([#7]=[#7])]</span></code></p>
 <p>Derived from tertiary amines by attachment of an oxygen atom to nitrogen.</p>
-<section id="id6">
-<h5>Reference<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h5>
+<section id="id4">
+<h5>Reference<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.A00273">https://doi.org/10.1351/goldbook.A00273</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -3840,8 +3840,8 @@ Reference: <a class="reference external" href="https://doi.org/10.1351/goldbook.
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[NX1]#[CX2]</span></code></p>
 <p>Compounds with the structure RC≡N, i.e., C-substituted derivatives of hydrocyanic acid.</p>
-<section id="id7">
-<h5>Reference<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h5>
+<section id="id5">
+<h5>Reference<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.N04151">https://doi.org/10.1351/goldbook.N04151</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -3951,8 +3951,8 @@ Reference: <a class="reference external" href="https://doi.org/10.1351/goldbook.
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[NX2]=[OX1]</span></code></p>
 <p>Nitroso groups (-NO) attached to carbon or other elements.</p>
-<section id="id8">
-<h5>Reference<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h5>
+<section id="id6">
+<h5>Reference<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.N04169">https://doi.org/10.1351/goldbook.N04169</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -4493,8 +4493,8 @@ whether the pattern is an aromatic substituent in the molecule.</p>
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[#6][#16D2][#6]</span></code></p>
 <p>Sulphides are compounds with the structure R-S-R’ (R ≠ H), also known as thioethers.</p>
-<section id="id9">
-<h5>Reference<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h5>
+<section id="id7">
+<h5>Reference<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.S06102">https://doi.org/10.1351/goldbook.S06102</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -4527,8 +4527,8 @@ whether the pattern is an aromatic substituent in the molecule.</p>
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[$([#6]#16X3[OX2H,OX1H0-]),</span> <span class="pre">$([#6]#16X3+[OX2H,OX1H0-])]</span></code></p>
 <p>Sulphinic acids (RS(=O)OH) and their conjugate bases (sulphinates) are included.</p>
-<section id="id10">
-<h5>Reference<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h5>
+<section id="id8">
+<h5>Reference<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.S06109">https://doi.org/10.1351/goldbook.S06109</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -4823,8 +4823,8 @@ whether the pattern is an aromatic substituent in the molecule.</p>
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">CX3[SX2]CX3</span></code></p>
 <p>Thioanhydrides are compounds with the structure acyl-S-acyl, also called diacylsulfanes.</p>
-<section id="id11">
-<h5>Reference<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h5>
+<section id="id9">
+<h5>Reference<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.T06351">https://doi.org/10.1351/goldbook.T06351</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -4910,8 +4910,8 @@ whether the pattern is an aromatic substituent in the molecule.</p>
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">$([$([CX3[OX2H1]),$(CX3[OX1-])]),</span> <span class="pre">$($([CX3[SX2H1]),$(CX3[SX1-])]),</span> <span class="pre">$($([CX3[SX2H1]),$(CX3[SX1-])])]</span></code></p>
 <p>Thiocarboxylic acids are compounds where one or both oxygens of a carboxy group are replaced by sulphur.</p>
-<section id="id12">
-<h5>Reference<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h5>
+<section id="id10">
+<h5>Reference<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.T06352">https://doi.org/10.1351/goldbook.T06352</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -4944,8 +4944,8 @@ whether the pattern is an aromatic substituent in the molecule.</p>
 <p>SMARTS pattern used:
 - <code class="docutils literal notranslate"><span class="pre">[#16D2]#[#7]</span></code></p>
 <p>Thiocyanates are salts and esters of thiocyanic acid (HSC≡N), e.g. methyl thiocyanate (CH₃SC≡N).</p>
-<section id="id13">
-<h5>Reference<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h5>
+<section id="id11">
+<h5>Reference<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h5>
 <p><a class="reference external" href="https://doi.org/10.1351/goldbook.T06353">https://doi.org/10.1351/goldbook.T06353</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">param target<span class="colon">:</span></dt>
@@ -7612,7 +7612,7 @@ and rendering options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input</strong> (str or <a href="#id14"><span class="problematic" id="id15">numpy.str_</span></a> or rdkit.Chem.rdchem.Mol) – The molecule input as a SMILES string, numpy string, or RDKit Mol object.</p></li>
+<li><p><strong>mol_input</strong> (str or <code class="docutils literal notranslate"><span class="pre">numpy.str_</span></code> or rdkit.Chem.rdchem.Mol) – The molecule input as a SMILES string, numpy string, or RDKit Mol object.</p></li>
 <li><p><strong>add_hydrogens</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to add hydrogens to the molecule. Default is False.</p></li>
 <li><p><strong>show</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to display the molecule. Default is False.</p></li>
 <li><p><strong>solid_sticks</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to render the molecule as solid sticks. Default is False.</p></li>

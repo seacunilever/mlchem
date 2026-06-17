@@ -1,3 +1,14 @@
+/* --- Design tokens ---------------------------------------------------- */
+:root {
+    --mlchem-accent:        #334155;   /* neutral slate */
+    --mlchem-accent-soft:   #475569;
+    --mlchem-muted:         #64748b;
+    --mlchem-border:        #e2e8f0;
+    --mlchem-surface:       #f8fafc;
+    --mlchem-surface-alt:   #f1f5f9;
+    --mlchem-ink:           #0f172a;
+}
+
 /* --- Sidebar repositioned to the right -------------------------------- */
 /* The bizstyle theme floats the sidebar to the left (width 210px) using a
    negative-margin trick that doesn't mirror cleanly. Use absolute
@@ -41,9 +52,245 @@ div.sphinxsidebarwrapper a {
     word-break: break-word;
 }
 
+/* Sidebar: highlight the current page entry and tighten sub-item spacing */
+div.sphinxsidebarwrapper a.current,
+div.sphinxsidebarwrapper li.current > a,
+div.sphinxsidebarwrapper li.toctree-l1.current > a,
+div.sphinxsidebarwrapper li.toctree-l2.current > a,
+div.sphinxsidebarwrapper li.toctree-l3.current > a {
+    font-weight: 700;
+    color: var(--mlchem-accent);
+    border-left: 2px solid var(--mlchem-accent);
+    padding-left: 0.4em;
+    margin-left: -0.4em;
+}
+
+div.sphinxsidebarwrapper ul ul {
+    margin-top: 0.15em;
+    margin-bottom: 0.35em;
+}
+
+div.sphinxsidebarwrapper li {
+    margin: 0.1em 0;
+}
+
+/* Anchor permalinks (the "¶" next to headings/dt entries): mute them so they
+   don't compete visually; brighten only on hover. */
+a.headerlink {
+    color: transparent;
+    margin-left: 0.3em;
+    transition: color 0.15s ease;
+    text-decoration: none;
+}
+
+h1:hover a.headerlink,
+h2:hover a.headerlink,
+h3:hover a.headerlink,
+h4:hover a.headerlink,
+dl.py > dt:hover a.headerlink,
+dl.field-list > dt:hover a.headerlink {
+    color: var(--mlchem-muted);
+}
+
+a.headerlink:hover {
+    color: var(--mlchem-accent) !important;
+    background: transparent;
+}
+
 /* Main content font size */
 body {
     font-size: 14px;
+    line-height: 1.55;
+    color: var(--mlchem-ink);
+}
+
+/* --- Links: a single slate accent across body + sidebar -------------- */
+div.body a,
+div.body a:visited,
+div.sphinxsidebarwrapper a,
+div.sphinxsidebarwrapper a:visited {
+    color: var(--mlchem-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--mlchem-border);
+}
+
+div.body a:hover,
+div.sphinxsidebarwrapper a:hover {
+    color: var(--mlchem-ink);
+    border-bottom-color: var(--mlchem-accent);
+}
+
+/* Anchor permalinks and TOC-current entries should not pick up the dotted
+   underline (they already have their own treatment). */
+a.headerlink,
+div.sphinxsidebarwrapper li.current > a {
+    border-bottom: none;
+}
+
+/* --- Admonitions (note / warning / tip / seealso) -------------------- */
+div.admonition,
+div.note,
+div.warning,
+div.tip,
+div.hint,
+div.seealso,
+div.important {
+    border: 1px solid var(--mlchem-border);
+    border-left: 4px solid var(--mlchem-accent);
+    background: var(--mlchem-surface);
+    border-radius: 3px;
+    padding: 0.6em 0.9em;
+    margin: 1em 0;
+}
+
+div.admonition > p.admonition-title,
+div.note > p.first,
+div.warning > p.first,
+div.tip > p.first {
+    font-variant: small-caps;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--mlchem-accent);
+    margin-bottom: 0.3em;
+}
+
+div.warning {
+    border-left-color: #b45309;
+}
+
+div.warning > p.admonition-title {
+    color: #b45309;
+}
+
+/* Heading hierarchy: bizstyle keeps h1/h2/h3 visually similar, so lift the
+   contrast between them. */
+div.body h1 {
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    border-bottom: 2px solid var(--mlchem-accent);
+    padding-bottom: 0.25em;
+    margin-top: 0;
+}
+
+div.body h2 {
+    font-size: 1.45em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--mlchem-border);
+    padding-bottom: 0.2em;
+    margin-top: 1.6em;
+}
+
+div.body h3 {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: var(--mlchem-accent-soft);
+    margin-top: 1.4em;
+}
+
+div.body h4 {
+    font-size: 1.02em;
+    font-weight: 600;
+    color: var(--mlchem-muted);
+}
+
+/* --- Autodoc API entries (classes / functions / methods) -------------- */
+/* Each `.. py:class::` / `.. py:function::` block is wrapped in a `dl.py`.
+   Treat its signature header as a "card" so each entry has clear edges. */
+dl.py > dt,
+dl.py > dt.sig {
+    background: var(--mlchem-surface);
+    border-left: 3px solid var(--mlchem-accent);
+    padding: 0.45em 0.7em;
+    margin-top: 1.2em;
+    border-radius: 2px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* The symbol name itself: bolder, slightly darker than the rest. */
+dl.py > dt .sig-name,
+dl.py > dt .descname {
+    font-weight: 700;
+    color: var(--mlchem-ink);
+}
+
+/* "class ", "property", "static", "classmethod" prefixes */
+dl.py > dt .property {
+    color: var(--mlchem-muted);
+    font-style: italic;
+    font-weight: 500;
+    margin-right: 0.25em;
+}
+
+/* Parameter names inside signatures */
+dl.py > dt em.sig-param > .n,
+dl.py > dt .sig-param .n {
+    font-style: normal;
+    color: var(--mlchem-ink);
+}
+
+/* --- Field lists: Parameters / Returns / Raises / Notes --------------- */
+dl.field-list > dt,
+.rst-content dl.field-list > dt {
+    font-variant: small-caps;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    color: var(--mlchem-accent);
+    padding-top: 0.2em;
+}
+
+/* Parameter entries: bold name, muted type annotation */
+dl.field-list dd p strong,
+dl.field-list dd li p strong {
+    color: var(--mlchem-ink);
+}
+
+dl.field-list dd p em.classifier,
+dl.field-list dd .classifier {
+    color: var(--mlchem-muted);
+    font-style: normal;
+}
+
+/* --- Inline code & literals ------------------------------------------- */
+code.literal,
+code.docutils.literal,
+tt.literal {
+    background: var(--mlchem-surface-alt);
+    border: 1px solid var(--mlchem-border);
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+    font-size: 0.92em;
+    color: var(--mlchem-accent);
+}
+
+/* Code blocks stay unboxed (Pygments handles them) but soften the border */
+div.highlight {
+    border: 1px solid var(--mlchem-border);
+    border-radius: 4px;
+}
+
+/* --- Tables ----------------------------------------------------------- */
+table.docutils {
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.95em;
+}
+
+table.docutils th,
+table.docutils td {
+    padding: 0.45em 0.7em;
+    border: 1px solid var(--mlchem-border);
+}
+
+table.docutils thead th {
+    background: var(--mlchem-surface);
+    color: var(--mlchem-accent);
+    font-weight: 700;
+    text-align: left;
+}
+
+table.docutils tbody tr:nth-child(even) {
+    background: var(--mlchem-surface);
 }
 
 /* On narrower screens, fall back to a stacked layout */
