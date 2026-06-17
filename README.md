@@ -125,13 +125,30 @@ The documentation is built with [Sphinx](https://www.sphinx-doc.org/) using the 
 
 > Single-source content: `docs/source/welcome.md` `{include}`s this README, so you only edit `README.md` — never duplicate content into the welcome page.
 
-Prerequisites (one-off): the documentation toolchain is part of `requirements.txt`, but if you only want the doc deps:
+### What is tracked, what is not
+
+Only the inputs and the published output are tracked in git:
+
+- **Tracked (do edit / commit)**
+  - `docs/source/` — Sphinx inputs (`conf.py`, `*.rst`, `welcome.md`, `_static/custom.css`).
+  - `docs/Makefile`, `docs/make.bat`, `docs/_publish.py` — build entry points.
+  - `docs/.nojekyll` — tells GitHub Pages to keep `_static/` and `_sources/`.
+  - `docs/*.html`, `docs/_static/`, `docs/_sources/`, `docs/_images/`, `docs/objects.inv`, `docs/searchindex.js` — the **published mirror** that GitHub Pages serves; updated automatically by `make html` via `_publish.py`.
+- **Not tracked (regenerated on every build, ignored via `.gitignore`)**
+  - `docs/build/` — Sphinx scratch output, including `build/html/.doctrees/` and `build/html/.buildinfo` incremental-build caches.
+  - `docs/*warnings*.{log,txt}` — ad-hoc diagnostic logs.
+
+### Prerequisites
+
+The documentation toolchain is part of `requirements.txt`. If you only want the doc deps:
 
 ```bash
 pip install sphinx myst-parser
 ```
 
-To rebuild and publish the docs, **run the commands from the `docs/` directory** (NOT from `docs/source/` — `source` is the value of `SOURCEDIR` inside the `Makefile` / `make.bat`, not the working directory):
+### Build & publish
+
+Run the commands from the `docs/` directory (NOT from `docs/source/` — `source` is the value of `SOURCEDIR` inside the `Makefile` / `make.bat`, not the working directory):
 
 ```bash
 # from the repository root
@@ -146,9 +163,11 @@ make html
 
 `make html` runs Sphinx and then invokes `_publish.py`, which:
 
-1. removes every stale published asset at the root of `docs/` (everything except `source/`, `build/`, `Makefile`, `make.bat`, `_publish.py`, `.nojekyll`);
+1. removes every stale published asset at the root of `docs/` (everything except `source/`, `build/`, `Makefile`, `make.bat`, `_publish.py`, `.nojekyll`, `.gitignore`);
 2. copies the freshly built site from `docs/build/html/` into `docs/`;
 3. ensures the `.nojekyll` marker is present so GitHub Pages keeps `_static/` and `_sources/`.
+
+Then commit the regenerated files at the root of `docs/` — that is what gets published. `docs/build/` stays local.
 
 If you ever build with a raw `sphinx-build` invocation, run the mirror step manually:
 
