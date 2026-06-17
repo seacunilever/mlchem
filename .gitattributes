@@ -1,9 +1,14 @@
-# GitHub Linguist override:
-# the built Sphinx site (docs/) is generated documentation, not the
-# repository's actual codebase. Keep it tracked and served by GitHub Pages,
-# but exclude it from the language statistics on the repo home page.
+# GitHub Linguist overrides
+# https://github.com/github-linguist/linguist/blob/main/docs/overrides.md
+# Note: .gitattributes does NOT support inline comments — keep comments on
+# their own lines, otherwise the trailing text breaks the rule.
 
-docs/**    linguist-generated=true                # don't include html docs in stats
-tests/**           linguist-generated=true        # any test artifact
-tests/**/*.py      linguist-generated=false       # keep .py test files
-examples/**/.html        linguist-generated=true  # chemical space html files
+# Built Sphinx site — generated documentation, not part of the codebase.
+docs/**                  linguist-generated=true
+
+# Test artefacts (HTML plots, fixtures, etc.) — keep .py test code counted.
+tests/**                 linguist-generated=true
+tests/**/*.py            linguist-generated=false
+
+# Plotly demo bundled with the chemical-space example.
+examples/**/*.html       linguist-generated=true
