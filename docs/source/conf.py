@@ -8,7 +8,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))  # Adjust if needed
+sys.path.insert(0, os.path.abspath('../../..'))  # parent of the package dir
 
 project = 'mlchem'
 copyright = '2025, Leonardo Contreas'
@@ -55,5 +55,9 @@ autodoc_default_options = {
     'undoc-members': True,
     'show-inheritance': True,
 }
+
+# Render the numpydoc "Methods" section as a styled description list instead
+# of letting Napoleon emit `.. method::` directives that collide with autodoc.
+napoleon_custom_sections = [('Methods', 'params_style')]
 
 toc_object_entries_show_parents = 'hide'
