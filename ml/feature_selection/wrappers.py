@@ -254,21 +254,22 @@ class SequentialForwardSelection:
         -----
         The automatic algorithm works as follows:
 
-        1. Calculate the standard deviation of the training, 
-        cross-validation, and unseen test scores for each feature subset.
+        1. Calculate the standard deviation of the training,
+           cross-validation, and unseen test scores for each feature subset.
         2. Initialise the best score and best index to zero.
-        3. Define coefficients for variability contribution, percentile, 
-        and contributions from training, cross-validation, and unseen test scores.
-        4. Iterate through each feature subset up to the maximum number 
-        of features:
-            - Add a variability contribution if the standard deviation is 
-            below a certain percentile.
-            - Add a geometric contribution based on the product of the 
-            training, cross-validation, and unseen test scores.
-            - Add the absolute difference between the training and unseen 
-            test scores.
-            - Update the best score and best index if the current total 
-            score is higher than the best score.
+        3. Define coefficients for variability contribution, percentile,
+           and contributions from training, cross-validation, and unseen test scores.
+        4. Iterate through each feature subset up to the maximum number
+           of features:
+
+           - Add a variability contribution if the standard deviation is
+             below a certain percentile.
+           - Add a geometric contribution based on the product of the
+             training, cross-validation, and unseen test scores.
+           - Add the absolute difference between the training and unseen
+             test scores.
+           - Update the best score and best index if the current total
+             score is higher than the best score.
         """
 
         if which is None:
@@ -582,8 +583,8 @@ class CombinatorialSelection:
         Notes
         -----
         - Generates all possible feature subsets of size `k`.
-        - Evaluates each subset using training, cross-validation, and 
-        test scores.
+        - Evaluates each subset using training, cross-validation, and
+          test scores.
         - Filters and ranks subsets based on geometric mean of scores.
         """
 

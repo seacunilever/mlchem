@@ -121,7 +121,7 @@ and rendering options.
 
 Parameters
 ----------
-mol_input : str or numpy.str_ or rdkit.Chem.rdchem.Mol
+mol_input : str or ``numpy.str_`` or rdkit.Chem.rdchem.Mol
     The molecule input as a SMILES string, numpy string, or RDKit Mol object.
 add_hydrogens : bool, optional
     Whether to add hydrogens to the molecule. Default is False.
@@ -5119,7 +5119,7 @@ Examples
 Check for anhydride groups in a molecule.
 
 The SMARTS pattern used to identify anhydride groups is
-``CX3[OX2][CX3].
+``[CX3](=[OX1])[OX2][CX3](=[OX1])``.
 
 Parameters
 ----------
@@ -5612,6 +5612,7 @@ Returns
 -------
 tuple[bool, list[int], tuple[str, str, str, str]]
     A tuple containing:
+
     - A boolean indicating whether any amine group was found.
     - A list of atom indices matching any of the amine group patterns.
     - A tuple of SMARTS strings representing the matched patterns for
