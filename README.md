@@ -93,6 +93,46 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
+## Compatibility checks (Python 3.12, 3.13, 3.14)
+
+This repository now includes a local matrix runner and CI workflow scaffold to
+keep cross-version support visible on every push.
+
+Current policy:
+
+- Python 3.12 and 3.13 are required to pass.
+- Python 3.14 is currently experimental (reported, not blocking).
+
+### Local matrix (default envs under ~/Envs)
+
+Run all environments with install + tests:
+
+```bash
+python scripts/run_local_matrix.py
+```
+
+Run matrix without reinstalling dependencies:
+
+```bash
+python scripts/run_local_matrix.py --skip-install -- -q tests
+```
+
+Strict mode (make Python 3.14 failures blocking):
+
+```bash
+python scripts/run_local_matrix.py --strict-314 -- -q tests
+```
+
+### tox entrypoint
+
+You can also run the same idea via tox:
+
+```bash
+tox -e py312,py313,py314
+```
+
+The `py314` tox environment is marked non-blocking during early adoption.
+
 ## Usage
 
 Here's some basic examples of how to use **mlchem**:
