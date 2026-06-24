@@ -35,12 +35,45 @@ def _python_path(env_root: Path) -> Path:
     return env_root / "Scripts" / "python.exe"
 
 
-def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True)
+def _run(
+    cmd: list[str],
+    cwd: Path,
+    live_output: bool,
+) -> subprocess.CompletedProcess[str]:
+    if not live_output:
+        return subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True)
+
+    process = subprocess.Popen(
+        cmd,
+        cwd=str(cwd),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    output_lines: list[str] = []
+    assert process.stdout is not None
+    for line in process.stdout:
+        output_lines.append(line)
+        print(line, end="")
+
+    returncode = process.wait()
+    output = "".join(output_lines)
+    return subprocess.CompletedProcess(args=cmd, returncode=returncode, stdout=output, stderr="")
 
 
-def _run_and_check(cmd: list[str], cwd: Path, label: str) -> tuple[bool, str]:
-    proc = _run(cmd, cwd)
+def _run_and_check(
+    cmd: list[str],
+    cwd: Path,
+    label: str,
+    live_output: bool,
+    version: str,
+) -> tuple[bool, str]:
+    if live_output:
+        print(f"\n[{version}] {label}: {' '.join(cmd)}")
+
+    proc = _run(cmd, cwd, live_output=live_output)
     if proc.returncode == 0:
         return True, ""
 
@@ -54,6 +87,7 @@ def run_matrix(
     pytest_args: list[str],
     allow_314_failure: bool,
     skip_install: bool,
+    live_output: bool,
 ) -> list[EnvResult]:
     results: list[EnvResult] = []
 
@@ -65,19 +99,41 @@ def run_matrix(
             results.append(EnvResult(version, "missing", f"Interpreter not found: {py}"))
             continue
 
+        if live_output:
+            mode = "skip-install" if skip_install else "full-install"
+            print(f"\n===== Python {version} ({mode}) =====")
+
         if not skip_install:
-            ok, detail = _run_and_check([str(py), "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"], REPO_ROOT, "bootstrap")
+            ok, detail = _run_and_check(
+                [str(py), "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"],
+                REPO_ROOT,
+                "bootstrap",
+                live_output,
+                version,
+            )
             if not ok:
                 results.append(EnvResult(version, "fail", f"pip bootstrap failed\n{detail}"))
                 continue
 
-            ok, detail = _run_and_check([str(py), "-m", "pip", "install", "-r", "requirements.txt"], REPO_ROOT, "deps")
+            ok, detail = _run_and_check(
+                [str(py), "-m", "pip", "install", "-r", "requirements.txt"],
+                REPO_ROOT,
+                "deps",
+                live_output,
+                version,
+            )
             if not ok:
                 status = "warn" if version == "3.14" and allow_314_failure else "fail"
                 results.append(EnvResult(version, status, f"dependency installation failed\n{detail}"))
                 continue
 
-            ok, detail = _run_and_check([str(py), "-m", "pip", "install", "-e", "."], REPO_ROOT, "editable")
+            ok, detail = _run_and_check(
+                [str(py), "-m", "pip", "install", "-e", "."],
+                REPO_ROOT,
+                "editable",
+                live_output,
+                version,
+            )
             if not ok:
                 status = "warn" if version == "3.14" and allow_314_failure else "fail"
                 results.append(EnvResult(version, status, f"editable install failed\n{detail}"))
@@ -92,14 +148,14 @@ def run_matrix(
                 "print('smoke-ok')"
             ),
         ]
-        ok, detail = _run_and_check(smoke, REPO_ROOT, "smoke")
+        ok, detail = _run_and_check(smoke, REPO_ROOT, "smoke", live_output, version)
         if not ok:
             status = "warn" if version == "3.14" and allow_314_failure else "fail"
             results.append(EnvResult(version, status, f"smoke import failed\n{detail}"))
             continue
 
         test_cmd = [str(py), "-m", "pytest"] + pytest_args
-        ok, detail = _run_and_check(test_cmd, REPO_ROOT, "tests")
+        ok, detail = _run_and_check(test_cmd, REPO_ROOT, "tests", live_output, version)
         if ok:
             results.append(EnvResult(version, "pass", ""))
         else:
@@ -150,9 +206,19 @@ def main() -> int:
         help="Override and fail when 3.14 fails.",
     )
     parser.add_argument(
+        "--full-install",
+        action="store_true",
+        help="Run pip install bootstrap and dependency installation before smoke/tests.",
+    )
+    parser.add_argument(
         "--skip-install",
         action="store_true",
-        help="Skip pip install steps and run smoke/tests only.",
+        help="Deprecated compatibility flag. Install steps are skipped by default.",
+    )
+    parser.add_argument(
+        "--live-output",
+        action="store_true",
+        help="Stream command output as each env and step runs.",
     )
     parser.add_argument(
         "pytest_args",
@@ -166,11 +232,14 @@ def main() -> int:
     if pytest_args and pytest_args[0] == "--":
         pytest_args = pytest_args[1:]
 
+    skip_install = not args.full_install
+
     results = run_matrix(
         versions=args.versions,
         pytest_args=pytest_args,
         allow_314_failure=allow_314_failure,
-        skip_install=args.skip_install,
+        skip_install=skip_install,
+        live_output=args.live_output,
     )
     print_summary(results)
 
