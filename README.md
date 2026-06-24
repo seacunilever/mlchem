@@ -105,22 +105,28 @@ Current policy:
 
 ### Local matrix (Windows envs under C:/Users/Leonardo.Contreas/Envs)
 
-Run all environments with install + tests:
+Run all environments in fast mode (default: no dependency reinstall):
 
 ```bash
 python scripts/run_local_matrix.py
 ```
 
-Run matrix without reinstalling dependencies:
+Run all environments with full dependency reinstall + tests:
 
 ```bash
-python scripts/run_local_matrix.py --skip-install -- -q tests
+python scripts/run_local_matrix.py --full-install -- -q tests
 ```
 
 Strict mode (make Python 3.14 failures blocking):
 
 ```bash
 python scripts/run_local_matrix.py --strict-314 -- -q tests
+```
+
+Live progress output (see each env/step and pytest output in real time):
+
+```bash
+python scripts/run_local_matrix.py --live-output -- -vv -ra -s -W default tests
 ```
 
 ### tox entrypoint
