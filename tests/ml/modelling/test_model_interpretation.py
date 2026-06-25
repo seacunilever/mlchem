@@ -242,8 +242,9 @@ def test_shap_explainer_tree_decision_plot(mock_decision_plot, mock_initjs, shap
 @patch('shap.initjs')
 @patch('shap.decision_plot')
 def test_shap_explainer_notree_decision_plot(mock_decision_plot, mock_initjs, shap_explainer_notree):
-    with pytest.raises(ValueError,match='Not supported yet for this non-tree model.'):
-        shap_explainer_notree.decision_plot(interval_lower=0.2, interval_upper=0.8)
+    shap_explainer_notree.decision_plot(interval_lower=0.2, interval_upper=0.8)
+    mock_initjs.assert_called_once()
+    mock_decision_plot.assert_called()
 
 
 @pytest.fixture
