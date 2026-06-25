@@ -649,7 +649,9 @@ prints classification statistics for the selected interval.
 
 Note
 ----
-Currently only supported for tree-based models.
+Supported for binary classifiers with predict_proba output. The method
+handles both tree and non-tree SHAP layouts and selects the positive class
+contributions when class-wise SHAP values are provided.
 
 Parameters
 ----------

@@ -9,11 +9,11 @@
     <title>mlchem &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6b1a2ad2" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
     <script src="_static/documentation_options.js?v=2709fde1"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -51,10 +51,10 @@
             
   <section id="mlchem">
 <h1>mlchem<a class="headerlink" href="#mlchem" title="Link to this heading">¶</a></h1>
-<p><a class="reference external" href="https://www.python.org/"><img alt="Static Badge" src="https://img.shields.io/badge/python_version-3.11,3.12,3.13-limegreen" /></a>
+<p><a class="reference external" href="https://www.python.org/"><img alt="Static Badge" src="https://img.shields.io/badge/python_version-3.12,3.13,3.14-limegreen" /></a>
 <a class="reference external" href="https://www.rdkit.org/"><img alt="Static Badge" src="https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black" /></a></p>
 <p><strong>mlchem</strong> is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
-The library has been tested for python 3.11, 3.12 and 3.13.</p>
+The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h2>
 <p>Available at <a class="reference external" href="https://seacunilever.github.io/mlchem/">seacunilever.github.io/mlchem</a>.</p>
@@ -148,6 +148,44 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
+</section>
+<section id="compatibility-checks-python-3-12-3-13-3-14">
+<h2>Compatibility checks (Python 3.12, 3.13, 3.14)<a class="headerlink" href="#compatibility-checks-python-3-12-3-13-3-14" title="Link to this heading">¶</a></h2>
+<p>This repository now includes a local matrix runner and CI workflow scaffold to
+keep cross-version support visible on every push.</p>
+<p>Current policy:</p>
+<ul class="simple">
+<li><p>Python 3.12 and 3.13 are required to pass.</p></li>
+<li><p>Python 3.14 is currently experimental (reported, not blocking).</p></li>
+</ul>
+<section id="local-matrix-windows-envs-under-c-users-leonardo-contreas-envs">
+<h3>Local matrix (Windows envs under C:/Users/Leonardo.Contreas/Envs)<a class="headerlink" href="#local-matrix-windows-envs-under-c-users-leonardo-contreas-envs" title="Link to this heading">¶</a></h3>
+<p>Run all environments in fast mode (default: no dependency reinstall):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py
+</pre></div>
+</div>
+<p>By default, the runner streams live progress (active env/step and pytest output).</p>
+<p>Run all environments with full dependency reinstall + tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--full-install<span class="w"> </span>--<span class="w"> </span>-q<span class="w"> </span>tests
+</pre></div>
+</div>
+<p>Strict mode (make Python 3.14 failures blocking):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--strict-314<span class="w"> </span>--<span class="w"> </span>-q<span class="w"> </span>tests
+</pre></div>
+</div>
+<p>Quiet mode (disable live streaming and print only summary):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--no-live-output<span class="w"> </span>--<span class="w"> </span>-q<span class="w"> </span>tests
+</pre></div>
+</div>
+</section>
+<section id="tox-entrypoint">
+<h3>tox entrypoint<a class="headerlink" href="#tox-entrypoint" title="Link to this heading">¶</a></h3>
+<p>You can also run the same idea via tox:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tox<span class="w"> </span>-e<span class="w"> </span>py312,py313,py314
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">py314</span></code> tox environment is marked non-blocking during early adoption.</p>
+</section>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
@@ -288,6 +326,11 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 </ul>
 </li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#compatibility-checks-python-3-12-3-13-3-14">Compatibility checks (Python 3.12, 3.13, 3.14)</a><ul>
+<li><a class="reference internal" href="#local-matrix-windows-envs-under-c-users-leonardo-contreas-envs">Local matrix (Windows envs under C:/Users/Leonardo.Contreas/Envs)</a></li>
+<li><a class="reference internal" href="#tox-entrypoint">tox entrypoint</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
 <li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
@@ -363,7 +406,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2025, Leonardo Contreas.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
   </body>
 </html>
