@@ -111,6 +111,8 @@ Run all environments in fast mode (default: no dependency reinstall):
 python scripts/run_local_matrix.py
 ```
 
+By default, the runner streams live progress (active env/step and pytest output).
+
 Run all environments with full dependency reinstall + tests:
 
 ```bash
@@ -123,10 +125,10 @@ Strict mode (make Python 3.14 failures blocking):
 python scripts/run_local_matrix.py --strict-314 -- -q tests
 ```
 
-Live progress output (see each env/step and pytest output in real time):
+Quiet mode (disable live streaming and print only summary):
 
 ```bash
-python scripts/run_local_matrix.py --live-output -- -vv -ra -s -W default tests
+python scripts/run_local_matrix.py --no-live-output -- -q tests
 ```
 
 ### tox entrypoint
