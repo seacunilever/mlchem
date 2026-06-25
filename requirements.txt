@@ -19,3 +19,4 @@ selfies==2.2.0
 shap==0.52.0
 sphinx==9.1.0
 umap-learn==0.5.12
+xgboost==3.3.0
