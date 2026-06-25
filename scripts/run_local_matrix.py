@@ -218,7 +218,14 @@ def main() -> int:
     parser.add_argument(
         "--live-output",
         action="store_true",
-        help="Stream command output as each env and step runs.",
+        default=True,
+        help="Stream command output as each env and step runs (default: enabled).",
+    )
+    parser.add_argument(
+        "--no-live-output",
+        action="store_false",
+        dest="live_output",
+        help="Disable live output streaming and only show final summary.",
     )
     parser.add_argument(
         "pytest_args",
