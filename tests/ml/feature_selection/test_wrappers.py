@@ -81,9 +81,10 @@ def test_sequential_forward_selection_find_best(fitted_sfs):
     assert 'features' in best_features
     assert len(best_features['features']) > 0
 
-def test_sequential_forward_selection_plot(fitted_sfs):
+def test_sequential_forward_selection_plot(fitted_sfs, tmp_path, monkeypatch):
     plt.close('all')
     plt.switch_backend('Agg')  # Use the Agg backend for testing
+    monkeypatch.chdir(tmp_path)
     with patch('matplotlib.pyplot.show') as mock_show:
         fitted_sfs.plot(best_feature=None,save=True)
         mock_show.assert_called_once()  # Ensure plt.show() is called

@@ -77,10 +77,11 @@ def test_crossval_regression(sample_data):
     assert isinstance(scores, np.ndarray)
     assert len(scores) == 5
 
-def test_y_scrambling(sample_data):
+def test_y_scrambling(sample_data, tmp_path, monkeypatch):
     train_set, y_train, test_set, y_test = sample_data
     estimator = LogisticRegression()
     metric_function = get_geometric_S
+    monkeypatch.chdir(tmp_path)
     
     with pytest.raises(ValueError):
         # Test with invalid number of iterations
