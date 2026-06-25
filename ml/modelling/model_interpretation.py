@@ -33,6 +33,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import warnings
 from typing import Literal, Iterable
 import pandas as pd
 from IPython.display import HTML
@@ -648,7 +649,9 @@ prints classification statistics for the selected interval.
 
 Note
 ----
-Currently only supported for tree-based models.
+Supported for binary classifiers with predict_proba output. The method
+handles both tree and non-tree SHAP layouts and selects the positive class
+contributions when class-wise SHAP values are provided.
 
 Parameters
 ----------
@@ -663,29 +666,92 @@ Returns
 None
 """
 
-        print("Scikit-learn version 1.6 modified the API around its 'tags', "
-              "and that's the cause of some known errors.\nXGBoost has made the"
-              "necessary changes in PR11021, but at present that hasn't "
-              "made it into a released version.\nYou can either keep your"
-              "sklearn version <1.6, or build XGBoost directly from github"
-              "(or upgrade XGBoost, after a new version is released)."
-              "\nIn sklearn 1.6.1, the error was downgraded to a warning "
-              "(to be returned to an error in 1.7). So you may also "
-              "install sklearn >=1.6.1,<1.7 and just expect DeprecationWarnings."
-              )
-
         import shap
         shap.initjs()
         from mlchem.helper import create_mask
 
-        self.misclassified = self.estimator.predict(self.data) != self.y
-        self.y_pred_proba = self.estimator.predict_proba(self.data)[:, 1]
+        n_samples = len(self.data)
+
+        def _select_binary_class_shap_values(shap_values_obj):
+            """Return a 2D SHAP matrix (n_samples, n_features), preferring class 1 when present."""
+            if isinstance(shap_values_obj, list):
+                if len(shap_values_obj) == 0:
+                    raise ValueError('Empty SHAP values list.')
+                class_index = 1 if len(shap_values_obj) > 1 else 0
+                return np.asarray(shap_values_obj[class_index])
+
+            shap_array = np.asarray(shap_values_obj)
+            if shap_array.ndim == 2:
+                return shap_array
+
+            if shap_array.ndim == 3:
+                # Common variants:
+                # (n_classes, n_samples, n_features)
+                if shap_array.shape[1] == n_samples:
+                    class_index = 1 if shap_array.shape[0] > 1 else 0
+                    return shap_array[class_index]
+
+                # (n_samples, n_features, n_classes)
+                if shap_array.shape[0] == n_samples:
+                    class_index = 1 if shap_array.shape[2] > 1 else 0
+                    return shap_array[:, :, class_index]
+
+            raise ValueError(
+                f'Unsupported SHAP value shape for decision plot: {shap_array.shape}'
+            )
+
+        def _select_binary_class_base_value(base_values_obj, mask):
+            """Return a scalar base value compatible with shap.decision_plot."""
+            if isinstance(base_values_obj, list):
+                if len(base_values_obj) == 0:
+                    raise ValueError('Empty base values list.')
+                class_index = 1 if len(base_values_obj) > 1 else 0
+                base_array = np.asarray(base_values_obj[class_index])
+            else:
+                base_array = np.asarray(base_values_obj)
+
+            if base_array.ndim == 0:
+                return float(base_array)
+
+            if base_array.ndim == 1:
+                if base_array.shape[0] == n_samples:
+                    return float(np.mean(base_array[mask]))
+                if base_array.shape[0] > 1:
+                    return float(base_array[1])
+                return float(base_array[0])
+
+            return float(np.mean(base_array))
+
+        try:
+            y_pred_proba = np.asarray(self.estimator.predict_proba(self.data))
+            self.y_pred_proba = y_pred_proba[:, 1] if y_pred_proba.ndim > 1 else y_pred_proba
+            self.y_pred = np.asarray(self.estimator.predict(self.data))
+        except Exception as exc:
+            raise RuntimeError(
+                    'Could not compute predictions for decision_plot with the current '
+                    'estimator/scikit-learn combination. Please raise a ticket in the github' 
+                    'repository page and rerun explain() before calling decision_plot().'
+                ) from exc
+
+
+        self.misclassified = self.y_pred != self.y
         self.mask = create_mask(
             np.array(self.y_pred_proba),
             interval_lower,
             interval_upper
         )
         self.samples_in_interval = np.array(self.y)[self.mask].shape[0]
+        if self.samples_in_interval == 0:
+            warnings.warn(
+                (
+                    f'No samples found in interval '
+                    f'{interval_lower:.2f} - {interval_upper:.2f}. '
+                    'Returning empty decision plot output.'
+                ),
+                RuntimeWarning,
+            )
+            return None
+
         self.misclassified_samples = self.misclassified[self.mask].sum()
         self.accuracy = 1 - (self.misclassified_samples /
                              self.samples_in_interval)
@@ -697,38 +763,21 @@ None
             f'{self.accuracy:.2f}'
         )
 
-        if self.is_tree:
-            if str(self.estimator).startswith('XGB'):
-                return shap.decision_plot(
-                    self.base_values,
-                    self.shap_values[self.mask],
-                    features=self.data,
-                    feature_order='hclust',
-                    highlight=self.misclassified[self.mask],
-                    ignore_warnings=True,
-                    link='logit'
-                )
-            else:
-                try:
-                    return shap.decision_plot(
-                        self.base_values[1],
-                        self.shap_values[1][self.mask],
-                        features=self.data,
-                        feature_order='hclust',
-                        highlight=self.misclassified[self.mask],
-                        ignore_warnings=True
-                    )
-                except IndexError:
-                    return shap.decision_plot(
-                        self.base_values,
-                        self.shap_values[self.mask],
-                        features=self.data,
-                        feature_order='hclust',
-                        highlight=self.misclassified[self.mask],
-                        ignore_warnings=True
-                    )
-        else:
-            raise ValueError('Not supported yet for this non-tree model.')
+        shap_matrix = _select_binary_class_shap_values(self.shap_values)
+        base_scalar = _select_binary_class_base_value(self.base_values, self.mask)
+
+        # SHAP values coming from XGBoost tree explainers are typically in log-odds.
+        link = 'logit' if str(self.estimator).startswith('XGB') else 'identity'
+
+        return shap.decision_plot(
+            base_scalar,
+            shap_matrix[self.mask],
+            features=self.data[self.mask],
+            feature_order='hclust',
+            highlight=self.misclassified[self.mask],
+            ignore_warnings=True,
+            link=link
+        )
 
 
 class DescriptorExplainer:

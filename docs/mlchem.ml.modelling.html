@@ -9,11 +9,11 @@
     <title>mlchem.ml.modelling package &#8212; mlchem 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=6b1a2ad2" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
     <script src="_static/documentation_options.js?v=2709fde1"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -60,7 +60,7 @@
 <span id="mlchem-ml-modelling-model-evaluation-module"></span><h3>mlchem.ml.modelling.model_evaluation module<a class="headerlink" href="#module-mlchem.ml.modelling.model_evaluation" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.ApplicabilityDomain">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ApplicabilityDomain</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ApplicabilityDomain</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class to calculate the leverage of data points in a dataset for
 applicability domain analysis.</p>
@@ -80,7 +80,7 @@ applicability domain based on a threshold.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">leverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">leverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.ApplicabilityDomain.leverage" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate leverage values for a dataset and determine applicability domain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -109,7 +109,7 @@ inclusion.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_evaluation.MajorityVote">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MajorityVote</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.MajorityVote" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MajorityVote</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_evaluation.MajorityVote" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>MajorityVote(train_set, test_set, y_train, y_test, task_type,
 estimator_list, column_list, estimator_names=[])</p>
@@ -234,7 +234,7 @@ model performance. More explained at <a class="reference external" href="https:/
 <span id="mlchem-ml-modelling-model-interpretation-module"></span><h3>mlchem.ml.modelling.model_interpretation module<a class="headerlink" href="#module-mlchem.ml.modelling.model_interpretation" title="Link to this heading">¶</a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.DescriptorExplainer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DescriptorExplainer</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DescriptorExplainer</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.DescriptorExplainer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class to perform feature selection and model evaluation using
 combinatorial selection methods.</p>
@@ -424,7 +424,7 @@ cross-validation to identify the best-performing combinations.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ShapExplainer</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ShapExplainer</span></span><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class to generate SHAP (SHapley Additive exPlanations) values for
 model interpretability.</p>
@@ -530,7 +530,9 @@ to model predictions for samples within a given probability interval. It also
 prints classification statistics for the selected interval.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Currently only supported for tree-based models.</p>
+<p>Supported for binary classifiers with predict_proba output. The method
+handles both tree and non-tree SHAP layouts and selects the positive class
+contributions when class-wise SHAP values are provided.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -852,7 +854,7 @@ the plot.</p>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2025, Leonardo Contreas.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
   </body>
 </html>
