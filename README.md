@@ -238,7 +238,7 @@ On Windows the same targets are dispatched through `make.bat`, so the commands w
 
 ## Contributing
 
-We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the guide (work in progress) on how to properly submit pull requests.
+We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the [contribution guide](CONTRIBUTING.md) on how to properly propose and submit changes.
 
 ## Third-Party Dependencies
 
