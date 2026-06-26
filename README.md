@@ -66,7 +66,7 @@ To install **mlchem**, open your command prompt and use the following command:
 pip install git+https://github.com/seacunilever/mlchem.git
 ```
 
-Alternatively, latest release from PiPy (not available yet):
+Alternatively, latest release from PyPI (not available yet):
 
 ```bash
 pip install mlchem
@@ -80,11 +80,16 @@ git clone https://github.com/seacunilever/mlchem
 cd mlchem
 
 # (Optional: create a virtual environment)
-python3 -m venv _venv
-. ./_venv/bin/activate
+python -m venv _venv
 
-# On Windows:
-use .\_venv\Scripts\activate
+# Activate on macOS/Linux:
+source _venv/bin/activate
+
+# Activate on Windows (PowerShell):
+.\_venv\Scripts\Activate.ps1
+
+# Activate on Windows (cmd.exe):
+_venv\Scripts\activate.bat
 
 # Make an editable install of mlchem from the source tree
 pip install -e .
@@ -136,7 +141,11 @@ python scripts/run_local_matrix.py --no-live-output -- -q tests
 You can also run the same idea via tox:
 
 ```bash
-tox -e py312,py313,py314
+python -m pip install tox
+```
+
+```bash
+python -m tox -e py312,py313,py314
 ```
 
 The `py314` tox environment is marked non-blocking during early adoption.
