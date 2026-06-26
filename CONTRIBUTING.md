@@ -55,6 +55,10 @@ python -m pip install -e .
 
 ## Run tests locally
 
+For everyday local work, `pytest -q` is the default and usually sufficient.
+Use `run_local_matrix.py` or `tox` when you need cross-version validation
+(for example, larger refactors, pre-merge checks, or maintainer/release work).
+
 Run the core suite:
 
 ```bash

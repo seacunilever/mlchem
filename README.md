@@ -103,6 +103,10 @@ pip install -r requirements.txt
 This repository now includes a local matrix runner and CI workflow scaffold to
 keep cross-version support visible on every push.
 
+For most local development, running `pytest -q` from repo root is enough. The commands in
+this section are mainly for maintainers, release checks, or contributors who
+want local parity with CI across multiple Python versions.
+
 Current policy:
 
 - Python 3.12 and 3.13 are required to pass.
