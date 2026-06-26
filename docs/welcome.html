@@ -158,6 +158,9 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <h2>Compatibility checks (Python 3.12, 3.13, 3.14)<a class="headerlink" href="#compatibility-checks-python-3-12-3-13-3-14" title="Link to this heading">¶</a></h2>
 <p>This repository now includes a local matrix runner and CI workflow scaffold to
 keep cross-version support visible on every push.</p>
+<p>For most local development, running <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-q</span></code> from repo root is enough. The commands in
+this section are mainly for maintainers, release checks, or contributors who
+want local parity with CI across multiple Python versions.</p>
 <p>Current policy:</p>
 <ul class="simple">
 <li><p>Python 3.12 and 3.13 are required to pass.</p></li>
@@ -291,7 +294,7 @@ make<span class="w"> </span>html
 </section>
 <section id="contributing">
 <h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
-<p>We welcome contributions to <strong>mlchem</strong>. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the guide (work in progress) on how to properly submit pull requests.</p>
+<p>We welcome contributions to <strong>mlchem</strong>. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the <a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/CONTRIBUTING.md">contribution guide</a> on how to properly propose and submit changes.</p>
 </section>
 <section id="third-party-dependencies">
 <h2>Third-Party Dependencies<a class="headerlink" href="#third-party-dependencies" title="Link to this heading">¶</a></h2>
