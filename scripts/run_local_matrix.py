@@ -264,12 +264,12 @@ def main() -> int:
     parser.add_argument(
         "pytest_args",
         nargs=argparse.REMAINDER,
-        help="Arguments passed to pytest (example: -- -q tests).",
+        help="Arguments passed to pytest (example: -- -vv tests).",
     )
     args = parser.parse_args()
 
     allow_314_failure = False if args.strict_314 else args.allow_314_failure
-    pytest_args = args.pytest_args if args.pytest_args else ["-q", "tests"]
+    pytest_args = args.pytest_args if args.pytest_args else ["-vv", "tests"]
     if pytest_args and pytest_args[0] == "--":
         pytest_args = pytest_args[1:]
 

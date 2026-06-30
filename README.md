@@ -103,9 +103,21 @@ pip install -r requirements.txt
 This repository now includes a local matrix runner and CI workflow scaffold to
 keep cross-version support visible on every push.
 
-For most local development, running `pytest -q` from repo root is enough. The commands in
+For most local development, running `pytest -vv` from repo root is enough. The commands in
 this section are mainly for maintainers, release checks, or contributors who
 want local parity with CI across multiple Python versions.
+
+Warning policy note:
+
+- A narrowly scoped `pytest` warning filter is used for an upstream SHAP
+  `PendingDeprecationWarning` (`shap.plots.colors._colors`) tied to matplotlib
+  colormap API changes.
+- Keep this filter temporary and remove it once SHAP resolves the upstream issue.
+- To periodically audit all warnings explicitly, run:
+
+```bash
+python -m pytest -vv tests -W default
+```
 
 Current policy:
 
@@ -125,19 +137,19 @@ By default, the runner streams live progress (active env/step and pytest output)
 Run all environments with full dependency reinstall + tests:
 
 ```bash
-python scripts/run_local_matrix.py --full-install -- -q tests
+python scripts/run_local_matrix.py --full-install -- -vv tests
 ```
 
 Strict mode (make Python 3.14 failures blocking):
 
 ```bash
-python scripts/run_local_matrix.py --strict-314 -- -q tests
+python scripts/run_local_matrix.py --strict-314 -- -vv tests
 ```
 
 Quiet mode (disable live streaming and print only summary):
 
 ```bash
-python scripts/run_local_matrix.py --no-live-output -- -q tests
+python scripts/run_local_matrix.py --no-live-output -- -vv tests
 ```
 
 ### tox entrypoint
