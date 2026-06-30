@@ -128,8 +128,22 @@ Current policy:
 
 Run all environments in fast mode (default: no dependency reinstall):
 
+From repository root:
+
 ```bash
 python scripts/run_local_matrix.py
+```
+
+From `scripts/` directory:
+
+```bash
+python run_local_matrix.py
+```
+
+On Windows, if output appears buffered/silent, use unbuffered mode:
+
+```bash
+py -u scripts/run_local_matrix.py
 ```
 
 By default, the runner streams live progress (active env/step and pytest output).
