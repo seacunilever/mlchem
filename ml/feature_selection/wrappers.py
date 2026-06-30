@@ -648,7 +648,9 @@ class CombinatorialSelection:
                     pass
                 else:
                     self.dict_results['feature_subsets'].append(subset)
-                    y_test_pred = self.estimator.predict(self.test_set[subset])
+                    y_test_pred = self.estimator.predict(
+                        self.test_set[subset].values
+                    )
                     test_score = self.metric(self.y_test, y_test_pred)
                     self.dict_results['training_score'].append(train_score)
                     self.dict_results['cv_score'].append(cv_score)
@@ -748,7 +750,9 @@ class CombinatorialSelection:
                     pass
                 else:
                     self.dict_results_2['feature_subsets'].append(subset)
-                    y_test_pred = self.estimator.predict(self.test_set[subset])
+                    y_test_pred = self.estimator.predict(
+                        self.test_set[subset].values
+                    )
                     test_score = self.metric(self.y_test, y_test_pred)
                     self.dict_results_2['training_score'].append(train_score)
                     self.dict_results_2['cv_score'].append(cv_score)

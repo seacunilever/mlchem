@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 from typing import Literal
+import warnings
 import pandas as pd
 
 
@@ -358,7 +359,13 @@ Returns
 None
 """
 
-        import umap
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                'ignore',
+                message='Tensorflow not installed; ParametricUMAP will be unavailable',
+                category=ImportWarning,
+            )
+            import umap
 
         if dict_params is None:
             if isinstance(neighbours_number_or_fraction, float):
@@ -373,7 +380,7 @@ None
             self.algorithm = umap.UMAP(
                 n_components=n_components,
                 n_neighbors=self.n_neighbours,
-                n_jobs=-1,
+                n_jobs=1,
                 random_state=random_state
             )
         else:
@@ -429,6 +436,7 @@ None
         if dict_params is None:
             self.algorithm = MDS(
                 n_components=n_components,
+                init='random',
                 n_jobs=-1,
                 random_state=random_state
             )

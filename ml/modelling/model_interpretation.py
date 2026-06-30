@@ -1010,7 +1010,9 @@ None
 
         else:
 
-            y_test_pred = self.estimator.predict(self.df_test[self.best_features])
+            y_test_pred = self.estimator.predict(
+                self.df_test[self.best_features].values
+            )
             confmat = confusion_matrix(self.target_test.values,y_test_pred)
             print(f'Train score: {list(self.df_results_stage_2.training_score)[subset_index]:.2f}')
             print(f'CV score: {list(self.df_results_stage_2.cv_score)[subset_index]:.2f}')
