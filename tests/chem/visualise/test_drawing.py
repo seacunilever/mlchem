@@ -35,6 +35,7 @@ import pytest
 from unittest.mock import patch
 from rdkit import Chem
 from PIL import Image
+import numpy as np
 from mlchem.chem.visualise.drawing import MolDrawer
 from mlchem.chem.manipulation import create_molecule
 
@@ -91,6 +92,83 @@ def test_show_images_grid(mol_drawer):
     with patch('mlchem.chem.visualise.drawing.MolDrawer.show_images_grid') as mock_display:
         mol_drawer.show_images_grid()
         assert mock_display.called
+
+
+def test_show_images_grid_invalid_empty_tile_colour_raises(mol_drawer):
+    with pytest.raises(AssertionError, match='is not a known colour'):
+        mol_drawer.show_images_grid(images=[], empty_tile_colour='not_a_colour')
+
+
+def test_show_images_grid_invalid_size_raises(mol_drawer):
+    with pytest.raises(AssertionError, match="'size' argument must have lenght == 2"):
+        mol_drawer.show_images_grid(images=[], size=[100])
+
+
+def test_draw_mol_requires_valid_molecule():
+    drawer = MolDrawer(mol=None)
+    with pytest.raises(AssertionError, match='No valid molecule was passed'):
+        drawer.draw_mol()
+
+
+def test_draw_mol_invalid_background_colour_string_raises(mol_drawer):
+    mol_drawer.update_drawing_options(backgroundColour='not_a_colour')
+    with pytest.raises(ValueError, match='not a valid colour'):
+        mol_drawer.draw_mol()
+
+
+def test_draw_mol_invalid_atom_palette_raises_assertion(mol_drawer):
+    mol_drawer.update_drawing_options(atomPalette='invalid_palette')
+    with pytest.raises(AssertionError, match="'atomPalette' property must be one of"):
+        mol_drawer.draw_mol()
+
+
+def test_draw_mol_invalid_highlight_colour_string_raises(mol_drawer):
+    mol_drawer.update_drawing_options(highlightColour='not_a_colour')
+    with pytest.raises(ValueError, match='not a valid colour'):
+        mol_drawer.draw_mol()
+
+
+def test_draw_mol_invalid_query_colour_string_raises(mol_drawer):
+    mol_drawer.update_drawing_options(queryColour='not_a_colour')
+    with pytest.raises(ValueError, match='not a valid colour'):
+        mol_drawer.draw_mol()
+
+
+def test_draw_mol_acs1996_mode_returns_image(mol_drawer):
+    img = mol_drawer.draw_mol(ACS1996_mode=True)
+    assert isinstance(img, Image.Image)
+
+
+def test_draw_mol_with_weight_circle_map_style_branch(mol_drawer):
+    atom_count = mol_drawer.mol.GetNumAtoms()
+    mol_drawer.update_drawing_options(
+        atomWeights=[0.5 if i % 2 == 0 else -0.4 for i in range(atom_count)],
+        mapStyle='C',
+        numContours=2,
+    )
+    img = mol_drawer.draw_mol()
+    assert isinstance(img, Image.Image)
+
+
+def test_draw_mol_with_custom_circle_shape_branch(mol_drawer):
+    mol_drawer.update_drawing_options(
+        shapeTypes=['circle'],
+        shapeSizes=[0.3],
+        shapeColours=['red'],
+        shapeCoords=[(0.0, 0.0)],
+    )
+    img = mol_drawer.draw_mol()
+    assert isinstance(img, Image.Image)
+
+
+def test_draw_mol_tuple_highlight_atoms_is_handled(mol_drawer):
+    img = mol_drawer.draw_mol(highlightAtoms=(0, 1))
+    assert isinstance(img, Image.Image)
+
+
+def test_draw_mol_numpy_highlight_atoms_is_handled(mol_drawer):
+    img = mol_drawer.draw_mol(highlightAtoms=np.array([0, 1]))
+    assert isinstance(img, Image.Image)
 
 if __name__ == "__main__":
     pytest.main()

@@ -34,9 +34,11 @@
 import pytest
 from rdkit import Chem
 from rdkit.Chem import Draw
+import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from mlchem.chem.visualise.simmaps import SimMaps
+from mlchem.chem.manipulation import create_molecule
 import matplotlib.pyplot as plt
 
 @pytest.fixture
@@ -83,6 +85,64 @@ def test_get_weights_from_fingerprint(sample_molecule):
     )
     assert isinstance(result, pd.DataFrame)
     assert 'Delta' in result.columns
+
+
+def test_get_weights_from_model_returns_array(sample_molecule, sample_estimator):
+    estimator_cols = ['m1', 'm2']
+    result = SimMaps.get_weights_from_model(
+        mol_input=sample_molecule,
+        estimator=sample_estimator,
+        estimator_cols=estimator_cols,
+        model_type='classification',
+        actual_val=0.5,
+        fp_type='m',
+        normalise=False,
+        return_df=False,
+    )
+    assert isinstance(result, np.ndarray)
+    assert len(result) == sample_molecule.GetNumAtoms()
+
+
+def test_get_weights_from_fingerprint_returns_array(sample_molecule):
+    result = SimMaps.get_weights_from_fingerprint(
+        refmol=sample_molecule,
+        probemol=sample_molecule,
+        fp_type='m',
+        similarity_metric='Dice',
+        normalise=False,
+        return_df=False,
+    )
+    assert isinstance(result, np.ndarray)
+    assert len(result) == sample_molecule.GetNumAtoms()
+
+
+def test_get_similarity_map_from_weights_requires_draw2d(sample_molecule):
+    with pytest.raises(ValueError, match='draw2d argument must be provided'):
+        SimMaps.get_similarity_map_from_weights(sample_molecule, [0.1, 0.2, 0.3], draw2d=None)
+
+
+def test_get_similarity_map_from_weights_rejects_too_few_atoms():
+    methane = Chem.MolFromSmiles('C')
+    with pytest.raises(ValueError, match='too few atoms'):
+        SimMaps.get_similarity_map_from_weights(
+            methane,
+            [0.1],
+            draw2d=Draw.MolDraw2DCairo(150, 100),
+        )
+
+
+def test_get_similarity_map_from_weights_with_string_colormap():
+    mol = create_molecule('CCO', is_3d=True)
+    weights = [0.3, -0.2, 0.1]
+    draw2d = Draw.MolDraw2DCairo(200, 160)
+    returned = SimMaps.get_similarity_map_from_weights(
+        mol=mol,
+        weights=weights,
+        colorMap='PiYG',
+        contour_colour='black',
+        draw2d=draw2d,
+    )
+    assert returned is draw2d
 
 
 if __name__ == "__main__":
