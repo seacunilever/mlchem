@@ -39,6 +39,7 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
           python -m pip install -e .
+          python -m pip install pytest-cov
 
       - name: Smoke imports
         run: |
@@ -55,7 +56,7 @@ jobs:
       - name: Generate coverage badge (py312 only)
         if: matrix.python-version == '3.12'
         run: |
-          python -m pip install anybadge pytest-cov
+          python -m pip install anybadge
           python - <<'PY'
           import xml.etree.ElementTree as ET
           pct = round(float(ET.parse('coverage.xml').getroot().get('branch-rate', 0.0)) * 100)
