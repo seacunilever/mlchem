@@ -2,6 +2,7 @@
 
 [![Static Badge](https://img.shields.io/badge/python_version-3.12,3.13,3.14-limegreen)](https://www.python.org/)
 [![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black)](https://www.rdkit.org/)
+[![Coverage](assets/coverage.svg)](assets/coverage.svg)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.12, 3.13 and 3.14 (experimental).
@@ -117,6 +118,13 @@ Warning policy note:
 
 ```bash
 python -m pytest -vv tests -W default
+```
+
+Coverage baseline (canonical: Python 3.12):
+
+```bash
+python -m pytest -vv tests --cov=mlchem --cov-branch --cov-report=term --cov-report=xml:coverage.xml
+python -m anybadge --label coverage --value 72 --file assets/coverage.svg 50=red 60=orange 70=yellow 80=yellowgreen 90=green
 ```
 
 Current policy:
