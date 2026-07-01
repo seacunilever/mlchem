@@ -123,8 +123,13 @@ python -m pytest -vv tests -W default
 Coverage baseline (canonical: Python 3.12):
 
 ```bash
-python -m pytest -vv tests --cov=mlchem --cov-branch --cov-report=term --cov-report=xml:coverage.xml
-python -m anybadge --label coverage --value 72 --file assets/coverage.svg 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+python -m pytest -vv tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
+python - <<'PY'
+import xml.etree.ElementTree as ET
+pct = round(float(ET.parse('coverage.xml').getroot().get('line-rate', 0.0)) * 100)
+print(pct)
+PY
+python -m anybadge --label coverage --value <PERCENT_FROM_PREVIOUS_COMMAND> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
 ```
 
 Current policy:
