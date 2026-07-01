@@ -67,7 +67,7 @@ To install **mlchem**, open your command prompt and use the following command:
 pip install git+https://github.com/seacunilever/mlchem.git
 ```
 
-Alternatively, latest release from PyPI (not available yet):
+When a release is published to PyPI, install with:
 
 ```bash
 pip install mlchem
@@ -104,9 +104,11 @@ pip install -r requirements.txt
 This repository now includes a local matrix runner and CI workflow scaffold to
 keep cross-version support visible on every push.
 
-For most local development, running `pytest -vv` from repo root is enough. The commands in
+For most local development, running `python -m pytest -vv tests` from repo root is enough. The commands in
 this section are mainly for maintainers, release checks, or contributors who
 want local parity with CI across multiple Python versions.
+
+Prerequisite for all commands below: activate your project virtual environment first.
 
 Warning policy note:
 
@@ -126,11 +128,13 @@ Coverage baseline (canonical: Python 3.12):
 python -m pytest -vv tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
 python - <<'PY'
 import xml.etree.ElementTree as ET
-pct = round(float(ET.parse('coverage.xml').getroot().get('line-rate', 0.0)) * 100)
+pct = round(float(ET.parse('coverage.xml').getroot().get('branch-rate', 0.0)) * 100)
 print(pct)
 PY
-python -m anybadge --label coverage --value <PERCENT_FROM_PREVIOUS_COMMAND> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+python -m anybadge --label "branch cov" --value <PERCENT_FROM_PREVIOUS_COMMAND> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
 ```
+
+Note: the badge in `assets/coverage.svg` is refreshed automatically by GitHub CI on push (py312 job), so local regeneration is optional and mainly useful for previewing changes before pushing.
 
 Current policy:
 
@@ -138,6 +142,8 @@ Current policy:
 - Python 3.14 is currently experimental (reported, not blocking).
 
 ### Local matrix (default envs under ~/Envs)
+
+The matrix helper expects existing Python environments (for example py312, py313, py314). If you do not use this layout, use the tox entrypoint below instead.
 
 Run all environments in fast mode (default: no dependency reinstall):
 
