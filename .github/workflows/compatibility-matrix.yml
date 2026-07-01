@@ -53,7 +53,7 @@ jobs:
             pytest -vv tests
           fi
 
-        - name: Generate coverage badges (py312 only)
+      - name: Generate coverage badges (py312 only)
         if: matrix.python-version == '3.12'
         run: |
           python -m pip install anybadge
