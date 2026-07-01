@@ -179,12 +179,13 @@ Examples
         from mlchem.ml.preprocessing.scaling import scale_df_standard
 
         if diversity_filter:
-            
-          assert (0. <= diversity_filter < 1.,
-                  "'diversity_filter' argument must be a float 0 <= x < 1.")
+            assert 0. <= diversity_filter < 1., (
+                "'diversity_filter' argument must be a float 0 <= x < 1."
+            )
         if collinearity_filter:
-          assert( 0. < collinearity_filter <= 1.,
-                "'collinearity_filter' argument must be a float 0 < x <= 1.")
+            assert 0. < collinearity_filter <= 1., (
+                "'collinearity_filter' argument must be a float 0 < x <= 1."
+            )
           
         if diversity_filter:
           print("Before filtering:", self.df_descriptors.shape)
