@@ -34,3 +34,6 @@ docs/build/
 # Sphinx warning logs produced ad-hoc when diagnosing the build.
 docs/*warnings*.log
 docs/*warnings*.txt
+
+# Local planning notes (keep private and untracked)
+TODO.md
