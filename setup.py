@@ -43,7 +43,7 @@ _subpkgs = find_packages(exclude=['tests', 'tests.*', 'docs', 'docs.*'])
 
 setup(
     name='mlchem',
-    version='0.1',
+    version='1.0.0',
     package_dir={'mlchem': '.'},
     packages=['mlchem'] + [f'mlchem.{p}' for p in _subpkgs],
     install_requires=requirements,
