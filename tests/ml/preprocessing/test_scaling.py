@@ -87,5 +87,31 @@ def test_transform_df_robust(sample_dataframe):
     assert transformed_df.shape == (3, 2)
     assert 'feature3' not in transformed_df.columns
 
+
+def test_scale_df_standard_zero_columns_preserved(sample_dataframe):
+    scaled_df, _ = scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
+    assert scaled_df.shape == sample_dataframe.shape
+
+
+def test_scale_df_standard_negative_columns_preserved_raises(sample_dataframe):
+    with pytest.raises(ValueError, match="must be >= 0"):
+        scale_df_standard(sample_dataframe, last_columns_to_preserve=-1)
+
+
+def test_scale_df_minmax_negative_columns_preserved_raises(sample_dataframe):
+    with pytest.raises(ValueError, match="must be >= 0"):
+        scale_df_minmax(sample_dataframe, last_columns_to_preserve=-1)
+
+
+def test_scale_df_robust_negative_columns_preserved_raises(sample_dataframe):
+    with pytest.raises(ValueError, match="must be >= 0"):
+        scale_df_robust(sample_dataframe, last_columns_to_preserve=-1)
+
+
+def test_transform_df_negative_columns_preserved_raises(sample_dataframe):
+    _, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
+    with pytest.raises(ValueError, match="must be >= 0"):
+        transform_df(sample_dataframe, scaler, last_columns_to_preserve=-1)
+
 if __name__ == "__main__":
     pytest.main()

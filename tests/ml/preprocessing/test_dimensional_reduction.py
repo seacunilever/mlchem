@@ -38,7 +38,8 @@ from mlchem.ml.preprocessing.dimensional_reduction import Compressor
 
 @pytest.fixture
 def sample_dataframe():
-    return pd.DataFrame(np.random.rand(100, 10), columns=[f'feature_{i}' for i in range(10)])
+    np.random.seed(1)
+    return pd.DataFrame(np.random.rand(30, 6), columns=[f'feature_{i}' for i in range(6)])
 
 @pytest.fixture
 def compressor(sample_dataframe):
@@ -57,7 +58,7 @@ def test_compress_PCA_components(compressor):
     assert compressor.dataframe_compressed.shape[1] == 3
 
 def test_compress_TSNE(compressor):
-    compressor.compress_TSNE(n_components=2)
+    compressor.compress_TSNE(n_components=2, neighbours_number_or_fraction=5)
     assert hasattr(compressor, 'X_compressed')
     assert hasattr(compressor, 'dataframe_compressed')
     assert compressor.dataframe_compressed.shape[1] == 2
@@ -91,6 +92,58 @@ def test_compress_ISOMAP(compressor):
     assert hasattr(compressor, 'X_compressed')
     assert hasattr(compressor, 'dataframe_compressed')
     assert compressor.dataframe_compressed.shape[1] == 2
+
+
+def test_compress_tsne_invalid_float_neighbours_raises(compressor):
+    with pytest.raises(AssertionError, match='must be between 0 and 1'):
+        compressor.compress_TSNE(n_components=2, neighbours_number_or_fraction=1.2)
+
+
+def test_compress_tsne_invalid_integer_neighbours_raises(compressor):
+    with pytest.raises(AssertionError, match='must be less than the number of samples'):
+        compressor.compress_TSNE(
+            n_components=2,
+            neighbours_number_or_fraction=len(compressor.dataframe)
+        )
+
+
+def test_compress_se_float_neighbours_path(compressor):
+    compressor.compress_SE(n_components=2, neighbours_number_or_fraction=0.3)
+    assert compressor.dataframe_compressed.shape[1] == 2
+
+
+def test_compress_umap_dict_params_and_custom_dataframe(sample_dataframe):
+    compressor = Compressor(dataframe=sample_dataframe.iloc[:20])
+    compressor.compress_UMAP(
+        n_components=2,
+        neighbours_number_or_fraction=5,
+        dataframe=sample_dataframe,
+        dict_params={
+            'n_components': 2,
+            'n_neighbors': 5,
+            'random_state': 1,
+            'n_jobs': 1,
+        },
+    )
+    assert compressor.dataframe_compressed.shape == (len(sample_dataframe), 2)
+
+
+def test_compress_mds_dict_params_path(compressor):
+    compressor.compress_MDS(
+        n_components=2,
+        dict_params={'n_components': 2, 'random_state': 1, 'init': 'random'}
+    )
+    assert compressor.dataframe_compressed.shape[1] == 2
+
+
+def test_compress_lle_invalid_float_neighbours_raises(compressor):
+    with pytest.raises(AssertionError, match='must be between 0 and 1'):
+        compressor.compress_LLE(n_components=2, neighbours_number_or_fraction=1.5)
+
+
+def test_compress_isomap_invalid_float_neighbours_raises(compressor):
+    with pytest.raises(AssertionError, match='must be between 0  and 1'):
+        compressor.compress_ISOMAP(n_components=2, neighbours_number_or_fraction=1.5)
 
 if __name__ == "__main__":
     pytest.main()

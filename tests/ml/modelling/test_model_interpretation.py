@@ -43,17 +43,17 @@ from mlchem.ml.modelling.model_interpretation import DescriptorExplainer
 from mlchem.metrics import get_rmse
 from sklearn.datasets import make_classification
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def sample_data():
     n_features = 10
-    X, y = make_classification(100, n_features, n_informative=4,random_state=1)
+    X, y = make_classification(60, n_features, n_informative=4, random_state=1)
     X = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(n_features)])
     return X, y
 
 @pytest.fixture
 def shap_explainer_tree(sample_data):
     X, y = sample_data
-    estimator = RandomForestClassifier()
+    estimator = RandomForestClassifier(n_estimators=20, random_state=1)
     estimator.fit(X, y)
     explainer = ShapExplainer(estimator=estimator, data=X, y=y, is_tree=True)
     explainer.explain()
@@ -62,7 +62,7 @@ def shap_explainer_tree(sample_data):
 @pytest.fixture
 def shap_explainer_notree(sample_data):
     X, y = sample_data
-    estimator = LogisticRegression()
+    estimator = LogisticRegression(max_iter=250, random_state=1)
     estimator.fit(X, y)
     explainer = ShapExplainer(estimator=estimator, data=X, y=y, is_tree=False)
     explainer.explain()
@@ -247,13 +247,63 @@ def test_shap_explainer_notree_decision_plot(mock_decision_plot, mock_initjs, sh
     mock_decision_plot.assert_called()
 
 
+@patch('shap.initjs')
+def test_shap_explainer_decision_plot_warns_when_interval_has_no_samples(mock_initjs, sample_data):
+    X, y = sample_data
+    estimator = LogisticRegression(max_iter=250, random_state=1)
+    estimator.fit(X, y)
+
+    explainer = ShapExplainer(estimator=estimator, data=X, y=y, is_tree=False)
+    explainer.base_values = np.zeros(len(X))
+    explainer.shap_values = np.zeros((len(X), X.shape[1]))
+
+    with pytest.warns(RuntimeWarning, match='No samples found in interval'):
+        result = explainer.decision_plot(interval_lower=2.0, interval_upper=3.0)
+    assert result is None
+    mock_initjs.assert_called_once()
+
+
+@patch('shap.initjs')
+def test_shap_explainer_decision_plot_raises_runtime_error_without_predict_proba(mock_initjs, sample_data):
+    X, y = sample_data
+
+    class BadEstimator:
+        def predict(self, data):
+            return np.zeros(len(data), dtype=int)
+
+    explainer = ShapExplainer(estimator=BadEstimator(), data=X, y=y, is_tree=False)
+    explainer.base_values = np.zeros(len(X))
+    explainer.shap_values = np.zeros((len(X), X.shape[1]))
+
+    with pytest.raises(RuntimeError, match='Could not compute predictions for decision_plot'):
+        explainer.decision_plot(interval_lower=0.2, interval_upper=0.8)
+    mock_initjs.assert_called_once()
+
+
+@patch('shap.initjs')
+@patch('shap.decision_plot')
+def test_shap_explainer_decision_plot_accepts_3d_shap_layout(mock_decision_plot, mock_initjs, sample_data):
+    X, y = sample_data
+    estimator = LogisticRegression(max_iter=250, random_state=1)
+    estimator.fit(X, y)
+
+    explainer = ShapExplainer(estimator=estimator, data=X, y=y, is_tree=False)
+    n_samples, n_features = X.shape
+    explainer.base_values = np.array([0.1, 0.2])
+    explainer.shap_values = np.random.rand(n_samples, n_features, 2)
+
+    explainer.decision_plot(interval_lower=0.2, interval_upper=0.8)
+    mock_initjs.assert_called_once()
+    mock_decision_plot.assert_called_once()
+
+
 @pytest.fixture
 def sample_data_descriptor_explainer():
     np.random.seed(1)
-    X_train = pd.DataFrame(np.random.rand(100, 10), columns=[f'feature_{i}' for i in range(10)])
-    y_train = pd.DataFrame(np.random.rand(100, 1), columns=['target'])
-    X_test = pd.DataFrame(np.random.rand(50, 10), columns=[f'feature_{i}' for i in range(10)])
-    y_test = pd.DataFrame(np.random.rand(50, 1), columns=['target'])
+    X_train = pd.DataFrame(np.random.rand(40, 6), columns=[f'feature_{i}' for i in range(6)])
+    y_train = pd.DataFrame(np.random.rand(40, 1), columns=['target'])
+    X_test = pd.DataFrame(np.random.rand(20, 6), columns=[f'feature_{i}' for i in range(6)])
+    y_test = pd.DataFrame(np.random.rand(20, 1), columns=['target'])
     return X_train, y_train, X_test, y_test
 
 @pytest.fixture
@@ -267,7 +317,7 @@ def descriptor_explainer(sample_data_descriptor_explainer):
 
 @pytest.fixture
 def stage_1_fitted_explainer(descriptor_explainer):
-    descriptor_explainer.fit_stage_1()
+    descriptor_explainer.fit_stage_1(cv_iter=2)
     return descriptor_explainer
 
 
@@ -277,14 +327,14 @@ def test_descriptor_explainer_fit_stage_1(stage_1_fitted_explainer):
 
 def test_descriptor_explainer_fit_stage_2(stage_1_fitted_explainer):
     assert not stage_1_fitted_explainer.df_results_stage_1.empty, "Stage 1 results are empty"
-    stage_1_fitted_explainer.fit_stage_2()
+    stage_1_fitted_explainer.fit_stage_2(top_n_subsets=4, cv_iter=2)
     assert hasattr(stage_1_fitted_explainer, 'df_results_stage_2')
     assert not stage_1_fitted_explainer.df_results_stage_2.empty, "Stage 2 results are empty"
 
 @patch('matplotlib.pyplot.show')
 def test_descriptor_explainer_display(mock_show, stage_1_fitted_explainer):
     assert not stage_1_fitted_explainer.df_results_stage_1.empty, "Stage 1 results are empty"
-    stage_1_fitted_explainer.fit_stage_2()
+    stage_1_fitted_explainer.fit_stage_2(top_n_subsets=4, cv_iter=2)
     assert not stage_1_fitted_explainer.df_results_stage_2.empty, "Stage 2 results are empty"
     # Ensure the best_features attribute is set correctly
     subset_index = 0
