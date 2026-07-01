@@ -2,7 +2,8 @@
 
 [![Static Badge](https://img.shields.io/badge/python_version-3.12,3.13,3.14-limegreen)](https://www.python.org/)
 [![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black)](https://www.rdkit.org/)
-[![Coverage](assets/coverage.svg)](assets/coverage.svg)
+[![Line Coverage](assets/coverage.svg)](assets/coverage.svg)
+[![Branch Coverage](assets/coverage-branch.svg)](assets/coverage-branch.svg)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.12, 3.13 and 3.14 (experimental).
@@ -128,13 +129,16 @@ Coverage baseline (canonical: Python 3.12):
 python -m pytest -vv tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
 python - <<'PY'
 import xml.etree.ElementTree as ET
-pct = round(float(ET.parse('coverage.xml').getroot().get('branch-rate', 0.0)) * 100)
-print(pct)
+root = ET.parse('coverage.xml').getroot()
+line_pct = round(float(root.get('line-rate', 0.0)) * 100)
+branch_pct = round(float(root.get('branch-rate', 0.0)) * 100)
+print(f'line={line_pct}, branch={branch_pct}')
 PY
-python -m anybadge --label "branch cov" --value <PERCENT_FROM_PREVIOUS_COMMAND> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+python -m anybadge --label "line cov" --value <LINE_PERCENT> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+python -m anybadge --label "branch cov" --value <BRANCH_PERCENT> --file assets/coverage-branch.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
 ```
 
-Note: the badge in `assets/coverage.svg` is refreshed automatically by GitHub CI on push (py312 job), so local regeneration is optional and mainly useful for previewing changes before pushing.
+Note: both badges (`assets/coverage.svg` for line coverage and `assets/coverage-branch.svg` for branch coverage) are refreshed automatically by GitHub CI on push (py312 job), so local regeneration is optional and mainly useful for previewing changes before pushing.
 
 Current policy:
 
