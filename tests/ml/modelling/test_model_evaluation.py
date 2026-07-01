@@ -38,6 +38,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_classification
 from mlchem.ml.modelling.model_evaluation import (crossval,
                                                   y_scrambling,
@@ -93,6 +94,23 @@ def test_y_scrambling(sample_data, tmp_path, monkeypatch):
             mock_show.assert_called_once()  # Ensure plt.show() is called
             plot = y_scrambling(estimator, train_set.values, y_train, test_set.values, y_test, metric_function, n_iter=100,plot=False)
             plt.savefig('y_scrambling_test_plot.png')
+
+def test_y_scrambling_with_dataframe_inputs(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    estimator = LogisticRegression(max_iter=250)
+    metric_function = get_geometric_S
+
+    # Exercise DataFrame input branch in y_scrambling conversion logic.
+    y_scrambling(
+        estimator,
+        train_set,
+        y_train,
+        test_set,
+        y_test,
+        metric_function,
+        n_iter=2,
+        plot=False,
+    )
 
 
 def test_leverage():
@@ -175,6 +193,44 @@ def test_majority_vote_predict(majority_vote_classification):
         assert not mv.final_results.empty
         assert 'accuracy_train' in mv.final_results.columns
         assert 'accuracy_test' in mv.final_results.columns
+
+
+@pytest.fixture
+def majority_vote_regression(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    y_train = y_train.astype(float)
+    y_test = y_test.astype(float)
+
+    est_1 = LinearRegression()
+    est_2 = LinearRegression()
+    estimator_list = [est_1, est_2]
+    column_list = [train_set.columns.tolist(), train_set.columns.tolist()]
+
+    return MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='regression',
+        estimator_list=estimator_list,
+        column_list=column_list,
+        estimator_names=[],
+    )
+
+
+def test_majority_vote_regression_fit_and_predict(majority_vote_regression):
+    mv = majority_vote_regression
+    mv.fit()
+
+    assert not mv.df_train_predictions.empty
+    assert not mv.df_test_predictions.empty
+
+    metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
+    mv.predict(metric=metric_function, metric_name='mae', n_estimators_max=2)
+
+    assert not mv.final_results.empty
+    assert 'mae_train' in mv.final_results.columns
+    assert 'mae_test' in mv.final_results.columns
 
 if __name__ == "__main__":
     pytest.main()

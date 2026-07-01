@@ -34,6 +34,7 @@
 import pytest
 import pandas as pd
 import numpy as np
+from unittest.mock import MagicMock
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler
 from mlchem.ml.preprocessing.scaling import scale_df_standard, scale_df_minmax, scale_df_robust, transform_df
 
@@ -112,6 +113,41 @@ def test_transform_df_negative_columns_preserved_raises(sample_dataframe):
     _, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
     with pytest.raises(ValueError, match="must be >= 0"):
         transform_df(sample_dataframe, scaler, last_columns_to_preserve=-1)
+
+
+def test_scale_df_standard_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
+    scaler = MagicMock()
+    scaler.fit_transform.side_effect = [IndexError('shape'), ValueError('bad data')]
+    monkeypatch.setattr('mlchem.ml.preprocessing.scaling.StandardScaler', lambda: scaler)
+
+    with pytest.raises(ValueError, match='Error in scaling data: bad data'):
+        scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
+
+
+def test_scale_df_minmax_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
+    scaler = MagicMock()
+    scaler.fit_transform.side_effect = [IndexError('shape'), ValueError('bad data')]
+    monkeypatch.setattr('mlchem.ml.preprocessing.scaling.MinMaxScaler', lambda: scaler)
+
+    with pytest.raises(ValueError, match='Error in scaling data: bad data'):
+        scale_df_minmax(sample_dataframe, last_columns_to_preserve=0)
+
+
+def test_scale_df_robust_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
+    scaler = MagicMock()
+    scaler.fit_transform.side_effect = [IndexError('shape'), ValueError('bad data')]
+    monkeypatch.setattr('mlchem.ml.preprocessing.scaling.RobustScaler', lambda: scaler)
+
+    with pytest.raises(ValueError, match='Error in scaling data: bad data'):
+        scale_df_robust(sample_dataframe, last_columns_to_preserve=0)
+
+
+def test_transform_df_wraps_scaler_valueerror(sample_dataframe):
+    scaler = MagicMock()
+    scaler.transform.side_effect = [IndexError('shape'), ValueError('bad data')]
+
+    with pytest.raises(ValueError, match='Error in scaling data: bad data'):
+        transform_df(sample_dataframe, scaler, last_columns_to_preserve=0)
 
 if __name__ == "__main__":
     pytest.main()
