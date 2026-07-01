@@ -57,12 +57,12 @@ jobs:
           import xml.etree.ElementTree as ET
           tree = ET.parse('coverage.xml')
           root = tree.getroot()
-          pct = round(float(root.get('line-rate', 0.0)) * 100)
+            pct = round(float(root.get('branch-rate', 0.0)) * 100)
           with open('.coverage_percent', 'w', encoding='utf-8') as f:
               f.write(str(pct))
-          print(f'coverage-percent={pct}')
+            print(f'branch-coverage-percent={pct}')
           PY
-          python -m anybadge --label coverage --value "$(cat .coverage_percent)" --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+            python -m anybadge --label "branch cov" --value "$(cat .coverage_percent)" --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
 
       - name: Commit refreshed coverage badge
         if: matrix.python-version == '3.12' && github.event_name == 'push'

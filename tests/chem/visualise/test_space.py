@@ -115,9 +115,10 @@ def test_reset_bokeh_tooltips(chemical_space):
     chemical_space.reset_bokeh_tooltips()
     assert chemical_space.bokeh_tooltips != {'tooltip': 'value'}
 
-def test_plot(chemical_space, monkeypatch):
+def test_plot(chemical_space, monkeypatch, tmp_path):
     show_mock = MagicMock()
     monkeypatch.setattr("bokeh.plotting.show", show_mock)
+    monkeypatch.chdir(tmp_path)
 
     chemical_space.process(diversity_filter=0, collinearity_filter=0.9, standardise=True)
     df_compressed = pd.DataFrame({
