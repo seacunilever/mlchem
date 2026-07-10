@@ -37,46 +37,82 @@ from PIL import Image
 
 class MolDrawer:
     """
-MolDrawer is a utility class for rendering molecular structures with
-customisable visual styles and annotations.
+Render molecules and image grids with configurable RDKit drawing options.
 
-This class provides a flexible interface for drawing molecules using RDKit,
-with support for highlighting atoms, adjusting drawing styles, displaying
-legends, and visualising similarity or weight maps.
+`MolDrawer` centralises drawing configuration (`drawing_options`) and provides
+helpers for:
+
+- single-molecule rendering (`draw_mol`),
+- palette preview (`show_palette`),
+- loading molecules/images (`load_mols`, `load_images`),
+- and gallery output (`show_images_grid`).
+
+The class can operate with:
+
+- mlchem defaults (`MLCHEM_DEFAULTS`),
+- RDKit defaults (`get_rdkit_defaults`),
+- and per-instance option overrides (`update_drawing_options`).
+
+Typical usage:
+
+>>> from rdkit import Chem
+>>> drawer = MolDrawer(size=[400, 300], legend="Example")
+>>> drawer.update_drawing_options(atomPalette='cdk', highlightColour='tomato')
+>>> mol = Chem.MolFromSmiles("CCO")
+>>> image = drawer.draw_mol(mol, highlightAtoms=[1])
+
+Batch usage:
+
+>>> drawer = MolDrawer(size=[300, 300])
+>>> drawer.load_mols([Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("c1ccccc1")])
+>>> drawer.show_images_grid(n_columns=2)
 
 Attributes
 ----------
 mol : rdkit.Chem.rdchem.Mol or None
-    The molecule to be drawn.
-highlightAtoms : list
-    List of atom indices to highlight.
-size : list[int, int]
-    Canvas size in pixels as [width, height].
+    Default molecule used by `draw_mol` when no molecule is passed.
+highlightAtoms : Iterable
+    Default atom indices to highlight when `draw_mol` receives none.
+size : Iterable
+    Default canvas size in pixels as `(width, height)`.
 legend : str
-    Text to display as a legend below the molecule.
+    Default legend used by `draw_mol` when none is passed.
+mol_list : list
+    Internal list of molecules accumulated via `load_mols`.
+highlightAtoms_list : list
+    History of highlight index sets used in drawing calls.
+size_list : list
+    History of canvas sizes used in drawing calls.
+legend_list : list
+    History of legends used in drawing calls.
+img_list : list[PIL.Image.Image]
+    Internal image collection used by `load_images`, `load_mols`, and
+    `show_images_grid`.
 colour_dictionary : dict
-    Predefined colour palette for drawing.
+    Named RGB palette imported from `mlchem.importables`.
 drawing_options : dict
-    Dictionary of default drawing parameters and visual styles.
+    Active drawing configuration (starts as a copy of `MLCHEM_DEFAULTS`).
 
 Methods
 -------
 __init__(...)
-    Initialise the MolDrawer with molecule, size, highlights, and legend.
+    Initialise the drawer and instance-level defaults.
+get_rdkit_defaults(...)
+    Return RDKit native drawing defaults as a dictionary.
 show_palette(...)
-    Display or save the colour palette used for drawing.
+    Visualise or save a colour dictionary.
 update_drawing_options(...)
-    Update drawing options using a dictionary or keyword arguments.
-reset_drawing_options()
-    Reset drawing options to their default values.
-draw_mol(...)
-    Render a single molecule with the current drawing settings.
+    Update instance drawing options via keyword arguments.
+reset_drawing_options(...)
+    Reset options to mlchem or RDKit defaults.
 load_images(...)
-    Load external images into the drawer.
+    Add one or more pre-rendered PIL images to the internal image list.
 load_mols(...)
-    Load molecules and generate their images.
+    Add molecules and immediately render/store their images.
 show_images_grid(...)
-    Display all loaded images in a grid layout.
+    Display and optionally save images as a tiled grid.
+draw_mol(...)
+    Render a single molecule with highlights, maps, and optional ACS style.
 """
     MLCHEM_DEFAULTS = {
 
@@ -349,25 +385,36 @@ show_images_grid(...)
                  size: Iterable = [300, 300],
                  legend: str = '') -> None:
         """
-Initialise the MolDrawer class for molecular visualisation.
+Initialise a `MolDrawer` instance and its default drawing state.
 
-This class sets up the molecule, drawing canvas, highlighting options,
-and default drawing styles for rendering molecular structures.
+The constructor stores defaults that are reused by `draw_mol` unless per-call
+arguments are provided.
 
 Parameters
 ----------
 mol : rdkit.Chem.rdchem.Mol or None, optional
-    The molecule to be drawn. Default is None.
+    Molecule to keep as instance default. If provided, `draw_mol()` can be
+    called without passing `mol`.
 highlightAtoms : Iterable, optional
-    List of atom indices to highlight. Default is an empty list.
+    Default atom indices for highlighting in `draw_mol`.
 size : Iterable, optional
-    Canvas size as (width, height) in pixels. Default is [300, 300].
+    Default canvas size as `(width, height)` in pixels.
 legend : str, optional
-    Text to display as a legend below the molecule. Default is an empty string.
+    Default legend text shown under molecules.
 
 Returns
 -------
 None
+
+Examples
+--------
+>>> from rdkit import Chem
+>>> drawer = MolDrawer(
+...     mol=Chem.MolFromSmiles("CCO"),
+...     highlightAtoms=[1],
+...     size=[400, 250],
+...     legend="Ethanol",
+... )
 """
 
 
@@ -394,28 +441,26 @@ None
         filename: str = '', size: Iterable = [1000, 300]
     ) -> Image.Image:
         """
-Display the colour palette used for molecular drawings.
+Display a colour palette as an image.
 
-This method visualises the colour palette as an image. If no palette is
-provided, the default `colour_dictionary` is used. The image can also be
-saved to a file.
+If `palette` is not provided, `self.colour_dictionary` is used.
 
 Parameters
 ----------
 palette : dict or None, optional
-    A dictionary mapping colour names to RGB values. If None, uses the
-    default palette from `self.colour_dictionary`.
+    Colour mapping `{name: (r, g, b)}`. When `None`, uses
+    `self.colour_dictionary`.
 save : bool, optional
-    If True, saves the palette image to a file. Default is False.
+    If `True`, write the generated image to `filename`.
 filename : str, optional
-    Filename to save the image if `save` is True. Default is an empty string.
+    Output path used when `save=True`.
 size : Iterable, optional
-    Size of the image in pixels as (width, height). Default is [1000, 300].
+    Output size in pixels as `(width, height)`.
 
 Returns
 -------
 PIL.Image.Image
-    The image object representing the colour palette.
+    Palette image.
 
 Examples
 --------
@@ -434,110 +479,31 @@ Examples
 
     def update_drawing_options(self, **args) -> None:
         """
-Update the RDKit drawing options.
+Update instance drawing options used by `draw_mol`.
 
-This method allows customisation of the molecule rendering style by updating
-the internal drawing options dictionary. Users can pass either a full or
-partial dictionary of options, or use keyword arguments directly.
+The provided keyword arguments are merged into `self.drawing_options`.
+Unknown keys are kept in the dictionary, but they only affect rendering if
+they are consumed in `draw_mol` or recognised by RDKit draw options.
 
 Parameters
 ----------
 **args : dict
-    Keyword arguments representing drawing options. These can include:
+    Keyword arguments overriding one or more entries from
+    `MolDrawer.MLCHEM_DEFAULTS`. Common groups include:
 
-    **Colours**
+    - Colours: `atomPalette`, `backgroundColour`, `highlightColour`,
+      `highlightAlpha`, `queryColour`, `annotationColour`.
+    - Style/layout: `bondLineWidth`, `baseFontSize`, `padding`, `rotate`.
+    - Similarity maps: `atomWeights`, `mapStyle`, `colourMap`, `mapRes`,
+      `numContours`.
+    - Optional shapes: `shapeTypes`, `shapeSizes`, `shapeColours`,
+      `shapeCoords`.
 
-    - atomPalette : str or dict, default='cdk'
-        Atom colour scheme. Options: 'avalon', 'cdk', 'bw', or a dictionary
-        mapping atomic numbers to RGB tuples.
-    - backgroundColour : str or tuple, default='white'
-        Background colour of the canvas.
-    - highlightColour : str or tuple, default='tomato'
-        Colour used for highlighting atoms or bonds.
-    - highlightAlpha : float, default=1
-        Transparency of the highlight colour (0 = transparent, 1 = opaque).
-    - queryColour : str or tuple, default='red'
-        Colour used for SMARTS query atoms.
-    - annotationColour : str or tuple, default='black'
-        Colour for annotations (e.g., atom/bond notes).
-
-    **Drawing Style Options**
-
-    - dummiesAreAttachments : bool, default=False
-    - addAtomIndices : bool, default=False
-    - addBondIndices : bool, default=False
-    - noAtomLabels : bool, default=False
-    - explicitMethyl : bool, default=False
-    - includeRadicals : bool, default=True
-    - useComplexQueryAtomSymbols : bool, default=True
-    - singleColourWedgeBonds : bool, default=False
-    - drawMolsSameScale : bool, default=False
-
-    **Highlighting**
-
-    - continuousHighlight : bool, default=True
-    - circleAtoms : bool, default=True
-    - atomHighlightsAreCircles : bool, default=True
-    - fillHighlights : bool, default=True
-    - highlightRadius : float, default=0.3
-    - highlightBondWidthMultiplier : float, default=10
-
-    **Stereochemistry**
-
-    - addStereoAnnotation : bool, default=False
-    - unspecifiedStereoIsUnknown : bool, default=False
-
-    **Fonts and Text**
-
-    - baseFontSize : float, default=0.6
-    - annotationFontScale : float, default=0.5
-    - legendFontSize : int, default=25
-    - fixedFontSize : int, default=-1
-    - minFontSize : int, default=6
-    - maxFontSize : int, default=40
-    - fontFile : str, default=''
-        Path to a custom font file.
-
-    **Bond Drawing Parameters**
-
-    - multipleBondOffset : float, default=0.15
-    - additionalAtomLabelPadding : float, default=0
-    - bondLineWidth : float, default=2
-    - scaleBondWidth : bool, default=False
-    - scaleHighlightBondWidth : bool, default=True
-    - fixedBondLength : float, default=-1
-
-    **Similarity Maps Parameters**
-
-    - atomWeights : list, default=[]
-    - mapStyle : {'GC', 'C'}, default='GC'
-    - colourMap : str or list of RGB tuples, default=None
-    - positiveColour : str or tuple, default='green'
-    - negativeColour : str or tuple, default='mediumvioletred'
-    - numContours : int, default=10
-    - weightAlpha : float, default=0.2
-    - scalingFactor : float, default=2
-    - minRadius : float, default=2
-    - maxRadius : float, default=30
-    - mapRes : float, default=0.5
-    - contourColour : str or tuple, default='black'
-    - contourWidth : float, default=1
-    - dashNegative : bool, default=True
-
-    **Optional Shapes**
-
-    - shapeTypes : list, default=[]
-    - shapeSizes : list, default=[]
-    - shapeColours : list, default=[]
-    - shapeCoords : list, default=[]
-
-    **Miscellaneous**
-
-    - clearBackground : bool, default=True
-    - prepareMolsBeforeDrawing : bool, default=True
-    - rotate : float, default=0
-    - padding : float, default=0.05
-    - atomLabelDeuteriumTritium : bool, default=False
+Notes
+-----
+- For a complete list of default option names and values, inspect
+  `MolDrawer.MLCHEM_DEFAULTS`.
+- The default `mapRes` in mlchem is `0.05`.
 
 Returns
 -------
@@ -556,12 +522,15 @@ Examples
 
     def reset_drawing_options(self, source: Literal['mlchem', 'rdkit'] = 'mlchem') -> None:
         """
-Reset the drawing options to their default values. It can be chosen between mlchem and rdkit defaults.
+Reset drawing options from a predefined source.
 
-This method reinitialises the internal drawing options dictionary to the
-default configuration defined in a fresh instance of the `MolDrawer` class.
-It is useful when you want to discard all customisations and revert to the
-original visual style.
+Parameters
+----------
+source : {'mlchem', 'rdkit'}, default='mlchem'
+    Reset source:
+
+    - `'mlchem'`: copy `MolDrawer.MLCHEM_DEFAULTS`.
+    - `'rdkit'`: use values returned by `get_rdkit_defaults()`.
 
 Returns
 -------
@@ -572,8 +541,7 @@ Examples
 >>> drawer = MolDrawer()
 >>> drawer.update_drawing_options(atomPalette='avalon', rotate=90)
 >>> drawer.reset_drawing_options(source='mlchem')  # Reverts to default mlchem settings
-OR
->>> drawer.reset_drawing_options(source='rdkit')  # Reverts to default rdkit native settings
+>>> drawer.reset_drawing_options(source='rdkit')  # Reverts to native RDKit defaults
 """
 
         if source=='mlchem':
@@ -586,17 +554,14 @@ OR
                     Iterable[Image.Image]
                     | Image.Image) -> None:
         """
-Load images into the drawer without adding molecules.
+Load one or more images into `self.img_list`.
 
-This method allows you to load one or more pre-rendered images into the
-MolDrawer instance. These images can be used for visualisation, layout
-composition, or exporting as part of a grid.
-This method is equivalent to overwrite the img_list attribute.
+The method appends to existing images and flattens nested iterables.
 
 Parameters
 ----------
 img_list : PIL.Image.Image or Iterable[PIL.Image.Image]
-    A single image or a list of images to be added to the drawer.
+    Single image or iterable of images to append.
 
 Returns
 -------
@@ -620,17 +585,16 @@ Examples
     def load_mols(self, mols:
                   Chem.rdchem.Mol | Iterable[Chem.rdchem.Mol]) -> None:
         """
-Load molecules and generate standard images in the drawer.
+Load molecules and render/store their images.
 
-This method accepts one or more RDKit molecule objects, stores them in the
-drawer, and generates their corresponding images using the default or
-customised drawing options. These images are stored internally and can be
-displayed later in a grid or individually.
+Molecules are appended to `self.mol_list`, then each molecule in the full
+stored list is rendered via a temporary `MolDrawer` and collected in
+`self.img_list`.
 
 Parameters
 ----------
 mols : rdkit.Chem.rdchem.Mol or Iterable[rdkit.Chem.rdchem.Mol]
-    A single molecule or an iterable of molecules to be loaded and rendered.
+    Single molecule or iterable of molecules.
 
 Returns
 -------
@@ -667,18 +631,15 @@ Examples
         filename: str = ''
     ) -> None:
         """
-Display all images arranged in a grid layout.
+Display a set of images as a tiled grid.
 
-This method arranges a list of images into a grid and displays them using
-IPython. It supports customisation of the number of columns, image size,
-spacing between images, and background colour for empty tiles. Optionally,
-the grid can be saved to a file.
+If `images` is `None`, the method uses `self.img_list`. The output is shown
+with `IPython.display.display` and can optionally be saved.
 
 Parameters
 ----------
 images : Iterable[PIL.Image.Image], optional
-    A list of images to be arranged in the grid. If None, uses the images
-    stored in `self.img_list`.
+    Images to arrange. If `None`, uses `self.img_list`.
 n_columns : int, default=4
     Number of columns in the grid layout.
 size : Iterable[int, int], optional
@@ -687,8 +648,8 @@ size : Iterable[int, int], optional
 buffer : int, default=5
     Space in pixels between images in the grid.
 empty_tile_colour : str, default='white'
-    Background colour for empty tiles. Must be a valid key in the
-    `colour_dictionary` attribute.
+    Background colour for empty grid tiles. Must be a key in
+    `self.colour_dictionary`.
 save : bool, default=False
     If True, saves the grid image to a file.
 filename : str, default=''
@@ -758,35 +719,54 @@ Examples
                  ACS1996_mode: bool = False
                  ) -> Image.Image:
         """
-Render and return an image of a single molecule using the current drawing options.
+Render and return a single molecule image.
 
-This method draws a molecule with optional atom highlighting, legend text,
-custom canvas size, and support for ACS 1996-style rendering. It uses the
-drawing configuration stored in the `MolDrawer` instance.
+The method applies the active `drawing_options`, supports atom highlighting,
+optional similarity maps (`mapStyle='GC'` or `'C'` when `atomWeights` are
+provided), optional custom shape overlays, and ACS 1996 styling.
 
 Parameters
 ----------
 mol : rdkit.Chem.rdchem.Mol, optional
-    The molecule to be drawn. If None, uses the molecule stored in `self.mol`.
+    Molecule to draw. If `None`, `self.mol` is used.
 legend : str, optional
-    Text to display below the molecule as a legend. Default is an empty string.
+    Legend text. If empty, `self.legend` is used.
 highlightAtoms : Iterable, optional
-    List of atom indices to highlight. Default is an empty list.
+    Atom indices to highlight. If empty, `self.highlightAtoms` is used.
 size : Iterable[int, int], optional
-    Canvas size in pixels as (width, height). If None, uses `self.size`.
+    Canvas size `(width, height)`. If `None`, `self.size` is used.
 ACS1996_mode : bool, default=False
-    If True, applies ACS 1996-style drawing conventions.
+    If `True`, draw using `Draw.DrawMoleculeACS1996`.
 
 Returns
 -------
 PIL.Image.Image
-    The rendered image of the molecule.
+    Rendered molecule image.
+
+Raises
+------
+AssertionError
+    If no molecule is available (`mol is None` and `self.mol is None`).
+ValueError
+    If a named colour is unknown.
+TypeError
+    If provided colour tuples/palettes are not valid.
 
 Examples
 --------
 >>> mol = Chem.MolFromSmiles("CCO")
 >>> drawer = MolDrawer()
 >>> img = drawer.draw_mol(mol, legend="Ethanol", highlightAtoms=[1])
+
+Use gaussian contour similarity map:
+
+>>> drawer.update_drawing_options(atomWeights=[0.1, -0.2, 0.3], mapStyle='GC')
+>>> img = drawer.draw_mol(mol)
+
+Use circle-style weight map:
+
+>>> drawer.update_drawing_options(atomWeights=[0.1, -0.2, 0.3], mapStyle='C')
+>>> img = drawer.draw_mol(mol)
 """
 
         from rdkit.Chem import Draw
