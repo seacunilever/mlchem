@@ -62,15 +62,39 @@
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MolDrawer</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>MolDrawer is a utility class for rendering molecular structures with
-customisable visual styles and annotations.</p>
-<p>This class provides a flexible interface for drawing molecules using RDKit,
-with support for highlighting atoms, adjusting drawing styles, displaying
-legends, and visualising similarity or weight maps.</p>
+<p>Render molecules and image grids with configurable RDKit drawing options.</p>
+<p><cite>MolDrawer</cite> centralises drawing configuration (<cite>drawing_options</cite>) and provides
+helpers for:</p>
+<ul class="simple">
+<li><p>single-molecule rendering (<cite>draw_mol</cite>),</p></li>
+<li><p>palette preview (<cite>show_palette</cite>),</p></li>
+<li><p>loading molecules/images (<cite>load_mols</cite>, <cite>load_images</cite>),</p></li>
+<li><p>and gallery output (<cite>show_images_grid</cite>).</p></li>
+</ul>
+<p>The class can operate with:</p>
+<ul class="simple">
+<li><p>mlchem defaults (<cite>MLCHEM_DEFAULTS</cite>),</p></li>
+<li><p>RDKit defaults (<cite>get_rdkit_defaults</cite>),</p></li>
+<li><p>and per-instance option overrides (<cite>update_drawing_options</cite>).</p></li>
+</ul>
+<p>Typical usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">400</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span> <span class="n">legend</span><span class="o">=</span><span class="s2">&quot;Example&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">update_drawing_options</span><span class="p">(</span><span class="n">atomPalette</span><span class="o">=</span><span class="s1">&#39;cdk&#39;</span><span class="p">,</span> <span class="n">highlightColour</span><span class="o">=</span><span class="s1">&#39;tomato&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">draw_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">highlightAtoms</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Batch usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">load_mols</span><span class="p">([</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">),</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;c1ccccc1&quot;</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">show_images_grid</span><span class="p">(</span><span class="n">n_columns</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.mol">
 <span class="sig-name descname"><span class="pre">mol</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.mol" title="Link to this definition">¶</a></dt>
-<dd><p>The molecule to be drawn.</p>
+<dd><p>Default molecule used by <cite>draw_mol</cite> when no molecule is passed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>rdkit.Chem.rdchem.Mol or None</p>
@@ -81,10 +105,10 @@ legends, and visualising similarity or weight maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.highlightAtoms">
 <span class="sig-name descname"><span class="pre">highlightAtoms</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.highlightAtoms" title="Link to this definition">¶</a></dt>
-<dd><p>List of atom indices to highlight.</p>
+<dd><p>Default atom indices to highlight when <cite>draw_mol</cite> receives none.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
+<dd class="field-odd"><p>Iterable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -92,10 +116,10 @@ legends, and visualising similarity or weight maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.size">
 <span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.size" title="Link to this definition">¶</a></dt>
-<dd><p>Canvas size in pixels as [width, height].</p>
+<dd><p>Default canvas size in pixels as <cite>(width, height)</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[int, int]</p>
+<dd class="field-odd"><p>Iterable</p>
 </dd>
 </dl>
 </dd></dl>
@@ -103,7 +127,7 @@ legends, and visualising similarity or weight maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.legend">
 <span class="sig-name descname"><span class="pre">legend</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.legend" title="Link to this definition">¶</a></dt>
-<dd><p>Text to display as a legend below the molecule.</p>
+<dd><p>Default legend used by <cite>draw_mol</cite> when none is passed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
@@ -112,9 +136,65 @@ legends, and visualising similarity or weight maps.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.mol_list">
+<span class="sig-name descname"><span class="pre">mol_list</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.mol_list" title="Link to this definition">¶</a></dt>
+<dd><p>Internal list of molecules accumulated via <cite>load_mols</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.highlightAtoms_list">
+<span class="sig-name descname"><span class="pre">highlightAtoms_list</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.highlightAtoms_list" title="Link to this definition">¶</a></dt>
+<dd><p>History of highlight index sets used in drawing calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.size_list">
+<span class="sig-name descname"><span class="pre">size_list</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.size_list" title="Link to this definition">¶</a></dt>
+<dd><p>History of canvas sizes used in drawing calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.legend_list">
+<span class="sig-name descname"><span class="pre">legend_list</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.legend_list" title="Link to this definition">¶</a></dt>
+<dd><p>History of legends used in drawing calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.img_list">
+<span class="sig-name descname"><span class="pre">img_list</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.img_list" title="Link to this definition">¶</a></dt>
+<dd><p>Internal image collection used by <cite>load_images</cite>, <cite>load_mols</cite>, and
+<cite>show_images_grid</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[PIL.Image.Image]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.colour_dictionary">
 <span class="sig-name descname"><span class="pre">colour_dictionary</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.colour_dictionary" title="Link to this definition">¶</a></dt>
-<dd><p>Predefined colour palette for drawing.</p>
+<dd><p>Named RGB palette imported from <cite>mlchem.importables</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
@@ -125,7 +205,7 @@ legends, and visualising similarity or weight maps.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.drawing_options">
 <span class="sig-name descname"><span class="pre">drawing_options</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.drawing_options" title="Link to this definition">¶</a></dt>
-<dd><p>Dictionary of drawing parameters and visual styles.</p>
+<dd><p>Active drawing configuration (starts as a copy of <cite>MLCHEM_DEFAULTS</cite>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
@@ -136,60 +216,84 @@ legends, and visualising similarity or weight maps.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Methods<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>__init__(…)</strong> – Initialise the MolDrawer with molecule, size, highlights, and legend.</p></li>
-<li><p><strong>show_palette(…)</strong> – Display or save the colour palette used for drawing.</p></li>
-<li><p><strong>update_drawing_options(…)</strong> – Update drawing options using a dictionary or keyword arguments.</p></li>
-<li><p><strong>reset_drawing_options()</strong> – Reset drawing options to their default values.</p></li>
-<li><p><strong>draw_mol(…)</strong> – Render a single molecule with the current drawing settings.</p></li>
-<li><p><strong>load_images(…)</strong> – Load external images into the drawer.</p></li>
-<li><p><strong>load_mols(…)</strong> – Load molecules and generate their images.</p></li>
-<li><p><strong>show_images_grid(…)</strong> – Display all loaded images in a grid layout.</p></li>
+<li><p><strong>__init__(…)</strong> – Initialise the drawer and instance-level defaults.</p></li>
+<li><p><strong>get_rdkit_defaults(…)</strong> – Return RDKit native drawing defaults as a dictionary.</p></li>
+<li><p><strong>show_palette(…)</strong> – Visualise or save a colour dictionary.</p></li>
+<li><p><strong>update_drawing_options(…)</strong> – Update instance drawing options via keyword arguments.</p></li>
+<li><p><strong>reset_drawing_options(…)</strong> – Reset options to mlchem or RDKit defaults.</p></li>
+<li><p><strong>load_images(…)</strong> – Add one or more pre-rendered PIL images to the internal image list.</p></li>
+<li><p><strong>load_mols(…)</strong> – Add molecules and immediately render/store their images.</p></li>
+<li><p><strong>show_images_grid(…)</strong> – Display and optionally save images as a tiled grid.</p></li>
+<li><p><strong>draw_mol(…)</strong> – Render a single molecule with highlights, maps, and optional ACS style.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.MLCHEM_DEFAULTS">
+<span class="sig-name descname"><span class="pre">MLCHEM_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'addAtomIndices':</span> <span class="pre">False,</span> <span class="pre">'addBondIndices':</span> <span class="pre">False,</span> <span class="pre">'addStereoAnnotation':</span> <span class="pre">False,</span> <span class="pre">'additionalAtomLabelPadding':</span> <span class="pre">0,</span> <span class="pre">'annotationColour':</span> <span class="pre">'black',</span> <span class="pre">'annotationFontScale':</span> <span class="pre">0.5,</span> <span class="pre">'atomHighlightsAreCircles':</span> <span class="pre">True,</span> <span class="pre">'atomLabelDeuteriumTritium':</span> <span class="pre">False,</span> <span class="pre">'atomPalette':</span> <span class="pre">'cdk',</span> <span class="pre">'atomWeights':</span> <span class="pre">[],</span> <span class="pre">'backgroundColour':</span> <span class="pre">'white',</span> <span class="pre">'baseFontSize':</span> <span class="pre">0.6,</span> <span class="pre">'bondLineWidth':</span> <span class="pre">2,</span> <span class="pre">'circleAtoms':</span> <span class="pre">True,</span> <span class="pre">'clearBackground':</span> <span class="pre">True,</span> <span class="pre">'colourMap':</span> <span class="pre">None,</span> <span class="pre">'continuousHighlight':</span> <span class="pre">True,</span> <span class="pre">'contourColour':</span> <span class="pre">'black',</span> <span class="pre">'contourWidth':</span> <span class="pre">1,</span> <span class="pre">'dashNegative':</span> <span class="pre">True,</span> <span class="pre">'drawMolsSameScale':</span> <span class="pre">False,</span> <span class="pre">'dummiesAreAttachments':</span> <span class="pre">False,</span> <span class="pre">'explicitMethyl':</span> <span class="pre">False,</span> <span class="pre">'fillHighlights':</span> <span class="pre">True,</span> <span class="pre">'fixedBondLength':</span> <span class="pre">-1,</span> <span class="pre">'fixedFontSize':</span> <span class="pre">-1,</span> <span class="pre">'fontFile':</span> <span class="pre">'',</span> <span class="pre">'highlightAlpha':</span> <span class="pre">1,</span> <span class="pre">'highlightBondWidthMultiplier':</span> <span class="pre">10,</span> <span class="pre">'highlightColour':</span> <span class="pre">'tomato',</span> <span class="pre">'highlightRadius':</span> <span class="pre">0.3,</span> <span class="pre">'includeRadicals':</span> <span class="pre">True,</span> <span class="pre">'legendFontSize':</span> <span class="pre">25,</span> <span class="pre">'mapRes':</span> <span class="pre">0.05,</span> <span class="pre">'mapStyle':</span> <span class="pre">'GC',</span> <span class="pre">'maxFontSize':</span> <span class="pre">40,</span> <span class="pre">'maxRadius':</span> <span class="pre">30,</span> <span class="pre">'minFontSize':</span> <span class="pre">6,</span> <span class="pre">'minRadius':</span> <span class="pre">2,</span> <span class="pre">'multipleBondOffset':</span> <span class="pre">0.15,</span> <span class="pre">'negativeColour':</span> <span class="pre">'mediumvioletred',</span> <span class="pre">'noAtomLabels':</span> <span class="pre">False,</span> <span class="pre">'numContours':</span> <span class="pre">10,</span> <span class="pre">'padding':</span> <span class="pre">0.05,</span> <span class="pre">'positiveColour':</span> <span class="pre">'green',</span> <span class="pre">'prepareMolsBeforeDrawing':</span> <span class="pre">True,</span> <span class="pre">'queryColour':</span> <span class="pre">'red',</span> <span class="pre">'rotate':</span> <span class="pre">0,</span> <span class="pre">'scaleBondWidth':</span> <span class="pre">False,</span> <span class="pre">'scaleHighlightBondWidth':</span> <span class="pre">True,</span> <span class="pre">'scalingFactor':</span> <span class="pre">2,</span> <span class="pre">'shapeColours':</span> <span class="pre">[],</span> <span class="pre">'shapeCoords':</span> <span class="pre">[],</span> <span class="pre">'shapeSizes':</span> <span class="pre">[],</span> <span class="pre">'shapeTypes':</span> <span class="pre">[],</span> <span class="pre">'singleColourWedgeBonds':</span> <span class="pre">False,</span> <span class="pre">'unspecifiedStereoIsUnknown':</span> <span class="pre">False,</span> <span class="pre">'useComplexQueryAtomSymbols':</span> <span class="pre">True,</span> <span class="pre">'weightAlpha':</span> <span class="pre">0.2}</span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.MLCHEM_DEFAULTS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlightAtoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[300,</span> <span class="pre">300]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialise the MolDrawer class for molecular visualisation.</p>
-<p>This class sets up the molecule, drawing canvas, highlighting options,
-and default drawing styles for rendering molecular structures.</p>
+<dd><p>Initialise a <cite>MolDrawer</cite> instance and its default drawing state.</p>
+<p>The constructor stores defaults that are reused by <cite>draw_mol</cite> unless per-call
+arguments are provided.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol</strong> (<em>rdkit.Chem.rdchem.Mol</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – The molecule to be drawn. Default is None.</p></li>
-<li><p><strong>highlightAtoms</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – List of atom indices to highlight. Default is an empty list.</p></li>
-<li><p><strong>size</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – Canvas size as (width, height) in pixels. Default is [300, 300].</p></li>
-<li><p><strong>legend</strong> (<em>str</em><em>, </em><em>optional</em>) – Text to display as a legend below the molecule. Default is an empty string.</p></li>
+<li><p><strong>mol</strong> (<em>rdkit.Chem.rdchem.Mol</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Molecule to keep as instance default. If provided, <cite>draw_mol()</cite> can be
+called without passing <cite>mol</cite>.</p></li>
+<li><p><strong>highlightAtoms</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – Default atom indices for highlighting in <cite>draw_mol</cite>.</p></li>
+<li><p><strong>size</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – Default canvas size as <cite>(width, height)</cite> in pixels.</p></li>
+<li><p><strong>legend</strong> (<em>str</em><em>, </em><em>optional</em>) – Default legend text shown under molecules.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">mol</span><span class="o">=</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">highlightAtoms</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">400</span><span class="p">,</span> <span class="mi">250</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">legend</span><span class="o">=</span><span class="s2">&quot;Ethanol&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.draw_mol">
 <span class="sig-name descname"><span class="pre">draw_mol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">highlightAtoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ACS1996_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.draw_mol" title="Link to this definition">¶</a></dt>
-<dd><p>Render and return an image of a single molecule using the current drawing options.</p>
-<p>This method draws a molecule with optional atom highlighting, legend text,
-custom canvas size, and support for ACS 1996-style rendering. It uses the
-drawing configuration stored in the <cite>MolDrawer</cite> instance.</p>
+<dd><p>Render and return a single molecule image.</p>
+<p>The method applies the active <cite>drawing_options</cite>, supports atom highlighting,
+optional similarity maps (<cite>mapStyle=’GC’</cite> or <cite>‘C’</cite> when <cite>atomWeights</cite> are
+provided), optional custom shape overlays, and ACS 1996 styling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol</strong> (<em>rdkit.Chem.rdchem.Mol</em><em>, </em><em>optional</em>) – The molecule to be drawn. If None, uses the molecule stored in <cite>self.mol</cite>.</p></li>
-<li><p><strong>legend</strong> (<em>str</em><em>, </em><em>optional</em>) – Text to display below the molecule as a legend. Default is an empty string.</p></li>
-<li><p><strong>highlightAtoms</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – List of atom indices to highlight. Default is an empty list.</p></li>
-<li><p><strong>size</strong> (<em>Iterable</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Canvas size in pixels as (width, height). If None, uses <cite>self.size</cite>.</p></li>
-<li><p><strong>ACS1996_mode</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, applies ACS 1996-style drawing conventions.</p></li>
+<li><p><strong>mol</strong> (<em>rdkit.Chem.rdchem.Mol</em><em>, </em><em>optional</em>) – Molecule to draw. If <cite>None</cite>, <cite>self.mol</cite> is used.</p></li>
+<li><p><strong>legend</strong> (<em>str</em><em>, </em><em>optional</em>) – Legend text. If empty, <cite>self.legend</cite> is used.</p></li>
+<li><p><strong>highlightAtoms</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – Atom indices to highlight. If empty, <cite>self.highlightAtoms</cite> is used.</p></li>
+<li><p><strong>size</strong> (<em>Iterable</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Canvas size <cite>(width, height)</cite>. If <cite>None</cite>, <cite>self.size</cite> is used.</p></li>
+<li><p><strong>ACS1996_mode</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If <cite>True</cite>, draw using <cite>Draw.DrawMoleculeACS1996</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The rendered image of the molecule.</p>
+<dd class="field-even"><p>Rendered molecule image.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PIL.Image.Image</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AssertionError</strong> – If no molecule is available (<cite>mol is None</cite> and <cite>self.mol is None</cite>).</p></li>
+<li><p><strong>ValueError</strong> – If a named colour is unknown.</p></li>
+<li><p><strong>TypeError</strong> – If provided colour tuples/palettes are not valid.</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -198,19 +302,43 @@ drawing configuration stored in the <cite>MolDrawer</cite> instance.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">draw_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="s2">&quot;Ethanol&quot;</span><span class="p">,</span> <span class="n">highlightAtoms</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 </pre></div>
 </div>
+<p>Use gaussian contour similarity map:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">update_drawing_options</span><span class="p">(</span><span class="n">atomWeights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="n">mapStyle</span><span class="o">=</span><span class="s1">&#39;GC&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">draw_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Use circle-style weight map:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">update_drawing_options</span><span class="p">(</span><span class="n">atomWeights</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="n">mapStyle</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">img</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">draw_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.get_rdkit_defaults">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_rdkit_defaults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.get_rdkit_defaults" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve the default RDKit drawing options.</p>
+<p>This method creates a temporary RDKit drawing context and reads the
+values from its drawOptions object. The returned dictionary can be
+used to compare or restore RDKit default drawing settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of RDKit drawing option names and default values.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[str, object]</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.load_images">
 <span class="sig-name descname"><span class="pre">load_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Image</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.load_images" title="Link to this definition">¶</a></dt>
-<dd><p>Load images into the drawer without adding molecules.</p>
-<p>This method allows you to load one or more pre-rendered images into the
-MolDrawer instance. These images can be used for visualisation, layout
-composition, or exporting as part of a grid.
-This method is equivalent to overwrite the img_list attribute.</p>
+<dd><p>Load one or more images into <cite>self.img_list</cite>.</p>
+<p>The method appends to existing images and flattens nested iterables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>img_list</strong> (<em>PIL.Image.Image</em><em> or </em><em>Iterable</em><em>[</em><em>PIL.Image.Image</em><em>]</em>) – A single image or a list of images to be added to the drawer.</p>
+<dd class="field-odd"><p><strong>img_list</strong> (<em>PIL.Image.Image</em><em> or </em><em>Iterable</em><em>[</em><em>PIL.Image.Image</em><em>]</em>) – Single image or iterable of images to append.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -231,14 +359,13 @@ This method is equivalent to overwrite the img_list attribute.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.load_mols">
 <span class="sig-name descname"><span class="pre">load_mols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.load_mols" title="Link to this definition">¶</a></dt>
-<dd><p>Load molecules and generate standard images in the drawer.</p>
-<p>This method accepts one or more RDKit molecule objects, stores them in the
-drawer, and generates their corresponding images using the default or
-customised drawing options. These images are stored internally and can be
-displayed later in a grid or individually.</p>
+<dd><p>Load molecules and render/store their images.</p>
+<p>Molecules are appended to <cite>self.mol_list</cite>, then each molecule in the full
+stored list is rendered via a temporary <cite>MolDrawer</cite> and collected in
+<cite>self.img_list</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mols</strong> (<em>rdkit.Chem.rdchem.Mol</em><em> or </em><em>Iterable</em><em>[</em><em>rdkit.Chem.rdchem.Mol</em><em>]</em>) – A single molecule or an iterable of molecules to be loaded and rendered.</p>
+<dd class="field-odd"><p><strong>mols</strong> (<em>rdkit.Chem.rdchem.Mol</em><em> or </em><em>Iterable</em><em>[</em><em>rdkit.Chem.rdchem.Mol</em><em>]</em>) – Single molecule or iterable of molecules.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
@@ -256,21 +383,26 @@ displayed later in a grid or individually.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options">
-<span class="sig-name descname"><span class="pre">reset_drawing_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options" title="Link to this definition">¶</a></dt>
-<dd><p>Reset the drawing options to their default values.</p>
-<p>This method reinitialises the internal drawing options dictionary to the
-default configuration defined in a fresh instance of the <cite>MolDrawer</cite> class.
-It is useful when you want to discard all customisations and revert to the
-original visual style.</p>
+<span class="sig-name descname"><span class="pre">reset_drawing_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mlchem'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'rdkit'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mlchem'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options" title="Link to this definition">¶</a></dt>
+<dd><p>Reset drawing options from a predefined source.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source</strong> (<em>{'mlchem'</em><em>, </em><em>'rdkit'}</em><em>, </em><em>default='mlchem'</em>) – <p>Reset source:</p>
+<ul class="simple">
+<li><p><cite>’mlchem’</cite>: copy <cite>MolDrawer.MLCHEM_DEFAULTS</cite>.</p></li>
+<li><p><cite>’rdkit’</cite>: use values returned by <cite>get_rdkit_defaults()</cite>.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">update_drawing_options</span><span class="p">(</span><span class="n">atomPalette</span><span class="o">=</span><span class="s1">&#39;avalon&#39;</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">reset_drawing_options</span><span class="p">()</span>  <span class="c1"># Reverts to default settings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">reset_drawing_options</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s1">&#39;mlchem&#39;</span><span class="p">)</span>  <span class="c1"># Reverts to default mlchem settings</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">drawer</span><span class="o">.</span><span class="n">reset_drawing_options</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s1">&#39;rdkit&#39;</span><span class="p">)</span>  <span class="c1"># Reverts to native RDKit defaults</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -278,22 +410,19 @@ original visual style.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.show_images_grid">
 <span class="sig-name descname"><span class="pre">show_images_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Image</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty_tile_colour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'white'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.show_images_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Display all images arranged in a grid layout.</p>
-<p>This method arranges a list of images into a grid and displays them using
-IPython. It supports customisation of the number of columns, image size,
-spacing between images, and background colour for empty tiles. Optionally,
-the grid can be saved to a file.</p>
+<dd><p>Display a set of images as a tiled grid.</p>
+<p>If <cite>images</cite> is <cite>None</cite>, the method uses <cite>self.img_list</cite>. The output is shown
+with <cite>IPython.display.display</cite> and can optionally be saved.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>images</strong> (<em>Iterable</em><em>[</em><em>PIL.Image.Image</em><em>]</em><em>, </em><em>optional</em>) – A list of images to be arranged in the grid. If None, uses the images
-stored in <cite>self.img_list</cite>.</p></li>
+<li><p><strong>images</strong> (<em>Iterable</em><em>[</em><em>PIL.Image.Image</em><em>]</em><em>, </em><em>optional</em>) – Images to arrange. If <cite>None</cite>, uses <cite>self.img_list</cite>.</p></li>
 <li><p><strong>n_columns</strong> (<em>int</em><em>, </em><em>default=4</em>) – Number of columns in the grid layout.</p></li>
 <li><p><strong>size</strong> (<em>Iterable</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Size of each image in pixels as (width, height). If None, uses the
 default size from <cite>self.size</cite>.</p></li>
 <li><p><strong>buffer</strong> (<em>int</em><em>, </em><em>default=5</em>) – Space in pixels between images in the grid.</p></li>
-<li><p><strong>empty_tile_colour</strong> (<em>str</em><em>, </em><em>default='white'</em>) – Background colour for empty tiles. Must be a valid key in the
-<cite>colour_dictionary</cite> attribute.</p></li>
+<li><p><strong>empty_tile_colour</strong> (<em>str</em><em>, </em><em>default='white'</em>) – Background colour for empty grid tiles. Must be a key in
+<cite>self.colour_dictionary</cite>.</p></li>
 <li><p><strong>save</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, saves the grid image to a file.</p></li>
 <li><p><strong>filename</strong> (<em>str</em><em>, </em><em>default=''</em>) – Filename to save the image if <cite>save</cite> is True.</p></li>
 </ul>
@@ -320,22 +449,20 @@ default size from <cite>self.size</cite>.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.show_palette">
 <span class="sig-name descname"><span class="pre">show_palette</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">palette</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[1000,</span> <span class="pre">300]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.show_palette" title="Link to this definition">¶</a></dt>
-<dd><p>Display the colour palette used for molecular drawings.</p>
-<p>This method visualises the colour palette as an image. If no palette is
-provided, the default <cite>colour_dictionary</cite> is used. The image can also be
-saved to a file.</p>
+<dd><p>Display a colour palette as an image.</p>
+<p>If <cite>palette</cite> is not provided, <cite>self.colour_dictionary</cite> is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>palette</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – A dictionary mapping colour names to RGB values. If None, uses the
-default palette from <cite>self.colour_dictionary</cite>.</p></li>
-<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, saves the palette image to a file. Default is False.</p></li>
-<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>optional</em>) – Filename to save the image if <cite>save</cite> is True. Default is an empty string.</p></li>
-<li><p><strong>size</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – Size of the image in pixels as (width, height). Default is [1000, 300].</p></li>
+<li><p><strong>palette</strong> (<em>dict</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Colour mapping <cite>{name: (r, g, b)}</cite>. When <cite>None</cite>, uses
+<cite>self.colour_dictionary</cite>.</p></li>
+<li><p><strong>save</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <cite>True</cite>, write the generated image to <cite>filename</cite>.</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em>, </em><em>optional</em>) – Output path used when <cite>save=True</cite>.</p></li>
+<li><p><strong>size</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – Output size in pixels as <cite>(width, height)</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The image object representing the colour palette.</p>
+<dd class="field-even"><p>Palette image.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>PIL.Image.Image</p>
@@ -352,132 +479,35 @@ default palette from <cite>self.colour_dictionary</cite>.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options">
 <span class="sig-name descname"><span class="pre">update_drawing_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options" title="Link to this definition">¶</a></dt>
-<dd><p>Update the RDKit drawing options.</p>
-<p>This method allows customisation of the molecule rendering style by updating
-the internal drawing options dictionary. Users can pass either a full or
-partial dictionary of options, or use keyword arguments directly.</p>
+<dd><p>Update instance drawing options used by <cite>draw_mol</cite>.</p>
+<p>The provided keyword arguments are merged into <cite>self.drawing_options</cite>.
+Unknown keys are kept in the dictionary, but they only affect rendering if
+they are consumed in <cite>draw_mol</cite> or recognised by RDKit draw options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>**args</strong> (<em>dict</em>) – <p>Keyword arguments representing drawing options. These can include:</p>
-<p><strong>Colours</strong></p>
+<dd class="field-odd"><p><strong>**args</strong> (<em>dict</em>) – <p>Keyword arguments overriding one or more entries from
+<cite>MolDrawer.MLCHEM_DEFAULTS</cite>. Common groups include:</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt>atomPalette<span class="classifier">str or dict, default=’cdk’</span></dt><dd><p>Atom colour scheme. Options: ‘avalon’, ‘cdk’, ‘bw’, or a dictionary
-mapping atomic numbers to RGB tuples.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>backgroundColour<span class="classifier">str or tuple, default=’white’</span></dt><dd><p>Background colour of the canvas.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>highlightColour<span class="classifier">str or tuple, default=’tomato’</span></dt><dd><p>Colour used for highlighting atoms or bonds.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>highlightAlpha<span class="classifier">float, default=1</span></dt><dd><p>Transparency of the highlight colour (0 = transparent, 1 = opaque).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>queryColour<span class="classifier">str or tuple, default=’red’</span></dt><dd><p>Colour used for SMARTS query atoms.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>annotationColour<span class="classifier">str or tuple, default=’black’</span></dt><dd><p>Colour for annotations (e.g., atom/bond notes).</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Drawing Style Options</strong></p>
-<ul class="simple">
-<li><p>dummiesAreAttachments : bool, default=False</p></li>
-<li><p>addAtomIndices : bool, default=False</p></li>
-<li><p>addBondIndices : bool, default=False</p></li>
-<li><p>noAtomLabels : bool, default=False</p></li>
-<li><p>explicitMethyl : bool, default=False</p></li>
-<li><p>includeRadicals : bool, default=True</p></li>
-<li><p>useComplexQueryAtomSymbols : bool, default=True</p></li>
-<li><p>singleColourWedgeBonds : bool, default=False</p></li>
-<li><p>drawMolsSameScale : bool, default=False</p></li>
-</ul>
-<p><strong>Highlighting</strong></p>
-<ul class="simple">
-<li><p>continuousHighlight : bool, default=True</p></li>
-<li><p>circleAtoms : bool, default=True</p></li>
-<li><p>atomHighlightsAreCircles : bool, default=True</p></li>
-<li><p>fillHighlights : bool, default=True</p></li>
-<li><p>highlightRadius : float, default=0.3</p></li>
-<li><p>highlightBondWidthMultiplier : float, default=10</p></li>
-</ul>
-<p><strong>Stereochemistry</strong></p>
-<ul class="simple">
-<li><p>addStereoAnnotation : bool, default=False</p></li>
-<li><p>unspecifiedStereoIsUnknown : bool, default=False</p></li>
-</ul>
-<p><strong>Fonts and Text</strong></p>
-<ul class="simple">
-<li><p>baseFontSize : float, default=0.6</p></li>
-<li><p>annotationFontScale : float, default=0.5</p></li>
-<li><p>legendFontSize : int, default=25</p></li>
-<li><p>fixedFontSize : int, default=-1</p></li>
-<li><p>minFontSize : int, default=6</p></li>
-<li><p>maxFontSize : int, default=40</p></li>
-<li><dl class="simple">
-<dt>fontFile<span class="classifier">str, default=’’</span></dt><dd><p>Path to a custom font file.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<p><strong>Bond Drawing Parameters</strong></p>
-<ul class="simple">
-<li><p>multipleBondOffset : float, default=0.15</p></li>
-<li><p>additionalAtomLabelPadding : float, default=0</p></li>
-<li><p>bondLineWidth : float, default=2</p></li>
-<li><p>scaleBondWidth : bool, default=False</p></li>
-<li><p>scaleHighlightBondWidth : bool, default=True</p></li>
-<li><p>fixedBondLength : float, default=-1</p></li>
-</ul>
-<p><strong>Similarity Maps Parameters</strong></p>
-<ul class="simple">
-<li><p>atomWeights : list, default=[]</p></li>
-<li><p>mapStyle : {‘GC’, ‘C’}, default=’GC’</p></li>
-<li><p>colourMap : str or list of RGB tuples, default=None</p></li>
-<li><p>positiveColour : str or tuple, default=’green’</p></li>
-<li><p>negativeColour : str or tuple, default=’mediumvioletred’</p></li>
-<li><p>numContours : int, default=10</p></li>
-<li><p>weightAlpha : float, default=0.2</p></li>
-<li><p>scalingFactor : float, default=2</p></li>
-<li><p>minRadius : float, default=2</p></li>
-<li><p>maxRadius : float, default=30</p></li>
-<li><p>mapRes : float, default=0.5</p></li>
-<li><p>contourColour : str or tuple, default=’black’</p></li>
-<li><p>contourWidth : float, default=1</p></li>
-<li><p>dashNegative : bool, default=True</p></li>
-</ul>
-<p><strong>Optional Shapes</strong></p>
-<ul class="simple">
-<li><p>shapeTypes : list, default=[]</p></li>
-<li><p>shapeSizes : list, default=[]</p></li>
-<li><p>shapeColours : list, default=[]</p></li>
-<li><p>shapeCoords : list, default=[]</p></li>
-</ul>
-<p><strong>Miscellaneous</strong></p>
-<ul class="simple">
-<li><p>clearBackground : bool, default=True</p></li>
-<li><p>prepareMolsBeforeDrawing : bool, default=True</p></li>
-<li><p>rotate : float, default=0</p></li>
-<li><p>padding : float, default=0.05</p></li>
-<li><p>atomLabelDeuteriumTritium : bool, default=False</p></li>
+<li><p>Colours: <cite>atomPalette</cite>, <cite>backgroundColour</cite>, <cite>highlightColour</cite>,
+<cite>highlightAlpha</cite>, <cite>queryColour</cite>, <cite>annotationColour</cite>.</p></li>
+<li><p>Style/layout: <cite>bondLineWidth</cite>, <cite>baseFontSize</cite>, <cite>padding</cite>, <cite>rotate</cite>.</p></li>
+<li><p>Similarity maps: <cite>atomWeights</cite>, <cite>mapStyle</cite>, <cite>colourMap</cite>, <cite>mapRes</cite>,
+<cite>numContours</cite>.</p></li>
+<li><p>Optional shapes: <cite>shapeTypes</cite>, <cite>shapeSizes</cite>, <cite>shapeColours</cite>,
+<cite>shapeCoords</cite>.</p></li>
 </ul>
 </p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>For a complete list of default option names and values, inspect
+<cite>MolDrawer.MLCHEM_DEFAULTS</cite>.</p></li>
+<li><p>The default <cite>mapRes</cite> in mlchem is <cite>0.05</cite>.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -953,10 +983,17 @@ such as title properties, legend properties, and axis properties.</p>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.highlightAtoms"><code class="docutils literal notranslate"><span class="pre">highlightAtoms</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.size"><code class="docutils literal notranslate"><span class="pre">size</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.legend"><code class="docutils literal notranslate"><span class="pre">legend</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.mol_list"><code class="docutils literal notranslate"><span class="pre">mol_list</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.highlightAtoms_list"><code class="docutils literal notranslate"><span class="pre">highlightAtoms_list</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.size_list"><code class="docutils literal notranslate"><span class="pre">size_list</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.legend_list"><code class="docutils literal notranslate"><span class="pre">legend_list</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.img_list"><code class="docutils literal notranslate"><span class="pre">img_list</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.colour_dictionary"><code class="docutils literal notranslate"><span class="pre">colour_dictionary</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.drawing_options"><code class="docutils literal notranslate"><span class="pre">drawing_options</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.MLCHEM_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">MLCHEM_DEFAULTS</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.draw_mol"><code class="docutils literal notranslate"><span class="pre">draw_mol()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.get_rdkit_defaults"><code class="docutils literal notranslate"><span class="pre">get_rdkit_defaults()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.load_images"><code class="docutils literal notranslate"><span class="pre">load_images()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.load_mols"><code class="docutils literal notranslate"><span class="pre">load_mols()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options"><code class="docutils literal notranslate"><span class="pre">reset_drawing_options()</span></code></a></li>

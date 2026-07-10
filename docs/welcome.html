@@ -52,7 +52,9 @@
   <section id="mlchem">
 <h1>mlchem<a class="headerlink" href="#mlchem" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://www.python.org/"><img alt="Static Badge" src="https://img.shields.io/badge/python_version-3.12,3.13,3.14-limegreen" /></a>
-<a class="reference external" href="https://www.rdkit.org/"><img alt="Static Badge" src="https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black" /></a></p>
+<a class="reference external" href="https://www.rdkit.org/"><img alt="Static Badge" src="https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black" /></a>
+<a class="reference internal" href="#assets/coverage.svg"><span class="xref myst"><img alt="Line Coverage" src="_images/coverage.svg" /></span></a>
+<a class="reference internal" href="#assets/coverage-branch.svg"><span class="xref myst"><img alt="Branch Coverage" src="_images/coverage-branch.svg" /></span></a></p>
 <p><strong>mlchem</strong> is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
 <section id="documentation">
@@ -125,7 +127,7 @@ The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/seacunilever/mlchem.git
 </pre></div>
 </div>
-<p>Alternatively, latest release from PyPI (not available yet):</p>
+<p>When a release is published to PyPI, install with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>mlchem
 </pre></div>
 </div>
@@ -158,9 +160,35 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <h2>Compatibility checks (Python 3.12, 3.13, 3.14)<a class="headerlink" href="#compatibility-checks-python-3-12-3-13-3-14" title="Link to this heading">¶</a></h2>
 <p>This repository now includes a local matrix runner and CI workflow scaffold to
 keep cross-version support visible on every push.</p>
-<p>For most local development, running <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-q</span></code> from repo root is enough. The commands in
+<p>For most local development, running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">tests</span></code> from repo root is enough. The commands in
 this section are mainly for maintainers, release checks, or contributors who
 want local parity with CI across multiple Python versions.</p>
+<p>Prerequisite for all commands below: activate your project virtual environment first.</p>
+<p>Warning policy note:</p>
+<ul class="simple">
+<li><p>A narrowly scoped <code class="docutils literal notranslate"><span class="pre">pytest</span></code> warning filter is used for an upstream SHAP
+<code class="docutils literal notranslate"><span class="pre">PendingDeprecationWarning</span></code> (<code class="docutils literal notranslate"><span class="pre">shap.plots.colors._colors</span></code>) tied to matplotlib
+colormap API changes.</p></li>
+<li><p>Keep this filter temporary and remove it once SHAP resolves the upstream issue.</p></li>
+<li><p>To periodically audit all warnings explicitly, run:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>tests<span class="w"> </span>-W<span class="w"> </span>default
+</pre></div>
+</div>
+<p>Coverage baseline (canonical: Python 3.12):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>tests<span class="w"> </span>--cov<span class="o">=</span>mlchem<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc<span class="w"> </span>--cov-branch<span class="w"> </span>--cov-report<span class="o">=</span>term<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml
+python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+<span class="s">import xml.etree.ElementTree as ET</span>
+<span class="s">root = ET.parse(&#39;coverage.xml&#39;).getroot()</span>
+<span class="s">line_pct = round(float(root.get(&#39;line-rate&#39;, 0.0)) * 100)</span>
+<span class="s">branch_pct = round(float(root.get(&#39;branch-rate&#39;, 0.0)) * 100)</span>
+<span class="s">print(f&#39;line={line_pct}, branch={branch_pct}&#39;)</span>
+<span class="s">PY</span>
+python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;line cov&quot;</span><span class="w"> </span>--value<span class="w"> </span>&lt;LINE_PERCENT&gt;<span class="w"> </span>--file<span class="w"> </span>assets/coverage.svg<span class="w"> </span>--overwrite<span class="w"> </span><span class="nv">50</span><span class="o">=</span>red<span class="w"> </span><span class="nv">60</span><span class="o">=</span>orange<span class="w"> </span><span class="nv">70</span><span class="o">=</span>yellow<span class="w"> </span><span class="nv">80</span><span class="o">=</span>yellowgreen<span class="w"> </span><span class="nv">90</span><span class="o">=</span>green
+python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;branch cov&quot;</span><span class="w"> </span>--value<span class="w"> </span>&lt;BRANCH_PERCENT&gt;<span class="w"> </span>--file<span class="w"> </span>assets/coverage-branch.svg<span class="w"> </span>--overwrite<span class="w"> </span><span class="nv">50</span><span class="o">=</span>red<span class="w"> </span><span class="nv">60</span><span class="o">=</span>orange<span class="w"> </span><span class="nv">70</span><span class="o">=</span>yellow<span class="w"> </span><span class="nv">80</span><span class="o">=</span>yellowgreen<span class="w"> </span><span class="nv">90</span><span class="o">=</span>green
+</pre></div>
+</div>
+<p>Note: both badges (<code class="docutils literal notranslate"><span class="pre">assets/coverage.svg</span></code> for line coverage and <code class="docutils literal notranslate"><span class="pre">assets/coverage-branch.svg</span></code> for branch coverage) are refreshed automatically by GitHub CI on push (py312 job), so local regeneration is optional and mainly useful for previewing changes before pushing.</p>
 <p>Current policy:</p>
 <ul class="simple">
 <li><p>Python 3.12 and 3.13 are required to pass.</p></li>
@@ -168,21 +196,31 @@ want local parity with CI across multiple Python versions.</p>
 </ul>
 <section id="local-matrix-default-envs-under-envs">
 <h3>Local matrix (default envs under ~/Envs)<a class="headerlink" href="#local-matrix-default-envs-under-envs" title="Link to this heading">¶</a></h3>
+<p>The matrix helper expects existing Python environments (for example py312, py313, py314). If you do not use this layout, use the tox entrypoint below instead.</p>
 <p>Run all environments in fast mode (default: no dependency reinstall):</p>
+<p>From repository root:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py
+</pre></div>
+</div>
+<p>From <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_local_matrix.py
+</pre></div>
+</div>
+<p>On Windows, if output appears buffered/silent, use unbuffered mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>py<span class="w"> </span>-u<span class="w"> </span>scripts/run_local_matrix.py
 </pre></div>
 </div>
 <p>By default, the runner streams live progress (active env/step and pytest output).</p>
 <p>Run all environments with full dependency reinstall + tests:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--full-install<span class="w"> </span>--<span class="w"> </span>-q<span class="w"> </span>tests
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--full-install<span class="w"> </span>--<span class="w"> </span>-vv<span class="w"> </span>tests
 </pre></div>
 </div>
 <p>Strict mode (make Python 3.14 failures blocking):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--strict-314<span class="w"> </span>--<span class="w"> </span>-q<span class="w"> </span>tests
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--strict-314<span class="w"> </span>--<span class="w"> </span>-vv<span class="w"> </span>tests
 </pre></div>
 </div>
 <p>Quiet mode (disable live streaming and print only summary):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--no-live-output<span class="w"> </span>--<span class="w"> </span>-q<span class="w"> </span>tests
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--no-live-output<span class="w"> </span>--<span class="w"> </span>-vv<span class="w"> </span>tests
 </pre></div>
 </div>
 </section>
