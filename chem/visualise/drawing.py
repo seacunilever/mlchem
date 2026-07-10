@@ -925,7 +925,7 @@ Examples
                 except Exception:
                     print("Problem encountered with the '%s' option. "
                           "Please disable it in the original definition"
-                          " in self.drawing_options attribute.")
+                          " in self.drawing_options attribute." % option)
 
         background_colour = self.drawing_options['backgroundColour']
         assert (isinstance(background_colour, str) or
