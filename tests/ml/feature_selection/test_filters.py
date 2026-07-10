@@ -78,5 +78,54 @@ def test_diversity_filter(sample_data):
     assert 'feature4' not in filtered_df.columns
     assert 'target' in filtered_df.columns
 
+
+def test_collinearity_filter_overlapping_clusters_without_target():
+    data = pd.DataFrame(
+        {
+            'a1': [1, 2, 3, 4, 5],
+            'a2': [2, 4, 6, 8, 10],
+            'b1': [5, 4, 3, 2, 1],
+            'b2': [10, 8, 6, 4, 2],
+            'c': [1, 0, 1, 0, 1],
+        }
+    )
+    filtered_df = collinearity_filter(data, threshold=0.9)
+
+    assert 'a1' in filtered_df.columns
+    assert 'a2' not in filtered_df.columns
+    assert 'b1' not in filtered_df.columns
+    assert 'b2' not in filtered_df.columns
+    assert 'c' in filtered_df.columns
+
+
+def test_collinearity_filter_with_target_removes_perfect_target_correlations():
+    data = pd.DataFrame(
+        {
+            'f1': [0, 1, 0, 1, 0],
+            'f2': [0, 1, 0, 1, 0],
+            'target': [0, 1, 0, 1, 0],
+        }
+    )
+    filtered_df = collinearity_filter(
+        data,
+        threshold=0.8,
+        target_variable='target',
+    )
+
+    assert list(filtered_df.columns) == ['target']
+
+
+def test_diversity_filter_preserves_target_even_when_low_diversity():
+    data = pd.DataFrame(
+        {
+            'feature1': [1, 1, 1, 1, 1],
+            'feature2': [2, 2, 2, 2, 2],
+            'target': [0, 0, 0, 0, 0],
+        }
+    )
+    filtered_df = diversity_filter(data, threshold=0.8, target_variable='target')
+
+    assert list(filtered_df.columns) == ['target']
+
 if __name__ == "__main__":
     pytest.main()

@@ -71,10 +71,11 @@ def test_crossval_classification(sample_data):
 
 def test_crossval_regression(sample_data):
     train_set, y_train, _, _ = sample_data
-    estimator = LogisticRegression()
-    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
-    
-    scores = crossval(estimator, train_set.values, y_train, metric_function, n_fold=5, task_type='regression')
+    estimator = LinearRegression()
+    y_train_reg = y_train.astype(float)
+    metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
+
+    scores = crossval(estimator, train_set.values, y_train_reg, metric_function, n_fold=5, task_type='regression')
     assert isinstance(scores, np.ndarray)
     assert len(scores) == 5
 
@@ -84,7 +85,7 @@ def test_y_scrambling(sample_data, tmp_path, monkeypatch):
     metric_function = get_geometric_S
     monkeypatch.chdir(tmp_path)
     
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='empty'):
         # Test with invalid number of iterations
         y_scrambling(estimator, train_set.values, y_train, test_set.values, y_test, metric_function, n_iter=-1)
 

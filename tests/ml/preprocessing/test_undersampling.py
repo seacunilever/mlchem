@@ -33,6 +33,7 @@
 
 import pytest
 import pandas as pd
+from unittest.mock import patch
 from mlchem.ml.preprocessing.undersampling import check_class_balance, undersample
 
 @pytest.fixture
@@ -80,6 +81,89 @@ def test_undersample_add_dropped_to_test(sample_data):
     )
     assert len(undersampled_train_set) == 4
     assert len(undersampled_test_set) == 11
+
+
+@pytest.mark.xfail(strict=True, reason="undersample should validate ratio bounds explicitly")
+def test_undersample_ratio_equal_1_raises_valueerror(sample_data):
+    train_set, test_set = sample_data
+    with pytest.raises(ValueError):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=1.0,
+            add_dropped_to_test=False,
+            random_seed=1,
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="undersample should validate ratio bounds explicitly")
+def test_undersample_ratio_zero_raises_valueerror(sample_data):
+    train_set, test_set = sample_data
+    with pytest.raises(ValueError):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=0.0,
+            add_dropped_to_test=False,
+            random_seed=1,
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="undersample should validate ratio bounds explicitly")
+def test_undersample_ratio_negative_raises_valueerror(sample_data):
+    train_set, test_set = sample_data
+    with pytest.raises(ValueError):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=-0.2,
+            add_dropped_to_test=False,
+            random_seed=1,
+        )
+
+
+def test_undersample_ratio_above_one_raises_valueerror(sample_data):
+    train_set, test_set = sample_data
+    with pytest.raises(ValueError):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=1.2,
+            add_dropped_to_test=False,
+            random_seed=1,
+        )
+
+
+@pytest.mark.xfail(strict=True, reason="undersample should normalize sampling errors into a clear ValueError")
+def test_undersample_cycles_exceed_majority_raises_clean_error(sample_data):
+    train_set, test_set = sample_data
+    with pytest.raises(ValueError, match="Invalid undersampling configuration"):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=1.2,
+            add_dropped_to_test=False,
+            random_seed=1,
+        )
+
+
+def test_undersample_random_seed_zero_skips_seeding(sample_data):
+    train_set, test_set = sample_data
+    with patch('random.seed') as seed_mock:
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=0.5,
+            add_dropped_to_test=False,
+            random_seed=0,
+        )
+    seed_mock.assert_not_called()
 
 if __name__ == "__main__":
     pytest.main()

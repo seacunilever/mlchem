@@ -149,5 +149,23 @@ def test_transform_df_wraps_scaler_valueerror(sample_dataframe):
     with pytest.raises(ValueError, match='Error in scaling data: bad data'):
         transform_df(sample_dataframe, scaler, last_columns_to_preserve=0)
 
+
+def test_scale_df_standard_handles_duplicate_columns():
+    df = pd.DataFrame(
+        [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
+        columns=['feature', 'feature', 'tail'],
+    )
+    with pytest.raises(Exception, match='Expected unique column names'):
+        scale_df_standard(df, last_columns_to_preserve=1)
+
+
+def test_transform_df_handles_duplicate_columns():
+    df = pd.DataFrame(
+        [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
+        columns=['feature', 'feature', 'tail'],
+    )
+    with pytest.raises(Exception, match='Expected unique column names'):
+        scale_df_minmax(df, last_columns_to_preserve=1)
+
 if __name__ == "__main__":
     pytest.main()

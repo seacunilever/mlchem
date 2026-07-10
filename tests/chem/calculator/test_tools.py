@@ -67,6 +67,12 @@ def test_logit_to_proba():
     assert 0 <= result <= 1
 
 
+@pytest.mark.xfail(strict=True, reason="logit_to_proba is numerically unstable for extreme logits")
+def test_logit_to_proba_extreme_values_finite():
+    assert np.isfinite(logit_to_proba(1000.0))
+    assert np.isfinite(logit_to_proba(-1000.0))
+
+
 def test_pairwise_euclidean_distance():
     matrix = np.array([[0, 0], [3, 4], [6, 8]])
     result = pairwise_euclidean_distance(matrix)
@@ -108,6 +114,21 @@ def test_calc_centroid_with_masses():
     assert isinstance(result, np.ndarray)
     assert result.shape == (2,)
     assert np.allclose(result, [1.33333333, 1.33333333])
+
+
+@pytest.mark.xfail(strict=True, reason="calc_centroid should raise on zero total mass")
+def test_calc_centroid_zero_total_mass_raises():
+    coordinates = np.array([[0, 0], [1, 1], [2, 2]])
+    masses = [0, 0, 0]
+    with pytest.raises(ValueError):
+        calc_centroid(coordinates, masses)
+
+
+def test_calc_centroid_nan_mass_input():
+    coordinates = np.array([[0, 0], [1, 1], [2, 2]])
+    masses = [1, np.nan, 3]
+    result = calc_centroid(coordinates, masses)
+    assert np.isnan(result).all()
 
 
 def test_calc_gyration_tensor():

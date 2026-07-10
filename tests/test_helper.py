@@ -84,6 +84,29 @@ def test_visualise_colour_grid():
         visualise_colour_grid(colour_dictionary)
         assert mock_show.called
 
+
+def test_visualise_colour_grid_save_calls_savefig(tmp_path):
+    colour_dictionary = {
+        'red': (1.0, 0.0, 0.0),
+        'green': (0.0, 1.0, 0.0),
+        'blue': (0.0, 0.0, 1.0),
+    }
+    output_file = tmp_path / 'palette.png'
+
+    plt.close('all')
+    plt.switch_backend('Agg')
+
+    with patch('matplotlib.pyplot.savefig') as mock_savefig:
+        with patch('matplotlib.pyplot.show'):
+            visualise_colour_grid(
+                colour_dictionary,
+                save=True,
+                filename=str(output_file),
+                figsize=(4, 4),
+            )
+
+    mock_savefig.assert_called_once_with(str(output_file))
+
 def test_show_png():
     # Create a simple PNG image in memory
     img = Image.new('RGB', (10, 10), color='red')

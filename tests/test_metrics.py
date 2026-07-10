@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+import numpy as np
 from rdkit.DataStructs import ExplicitBitVect
 from mlchem.metrics import (
     get_sensitivity, get_specificity, get_geometric_S, get_mcc, get_rmse,
@@ -121,6 +122,20 @@ def test_get_r2(sample_regression_data):
     r2 = get_r2(y_true, y_pred)
     assert r2 == pytest.approx(0.96, 0.01)
 
+
+def test_get_r2_constant_target_returns_nan():
+    y_true = [1.0, 1.0, 1.0, 1.0]
+    y_pred = [0.8, 1.1, 1.2, 0.9]
+    r2 = get_r2(y_true, y_pred)
+    assert np.isnan(r2)
+
+
+def test_rmse_to_std_ratio_zero_rmse_returns_infinity():
+    y_true = [0.0, 1.0, 2.0, 3.0]
+    y_pred = [0.0, 1.0, 2.0, 3.0]
+    ratio = rmse_to_std_ratio(y_true, y_pred)
+    assert np.isinf(ratio)
+
 def test_DiceSimilarity(sample_fingerprints):
     fp1, fp2 = sample_fingerprints
     similarity = DiceSimilarity(fp1, fp2)
@@ -196,6 +211,18 @@ def test_FingerprintSimilarity(sample_fingerprints):
     fp1, fp2 = sample_fingerprints
     similarity = FingerprintSimilarity(fp1, fp2, metric=TanimotoSimilarity)
     assert similarity == pytest.approx(0.333, 0.01)
+
+
+def test_similarity_identical_fingerprints_is_one():
+    fp = ExplicitBitVect(1024)
+    fp.SetBit(0)
+    fp.SetBit(10)
+    fp.SetBit(200)
+
+    assert TanimotoSimilarity(fp, fp) == pytest.approx(1.0, 1e-12)
+    assert DiceSimilarity(fp, fp) == pytest.approx(1.0, 1e-12)
+    assert CosineSimilarity(fp, fp) == pytest.approx(1.0, 1e-12)
+    assert FingerprintSimilarity(fp, fp, metric=TanimotoSimilarity) == pytest.approx(1.0, 1e-12)
 
 if __name__ == "__main__":
     pytest.main()

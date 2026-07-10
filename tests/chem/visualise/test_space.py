@@ -130,5 +130,48 @@ def test_plot(chemical_space, monkeypatch, tmp_path):
     show_mock.assert_called_once()
     assert chemical_space.filename == 'test_plot'
 
+
+def test_process_invalid_diversity_filter_raises(chemical_space):
+    with pytest.raises(AssertionError):
+        chemical_space.process(diversity_filter=-0.1, collinearity_filter=0.9)
+
+    with pytest.raises(AssertionError):
+        chemical_space.process(diversity_filter=1.0, collinearity_filter=0.9)
+
+
+def test_process_invalid_collinearity_filter_raises(chemical_space):
+    with pytest.raises(AssertionError):
+        chemical_space.process(diversity_filter=0.0, collinearity_filter=-0.1)
+
+    with pytest.raises(AssertionError):
+        chemical_space.process(diversity_filter=0.0, collinearity_filter=1.1)
+
+
+def test_prepare_rejects_wrong_columns(chemical_space):
+    chemical_space.process(diversity_filter=0, collinearity_filter=0.9, standardise=True)
+    df_compressed = pd.DataFrame(
+        {
+            'DIM_1': [0.1, 0.2, 0.3],
+            'WRONG': [0.4, 0.5, 0.6],
+        },
+        index=['CCO', 'CCN', 'CCC'],
+    )
+    with pytest.raises(AssertionError):
+        chemical_space.prepare(df_compressed)
+
+
+@pytest.mark.xfail(strict=True, reason="prepare currently accepts malformed indices without explicit validation")
+def test_prepare_rejects_non_smiles_index(chemical_space):
+    chemical_space.process(diversity_filter=0, collinearity_filter=0.9, standardise=True)
+    df_compressed = pd.DataFrame(
+        {
+            'DIM_1': [0.1, 0.2, 0.3],
+            'DIM_2': [0.4, 0.5, 0.6],
+        },
+        index=[10, 20, 30],
+    )
+    with pytest.raises(ValueError):
+        chemical_space.prepare(df_compressed)
+
 if __name__ == "__main__":
     pytest.main()

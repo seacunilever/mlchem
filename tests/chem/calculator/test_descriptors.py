@@ -33,6 +33,7 @@
 
 import pytest
 import pandas as pd
+import numpy as np
 from mlchem.chem.calculator.descriptors import (get_rdkitDesc,
                                                 get_mordredDesc,
                                                 get_allDesc,
@@ -43,6 +44,7 @@ from mlchem.chem.calculator.descriptors import (get_rdkitDesc,
                                                 get_EHT_descriptors
                                                 )
 from rdkit import DataStructs
+from rdkit import Chem
 
 
 def test_get_rdkitDesc_2D():
@@ -96,6 +98,30 @@ def test_get_mordredDesc_invalid_input(capfd):
     result = get_mordredDesc(['abc^'], include_3D=True)
     out, err = capfd.readouterr()
     assert "Problem encountered with: abc^." in out
+
+
+def test_get_mordredDesc_invalid_input_returns_null_descriptor_row():
+    result = get_mordredDesc(['abc^'], include_3D=True)
+    assert 'abc^' in result.index
+    assert result.shape[1] > 0
+    assert result.loc['abc^'].isna().all()
+
+
+@pytest.mark.xfail(strict=True, reason="get_rdkitDesc include_3D path swallows 3D creation errors")
+def test_get_rdkitDesc_3d_failure_contract(monkeypatch):
+    original_create_molecule = __import__('mlchem.chem.manipulation', fromlist=['create_molecule']).create_molecule
+
+    def fake_create_molecule(mol_input, **kwargs):
+        if kwargs.get('is_3d', False):
+            raise ValueError('3D embedding failed')
+        if isinstance(mol_input, str):
+            return Chem.MolFromSmiles(mol_input)
+        return original_create_molecule(mol_input, **kwargs)
+
+    monkeypatch.setattr('mlchem.chem.manipulation.create_molecule', fake_create_molecule)
+
+    with pytest.raises(ValueError):
+        get_rdkitDesc(['CCO'], include_3D=True)
 
 
 def test_get_allDesc_2D():
