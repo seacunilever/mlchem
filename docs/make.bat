@@ -8,6 +8,17 @@ if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
 if "%PYTHON%" == "" (
+	set PYTHON=py -3
+)
+%PYTHON% -V >NUL 2>NUL
+if errorlevel 1 (
+	python -V >NUL 2>NUL
+	if errorlevel 1 (
+		echo.
+		echo.Neither 'py -3' nor 'python' is available.
+		echo.Install Python or set the PYTHON environment variable to a valid interpreter.
+		exit /b 1
+	)
 	set PYTHON=python
 )
 set SOURCEDIR=source
@@ -33,12 +44,14 @@ if /I "%1" == "html" (
 	%SPHINXBUILD% -M html %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 	if errorlevel 1 goto end
 	%PYTHON% "%~dp0_publish.py"
+	if errorlevel 1 goto end
 	goto end
 )
 
 REM Standalone mirror step (use after a manual sphinx-build invocation).
 if /I "%1" == "publish" (
 	%PYTHON% "%~dp0_publish.py"
+	if errorlevel 1 goto end
 	goto end
 )
 
@@ -50,3 +63,4 @@ goto end
 
 :end
 popd
+exit /b %errorlevel%

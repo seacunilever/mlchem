@@ -7,7 +7,11 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
-PYTHON        ?= python
+ifeq ($(OS),Windows_NT)
+PYTHON        ?= py -3
+else
+PYTHON        ?= python3
+endif
 
 # Put it first so that "make" without argument is like "make help".
 help:
