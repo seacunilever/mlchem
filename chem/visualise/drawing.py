@@ -31,7 +31,7 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Iterable
+from typing import Iterable, Literal
 from rdkit import Chem
 from PIL import Image
 
@@ -57,7 +57,7 @@ legend : str
 colour_dictionary : dict
     Predefined colour palette for drawing.
 drawing_options : dict
-    Dictionary of drawing parameters and visual styles.
+    Dictionary of default drawing parameters and visual styles.
 
 Methods
 -------
@@ -78,7 +78,271 @@ load_mols(...)
 show_images_grid(...)
     Display all loaded images in a grid layout.
 """
+    MLCHEM_DEFAULTS = {
 
+
+    # colours #
+
+
+    # Possible values: 'avalon', 'cdk', 'bw',
+    # or a dictionary like this: {atomic_number:(R,G,B)),}
+    'atomPalette': 'cdk',
+
+    # Possible values: any present in 'colour_dictionary'
+    # attribute of the MolDrawer class or any RGB tuple
+    'backgroundColour': 'white',
+
+    # Possible values: any present in 'colour_dictionary'
+    # attribute of the MolDrawer class or any RGB tuple
+    'highlightColour': 'tomato',
+
+    # The transparency of the highlighting colour
+    'highlightAlpha': 1,
+
+    # Colour of the SMARTS query
+    'queryColour': 'red',
+
+    # The color used for molecule, atom, bond, and SGroup notes
+    'annotationColour': 'black',
+
+    # Drawing style controls #
+
+    # Display dummy atoms as dummy attachment points
+    'dummiesAreAttachments': False,
+
+    # Shortcut for set_property(mol, property_type='atomnote',
+    #                           atoms=[],custom_string='')
+    'addAtomIndices': False,
+
+    # Display bond indices
+    'addBondIndices': False,
+
+    # Hide all atom labels
+    'noAtomLabels': False,
+
+    # Show explicit methyl
+    'explicitMethyl': False,
+
+    # Include radicals
+    'includeRadicals': True,
+
+    # If False, simplify drawing of standard query atoms
+    # (Q, QH, X, XH, A, AH, M, MH) from mol files or CXSMILES
+    'useComplexQueryAtomSymbols': True,
+
+    # Single or double coloured chiral bonds
+    'singleColourWedgeBonds': False,
+
+    # If True, draw molecules having same scale
+    'drawMolsSameScale': False,
+
+    # Highlighting #
+
+
+    # Include bonds if highlighted atoms are adjacent
+    'continuousHighlight': True,
+
+    # Atoms are highlighted with small circles
+    'circleAtoms': True,
+
+    # Exclude H from atom circles
+    'atomHighlightsAreCircles': True,
+
+    # Fill bonds
+    'fillHighlights': True,
+
+    # Highlighting width of atoms
+    'highlightRadius': 0.3,
+
+    # Highlighting width of bonds scaling factor
+    'highlightBondWidthMultiplier': 10,
+
+
+
+    # Stereochemistry ##
+
+
+    # Display R,S notations; display, if specified, abs,and,or.
+    # For abs: (a:atom_number+1), for and, or: &, o
+    'addStereoAnnotation': False,
+
+    # Draw unspecified stereo atoms/bonds as unknown
+    'unspecifiedStereoIsUnknown': False,
+
+
+    # Fonts and text #
+
+
+    # Sets the initial font size, which can be scaled based on
+    # the molecule’s size. All elements are involved
+    'baseFontSize': 0.6,
+
+    # Increase or decrease font size of annotations
+    'annotationFontScale': 0.5,
+
+    # Increase or decrease font size of legends
+    'legendFontSize': 25,
+
+    # Set to any positive number to force the base fontsize
+    # to remain unchanged even if canvas size varies.
+    'fixedFontSize': -1,
+
+    # Ensures a minimum font size, preventing labels and notes
+    # from becoming too small.
+    'minFontSize': 6,
+
+    # Set to any number to set a ceiling to the base fontsize.
+    'maxFontSize': 40,
+
+    # Specify the path where the font file is stored
+    'fontFile': '',
+
+
+    # Bond drawing parameters #
+
+
+    # How distant the additional lines
+    # of a double/triple bond have to be from the single bond line
+    'multipleBondOffset': 0.15,
+
+    # Fraction of fontsize. How much buffer space around atoms
+    'additionalAtomLabelPadding': 0,
+
+    # How wide bonds are
+    'bondLineWidth': 2,
+
+    # Adapt bond witdth to highlight width
+    'scaleBondWidth': False,
+
+    # Adapt hilight width to bond width
+    'scaleHighlightBondWidth': True,
+
+    # If different from -1, forces molecule to
+    # have the same scale. The higher the value
+    # the larger the scale.
+    'fixedBondLength': -1,
+
+
+    # Weight and similarity maps parameters #
+
+
+    # Similarity maps drawing style
+    # (GC or C; Gaussian Contours or Circles)
+    'mapStyle': 'GC',
+
+    # Colour map for similarity maps; default is None.
+    # A list of 3 tuples/colour names is accepted too.
+    'colourMap': None,
+
+    # Colour of atoms having positive weights (style: both)
+    'positiveColour': 'green',
+
+    # Colour of atoms having negative weights (style: both)
+    'negativeColour': 'mediumvioletred',
+
+    # List of atom indices with numerical property
+    # to display (style: both)
+    'atomWeights': [],
+
+    # Baseline alpha of weight colour (style: both)
+    'weightAlpha': 0.2,
+
+    # Circle radius scale (style: circles)
+    'scalingFactor': 2,
+
+    # Minimum circle radius (style: circles)
+    'minRadius': 2,
+
+    # Maximum circle radius (style: circles)
+    'maxRadius': 30,
+
+    # Number of concentrical circles per atom (style: both)
+    'numContours': 10,
+
+    # Line width of the contours (style: gaussian contours)
+    'contourWidth': 1,
+
+    # Resolution of gaussian contours (style: gaussian contours)
+    'mapRes': 0.05,
+
+    # Contour colour (style: gaussian contours)
+    'contourColour': 'black',
+
+    # Whether to display negative weights as dashed
+    'dashNegative' : True,
+
+
+    # Optional shapes #
+
+
+    # Sets the type of shape to render. Current choices are: 'circle'.
+    'shapeTypes': [],
+
+    # Sets the size of the shape to render. Int or float
+    # values are accepted.
+    'shapeSizes': [],
+
+    # Sets the colour of the shapes to draw.
+    # Every colour in the iterable should be either a string
+    # (any colour present in the 'colour_dictionary')
+    # or a RGB/RGBA tuple
+    'shapeColours': [],
+
+    # Sets the 2D coordinates of the shapes. Accepts an
+    # iterable per shape.
+    'shapeCoords': [],
+
+
+    # Miscellaneous #
+
+    # Set to False to have transparent background
+    'clearBackground': True,
+
+    # Set to False to disable kekulisation prior to rendering
+    'prepareMolsBeforeDrawing': True,
+
+    # Rotation angle in degrees
+    'rotate': 0,
+
+    # Add or remove extra buffer zone. If value > 0.5,
+    # molecule flips (unwanted behaviour).
+    # At the moment, legend does not show when padding > 0.05.
+    'padding': 0.05,
+
+    # Set to True to show H isotopes as D and T rather
+    # than as 2H and 3H
+    'atomLabelDeuteriumTritium': False
+    }
+
+    @staticmethod
+    def get_rdkit_defaults() -> dict[str, object]:
+        """Retrieve the default RDKit drawing options.
+
+        This method creates a temporary RDKit drawing context and reads the
+        values from its drawOptions object. The returned dictionary can be
+        used to compare or restore RDKit default drawing settings.
+
+        Returns
+        -------
+        dict[str, object]
+            Dictionary of RDKit drawing option names and default values.
+        """
+        from rdkit.Chem.Draw import rdMolDraw2D
+
+        opts = rdMolDraw2D.MolDraw2DCairo(300, 300).drawOptions()
+        defaults = {}
+        for name in dir(opts):
+            if name.startswith("_"):
+                continue
+            try:
+                value = getattr(opts, name)
+                if callable(value):
+                    continue
+                defaults[name] = value
+            except Exception:
+                pass
+        return defaults
+    
     def __init__(self,
                  mol: Chem.rdchem.Mol | None = None,
                  highlightAtoms: Iterable = [],
@@ -121,241 +385,9 @@ None
 
         self.colour_dictionary = colour_dictionary
 
-        self.drawing_options = {
+        self.drawing_options = MolDrawer.MLCHEM_DEFAULTS.copy()
 
 
-            # colours #
-
-
-            # Possible values: 'avalon', 'cdk', 'bw',
-            # or a dictionary like this: {atomic_number:(R,G,B)),}
-            'atomPalette': 'cdk',
-
-            # Possible values: any present in 'colour_dictionary'
-            # attribute of the MolDrawer class or any RGB tuple
-            'backgroundColour': 'white',
-
-            # Possible values: any present in 'colour_dictionary'
-            # attribute of the MolDrawer class or any RGB tuple
-            'highlightColour': 'tomato',
-
-            # The transparency of the highlighting colour
-            'highlightAlpha': 1,
-
-            # Colour of the SMARTS query
-            'queryColour': 'red',
-
-            # The color used for molecule, atom, bond, and SGroup notes
-            'annotationColour': 'black',
-
-            # Drawing style controls #
-
-            # Display dummy atoms as dummy attachment points
-            'dummiesAreAttachments': False,
-
-            # Shortcut for set_property(mol, property_type='atomnote',
-            #                           atoms=[],custom_string='')
-            'addAtomIndices': False,
-
-            # Display bond indices
-            'addBondIndices': False,
-
-            # Hide all atom labels
-            'noAtomLabels': False,
-
-            # Show explicit methyl
-            'explicitMethyl': False,
-
-            # Include radicals
-            'includeRadicals': True,
-
-            # If False, simplify drawing of standard query atoms
-            # (Q, QH, X, XH, A, AH, M, MH) from mol files or CXSMILES
-            'useComplexQueryAtomSymbols': True,
-
-            # Single or double coloured chiral bonds
-            'singleColourWedgeBonds': False,
-
-            # If True, draw molecules having same scale
-            'drawMolsSameScale': False,
-
-            # Highlighting #
-
-
-            # Include bonds if highlighted atoms are adjacent
-            'continuousHighlight': True,
-
-            # Atoms are highlighted with small circles
-            'circleAtoms': True,
-
-            # Exclude H from atom circles
-            'atomHighlightsAreCircles': True,
-
-            # Fill bonds
-            'fillHighlights': True,
-
-            # Highlighting width of atoms
-            'highlightRadius': 0.3,
-
-            # Highlighting width of bonds scaling factor
-            'highlightBondWidthMultiplier': 10,
-
-
-
-            # Stereochemistry ##
-
-
-            # Display R,S notations; display, if specified, abs,and,or.
-            # For abs: (a:atom_number+1), for and, or: &, o
-            'addStereoAnnotation': False,
-
-            # Draw unspecified stereo atoms/bonds as unknown
-            'unspecifiedStereoIsUnknown': False,
-
-
-            # Fonts and text #
-
-
-            # Sets the initial font size, which can be scaled based on
-            # the molecule’s size. All elements are involved
-            'baseFontSize': 0.6,
-
-            # Increase or decrease font size of annotations
-            'annotationFontScale': 0.5,
-
-            # Increase or decrease font size of legends
-            'legendFontSize': 25,
-
-            # Set to any positive number to force the base fontsize
-            # to remain unchanged even if canvas size varies.
-            'fixedFontSize': -1,
-
-            # Ensures a minimum font size, preventing labels and notes
-            # from becoming too small.
-            'minFontSize': 6,
-
-            # Set to any number to set a ceiling to the base fontsize.
-            'maxFontSize': 40,
-
-            # Specify the path where the font file is stored
-            'fontFile': '',
-
-
-            # Bond drawing parameters #
-
-
-            # How distant the additional lines
-            # of a double/triple bond have to be from the single bond line
-            'multipleBondOffset': 0.15,
-
-            # Fraction of fontsize. How much buffer space around atoms
-            'additionalAtomLabelPadding': 0,
-
-            # How wide bonds are
-            'bondLineWidth': 2,
-
-            # Adapt bond witdth to highlight width
-            'scaleBondWidth': False,
-
-            # Adapt hilight width to bond width
-            'scaleHighlightBondWidth': True,
-
-            # If different from -1, forces molecule to
-            # have the same scale. The higher the value
-            # the larger the scale.
-            'fixedBondLength': -1,
-
-
-            # Weight and similarity maps parameters #
-
-
-            # Similarity maps drawing style
-            # (GC or C; Gaussian Contours or Circles)
-            'mapStyle': 'GC',
-
-            # Colour map for similarity maps; default is None.
-            # A list of 3 tuples/colour names is accepted too.
-            'colourMap': None,
-
-            # Colour of atoms having positive weights (style: both)
-            'positiveColour': 'green',
-
-            # Colour of atoms having negative weights (style: both)
-            'negativeColour': 'mediumvioletred',
-
-            # List of atom indices with numerical property
-            # to display (style: both)
-            'atomWeights': [],
-
-            # Baseline alpha of weight colour (style: both)
-            'weightAlpha': 0.2,
-
-            # Circle radius scale (style: circles)
-            'scalingFactor': 2,
-
-            # Minimum circle radius (style: circles)
-            'minRadius': 2,
-
-            # Maximum circle radius (style: circles)
-            'maxRadius': 30,
-
-            # Number of concentrical circles per atom (style: both)
-            'numContours': 10,
-
-            # Line width of the contours (style: gaussian contours)
-            'contourWidth': 1,
-
-            # Resolution of gaussian contours (style: gaussian contours)
-            'mapRes': 0.05,
-
-            # Contour colour (style: gaussian contours)
-            'contourColour': 'black',
-
-            # Whether to display negative weights as dashed
-            'dashNegative' : True,
-
-
-            # Optional shapes #
-
-
-            # Sets the type of shape to render. Current choices are: 'circle'.
-            'shapeTypes': [],
-
-            # Sets the size of the shape to render. Int or float
-            # values are accepted.
-            'shapeSizes': [],
-
-            # Sets the colour of the shapes to draw.
-            # Every colour in the iterable should be either a string
-            # (any colour present in the 'colour_dictionary')
-            # or a RGB/RGBA tuple
-            'shapeColours': [],
-
-            # Sets the 2D coordinates of the shapes. Accepts an
-            # iterable per shape.
-            'shapeCoords': [],
-
-
-            # Miscellaneous #
-
-            # Set to False to have transparent background
-            'clearBackground': True,
-
-            # Set to False to disable kekulisation prior to rendering
-            'prepareMolsBeforeDrawing': True,
-
-            # Rotation angle in degrees
-            'rotate': 0,
-
-            # Add or remove extra buffer zone. If value > 0.5,
-            # molecule flips (unwanted behaviour).
-            # At the moment, legend does not show when padding > 0.05.
-            'padding': 0.05,
-
-            # Set to True to show H isotopes as D and T rather
-            # than as 2H and 3H
-            'atomLabelDeuteriumTritium': False
-            }
 
     def show_palette(
         self, palette: dict | None = None, save: bool = False,
@@ -522,9 +554,9 @@ Examples
 
         self.drawing_options.update(args)
 
-    def reset_drawing_options(self) -> None:
+    def reset_drawing_options(self, source: Literal['mlchem', 'rdkit'] = 'mlchem') -> None:
         """
-Reset the drawing options to their default values.
+Reset the drawing options to their default values. It can be chosen between mlchem and rdkit defaults.
 
 This method reinitialises the internal drawing options dictionary to the
 default configuration defined in a fresh instance of the `MolDrawer` class.
@@ -539,12 +571,17 @@ Examples
 --------
 >>> drawer = MolDrawer()
 >>> drawer.update_drawing_options(atomPalette='avalon', rotate=90)
->>> drawer.reset_drawing_options()  # Reverts to default settings
+>>> drawer.reset_drawing_options(source='mlchem')  # Reverts to default mlchem settings
+OR
+>>> drawer.reset_drawing_options(source='rdkit')  # Reverts to default rdkit native settings
 """
 
-        internal_drawer = MolDrawer()
-        self.drawing_options = internal_drawer.drawing_options
+        if source=='mlchem':
+            self.drawing_options = MolDrawer.MLCHEM_DEFAULTS
+        elif source=='rdkit':
+            self.drawing_options = MolDrawer.get_rdkit_defaults().copy()
 
+    
     def load_images(self, img_list:
                     Iterable[Image.Image]
                     | Image.Image) -> None:
@@ -916,9 +953,28 @@ Examples
             self.drawing_options['padding'] = 0.07 \
                 * self.drawing_options['scalingFactor']
 
-        # all options a function is not needed for
+        ## all options a function is not needed for ##
+
+        # colour options refusing the 'setattr()' method
+
+        COLOUR_OPTIONS = {
+            "backgroundColour": dopts.setBackgroundColour,
+            "highlightColour": dopts.setHighlightColour,
+            "queryColour": dopts.setQueryColour,
+            "annotationColour": dopts.setAnnotationColour,
+            "atomNoteColour": dopts.setAtomNoteColour,
+            "bondNoteColour": dopts.setBondNoteColour,
+            "legendColour": dopts.setLegendColour,
+            "symbolColour": dopts.setSymbolColour,
+            "variableAttachmentColour": dopts.setVariableAttachmentColour,
+        }
+
 
         for option, value in self.drawing_options.items():
+
+            if option in COLOUR_OPTIONS:     # 
+                continue
+
             if hasattr(dopts, option):
                 try:
                     setattr(dopts, option, value)
@@ -1229,3 +1285,5 @@ Examples
             d2d.FinishDrawing()
             self.DrawingText = d2d.GetDrawingText()
             return show_png(self.DrawingText)
+        
+
