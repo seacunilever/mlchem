@@ -2790,20 +2790,6 @@ None
                                                         'rejection': rejections}
                                                         )])
 
-                self.IsIsomeric = isomeric
-                self.IsCanonical = canonical
-                self.IsKekulised = kekulise
-
-                self.smiles = smiles_accepted
-                self.ids = ids_accepted
-                self.df_accepted = pd.DataFrame(data={'id': self.ids,
-                                                      'SMILES': self.smiles})
-                self.df_rejected = pd.concat([self.df_rejected,
-                                              pd.DataFrame(
-                                                  data={'id': ids_rejected,
-                                                        'SMILES': smiles_rejected,
-                                                        'rejection': rejections})])
-
     def desalt_smiles(self,
                       method: Literal['chembl',
                                       'rdkit',
@@ -3831,11 +3817,13 @@ To compare two patterns directly, use `pattern_rel_fraction_greater_than`.
 
 
 
-            target_atoms = PatternRecognition.Base.count_atoms(target=target)
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
+            target_atoms = target_mol.GetNumAtoms()
             try:
-                res = func(target=target)
+                res = func(target=target_mol)
             except Exception:
-                res = func(target, hidden_pattern_function)
+                res = func(target_mol, hidden_pattern_function)
             pattern_atoms = len(res[1])
 
             return pattern_atoms / target_atoms > threshold
@@ -3905,12 +3893,14 @@ will be passed `hidden_pattern_function`.
 """
 
 
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
             try:
-                target_atoms = len(func2(target=target)[1])
-                pattern_atoms = len(func1(target=target)[1])
+                target_atoms = len(func2(target=target_mol)[1])
+                pattern_atoms = len(func1(target=target_mol)[1])
             except Exception as e:
                 if hidden_pattern_function:
-                    pattern_atoms = len(func1(target,
+                    pattern_atoms = len(func1(target_mol,
                                               hidden_pattern_function))
                 else:
                     raise e
@@ -3934,7 +3924,9 @@ list of rdkit.Chem.rdchem.Atom
     A list of atom objects in the molecule.
 """
 
-            return [a for a in create_molecule(target).GetAtoms()]
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
+            return [a for a in target_mol.GetAtoms()]
 
         @staticmethod
         def count_atoms(target: str | Chem.rdchem.Mol) -> int:
@@ -3952,7 +3944,9 @@ int
     The number of atoms in the molecule.
 """
 
-            return len(PatternRecognition.Base.get_atoms(target))
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
+            return target_mol.GetNumAtoms()
 
         @staticmethod
         def get_bonds(target: str | Chem.rdchem.Mol) -> list:
@@ -3970,7 +3964,9 @@ list of rdkit.Chem.rdchem.Bond
     A list of bond objects in the molecule.
 """
 
-            return [b for b in create_molecule(target).GetBonds()]
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
+            return [b for b in target_mol.GetBonds()]
 
         @staticmethod
         def count_bonds(target: str | Chem.rdchem.Mol) -> int:
@@ -3988,7 +3984,9 @@ int
     The number of bonds in the molecule.
 """
 
-            return len(PatternRecognition.Base.get_bonds(target))
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
+            return target_mol.GetNumBonds()
 
         @staticmethod
         def get_tautomers(target: str | Chem.rdchem.Mol) -> list[str]:
