@@ -215,6 +215,36 @@ mol1 = create_molecule('c1ccccc1CCCO')
 mol2 = create_molecule('CCCCCN')
 desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ```
+
+### calculate chemotypes faster on larger datasets
+```python
+from mlchem.chem.calculator import descriptors
+
+smiles_list = ['CCO', 'CCN', 'COCC', 'c1ccccc1O']
+
+# n_jobs=1 keeps serial execution (default)
+# n_jobs>1 enables multi-threaded molecule processing
+# n_jobs=-1 uses all available CPU cores
+chemotypes = descriptors.get_chemotypes(smiles_list, n_jobs=4)
+```
+
+Performance note: chemotype execution now reuses per-molecule rule results
+and avoids repeated molecule preparation. This is especially important for
+large rule dictionaries and medium-to-large training sets.
+
+### calculate fingerprints
+```python
+from mlchem.chem.calculator import descriptors
+
+smiles_list = ['CCO', 'CCN', 'CCC']
+
+# Morgan bit-vectors (2048 bits by default)
+fp_df = descriptors.get_fingerprint_df(smiles_list, fp_type='m', nBits=2048)
+
+# Include bit info for interpretability on a single molecule
+fp, bit_info = descriptors.get_fingerprint('CCO', fp_type='m', include_bit_info=True)
+```
+
 ### pattern recognition
 ![image](assets/figure2.png)
 

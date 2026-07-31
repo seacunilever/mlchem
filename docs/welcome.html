@@ -249,6 +249,36 @@ python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w">
 </pre></div>
 </div>
 </section>
+<section id="calculate-chemotypes-faster-on-larger-datasets">
+<h3>calculate chemotypes faster on larger datasets<a class="headerlink" href="#calculate-chemotypes-faster-on-larger-datasets" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
+
+<span class="n">smiles_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CCN&#39;</span><span class="p">,</span> <span class="s1">&#39;COCC&#39;</span><span class="p">,</span> <span class="s1">&#39;c1ccccc1O&#39;</span><span class="p">]</span>
+
+<span class="c1"># n_jobs=1 keeps serial execution (default)</span>
+<span class="c1"># n_jobs&gt;1 enables multi-threaded molecule processing</span>
+<span class="c1"># n_jobs=-1 uses all available CPU cores</span>
+<span class="n">chemotypes</span> <span class="o">=</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">get_chemotypes</span><span class="p">(</span><span class="n">smiles_list</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Performance note: chemotype execution now reuses per-molecule rule results
+and avoids repeated molecule preparation. This is especially important for
+large rule dictionaries and medium-to-large training sets.</p>
+</section>
+<section id="calculate-fingerprints">
+<h3>calculate fingerprints<a class="headerlink" href="#calculate-fingerprints" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
+
+<span class="n">smiles_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CCN&#39;</span><span class="p">,</span> <span class="s1">&#39;CCC&#39;</span><span class="p">]</span>
+
+<span class="c1"># Morgan bit-vectors (2048 bits by default)</span>
+<span class="n">fp_df</span> <span class="o">=</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">get_fingerprint_df</span><span class="p">(</span><span class="n">smiles_list</span><span class="p">,</span> <span class="n">fp_type</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">nBits</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+
+<span class="c1"># Include bit info for interpretability on a single molecule</span>
+<span class="n">fp</span><span class="p">,</span> <span class="n">bit_info</span> <span class="o">=</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">get_fingerprint</span><span class="p">(</span><span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="n">fp_type</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">include_bit_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="pattern-recognition">
 <h3>pattern recognition<a class="headerlink" href="#pattern-recognition" title="Link to this heading">¶</a></h3>
 <p><img alt="image" src="_images/figure2.png" /></p>
@@ -382,6 +412,8 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 </li>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
+<li><a class="reference internal" href="#calculate-chemotypes-faster-on-larger-datasets">calculate chemotypes faster on larger datasets</a></li>
+<li><a class="reference internal" href="#calculate-fingerprints">calculate fingerprints</a></li>
 <li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
 <li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
 <li><a class="reference internal" href="#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>

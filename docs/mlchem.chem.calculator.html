@@ -163,7 +163,7 @@ on neighbouring atoms up to the third order.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_chemotypes">
-<span class="sig-name descname"><span class="pre">get_chemotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chemotype_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_chemotypes" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chemotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chemotype_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_chemotypes" title="Link to this definition">¶</a></dt>
 <dd><p>Identify chemotypes for a list of molecules.</p>
 <p>This function applies a dictionary of chemotype definitions to each
 molecule in the input list. Each chemotype is defined by a function
@@ -175,6 +175,9 @@ and its arguments. If no dictionary is provided, a default one is used.</p>
 <li><p><strong>chemotype_dict</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary of chemotype definitions. Each entry should be a key
 with a tuple of (function, argument_dict). If None, a default
 dictionary is used.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of worker threads used to process molecules. Use values
+greater than 1 to enable parallel execution. Use -1 to consume
+all available CPU cores. Default is 1.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -183,9 +186,29 @@ dictionary is used.</p></li>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> is 0 or less than -1.</p></li>
+<li><p><strong>ValueError</strong> – If a chemotype rule does not contain exactly two items
+    (function, arguments).</p></li>
+<li><p><strong>TypeError</strong> – If a chemotype rule function is not callable or its argument payload is
+    not a dictionary.</p></li>
+<li><p><strong>Exception</strong> – Propagates molecule parsing/evaluation exceptions from underlying rule
+    functions and RDKit utilities.</p></li>
+</ul>
+</dd>
 </dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Output row ordering is deterministic and follows <code class="docutils literal notranslate"><span class="pre">mol_input_list</span></code> even
+when <code class="docutils literal notranslate"><span class="pre">n_jobs</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> because <code class="docutils literal notranslate"><span class="pre">ThreadPoolExecutor.map</span></code> preserves order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_jobs=-1</span></code> maps to <code class="docutils literal notranslate"><span class="pre">os.cpu_count()</span></code> (or 1 if unavailable).</p></li>
+</ul>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_chemotypes</span><span class="p">([</span><span class="s2">&quot;CCO&quot;</span><span class="p">,</span> <span class="s2">&quot;c1ccccc1&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_chemotypes</span><span class="p">([</span><span class="s2">&quot;CCO&quot;</span><span class="p">,</span> <span class="s2">&quot;CCN&quot;</span><span class="p">,</span> <span class="s2">&quot;COCC&quot;</span><span class="p">],</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">custom</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;O_rule&#39;</span><span class="p">:</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">target</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmarts</span><span class="p">(</span><span class="s1">&#39;[#8]&#39;</span><span class="p">)),</span> <span class="p">{}]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_chemotypes</span><span class="p">([</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">),</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCC&quot;</span><span class="p">)],</span> <span class="n">chemotype_dict</span><span class="o">=</span><span class="n">custom</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
