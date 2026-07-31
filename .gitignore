@@ -1,6 +1,7 @@
 *.pyc
 *.egg-info/
 *.log
+__pycache__/
 
 # Python test/cache runtime outputs
 .coverage
