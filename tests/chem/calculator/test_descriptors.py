@@ -45,6 +45,7 @@ from mlchem.chem.calculator.descriptors import (get_rdkitDesc,
                                                 )
 from rdkit import DataStructs
 from rdkit import Chem
+from mlchem.chem.manipulation import PatternRecognition as pr
 
 
 def test_get_rdkitDesc_2D():
@@ -252,6 +253,45 @@ def test_get_chemotypes_invalid_smiles():
     # Test with invalid SMILES input
     with pytest.raises(ValueError):
         get_chemotypes(['invalid_smiles'])
+
+
+def test_get_chemotypes_parallel_matches_serial():
+    smiles_list = ['CCO', 'CCN', 'COCC', 'CCOCCNCO', 'c1ccccc1O']
+
+    serial = get_chemotypes(smiles_list, n_jobs=1)
+    parallel = get_chemotypes(smiles_list, n_jobs=2)
+
+    pd.testing.assert_frame_equal(serial, parallel)
+
+
+def test_get_chemotypes_accepts_scalar_bool_rule_output():
+    def has_oxygen(target):
+        return pr.MolPatterns.check_oxygen(target)[0]
+
+    custom_dict = {
+        'O_rule_scalar_bool': [has_oxygen, {}],
+        'Carbon_rule_tuple': [pr.MolPatterns.check_carbon, {}],
+    }
+    result = get_chemotypes(['CCO', 'CCC'], chemotype_dict=custom_dict)
+
+    assert list(result['O_rule_scalar_bool']) == [True, False]
+    assert list(result['Carbon_rule_tuple']) == [True, True]
+
+
+def test_get_chemotypes_invalid_n_jobs():
+    with pytest.raises(ValueError):
+        get_chemotypes(['CCO'], n_jobs=0)
+    with pytest.raises(ValueError):
+        get_chemotypes(['CCO'], n_jobs=-2)
+
+
+def test_get_chemotypes_all_cpus_matches_serial():
+    smiles_list = ['CCO', 'CCN', 'COCC', 'CCOCCNCO', 'c1ccccc1O']
+
+    serial = get_chemotypes(smiles_list, n_jobs=1)
+    all_cpus = get_chemotypes(smiles_list, n_jobs=-1)
+
+    pd.testing.assert_frame_equal(serial, all_cpus)
 
 
 def test_get_fingerprint_df_morgan():
