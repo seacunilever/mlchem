@@ -74,6 +74,12 @@ def test_get_rdkitDesc_invalid_input():
         get_rdkitDesc(['invalid_smiles'], include_3D=True)
 
 
+def test_get_rdkitDesc_duplicate_identifiers_are_preserved():
+    result = get_rdkitDesc(['CCO', 'CCO'], include_3D=False)
+    assert result.shape[0] == 2
+    assert list(result.index) == ['CCO', 'CCO']
+
+
 def test_get_mordredDesc_2D():
     # Test with 2D descriptors only
     smiles_list = ['CCO', 'CCN', 'CCC']
@@ -94,11 +100,10 @@ def test_get_mordredDesc_3D():
     assert 'PBF' in result.columns  # Example check for a specific 3D descriptor
 
 
-def test_get_mordredDesc_invalid_input(capfd):
+def test_get_mordredDesc_invalid_input():
     # Test with invalid input
-    result = get_mordredDesc(['abc^'], include_3D=True)
-    out, err = capfd.readouterr()
-    assert "Problem encountered with: abc^." in out
+    with pytest.warns(RuntimeWarning, match="Problem encountered with: abc\^."):
+        get_mordredDesc(['abc^'], include_3D=True)
 
 
 def test_get_mordredDesc_invalid_input_returns_null_descriptor_row():
@@ -108,7 +113,12 @@ def test_get_mordredDesc_invalid_input_returns_null_descriptor_row():
     assert result.loc['abc^'].isna().all()
 
 
-@pytest.mark.xfail(strict=True, reason="get_rdkitDesc include_3D path swallows 3D creation errors")
+def test_get_mordredDesc_duplicate_identifiers_are_preserved():
+    result = get_mordredDesc(['CCO', 'CCO'], include_3D=False)
+    assert result.shape[0] == 2
+    assert list(result.index) == ['CCO', 'CCO']
+
+
 def test_get_rdkitDesc_3d_failure_contract(monkeypatch):
     original_create_molecule = __import__('mlchem.chem.manipulation', fromlist=['create_molecule']).create_molecule
 
@@ -121,7 +131,7 @@ def test_get_rdkitDesc_3d_failure_contract(monkeypatch):
 
     monkeypatch.setattr('mlchem.chem.manipulation.create_molecule', fake_create_molecule)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Descriptor calculation problem"):
         get_rdkitDesc(['CCO'], include_3D=True)
 
 
@@ -179,6 +189,11 @@ def test_get_atomicDesc_invalid_atom_index():
     invalid_atom_index = 10  # Index out of range
     with pytest.raises(IndexError):
         get_atomicDesc(smiles, invalid_atom_index)
+
+
+def test_get_atomicDesc_negative_atom_index():
+    with pytest.raises(IndexError):
+        get_atomicDesc('CCO', -1)
 
 
 def test_get_chemotypes_default_dict():
@@ -247,6 +262,16 @@ def test_get_fingerprint_with_bit_info():
     assert isinstance(result, DataStructs.cDataStructs.ExplicitBitVect)
     assert isinstance(bit_info, dict)
     assert result.GetNumBits() == 2048  # Check the size of the fingerprint
+
+
+def test_get_fingerprint_invalid_fp_type():
+    with pytest.raises(ValueError, match="Unsupported fp_type"):
+        get_fingerprint('CCO', fp_type='unknown')
+
+
+def test_get_fingerprint_invalid_smiles_raises_value_error():
+    with pytest.raises(ValueError, match="Problem encountered with"):
+        get_fingerprint('invalid_smiles', fp_type='m')
 
 
 def test_get_chemotypes_invalid_smiles():
@@ -353,6 +378,32 @@ def test_get_fingerprint_df_with_bit_info():
     assert isinstance(bit_info, dict)
     assert not result.empty
     assert result.shape[1] == 2048  # Check the number of bits in the fingerprint
+
+
+def test_get_fingerprint_df_invalid_fp_type():
+    with pytest.raises(ValueError, match="Unsupported fp_type"):
+        get_fingerprint_df(['CCO'], fp_type='unknown')
+
+
+def test_get_fingerprint_df_empty_input():
+    result = get_fingerprint_df([], fp_type='m')
+    assert isinstance(result, pd.DataFrame)
+    assert result.empty
+    assert result.shape[1] == 2048
+
+
+def test_get_fingerprint_df_empty_input_with_bit_info():
+    result, bit_info = get_fingerprint_df([], fp_type='m', include_bit_info=True)
+    assert isinstance(result, pd.DataFrame)
+    assert result.empty
+    assert result.shape[1] == 2048
+    assert bit_info == {}
+
+
+def test_get_fingerprint_df_duplicate_identifiers_are_preserved():
+    result = get_fingerprint_df(['CCO', 'CCO'], fp_type='m')
+    assert result.shape[0] == 2
+    assert list(result.index) == ['CCO', 'CCO']
 
 
 def test_get_EHT_descriptors_valid_input():

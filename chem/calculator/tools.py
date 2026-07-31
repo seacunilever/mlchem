@@ -354,7 +354,7 @@ Examples
 
     import math
 
-    if temperature == 0:
+    if temperature <= 0:
         raise ValueError("Temperature must be greater than zero.")
 
     # Boltzmann constant in different units
@@ -383,9 +383,9 @@ Examples
         )
 
     if partition_function == 0:
-        raise
-    ValueError(
-        "Partition function is zero, check the energy levels and temperature.")
+        raise ValueError(
+            "Partition function is zero, check the energy levels and temperature."
+        )
 
     # Calculate the probabilities
     probabilities = [

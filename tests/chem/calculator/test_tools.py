@@ -171,5 +171,17 @@ def test_boltzmann_probability_invalid_temperature():
         boltzmann_probability(energy_levels, temperature)
 
 
+def test_boltzmann_probability_negative_temperature():
+    energy_levels = [0, 1, 2]
+    with pytest.raises(ValueError):
+        boltzmann_probability(energy_levels, -1)
+
+
+def test_boltzmann_probability_zero_partition_function_raises():
+    energy_levels = [1e6, 1e6 + 1]
+    with pytest.raises(ValueError, match="Partition function is zero"):
+        boltzmann_probability(energy_levels, 1)
+
+
 if __name__ == "__main__":
     pytest.main()

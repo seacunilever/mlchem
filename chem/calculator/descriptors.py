@@ -37,6 +37,7 @@ from rdkit import Chem
 from typing import Literal, Iterable, Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 import os
+import warnings
 
 
 class _ChemotypeExecution:
@@ -281,6 +282,44 @@ class _ChemotypeExecution:
         )
 
 
+def _build_fingerprint_generator(
+    fp_type: Literal['m', 'ap', 'rk', 'tt', 'mac'],
+    radius: int,
+    nBits: int,
+    include_chirality: bool
+):
+    """Create an RDKit fingerprint generator for supported fingerprint types."""
+
+    from rdkit.Chem import rdFingerprintGenerator
+
+    if fp_type == 'm':
+        return rdFingerprintGenerator.GetMorganGenerator(
+            radius=radius, fpSize=nBits,
+            includeChirality=include_chirality
+        )
+    if fp_type == 'ap':
+        return rdFingerprintGenerator.GetAtomPairGenerator(
+            maxDistance=radius, fpSize=nBits,
+            includeChirality=include_chirality
+        )
+    if fp_type == 'rk':
+        return rdFingerprintGenerator.GetRDKitFPGenerator(
+            maxPath=radius, fpSize=nBits,
+        )
+    if fp_type == 'tt':
+        return rdFingerprintGenerator.GetTopologicalTorsionGenerator(
+            torsionAtomCount=radius, fpSize=nBits,
+            includeChirality=include_chirality
+        )
+    if fp_type == 'mac':
+        return None
+
+    raise ValueError(
+        f"Unsupported fp_type: {fp_type}. "
+        "Use one of {'m', 'ap', 'rk', 'tt', 'mac'}."
+    )
+
+
 def get_rdkitDesc(mol_input_list: Iterable[str | Chem.rdchem.Mol],
                   include_3D: bool = False) -> pd.DataFrame:
     """
@@ -322,31 +361,41 @@ Examples
         """Calculate 3D descriptors for a single molecule."""
         from rdkit.Chem.Descriptors3D import CalcMolDescriptors3D
 
-        try:
-            mol_input_h = create_molecule(mol_input=mol_input,
-                                          add_hydrogens=True,
-                                          show=False,
-                                          solid_sticks=True,
-                                          is_3d=True,
-                                          optimise=True)
-        except Exception as e:
-            print(f"Problem encountered with: {mol_input}."
-                               f"Error: {e}")
-            pass
+        mol_input_h = create_molecule(mol_input=mol_input,
+                                      add_hydrogens=True,
+                                      show=False,
+                                      solid_sticks=True,
+                                      is_3d=True,
+                                      optimise=True)
         return CalcMolDescriptors3D(mol_input_h)
 
-    # Calculate descriptors for each molecule in a dictionary
+    rows = []
+    identifiers = []
+    for i, mol_input in enumerate(mol_input_list):
+        try:
+            identifier = mol_input if isinstance(mol_input, str) \
+                else Chem.MolToSmiles(mol_input)
+        except Exception as e:
+            raise ValueError(f"Reading problem with molecule # {i}: {mol_input}."
+                             f"Error: {e}") from e
 
-    dict_desc = {
-        (m if isinstance(m, str) else Chem.MolToSmiles(m)):
-        (merge_dicts_with_duplicates(get_desc_2d(m),
-                                     get_desc_3d(m)) if include_3D
-            else get_desc_2d(m)) for m in mol_input_list
-    }
+        try:
+            desc_2d = get_desc_2d(mol_input)
+            if include_3D:
+                row = merge_dicts_with_duplicates(desc_2d,
+                                                  get_desc_3d(mol_input))
+            else:
+                row = desc_2d
+        except Exception as e:
+            raise ValueError(
+                f"Descriptor calculation problem with molecule # {i}: "
+                f"{mol_input}. Error: {e}"
+            ) from e
 
-    # Dataframes from dictionary need to be transposed
+        rows.append(row)
+        identifiers.append(identifier)
 
-    df = pd.DataFrame(dict_desc).T
+    df = pd.DataFrame(rows, index=identifiers)
 
     # Remove Ipc descriptor as it returns innatural values
     df = df[[c for c in df.columns if c != 'Ipc']]
@@ -391,19 +440,27 @@ Examples
             mol = create_molecule(mol_input)
             return calculator(mol)
         except Exception as e:
-            print(f"Problem encountered with: {mol_input}."
-                  f"Error: {e}")
+            warnings.warn(
+                f"Problem encountered with: {mol_input}. Error: {e}",
+                RuntimeWarning,
+                stacklevel=2
+            )
             return [None] * len(calculator.descriptors)
-        
 
-    # Calculate descriptors for each molecule in a dictionary
+    rows = []
+    identifiers = []
+    for i, mol_input in enumerate(mol_input_list):
+        try:
+            identifier = mol_input if isinstance(mol_input, str) \
+                else Chem.MolToSmiles(mol_input)
+        except Exception as e:
+            raise ValueError(f"Reading problem with molecule # {i}: {mol_input}."
+                             f"Error: {e}") from e
 
-    dict_desc = {
-        (m if isinstance(m, str) else Chem.MolToSmiles(m)):
-        get_desc(m, calculator=calc) for m in mol_input_list
-    }
+        rows.append(get_desc(mol_input, calculator=calc))
+        identifiers.append(identifier)
 
-    df_desc = pd.DataFrame(dict_desc).T
+    df_desc = pd.DataFrame(rows, index=identifiers)
     df_desc.columns = [str(d) for d in calc.descriptors]
     return df_desc
 
@@ -508,9 +565,9 @@ Examples
     distmat = pm.Mol.get_distance_matrix(mol_h)
 
     tot_atoms = mol.GetNumAtoms()
-    if atom_index >= tot_atoms:
+    if atom_index < 0 or atom_index >= tot_atoms:
         raise IndexError(
-        f"Atom index ({atom_index}) larger than total atoms ({tot_atoms})"
+            f"Atom index ({atom_index}) outside valid range [0, {tot_atoms - 1}]"
         )
 
     a = mol.GetAtomWithIdx(atom_index)
@@ -944,35 +1001,21 @@ Examples
     try:
         mol = create_molecule(mol_input)
     except Exception as e:
-        print(f"Problem encountered with: {mol_input}."
-              f"Error: {e}")
-        pass
+        raise ValueError(f"Problem encountered with: {mol_input}. Error: {e}") from e
+
+    fpgen = _build_fingerprint_generator(fp_type,
+                                         radius,
+                                         nBits,
+                                         include_chirality)
+    if fpgen is None:
+        fp = AllChem.GetMACCSKeysFingerprint(mol)
+        if include_bit_info:
+            return fp, {}
+        return fp
 
     ao = rdFingerprintGenerator.AdditionalOutput()
     if include_bit_info:
         ao.AllocateBitInfoMap()
-
-    if fp_type == 'm':
-        fpgen = rdFingerprintGenerator.GetMorganGenerator(
-            radius=radius, fpSize=nBits,
-            includeChirality=include_chirality
-        )
-    elif fp_type == 'ap':
-        fpgen = rdFingerprintGenerator.GetAtomPairGenerator(
-            maxDistance=radius, fpSize=nBits,
-            includeChirality=include_chirality
-        )
-    elif fp_type == 'rk':
-        fpgen = rdFingerprintGenerator.GetRDKitFPGenerator(
-            maxPath=radius, fpSize=nBits,
-        )
-    elif fp_type == 'tt':
-        fpgen = rdFingerprintGenerator.GetTopologicalTorsionGenerator(
-            torsionAtomCount=radius, fpSize=nBits,
-            includeChirality=include_chirality
-        )
-    elif fp_type == 'mac':
-        return AllChem.GetMACCSKeysFingerprint(mol)
 
     fp = fpgen.GetFingerprint(mol, additionalOutput=ao)
     if include_bit_info:
@@ -1023,34 +1066,64 @@ Examples
 >>> get_fingerprint_df(["CCO", "c1ccccc1"], fp_type='m')
 """
 
+    from rdkit.Chem import AllChem
+    from mlchem.chem.manipulation import create_molecule
     from mlchem.helper import create_progressive_column_names
 
-    dict_fp = {}
+    mol_input_list = list(mol_input_list)
+    fpgen = _build_fingerprint_generator(fp_type,
+                                         radius,
+                                         nBits,
+                                         include_chirality)
+    n_columns = 167 if fp_type == 'mac' else nBits
+    fp_names = create_progressive_column_names(fp_type, n_columns)
+
+    if len(mol_input_list) == 0:
+        empty_df = pd.DataFrame(columns=fp_names)
+        if include_bit_info:
+            return empty_df, {}
+        return empty_df
+
+    rows = []
+    identifiers = []
     dict_bit_info = {}
-    for i,m in enumerate(mol_input_list):
+    duplicate_counts = {}
+    for i, m in enumerate(mol_input_list):
         try:
             identifier = m if isinstance(m, str) else Chem.MolToSmiles(m)
         except Exception as e:
             raise ValueError(f"Reading problem with molecule # {i}: {m}."
-                  f"Error: {e}")
+                             f"Error: {e}") from e
         try:
-            fp = get_fingerprint(m, fp_type, radius, nBits,
-                                 include_chirality, include_bit_info)
-            if not include_bit_info:
-                dict_fp[identifier] = fp.ToList()
+            mol = create_molecule(m)
+            if fpgen is None:
+                fp = AllChem.GetMACCSKeysFingerprint(mol)
+                bit_info = {}
             else:
-                dict_fp[identifier] = fp[0].ToList()
-                dict_bit_info[identifier] = fp[1]
+                fp = fpgen.GetFingerprint(mol)
+                bit_info = {}
+                if include_bit_info:
+                    from rdkit.Chem import rdFingerprintGenerator
+                    ao = rdFingerprintGenerator.AdditionalOutput()
+                    ao.AllocateBitInfoMap()
+                    fp = fpgen.GetFingerprint(mol, additionalOutput=ao)
+                    bit_info = ao.GetBitInfoMap()
         except Exception as e:
             raise ValueError(f"Calculation problem with molecule # {i}: {m}."
-                             f"Error: {e}")
+                             f"Error: {e}") from e
 
-    # Dataframe from dictionary is always transposed,
-    # so needs to be transposed again
+        rows.append(fp.ToList())
+        identifiers.append(identifier)
+        if include_bit_info:
+            duplicate_count = duplicate_counts.get(identifier, 0)
+            duplicate_counts[identifier] = duplicate_count + 1
+            if duplicate_count == 0:
+                info_key = str(identifier)
+            else:
+                info_key = f"{identifier}__dup{duplicate_count + 1}"
+            dict_bit_info[info_key] = bit_info
 
-    fp_names = create_progressive_column_names(fp_type,
-                                               len(dict_fp[identifier]))
-    fp_dataframe = pd.DataFrame(dict_fp, index=fp_names).T
+    fp_dataframe = pd.DataFrame(rows, index=identifiers, columns=fp_names)
 
     if include_bit_info:
         return fp_dataframe, dict_bit_info
@@ -1108,15 +1181,18 @@ Examples
         raise ValueError("Provided molecule has no conformers.")
 
     try:
-        _, res = rdEHTTools.RunMol(
+        success, res = rdEHTTools.RunMol(
             mol_input,
             keepOverlapAndHamiltonianMatrices=True,
             confId=conf_id
             )
     except Exception as e:
-        print(f"Problem encountered with: {mol_input}."
-              f"Error: {e}")
-        pass
+        raise RuntimeError(
+            f"Problem encountered with: {mol_input}. Error: {e}"
+        ) from e
+
+    if not success:
+        raise RuntimeError("EHT calculation failed with the provided molecule.")
 
     dictionary = {
         'AtomicCharges': res.GetAtomicCharges(),
