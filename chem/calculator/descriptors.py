@@ -34,7 +34,251 @@
 import numpy as np
 import pandas as pd
 from rdkit import Chem
-from typing import Literal, Iterable
+from typing import Literal, Iterable, Any, Callable
+from concurrent.futures import ThreadPoolExecutor
+import os
+
+
+class _ChemotypeExecution:
+    """Private helpers that orchestrate cached chemotype rule execution.
+
+    Notes
+    -----
+    This class is internal to chemotype calculation and is not part of the
+    public API. The methods are documented to improve editor hover help and
+    maintainability.
+    """
+
+    @staticmethod
+    def freeze_cache_value(value: Any) -> Any:
+        """Convert nested arguments into a stable hashable cache key.
+
+        Parameters
+        ----------
+        value : Any
+            Nested input value (dict/list/set/callable/scalar).
+
+        Returns
+        -------
+        Any
+            A deterministic, hashable representation suitable for cache keys.
+
+        Examples
+        --------
+        >>> _ChemotypeExecution.freeze_cache_value({'a': [1, 2]})
+        (('a', (1, 2)),)
+        """
+
+        if isinstance(value, dict):
+            return tuple(sorted((k, _ChemotypeExecution.freeze_cache_value(v))
+                                for k, v in value.items()))
+        if isinstance(value, (list, tuple)):
+            return tuple(_ChemotypeExecution.freeze_cache_value(v)
+                         for v in value)
+        if isinstance(value, set):
+            return tuple(sorted(_ChemotypeExecution.freeze_cache_value(v)
+                                for v in value))
+        if callable(value):
+            return ("__callable__", getattr(value, "__module__", ""),
+                    getattr(value,
+                            "__qualname__",
+                            getattr(value, "__name__", "")))
+        return value
+
+    @staticmethod
+    def normalise_output(result: Any) -> bool:
+        """Normalize chemotype rule outputs to a boolean.
+
+        Tuple outputs follow legacy semantics where element 0 is the truth
+        value (for example: ``(True, [atom_ids], smarts)``).
+
+        Parameters
+        ----------
+        result : Any
+            Rule output as bool-like scalar or tuple.
+
+        Returns
+        -------
+        bool
+            Normalized boolean result.
+
+        Examples
+        --------
+        >>> _ChemotypeExecution.normalise_output((True, [0, 1]))
+        True
+        >>> _ChemotypeExecution.normalise_output(False)
+        False
+        """
+
+        if isinstance(result, tuple):
+            if len(result) == 0:
+                return False
+            return bool(result[0])
+        return bool(result)
+
+    @staticmethod
+    def call_rule_with_cache(func: Callable[..., Any],
+                             mol: Chem.rdchem.Mol,
+                             kwargs: dict[str, Any],
+                             rule_cache: dict[tuple[Any, Any], Any]) -> Any:
+        """Call a chemotype rule once per molecule for a specific arg signature.
+
+        Parameters
+        ----------
+        func : Callable[..., Any]
+            Chemotype rule function.
+        mol : rdkit.Chem.rdchem.Mol
+            Target molecule.
+        kwargs : dict[str, Any]
+            Keyword arguments passed to the rule function.
+        rule_cache : dict[tuple[Any, Any], Any]
+            Per-molecule cache mapping function/signature to computed result.
+
+        Returns
+        -------
+        Any
+            Cached or freshly computed rule output.
+
+        Notes
+        -----
+        The method first tries ``func(target=mol, **kwargs)`` and falls back
+        to ``func(mol, **kwargs)`` for backward compatibility with rule
+        functions that only accept positional target input.
+
+        Raises
+        ------
+        Exception
+            Re-raises exceptions from the rule function if evaluation fails.
+
+        Examples
+        --------
+        >>> # Internal use inside get_chemotypes evaluation loop
+        >>> # _ChemotypeExecution.call_rule_with_cache(rule, mol, {}, cache)
+        """
+
+        cache_key = (func, _ChemotypeExecution.freeze_cache_value(kwargs))
+        if cache_key in rule_cache:
+            return rule_cache[cache_key]
+
+        try:
+            result = func(target=mol, **kwargs)
+        except TypeError:
+            result = func(mol, **kwargs)
+
+        rule_cache[cache_key] = result
+        return result
+
+    @staticmethod
+    def to_atom_count(result: Any) -> int:
+        """Extract atom-count semantics from chemotype rule outputs.
+
+        Parameters
+        ----------
+        result : Any
+            Rule output as tuple ``(bool, atom_ids, ...)`` or scalar bool-like.
+
+        Returns
+        -------
+        int
+            Number of matched atoms if available, otherwise 1/0 from bool cast.
+
+        Examples
+        --------
+        >>> _ChemotypeExecution.to_atom_count((True, [2, 5, 9]))
+        3
+        >>> _ChemotypeExecution.to_atom_count(False)
+        0
+        """
+
+        if isinstance(result, tuple) and len(result) > 1:
+            return len(result[1])
+        return int(bool(result))
+
+    @staticmethod
+    def evaluate_rule(func: Callable[..., Any],
+                      args: dict[str, Any],
+                      mol: Chem.rdchem.Mol,
+                      rule_cache: dict[tuple[Any, Any], Any],
+                      abs_rule: Callable[..., Any],
+                      rel_rule: Callable[..., Any]) -> Any:
+        """Evaluate one chemotype rule with memoization-aware fast paths.
+
+        This method optimizes known derived rules
+        (absolute/relative fraction thresholds) by reusing cached base-pattern
+        evaluations rather than re-running equivalent pattern checks.
+
+        Parameters
+        ----------
+        func : Callable[..., Any]
+            Rule function to evaluate.
+        args : dict[str, Any]
+            Rule argument mapping from the chemotype dictionary.
+        mol : rdkit.Chem.rdchem.Mol
+            Molecule to evaluate.
+        rule_cache : dict[tuple[Any, Any], Any]
+            Per-molecule cache of previously evaluated rule calls.
+        abs_rule : Callable[..., Any]
+            Reference absolute-fraction rule function.
+        rel_rule : Callable[..., Any]
+            Reference relative-fraction rule function.
+
+        Returns
+        -------
+        Any
+            Raw rule output (later normalized by ``normalise_output``).
+
+        Raises
+        ------
+        KeyError
+            If a derived rule is missing required dictionary keys, for example
+            ``func``, ``func1``, ``func2``, or ``threshold``.
+        Exception
+            Re-raises exceptions from nested rule evaluations.
+
+        Examples
+        --------
+        >>> # Internal use in get_chemotypes:
+        >>> # raw = _ChemotypeExecution.evaluate_rule(func, args, mol, cache, abs_rule, rel_rule)
+        """
+
+        if func is abs_rule:
+            hidden_func = args.get('hidden_pattern_function')
+            numerator_kwargs = {}
+            if hidden_func is not None:
+                numerator_kwargs['pattern_function'] = hidden_func
+
+            numerator_result = _ChemotypeExecution.call_rule_with_cache(
+                args['func'], mol, numerator_kwargs, rule_cache
+            )
+            pattern_atoms = _ChemotypeExecution.to_atom_count(numerator_result)
+            total_atoms = mol.GetNumAtoms()
+            threshold = args['threshold']
+            return total_atoms > 0 and (pattern_atoms / total_atoms) > threshold
+
+        if func is rel_rule:
+            hidden_func = args.get('hidden_pattern_function')
+            numerator_kwargs = {}
+            if hidden_func is not None:
+                numerator_kwargs['pattern_function'] = hidden_func
+
+            denominator_result = _ChemotypeExecution.call_rule_with_cache(
+                args['func2'], mol, {}, rule_cache
+            )
+            numerator_result = _ChemotypeExecution.call_rule_with_cache(
+                args['func1'], mol, numerator_kwargs, rule_cache
+            )
+
+            denominator_atoms = _ChemotypeExecution.to_atom_count(
+                denominator_result
+            )
+            numerator_atoms = _ChemotypeExecution.to_atom_count(numerator_result)
+            threshold = args['threshold']
+            return denominator_atoms > 0 and \
+                (numerator_atoms / denominator_atoms) > threshold
+
+        return _ChemotypeExecution.call_rule_with_cache(
+            func, mol, args, rule_cache
+        )
 
 
 def get_rdkitDesc(mol_input_list: Iterable[str | Chem.rdchem.Mol],
@@ -506,7 +750,8 @@ Examples
 
 
 def get_chemotypes(mol_input_list: list | np.ndarray[str | Chem.rdchem.Mol],
-                   chemotype_dict: dict | None = None) -> pd.DataFrame:
+                   chemotype_dict: dict | None = None,
+                   n_jobs: int = 1) -> pd.DataFrame:
     """
 Identify chemotypes for a list of molecules.
 
@@ -522,53 +767,128 @@ chemotype_dict : dict, optional
     Dictionary of chemotype definitions. Each entry should be a key
     with a tuple of (function, argument_dict). If None, a default
     dictionary is used.
+n_jobs : int, optional
+    Number of worker threads used to process molecules. Use values
+    greater than 1 to enable parallel execution. Use -1 to consume
+    all available CPU cores. Default is 1.
 
 Returns
 -------
 pd.DataFrame
     DataFrame containing the identified chemotypes for each molecule.
 
+Raises
+------
+ValueError
+    If ``n_jobs`` is 0 or less than -1.
+ValueError
+    If a chemotype rule does not contain exactly two items
+    (function, arguments).
+TypeError
+    If a chemotype rule function is not callable or its argument payload is
+    not a dictionary.
+Exception
+    Propagates molecule parsing/evaluation exceptions from underlying rule
+    functions and RDKit utilities.
+
+Notes
+-----
+- Output row ordering is deterministic and follows ``mol_input_list`` even
+  when ``n_jobs > 1`` because ``ThreadPoolExecutor.map`` preserves order.
+- ``n_jobs=-1`` maps to ``os.cpu_count()`` (or 1 if unavailable).
+
 Examples
 --------
 >>> get_chemotypes(["CCO", "c1ccccc1"])
+>>> get_chemotypes(["CCO", "CCN", "COCC"], n_jobs=-1)
+>>> custom = {'O_rule': [lambda target: target.HasSubstructMatch(Chem.MolFromSmarts('[#8]')), {}]}
+>>> get_chemotypes([Chem.MolFromSmiles("CCO"), Chem.MolFromSmiles("CCC")], chemotype_dict=custom)
 """
 
+    from mlchem.chem.manipulation import create_molecule
+    from mlchem.chem.manipulation import PatternRecognition as pr
 
-    matchers = Chem.SubstructMatchParameters()
-    matchers.useGenericMatchers = True
+    if n_jobs == -1:
+        n_jobs = os.cpu_count() or 1
+    elif n_jobs < -1 or n_jobs == 0:
+        raise ValueError("'n_jobs' must be -1 or a positive integer.")
 
     if chemotype_dict is None:
         from mlchem.importables import chemotype_dictionary
         chemotype_dict = chemotype_dictionary
 
-    def identify_chemotypes(mol_input: str | Chem.rdchem.Mol,
-                            chemotype_dict: dict) -> dict:
-        """Identify chemotypes for a single molecule."""
+    abs_rule = pr.Base.pattern_abs_fraction_greater_than
+    rel_rule = pr.Base.pattern_rel_fraction_greater_than
+
+    mol_input_list = list(mol_input_list)
+    mol_list = [create_molecule(mol_input) if isinstance(mol_input, str)
+                else mol_input for mol_input in mol_input_list]
+
+    def identify_chemotypes(mol_input: Chem.rdchem.Mol,
+                            chemotype_dict: dict,
+                            abs_rule,
+                            rel_rule) -> dict:
+        """Identify chemotypes for one molecule.
+
+        Parameters
+        ----------
+        mol_input : rdkit.Chem.rdchem.Mol
+            Molecule to classify.
+        chemotype_dict : dict
+            Mapping of chemotype names to ``[function, kwargs]`` entries.
+        abs_rule : callable
+            Reference for absolute-fraction optimization path.
+        rel_rule : callable
+            Reference for relative-fraction optimization path.
+
+        Returns
+        -------
+        dict
+            Mapping of chemotype names to boolean presence flags.
+        """
         results = {}
+        rule_cache = {}
         for key, value in chemotype_dict.items():
-
-            # Case where there is a pattern function and its arguments
-
-            if len(value) == 2:     # Pattern function returns a tuple
-                try:
-                    func = value[0]
-                    args = value[1]
-                    # [0] is True/False, [1] (if available) are atom indexes,
-                    # [2] (if available) are either query strings or notes
-                    results[key] = func(mol_input, **args)[0]
-                except Exception:     # Pattern function returns a single value
-                    func, args = value
-                    results[key] = func(mol_input, **args)
-            else:
+            if len(value) != 2:
                 raise ValueError(
                     "expected 1 function and 1 dictionary of arguments, found "
                     f"{len(value)} total elements instead.")
+
+            func, args = value
+            if not callable(func):
+                raise TypeError(f"Chemotype rule '{key}' has a non-callable function.")
+            if not isinstance(args, dict):
+                raise TypeError(f"Chemotype rule '{key}' has non-dict arguments.")
+
+            result = _ChemotypeExecution.evaluate_rule(
+                func=func,
+                args=args,
+                mol=mol_input,
+                rule_cache=rule_cache,
+                abs_rule=abs_rule,
+                rel_rule=rel_rule
+            )
+            results[key] = _ChemotypeExecution.normalise_output(result)
         return results
 
-    chemotype_results = [
-        identify_chemotypes(mol, chemotype_dict) for mol in mol_input_list
-    ]
-    return pd.DataFrame(chemotype_results,index=mol_input_list)
+    if n_jobs == 1:
+        chemotype_results = [
+            identify_chemotypes(mol, chemotype_dict, abs_rule, rel_rule)
+            for mol in mol_list
+        ]
+    else:
+        with ThreadPoolExecutor(max_workers=n_jobs) as pool:
+            chemotype_results = list(
+                pool.map(
+                    lambda mol: identify_chemotypes(mol,
+                                                    chemotype_dict,
+                                                    abs_rule,
+                                                    rel_rule),
+                    mol_list
+                )
+            )
+
+    return pd.DataFrame(chemotype_results, index=mol_input_list)
 
 
 def get_fingerprint(

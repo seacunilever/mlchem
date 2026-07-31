@@ -37,6 +37,18 @@ import numpy as np
 import pandas as pd
 from typing import Literal, Optional, Iterable, Callable
 from IPython.display import display
+from functools import lru_cache
+
+
+@lru_cache(maxsize=4096)
+def _get_cached_smarts_pattern(processed_pattern: str) -> Chem.rdchem.Mol:
+    """Compile and cache SMARTS patterns used by substructure searches."""
+
+    mol_pattern = Chem.MolFromSmarts(processed_pattern)
+    if mol_pattern is None:
+        raise ValueError(f"Invalid SMARTS pattern: {processed_pattern}")
+    Chem.SetGenericQueriesFromProperties(mol_pattern)
+    return mol_pattern
 
 
 def mol_from_string(mol_input: str) -> Chem.rdchem.Mol:
@@ -3728,9 +3740,9 @@ Examples
             else:
                 processed_pattern_final = smarts_pattern
 
-            target_mol = create_molecule(target)
-            mol_pattern = Chem.MolFromSmarts(processed_pattern_final)
-            Chem.SetGenericQueriesFromProperties(mol_pattern)
+            target_mol = target if isinstance(target, Chem.rdchem.Mol) \
+                else create_molecule(target)
+            mol_pattern = _get_cached_smarts_pattern(processed_pattern_final)
             atoms = np.unique(flatten(target_mol.GetSubstructMatches(mol_pattern,
                                                            matchers)))
             
