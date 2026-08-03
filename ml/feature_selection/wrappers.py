@@ -36,11 +36,25 @@ import numpy as np
 from typing import Literal, Iterable, Callable, Optional
 from math import comb
 import os
+import logging
 from sklearn.base import clone
 
 import matplotlib.pyplot as plt
 from mlchem.helper import loadingbar, generate_combination_cascade
 from mlchem.ml.modelling.model_evaluation import crossval
+
+
+logger = logging.getLogger(__name__)
+
+
+def _coerce_log_level(level: int | str) -> int:
+    if isinstance(level, int):
+        return level
+    if isinstance(level, str):
+        resolved = logging.getLevelName(level.upper())
+        if isinstance(resolved, int):
+            return resolved
+    raise ValueError("'log_level' must be a valid logging level name or integer.")
 
 
 def _clone_for_search(estimator, outer_n_jobs: int):
@@ -143,7 +157,9 @@ class SequentialForwardSelection:
                  cv_iter: int = 5,
                  logic: Literal['lower', 'greater'] = 'greater',
                  task_type: Literal[
-                     'classification', 'regression'] = 'classification'
+                     'classification', 'regression'] = 'classification',
+                 verbose: bool = False,
+                 log_level: int | str = logging.INFO,
                  ) -> None:
         """
   Initialise the SequentialForwardSelection object.
@@ -175,6 +191,8 @@ class SequentialForwardSelection:
         self.cv_iter = cv_iter
         self.logic = logic
         self.task_type = task_type
+        self.verbose = bool(verbose)
+        self.log_level = _coerce_log_level(log_level)
 
         # Where to store the temporarily best feature set at each iteration
         self.extending_features = []
@@ -192,6 +210,17 @@ class SequentialForwardSelection:
 
         # Where to store test scores
         self.unseen_scores = []
+
+    def set_verbosity(self, verbose: bool = True,
+                      log_level: int | str | None = None) -> None:
+        """Enable/disable wrapper logs and optionally change log level."""
+        self.verbose = bool(verbose)
+        if log_level is not None:
+            self.log_level = _coerce_log_level(log_level)
+
+    def _log(self, level: int, msg: str, *args) -> None:
+        if self.verbose and level >= self.log_level:
+            logger.log(level, msg, *args)
 
     def fit(
         self,
@@ -231,6 +260,16 @@ class SequentialForwardSelection:
         self.feature_labels = self.train_set.columns
         self.n_jobs = self._resolve_n_jobs(n_jobs)
 
+        self._log(
+            logging.INFO,
+            "SFS start: samples=%d, features=%d, max_features=%d, cv_iter=%d, n_jobs=%d",
+            len(self.train_set),
+            len(self.feature_labels),
+            self.max_features,
+            self.cv_iter,
+            self.n_jobs,
+        )
+
         from joblib import Parallel, delayed
 
         def evaluate_feature(feat):
@@ -246,6 +285,14 @@ class SequentialForwardSelection:
                 self.cv_iter,
                 self.task_type,
             )
+            self._log(
+                logging.DEBUG,
+                "SFS candidate=%s | subset_size=%d | cv_mean=%.4f | cv_std=%.4f",
+                feat,
+                len(features_to_test),
+                float(np.mean(cvscores)),
+                float(np.std(cvscores)),
+            )
             return np.mean(cvscores), np.std(cvscores)
 
         for cycle in range(self.max_features):
@@ -260,6 +307,12 @@ class SequentialForwardSelection:
                                             self.feature_labels if
                                             feat not in self.extending_features
                                             ]
+            self._log(
+                logging.DEBUG,
+                "SFS cycle=%d | available_features=%d",
+                cycle + 1,
+                len(self.list_available_features),
+            )
 
             # Hypothetically assess model if an extra feature is added.
             # Do it for all unexplored features.
@@ -288,6 +341,15 @@ class SequentialForwardSelection:
             self.extending_features.append(feature_to_add)
             loadingbar(cycle + 1, self.max_features, 50)
 
+            self._log(
+                logging.INFO,
+                "SFS accepted cycle=%d | feature=%s | cv=%.4f +- %.4f",
+                cycle + 1,
+                feature_to_add,
+                self.cv_scores[-1],
+                self.cv_stds[-1],
+            )
+
             # Get score on unseen test data
             train_set_temp = self.train_set[self.extending_features]
             test_set_temp = self.test_set[self.extending_features]
@@ -296,6 +358,19 @@ class SequentialForwardSelection:
             y_test_pred = self.estimator.predict(test_set_temp)
             self.train_scores.append(self.metric(self.y_train, y_train_pred))
             self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
+            self._log(
+                logging.DEBUG,
+                "SFS cycle=%d scores | train=%.4f | test=%.4f",
+                cycle + 1,
+                self.train_scores[-1],
+                self.unseen_scores[-1],
+            )
+
+        self._log(
+            logging.INFO,
+            "SFS completed: selected_features=%d",
+            len(self.extending_features),
+        )
 
     @staticmethod
     def _resolve_n_jobs(n_jobs: int) -> int:
@@ -536,11 +611,16 @@ class SequentialForwardSelection:
 
         plt.show()
 
-        print('Number of features:', ind)
-        print(f'Winner feature subset: {self.extending_features[:ind]}')
-        print(f'Train Score: {self.train_scores[ind - 1]:.3f}')
-        print(f'CV Score: {self.cv_scores[ind - 1]:.3f} ± {self.cv_stds[ind - 1]:.3f}')
-        print(f'Test Score: {self.unseen_scores[ind - 1]:.3f}')
+        self._log(logging.INFO, 'SFS summary: number_of_features=%d', ind)
+        self._log(logging.INFO, 'SFS summary: winner_subset=%s', self.extending_features[:ind])
+        self._log(logging.INFO, 'SFS summary: train_score=%.3f', self.train_scores[ind - 1])
+        self._log(
+            logging.INFO,
+            'SFS summary: cv_score=%.3f +- %.3f',
+            self.cv_scores[ind - 1],
+            self.cv_stds[ind - 1],
+        )
+        self._log(logging.INFO, 'SFS summary: test_score=%.3f', self.unseen_scores[ind - 1])
 
 
 class CombinatorialSelection:
@@ -590,7 +670,9 @@ class CombinatorialSelection:
                  logic: Literal['lower', 'greater'] = 'greater',
                  task_type: Literal[
                      'classification', 'regression'
-                     ] = 'classification'
+                     ] = 'classification',
+                 verbose: bool = False,
+                 log_level: int | str = logging.INFO,
                  ) -> None:
         """
         Initialise the CombinatorialSelection object.
@@ -612,6 +694,19 @@ class CombinatorialSelection:
         self.metric = metric
         self.logic = logic
         self.task_type = task_type
+        self.verbose = bool(verbose)
+        self.log_level = _coerce_log_level(log_level)
+
+    def set_verbosity(self, verbose: bool = True,
+                      log_level: int | str | None = None) -> None:
+        """Enable/disable wrapper logs and optionally change log level."""
+        self.verbose = bool(verbose)
+        if log_level is not None:
+            self.log_level = _coerce_log_level(log_level)
+
+    def _log(self, level: int, msg: str, *args) -> None:
+        if self.verbose and level >= self.log_level:
+            logger.log(level, msg, *args)
 
     @staticmethod
     def _validate_subset_limit(
@@ -842,6 +937,15 @@ class CombinatorialSelection:
         self.max_subsets = max_subsets
         self.n_jobs = self._resolve_n_jobs(n_jobs)
 
+        self._log(
+            logging.INFO,
+            "Combinatorial stage 1 start: samples=%d, features=%d, k=%d, n_jobs=%d",
+            len(self.train_set),
+            len(self.features),
+            self.k,
+            self.n_jobs,
+        )
+
         if not 0 <= self.cv_train_ratio <= 1:
             raise ValueError("'cv_train_ratio' must be between 0 and 1.")
         if self.logic == 'lower' and self.cv_train_ratio == 0:
@@ -902,6 +1006,12 @@ class CombinatorialSelection:
             y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
             if not is_better(train_score, self.training_threshold):
+                self._log(
+                    logging.DEBUG,
+                    "Stage 1 rejected subset=%s by train threshold: %.4f",
+                    subset,
+                    train_score,
+                )
                 return None
 
             cv_score = crossval(
@@ -913,10 +1023,24 @@ class CombinatorialSelection:
                 self.task_type,
             ).mean()
             if not is_better(cv_score, self.cv_threshold):
+                self._log(
+                    logging.DEBUG,
+                    "Stage 1 rejected subset=%s by cv threshold: %.4f",
+                    subset,
+                    cv_score,
+                )
                 return None
 
             y_test_pred = estimator_copy.predict(self.test_set[subset].values)
             test_score = self.metric(self.y_test, y_test_pred)
+            self._log(
+                logging.DEBUG,
+                "Stage 1 accepted subset=%s | train=%.4f | cv=%.4f | test=%.4f",
+                subset,
+                train_score,
+                cv_score,
+                test_score,
+            )
             return subset, train_score, cv_score, test_score
 
         if self.n_jobs == 1:
@@ -959,6 +1083,11 @@ class CombinatorialSelection:
             by='geometric_mean',
             ascending=self.ascending_decision,
             inplace=True)
+        self._log(
+            logging.INFO,
+            "Combinatorial stage 1 completed: kept_subsets=%d",
+            len(self.df_results_stage1),
+        )
         return self.df_results_stage1
 
     def fit_stage_2(self,
@@ -1018,6 +1147,13 @@ class CombinatorialSelection:
         self.feature_subsets = generate_combination_cascade(
             self.best_recurrent, top_n_subsets
             )
+        self._log(
+            logging.INFO,
+            "Combinatorial stage 2 start: recurrent_features=%d, subset_size=%d, n_jobs=%d",
+            len(self.best_recurrent),
+            top_n_subsets,
+            self.n_jobs,
+        )
 
         # Set cv threshold based on the desirede cv/train ratio
         if self.logic == 'greater':
@@ -1047,6 +1183,12 @@ class CombinatorialSelection:
             y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
             if not is_better(train_score, self.training_threshold_2):
+                self._log(
+                    logging.DEBUG,
+                    "Stage 2 rejected subset=%s by train threshold: %.4f",
+                    subset,
+                    train_score,
+                )
                 return None
 
             cv_score = crossval(
@@ -1058,10 +1200,24 @@ class CombinatorialSelection:
                 self.task_type,
             ).mean()
             if not is_better(cv_score, self.cv_threshold_2):
+                self._log(
+                    logging.DEBUG,
+                    "Stage 2 rejected subset=%s by cv threshold: %.4f",
+                    subset,
+                    cv_score,
+                )
                 return None
 
             y_test_pred = estimator_copy.predict(self.test_set[subset].values)
             test_score = self.metric(self.y_test, y_test_pred)
+            self._log(
+                logging.DEBUG,
+                "Stage 2 accepted subset=%s | train=%.4f | cv=%.4f | test=%.4f",
+                subset,
+                train_score,
+                cv_score,
+                test_score,
+            )
             return subset, train_score, cv_score, test_score
 
         if self.n_jobs == 1:
@@ -1101,6 +1257,11 @@ class CombinatorialSelection:
             by='geometric_mean',
             ascending=self.ascending_decision,
             inplace=True)
+        self._log(
+            logging.INFO,
+            "Combinatorial stage 2 completed: kept_subsets=%d",
+            len(self.df_results_stage2),
+        )
         return self.df_results_stage2
 
     @staticmethod
@@ -1152,11 +1313,22 @@ class CombinatorialSelection:
             self.task_type
         )
 
-        # Display results
-        print(f'# of Features: {len(self.best_cols)}')
-        print(f'Best Features: {self.best_cols}')
-        print(f'Train Score: {self.metric(self.y_train,
-                                          self.y_train_pred):.3f}')
-        print(f'CV Score: {self.cv_performance.
-                           mean():.3f} ± {self.cv_performance.std():.3f}')
-        print(f'Test Score: {self.metric(self.y_test, self.y_test_pred):.3f}')
+        # Display results through logger
+        self._log(logging.INFO, '# of Features: %d', len(self.best_cols))
+        self._log(logging.INFO, 'Best Features: %s', self.best_cols)
+        self._log(
+            logging.INFO,
+            'Train Score: %.3f',
+            self.metric(self.y_train, self.y_train_pred),
+        )
+        self._log(
+            logging.INFO,
+            'CV Score: %.3f +- %.3f',
+            self.cv_performance.mean(),
+            self.cv_performance.std(),
+        )
+        self._log(
+            logging.INFO,
+            'Test Score: %.3f',
+            self.metric(self.y_test, self.y_test_pred),
+        )

@@ -33,6 +33,7 @@
 
 import pytest
 import inspect
+import logging
 from unittest.mock import patch
 import numpy as np
 import pandas as pd
@@ -205,14 +206,30 @@ def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     assert 'cv_score' in results_stage_2.columns
     assert 'test_score' in results_stage_2.columns
 
-def test_combinatorial_selection_display_best(fitted_cs_stage_2, capsys):
-    # Display best
-    fitted_cs_stage_2.display_best(row=1)
-    captured = capsys.readouterr()
-    assert "Best Features" in captured.out
-    assert "Train Score" in captured.out
-    assert "CV Score" in captured.out
-    assert "Test Score" in captured.out
+def test_combinatorial_selection_display_best_logs_summary(fitted_cs_stage_2, caplog):
+    fitted_cs_stage_2.set_verbosity(True, 'INFO')
+
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
+        fitted_cs_stage_2.display_best(row=1)
+
+    full_text = "\n".join(caplog.messages)
+    assert "Best Features" in full_text
+    assert "Train Score" in full_text
+    assert "CV Score" in full_text
+    assert "Test Score" in full_text
+
+
+def test_wrapper_logging_toggle_controls_verbosity(fitted_cs_stage_2, caplog):
+    fitted_cs_stage_2.set_verbosity(False)
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
+        fitted_cs_stage_2.display_best(row=1)
+    assert len(caplog.messages) == 0
+
+    caplog.clear()
+    fitted_cs_stage_2.set_verbosity(True, 'INFO')
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
+        fitted_cs_stage_2.display_best(row=1)
+    assert any('Best Features' in msg for msg in caplog.messages)
 
 
 def test_combinatorial_selection_stage_1_max_subsets_guard():
