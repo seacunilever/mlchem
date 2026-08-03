@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 from typing import Literal
+from numbers import Integral
 import warnings
 import pandas as pd
 
@@ -118,6 +119,33 @@ initial_columns_to_ignore : int, optional (default=0)
         self.dataframe = dataframe
         self.initial_columns_to_ignore = initial_columns_to_ignore
         self.algorithm = None
+
+    @staticmethod
+    def _resolve_neighbour_count(
+        neighbours_number_or_fraction: float | int,
+        sample_count: int,
+        require_less_than_sample_count: bool = False,
+    ) -> int:
+        if isinstance(neighbours_number_or_fraction, float):
+            if not 0 < neighbours_number_or_fraction <= 1:
+                raise ValueError(
+                    "'neighbours_number_or_fraction' must be between 0 and 1 "
+                    "if float."
+                )
+            return round(neighbours_number_or_fraction * sample_count)
+
+        if not isinstance(neighbours_number_or_fraction, Integral):
+            raise TypeError(
+                "'neighbours_number_or_fraction' must be an int or float."
+            )
+
+        if require_less_than_sample_count and neighbours_number_or_fraction >= sample_count:
+            raise ValueError(
+                "'neighbours_number_or_fraction' must be less than the "
+                "number of samples if int."
+            )
+
+        return int(neighbours_number_or_fraction)
         self.params_ = None
 
     def compress_PCA(self,
@@ -218,19 +246,11 @@ None
         df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
-            if isinstance(neighbours_number_or_fraction, float):
-                assert 0 < neighbours_number_or_fraction <= 1, (
-                    "'neighbours_number_or_fraction' must be between 0 and 1 "
-                    "if float."
-                )
-                self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(df))
-            else:
-                assert neighbours_number_or_fraction < len(df), (
-                    "'neighbours_number_or_fraction' must be less than the "
-                    "number of samples if int."
-                )
-                self.n_neighbours = neighbours_number_or_fraction
+            self.n_neighbours = self._resolve_neighbour_count(
+                neighbours_number_or_fraction,
+                len(df),
+                require_less_than_sample_count=True,
+            )
             self.algorithm = TSNE(
                 n_components=n_components,
                 perplexity=self.n_neighbours,
@@ -293,15 +313,10 @@ None
         df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
-            if isinstance(neighbours_number_or_fraction, float):
-                assert 0 < neighbours_number_or_fraction <= 1, (
-                    "'neighbours_number_or_fraction' must be between 0 and 1 "
-                    "if float."
-                )
-                self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(df))
-            else:
-                self.n_neighbours = neighbours_number_or_fraction
+            self.n_neighbours = self._resolve_neighbour_count(
+                neighbours_number_or_fraction,
+                len(df),
+            )
             self.algorithm = SpectralEmbedding(
                 n_components=n_components,
                 n_neighbors=self.n_neighbours,
@@ -369,15 +384,10 @@ None
         df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
-            if isinstance(neighbours_number_or_fraction, float):
-                assert 0 < neighbours_number_or_fraction <= 1, (
-                    "'neighbours_number_or_fraction' must be between 0 and 1 "
-                    "if float."
-                )
-                self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(df))
-            else:
-                self.n_neighbours = neighbours_number_or_fraction
+            self.n_neighbours = self._resolve_neighbour_count(
+                neighbours_number_or_fraction,
+                len(df),
+            )
             self.algorithm = umap.UMAP(
                 n_components=n_components,
                 n_neighbors=self.n_neighbours,
@@ -496,15 +506,10 @@ None
         df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
-            if isinstance(neighbours_number_or_fraction, float):
-                assert 0 < neighbours_number_or_fraction <= 1, (
-                    "'neighbours_number_or_fraction' must be between 0 "
-                    "and 1 if float."
-                )
-                self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(df))
-            else:
-                self.n_neighbours = neighbours_number_or_fraction
+            self.n_neighbours = self._resolve_neighbour_count(
+                neighbours_number_or_fraction,
+                len(df),
+            )
             self.algorithm = LocallyLinearEmbedding(
                 n_components=n_components,
                 n_neighbors=self.n_neighbours,
@@ -563,15 +568,10 @@ None
         df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
-            if isinstance(neighbours_number_or_fraction, float):
-                assert 0 < neighbours_number_or_fraction <= 1, (
-                    "'neighbours_number_or_fraction' must be between 0 "
-                    " and 1 if float."
-                )
-                self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(df))
-            else:
-                self.n_neighbours = neighbours_number_or_fraction
+            self.n_neighbours = self._resolve_neighbour_count(
+                neighbours_number_or_fraction,
+                len(df),
+            )
             self.algorithm = Isomap(
                 n_components=n_components,
                 n_neighbors=self.n_neighbours,

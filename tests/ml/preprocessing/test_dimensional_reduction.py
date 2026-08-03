@@ -95,12 +95,12 @@ def test_compress_ISOMAP(compressor):
 
 
 def test_compress_tsne_invalid_float_neighbours_raises(compressor):
-    with pytest.raises(AssertionError, match='must be between 0 and 1'):
+    with pytest.raises(ValueError, match='must be between 0 and 1'):
         compressor.compress_TSNE(n_components=2, neighbours_number_or_fraction=1.2)
 
 
 def test_compress_tsne_invalid_integer_neighbours_raises(compressor):
-    with pytest.raises(AssertionError, match='must be less than the number of samples'):
+    with pytest.raises(ValueError, match='must be less than the number of samples'):
         compressor.compress_TSNE(
             n_components=2,
             neighbours_number_or_fraction=len(compressor.dataframe)
@@ -151,13 +151,18 @@ def test_compress_mds_dict_params_path(compressor):
 
 
 def test_compress_lle_invalid_float_neighbours_raises(compressor):
-    with pytest.raises(AssertionError, match='must be between 0 and 1'):
+    with pytest.raises(ValueError, match='must be between 0 and 1'):
         compressor.compress_LLE(n_components=2, neighbours_number_or_fraction=1.5)
 
 
 def test_compress_isomap_invalid_float_neighbours_raises(compressor):
-    with pytest.raises(AssertionError, match='must be between 0  and 1'):
+    with pytest.raises(ValueError, match='must be an int or float|must be between 0'):
         compressor.compress_ISOMAP(n_components=2, neighbours_number_or_fraction=1.5)
+
+
+def test_compress_se_invalid_neighbour_type_raises_typeerror(compressor):
+    with pytest.raises(TypeError, match='must be an int or float'):
+        compressor.compress_SE(n_components=2, neighbours_number_or_fraction='invalid')
 
 if __name__ == "__main__":
     pytest.main()
