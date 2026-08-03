@@ -35,8 +35,6 @@ from typing import Literal
 import pandas as pd
 import numpy as np
 from mlchem.chem.calculator.tools import shannon_entropy
-from mlchem.helper import suppress_warnings
-suppress_warnings()
 
 
 def collinearity_filter(
