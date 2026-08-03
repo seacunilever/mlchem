@@ -73,6 +73,33 @@ def test_chemotype_dictionary():
     assert callable(chemotype_dictionary['Carbon'][0])
     assert isinstance(chemotype_dictionary['Carbon'][1], dict)
 
+
+def test_chemotype_dictionary_entries_are_well_formed():
+    function_like_keys = {'func', 'func1', 'func2', 'pattern_function', 'hidden_pattern_function'}
+
+    for name, entry in chemotype_dictionary.items():
+        assert isinstance(entry, list), f"Entry '{name}' must be a list"
+        assert len(entry) == 2, f"Entry '{name}' must contain exactly [callable, params]"
+
+        func, params = entry
+        assert callable(func), f"Entry '{name}' first item must be callable"
+        assert isinstance(params, dict), f"Entry '{name}' second item must be a dict"
+
+        for key in function_like_keys.intersection(params.keys()):
+            assert callable(params[key]), f"Entry '{name}' key '{key}' must reference a callable"
+
+        if 'threshold' in params:
+            assert isinstance(params['threshold'], (int, float)), (
+                f"Entry '{name}' threshold must be numeric"
+            )
+            assert 0 <= params['threshold'] <= 1, (
+                f"Entry '{name}' threshold must be between 0 and 1"
+            )
+
+        if 'n' in params:
+            assert isinstance(params['n'], int), f"Entry '{name}' n must be an int"
+            assert params['n'] >= 0, f"Entry '{name}' n must be >= 0"
+
 def test_bokeh_dictionary():
     assert isinstance(bokeh_dictionary, dict)
     assert 'title_location' in bokeh_dictionary
