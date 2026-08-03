@@ -555,7 +555,8 @@ list of str
 
 def try_except(
     func: Callable[[], Any],
-    exc: Any = None
+    exc: Any = None,
+    exceptions: type[BaseException] | tuple[type[BaseException], ...] = Exception,
 ) -> Any:
     """
 Execute a function and return its result or a fallback value on exception.
@@ -568,15 +569,36 @@ func : callable
 exc : any, optional
     Value to return if an exception occurs. Default is None.
 
+exceptions : exception type or tuple of exception types, optional
+    Exception types to catch. Default catches Exception.
+
 Returns
 -------
 any
     Result of the function or fallback value.
+
+Raises
+------
+TypeError
+    If `exceptions` is not an exception class or tuple of exception classes.
 """
+
+    if isinstance(exceptions, tuple):
+        if not exceptions or not all(
+            isinstance(ex, type) and issubclass(ex, BaseException)
+            for ex in exceptions
+        ):
+            raise TypeError(
+                "'exceptions' must be an exception type or tuple of exception types."
+            )
+    elif not (isinstance(exceptions, type) and issubclass(exceptions, BaseException)):
+        raise TypeError(
+            "'exceptions' must be an exception type or tuple of exception types."
+        )
 
     try:
         return func()
-    except Exception:
+    except exceptions:
         return exc
 
 
@@ -686,6 +708,9 @@ Returns
 tuple
     A flattened tuple containing all elements.
 """
+
+    if isinstance(args, (str, bytes, bytearray)):
+        return (args,)
 
     try:
         iter(args)
@@ -885,13 +910,25 @@ Returns
 -------
 tuple of pandas.DataFrame
     Cleaned DataFrame and DataFrame of removed duplicates.
+
+Raises
+------
+KeyError
+    If `column_name` does not exist in `df`.
+
+ValueError
+    If `keep` is not 'first' or 'last'.
 """
 
-    df_copy = df.copy()
-    df_copy.drop_duplicates(subset=column_name, keep=keep, inplace=True)
-    cleaned_df_copy = df_copy[df_copy.index.isin(df_copy.index)]
-    duplicates_removed = df[~df.index.isin(df_copy.index)]
-    return cleaned_df_copy, duplicates_removed
+    if column_name not in df.columns:
+        raise KeyError(f"Column '{column_name}' not found in DataFrame.")
+
+    if keep not in ('first', 'last'):
+        raise ValueError("'keep' must be either 'first' or 'last'.")
+
+    cleaned_df = df.drop_duplicates(subset=column_name, keep=keep)
+    duplicates_removed = df.loc[~df.index.isin(cleaned_df.index)]
+    return cleaned_df, duplicates_removed
 
 
 def create_structure_files(
@@ -1034,15 +1071,23 @@ Returns
 -------
 float
     Computed alpha value.
+
+Raises
+------
+ValueError
+    If size is negative.
 """
+
+    if size < 0:
+        raise ValueError("'size' must be a non-negative integer.")
 
     if size < 100:
         alpha = 0.95
-    elif 100 < size < 300:
+    elif size < 300:
         alpha = 0.9
-    elif 300 < size < 800:
+    elif size < 800:
         alpha = 0.8
-    elif 800 < size < 2000:
+    elif size < 2000:
         alpha = 0.5
     else:
         alpha = 0.2
@@ -1068,7 +1113,15 @@ Returns
 -------
 float
     Computed ratio.
+
+Raises
+------
+ValueError
+    If both sizes are zero.
 """
+
+    if size1 + size2 == 0:
+        raise ValueError("'size1' and 'size2' cannot both be zero.")
 
     return 1 - ((size1 / (size1 + size2)) / 2)
 

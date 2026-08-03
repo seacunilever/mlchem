@@ -32,12 +32,36 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+from pathlib import Path
+import mlchem
+import mlchem.importables as importables
 from mlchem.importables import (
     metal_list, chemical_dictionary, colour_dictionary,
     chemotype_dictionary, bokeh_dictionary, bokeh_tooltips,
     interpretable_descriptors_rdkit, interpretable_descriptors_mordred,
     similarity_metric_dictionary
 )
+
+
+def test_imports_use_workspace_package_root():
+    repo_root = Path(__file__).resolve().parents[1]
+    imported_root = Path(mlchem.__file__).resolve().parent
+    assert imported_root == repo_root
+
+
+def test_importables_has_explicit_public_exports():
+    expected = {
+        'metal_list',
+        'chemical_dictionary',
+        'colour_dictionary',
+        'chemotype_dictionary',
+        'bokeh_dictionary',
+        'bokeh_tooltips',
+        'interpretable_descriptors_rdkit',
+        'interpretable_descriptors_mordred',
+        'similarity_metric_dictionary',
+    }
+    assert set(importables.__all__) == expected
 
 def test_metal_list():
     assert isinstance(metal_list, list)
@@ -47,6 +71,11 @@ def test_metal_list():
     assert 'Fe' in metal_list
     assert 'Au' in metal_list
 
+
+def test_metal_list_contains_unique_symbols():
+    assert len(metal_list) == len(set(metal_list))
+    assert all(isinstance(symbol, str) and symbol.isalpha() for symbol in metal_list)
+
 def test_chemical_dictionary():
     assert isinstance(chemical_dictionary, dict)
     assert '[#B-1]' in chemical_dictionary
@@ -55,6 +84,11 @@ def test_chemical_dictionary():
     assert '[Br]' in chemical_dictionary
     assert '[Cl]' in chemical_dictionary
 
+
+def test_chemical_dictionary_weights_are_non_negative_numbers():
+    assert all(isinstance(weight, (int, float)) for weight in chemical_dictionary.values())
+    assert all(weight >= 0 for weight in chemical_dictionary.values())
+
 def test_colour_dictionary():
     assert isinstance(colour_dictionary, dict)
     assert 'red' in colour_dictionary
@@ -62,6 +96,15 @@ def test_colour_dictionary():
     assert 'blue' in colour_dictionary
     assert 'yellow' in colour_dictionary
     assert 'purple' in colour_dictionary
+
+
+def test_colour_dictionary_values_are_normalised_rgb_tuples():
+    for colour_name, rgb in colour_dictionary.items():
+        assert isinstance(colour_name, str)
+        assert isinstance(rgb, tuple)
+        assert len(rgb) == 3
+        assert all(isinstance(channel, (int, float)) for channel in rgb)
+        assert all(0 <= channel <= 1 for channel in rgb)
 
 def test_chemotype_dictionary():
     assert isinstance(chemotype_dictionary, dict)
@@ -147,6 +190,16 @@ def test_similarity_metric_dictionary():
     assert callable(similarity_metric_dictionary['Tanimoto'])
     assert callable(similarity_metric_dictionary['Dice'])
     assert callable(similarity_metric_dictionary['Cosine'])
+
+
+def test_similarity_metric_dictionary_has_expected_keys_and_callable_values():
+    expected_keys = {
+        'Tanimoto', 'Dice', 'Cosine', 'Sokal', 'Russel',
+        'RogotGoldberg', 'AllBit', 'OnBit', 'Kulczynski',
+        'McConnaughey', 'Asymmetric', 'BraunBlanquet', 'Tversky'
+    }
+    assert set(similarity_metric_dictionary.keys()) == expected_keys
+    assert all(callable(metric) for metric in similarity_metric_dictionary.values())
 
 if __name__ == "__main__":
     pytest.main()

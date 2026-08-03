@@ -163,6 +163,16 @@ def test_try_except():
     assert try_except(lambda: 1 / 0, exc="error") == "error"
     assert try_except(lambda: 1 / 1) == 1.0
 
+
+def test_try_except_exception_scope_and_validation():
+    assert try_except(lambda: 1 / 0, exc="zero", exceptions=ZeroDivisionError) == "zero"
+
+    with pytest.raises(KeyError):
+        try_except(lambda: {}['missing'], exc="fallback", exceptions=ValueError)
+
+    with pytest.raises(TypeError):
+        try_except(lambda: 1, exceptions=(ValueError, 'invalid'))
+
 def test_find_all_occurrences():
     assert find_all_occurrences("test test test", "test") == [0, 5, 10]
 
@@ -176,6 +186,11 @@ def test_insert_string_piece():
 
 def test_flatten():
     assert flatten([1, [2, 3], [[4, 5], 6]]) == (1, 2, 3, 4, 5, 6)
+
+
+def test_flatten_treats_strings_as_atomic_values():
+    assert flatten('abc') == ('abc',)
+    assert flatten(['ab', ['cd']]) == ('ab', 'cd')
 
 
 def test_process_custom_string():
@@ -208,6 +223,16 @@ def test_identify_df_duplicates():
     assert len(cleaned_df) == 3
     assert len(duplicates_df) == 1
 
+
+def test_identify_df_duplicates_validation_errors():
+    df = pd.DataFrame({"A": [1, 2, 2], "B": [3, 4, 4]})
+
+    with pytest.raises(KeyError):
+        identify_df_duplicates(df, "missing")
+
+    with pytest.raises(ValueError):
+        identify_df_duplicates(df, "A", keep='invalid')
+
 def test_create_structure_files(tmpdir):
     df = pd.DataFrame({"SMILES": ["CCO", "CCC"]})
     folder = tmpdir.mkdir("structures")
@@ -236,14 +261,24 @@ def test_prepare_datatable():
 
 def test_compute_alpha():
     assert compute_alpha(50) == 0.95
+    assert compute_alpha(100) == 0.9
     assert compute_alpha(150) == 0.9
+    assert compute_alpha(300) == 0.8
     assert compute_alpha(500) == 0.8
+    assert compute_alpha(800) == 0.5
     assert compute_alpha(1000) == 0.5
+    assert compute_alpha(2000) == 0.2
     assert compute_alpha(3000) == 0.2
+
+    with pytest.raises(ValueError):
+        compute_alpha(-1)
 
 def test_size_ratio():
     assert size_ratio(1, 1) == 0.75
     assert size_ratio(1, 3) == 0.875
+
+    with pytest.raises(ValueError):
+        size_ratio(0, 0)
 
 def test_bokeh_plot(monkeypatch):
     from bokeh.plotting import figure

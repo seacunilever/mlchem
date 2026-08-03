@@ -1845,3 +1845,15 @@ similarity_metric_dictionary = {'Tanimoto': metrics.
                                 'Tversky': metrics.
                                 TverskySimilarity,
                                 }
+
+__all__ = [
+    'metal_list',
+    'chemical_dictionary',
+    'colour_dictionary',
+    'chemotype_dictionary',
+    'bokeh_dictionary',
+    'bokeh_tooltips',
+    'interpretable_descriptors_rdkit',
+    'interpretable_descriptors_mordred',
+    'similarity_metric_dictionary',
+]
