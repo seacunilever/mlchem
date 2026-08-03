@@ -36,7 +36,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import logging
-from mlchem.helper import coerce_log_level
+from mlchem.helper import coerce_log_level, validate_task_type
 
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,8 @@ numpy.ndarray
 
     from sklearn.model_selection import cross_val_score
     from sklearn.metrics import make_scorer
+
+    validate_task_type(task_type)
 
     cv_kwargs = {
         'n_splits': n_fold,
@@ -295,7 +297,7 @@ estimator_names : list of str, optional
         estimator_names: list[str] | None = None
          ) -> None:
 
-        self.task_type = task_type
+        self.task_type = validate_task_type(task_type)
         self.estimator_list = estimator_list
         self.estimator_names = [] if estimator_names is None else list(estimator_names)
         self.column_list = column_list
@@ -456,7 +458,7 @@ None
             """
             Perform majority voting or averaging on the predictions.
             """
-            dataframe_probe = dataframe[individual_ys].values
+            dataframe_probe = dataframe[individual_ys].to_numpy(copy=False)
             if hard:
                 from scipy.stats import mode
                 return mode(dataframe_probe, axis=1)[0]

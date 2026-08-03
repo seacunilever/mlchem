@@ -57,6 +57,14 @@ class FailingRegressor:
     def fit(self, X, y):
         raise RuntimeError("Intentional fit failure")
 
+
+class NoProbaEstimator:
+    def fit(self, X, y):
+        return self
+
+    def predict(self, X):
+        return np.zeros(len(X), dtype=int)
+
 @pytest.fixture
 def sample_data():
     X, y = make_classification(100, 10, n_informative=5)
@@ -89,6 +97,22 @@ def test_crossval_regression(sample_data):
     scores = crossval(estimator, train_set.values, y_train_reg, metric_function, n_fold=5, task_type='regression')
     assert isinstance(scores, np.ndarray)
     assert len(scores) == 5
+
+
+def test_crossval_invalid_task_type_raises(sample_data):
+    train_set, y_train, _, _ = sample_data
+    estimator = LogisticRegression()
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+
+    with pytest.raises(ValueError, match="must be either 'classification' or 'regression'"):
+        crossval(
+            estimator,
+            train_set.values,
+            y_train,
+            metric_function,
+            n_fold=5,
+            task_type='invalid',
+        )
 
 
 @pytest.mark.parametrize('task_type, estimator, y_values', [
@@ -370,6 +394,29 @@ def test_majority_vote_fit_raises_when_all_classification_estimators_fail(sample
     with pytest.warns(RuntimeWarning):
         with pytest.raises(RuntimeError, match="No estimators were successfully fitted"):
             mv.fit()
+
+
+def test_majority_vote_fit_skips_estimator_without_predict_proba(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    good_estimator = LogisticRegression(random_state=1)
+    no_proba = NoProbaEstimator()
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=[good_estimator, no_proba],
+        column_list=[train_set.columns.tolist(), train_set.columns.tolist()],
+        estimator_names=['good_lr', 'no_proba']
+    )
+
+    with pytest.warns(RuntimeWarning, match="Skipping estimator 'no_proba'"):
+        mv.fit()
+
+    assert 'good_lr' in mv.df_train_predictions_soft.columns
+    assert 'no_proba' not in mv.df_train_predictions_soft.columns
 
 def test_majority_vote_predict(majority_vote_classification):
     mv = majority_vote_classification

@@ -54,7 +54,9 @@ def test_check_class_balance_logs_when_verbose(sample_data, caplog):
     y_train = train_set['class'].values.tolist()
     with caplog.at_level(logging.INFO, logger='mlchem.ml.preprocessing.undersampling'):
         check_class_balance(y_train, verbose=True, log_level='INFO')
-    assert any('CLASS BALANCE [0]: 2 [1]: 8 (0.20/0.80)' in msg for msg in caplog.messages)
+    assert any('CLASS BALANCE' in msg for msg in caplog.messages)
+    assert any('[0]: 2 (0.20)' in msg for msg in caplog.messages)
+    assert any('[1]: 8 (0.80)' in msg for msg in caplog.messages)
 
 
 def test_check_class_balance_is_silent_by_default(sample_data, caplog):
@@ -168,6 +170,37 @@ def test_undersample_random_seed_zero_seeds_rng(sample_data):
             random_seed=0,
         )
     seed_mock.assert_called_once_with(0)
+
+
+def test_undersample_rejects_non_binary_labels():
+    train_set = pd.DataFrame(
+        {
+            'feature1': [1, 2, 3, 4, 5, 6],
+            'class': ['a', 'b', 'c', 'a', 'b', 'c'],
+        }
+    )
+    test_set = pd.DataFrame({'feature1': [7, 8], 'class': ['a', 'b']})
+
+    with pytest.raises(ValueError, match='supports exactly two classes'):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=0.5,
+        )
+
+
+def test_undersample_rejects_impossible_majority_growth_target(sample_data):
+    train_set, test_set = sample_data
+
+    # Current majority proportion is 0.8; target 0.95 would require growth.
+    with pytest.raises(ValueError, match='implies majority-class growth'):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=0.95,
+        )
 
 if __name__ == "__main__":
     pytest.main()

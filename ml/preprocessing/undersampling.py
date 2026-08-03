@@ -63,20 +63,21 @@ Returns
 None
 """
 
-    zero_class_training = y_train.count(0)
-    one_class_training = y_train.count(1)
-    total = zero_class_training + one_class_training
-    zero_ratio = zero_class_training / total
-    one_ratio = 1 - zero_ratio
+    counts = pd.Series(list(y_train)).value_counts()
+    if counts.empty:
+        raise ValueError("'y_train' must contain at least one class label.")
+
+    total = int(counts.sum())
+    balance_parts = [
+        f"[{label}]: {int(count)} ({(count / total):.2f})"
+        for label, count in counts.items()
+    ]
     resolved_log_level = coerce_log_level(log_level)
     _log_if_verbose(
         verbose,
         resolved_log_level,
-        'CLASS BALANCE [0]: %d [1]: %d (%.2f/%.2f)',
-        zero_class_training,
-        one_class_training,
-        zero_ratio,
-        one_ratio,
+        'CLASS BALANCE %s',
+        ' '.join(balance_parts),
     )
 
 
@@ -134,23 +135,31 @@ tuple of pandas.DataFrame
             "'desired_proportion_majority' must be strictly between 0 and 1."
         )
 
-    zero_class_training = train_set[class_column].value_counts().get(0, 0)
-    one_class_training = train_set[class_column].value_counts().get(1, 0)
+    class_counts = train_set[class_column].value_counts()
+    if len(class_counts) != 2:
+        raise ValueError(
+            "'undersample' supports exactly two classes. "
+            "Use binary labels for undersampling."
+        )
 
-    # Determine the minority and majority classes
-    if zero_class_training > one_class_training:
-        minority_class = one_class_training
-        majority_class = zero_class_training
-        majority_class_label = 0
-    else:
-        minority_class = zero_class_training
-        majority_class = one_class_training
-        majority_class_label = 1
+    majority_class_label = class_counts.idxmax()
+    majority_class = int(class_counts.loc[majority_class_label])
+    minority_class = int(class_counts.min())
 
-    cycles = majority_class - int(minority_class *
-                                  desired_proportion_majority /
-                                  (1 - desired_proportion_majority)
-                                  )
+    target_majority_count = int(
+        minority_class * desired_proportion_majority /
+        (1 - desired_proportion_majority)
+    )
+    cycles = majority_class - target_majority_count
+    if cycles < 0:
+        raise ValueError(
+            "'desired_proportion_majority' implies majority-class growth. "
+            "Use oversampling for this target."
+        )
+    if cycles > majority_class:
+        raise ValueError(
+            "Computed majority-class removals exceed available samples."
+        )
     _log_if_verbose(verbose, resolved_log_level, 'Samples to remove: %d', cycles)
 
     if random_seed is not None:
@@ -161,24 +170,17 @@ tuple of pandas.DataFrame
     )
 
     train_set_undersampled = train_set.drop(index=to_drop_indices)
-    y_train_undersampled = train_set_undersampled[class_column].tolist()
-
-    # Check class balance after undersampling
-    zero_class_training_undersampled = y_train_undersampled.count(0)
-    one_class_training_undersampled = y_train_undersampled.count(1)
-    total_undersampled = zero_class_training_undersampled + \
-        one_class_training_undersampled
-    zero_ratio_undersampled = zero_class_training_undersampled / \
-        total_undersampled
-    one_ratio_undersampled = 1 - zero_ratio_undersampled
+    undersampled_counts = train_set_undersampled[class_column].value_counts()
+    total_undersampled = int(undersampled_counts.sum())
+    balance_parts = [
+        f"[{label}]: {int(count)} ({(count / total_undersampled):.2f})"
+        for label, count in undersampled_counts.items()
+    ]
     _log_if_verbose(
         verbose,
         resolved_log_level,
-        'CLASS BALANCE [0]: %d [1]: %d (%.2f/%.2f)',
-        zero_class_training_undersampled,
-        one_class_training_undersampled,
-        zero_ratio_undersampled,
-        one_ratio_undersampled,
+        'CLASS BALANCE %s',
+        ' '.join(balance_parts),
     )
 
     if add_dropped_to_test:

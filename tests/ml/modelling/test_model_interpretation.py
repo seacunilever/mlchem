@@ -152,6 +152,20 @@ def test_shap_explainer_tree_summary_plot(mock_summary_plot, mock_initjs, shap_e
     mock_initjs.assert_called_once()
     mock_summary_plot.assert_called()
 
+
+@patch('shap.initjs')
+def test_shap_explainer_tree_summary_plot_rejects_invalid_layout(mock_initjs, sample_data):
+    X, y = sample_data
+    estimator = RandomForestClassifier(n_estimators=20, random_state=1)
+    estimator.fit(X, y)
+
+    explainer = ShapExplainer(estimator=estimator, data=X, y=y, is_tree=True)
+    explainer.shap_values = np.array([1.0, 2.0, 3.0])  # 1D unsupported layout
+
+    with pytest.raises(TypeError, match='Unsupported SHAP layout'):
+        explainer.summary_plot(plot_type='dot')
+    mock_initjs.assert_called_once()
+
 @patch('shap.initjs')
 @patch('shap.summary_plot')
 def test_shap_explainer_notree_summary_plot(mock_summary_plot, mock_initjs, shap_explainer_notree):

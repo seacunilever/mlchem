@@ -347,6 +347,60 @@ ValueError
     raise ValueError("'log_level' must be a valid logging level name or integer.")
 
 
+def validate_task_type(task_type: str) -> str:
+    """
+Validate task type used by ML helpers.
+
+Parameters
+----------
+task_type : str
+    Task kind.
+
+Returns
+-------
+str
+    The validated task type.
+
+Raises
+------
+ValueError
+    If task_type is not 'classification' or 'regression'.
+"""
+
+    if task_type not in ('classification', 'regression'):
+        raise ValueError("'task_type' must be either 'classification' or 'regression'.")
+    return task_type
+
+
+def resolve_n_jobs(n_jobs: int) -> int:
+    """
+Normalize n_jobs values used by parallel wrappers.
+
+Parameters
+----------
+n_jobs : int
+    Requested number of workers. -1 means all CPUs.
+
+Returns
+-------
+int
+    Resolved positive worker count.
+
+Raises
+------
+ValueError
+    If n_jobs is not -1 or a positive integer.
+"""
+
+    import os
+
+    if n_jobs == -1:
+        return os.cpu_count() or 1
+    if n_jobs < -1 or n_jobs == 0:
+        raise ValueError("'n_jobs' must be -1 or a positive integer.")
+    return n_jobs
+
+
 def suppress_warnings() -> None:
     """
 Suppress all warnings in the current Python session.

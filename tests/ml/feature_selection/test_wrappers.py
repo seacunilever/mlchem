@@ -160,6 +160,16 @@ def test_sequential_forward_selection_invalid_n_jobs():
     with pytest.raises(ValueError, match="must be -1 or a positive integer"):
         sfs.fit(train_set, y_train, test_set, y_test, n_jobs=0)
 
+
+def test_sequential_forward_selection_invalid_task_type_raises():
+    with pytest.raises(ValueError, match="must be either 'classification' or 'regression'"):
+        SequentialForwardSelection(
+            estimator=LogisticRegression(),
+            estimator_string=None,
+            metric=get_geometric_S,
+            task_type='invalid',
+        )
+
 @pytest.fixture
 def fitted_cs_stage_1():
     estimator = LogisticRegression()
@@ -362,6 +372,15 @@ def test_combinatorial_selection_invalid_n_jobs_in_stage_1():
             y_test=y_test,
             features=train_set.columns,
             n_jobs=0,
+        )
+
+
+def test_combinatorial_selection_invalid_task_type_raises():
+    with pytest.raises(ValueError, match="must be either 'classification' or 'regression'"):
+        CombinatorialSelection(
+            estimator=LogisticRegression(),
+            metric=get_geometric_S,
+            task_type='invalid',
         )
 
 

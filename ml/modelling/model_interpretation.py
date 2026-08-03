@@ -129,6 +129,47 @@ is_tree : bool, optional (default=False)
         self.y = y
         self.is_tree = is_tree
 
+    def _tree_shap_values_for_plot(self):
+        """Return a 2D SHAP matrix for tree plots with explicit layout checks."""
+        values = self.shap_values
+
+        if isinstance(values, (list, tuple)):
+            if len(values) == 0:
+                raise TypeError("Empty SHAP values container for tree model.")
+            return values[1] if len(values) > 1 else values[0]
+
+        if isinstance(values, np.ndarray):
+            if values.ndim == 2:
+                return values
+            if values.ndim == 3:
+                if values.shape[-1] == 0:
+                    raise TypeError("Invalid SHAP tensor layout: empty class axis.")
+                class_index = 1 if values.shape[-1] > 1 else 0
+                return values[:, :, class_index]
+
+        raise TypeError(
+            "Unsupported SHAP layout for tree model. Expected list/tuple or 2D/3D numpy array."
+        )
+
+    def _tree_base_value_for_plot(self):
+        """Return a scalar-like base value for tree plots with explicit checks."""
+        base = self.base_values
+
+        if isinstance(base, (list, tuple)):
+            if len(base) == 0:
+                raise TypeError("Empty SHAP base values container for tree model.")
+            return base[1] if len(base) > 1 else base[0]
+
+        if isinstance(base, np.ndarray):
+            if base.ndim == 0:
+                return base.item()
+            flat_base = base.reshape(-1)
+            if flat_base.size == 0:
+                raise TypeError("Empty SHAP base values array for tree model.")
+            return flat_base[1] if flat_base.size > 1 else flat_base[0]
+
+        return base
+
     def explain(self) -> None:
         """
         Generate SHAP values for the model.
@@ -227,16 +268,11 @@ IPython.core.display.HTML
                                features=self.data, link='logit',
                                )
             else:
-                try:
-                    plot = shap.\
-                        force_plot(base_value=self.base_values[1],
-                                   shap_values=self.shap_values[1],
-                                   features=self.data)
-                except IndexError:
-                    plot = shap.\
-                        force_plot(base_value=self.base_values,
-                                   shap_values=self.shap_values,
-                                   features=self.data)
+                plot = shap.force_plot(
+                    base_value=self._tree_base_value_for_plot(),
+                    shap_values=self._tree_shap_values_for_plot(),
+                    features=self.data,
+                )
         else:
             plot = shap.\
                 force_plot(base_value=self.base_values,
@@ -273,18 +309,12 @@ IPython.core.display.HTML
                     link='logit'
                 )
             else:
-                try:
-                    self.plot = shap.force_plot(
-                        base_value=self.base_values[1],
-                        shap_values=self.shap_values[1][i, :],
-                        features=self.data.iloc[i, :]
-                    )
-                except IndexError:
-                    self.plot = shap.force_plot(
-                        base_value=self.base_values,
-                        shap_values=self.shap_values[i],
-                        features=self.data.iloc[i, :]
-                    )
+                tree_values = self._tree_shap_values_for_plot()
+                self.plot = shap.force_plot(
+                    base_value=self._tree_base_value_for_plot(),
+                    shap_values=tree_values[i, :],
+                    features=self.data.iloc[i, :]
+                )
         else:
             self.plot = shap.force_plot(
                 base_value=self.base_values[i],
@@ -316,18 +346,11 @@ None
         shap.initjs()
 
         if self.is_tree:
-            try:
-                self.plot = shap.dependence_plot(
-                    column,
-                    self.shap_values[1],
-                    self.data
-                )
-            except IndexError:
-                self.plot = shap.dependence_plot(
-                    column,
-                    self.shap_values,
-                    self.data
-                )
+            self.plot = shap.dependence_plot(
+                column,
+                self._tree_shap_values_for_plot(),
+                self.data
+            )
         else:
             self.plot = shap.dependence_plot(
                 column,
@@ -349,20 +372,13 @@ None
         shap.initjs()
 
         if self.is_tree:
-            try:
-                for column in range(self.data.shape[1]):
-                    shap.dependence_plot(
-                        column,
-                        self.shap_values[1],
-                        self.data
-                    )
-            except IndexError:
-                for column in range(self.data.shape[1]):
-                    shap.dependence_plot(
-                        column,
-                        self.shap_values,
-                        self.data
-                    )
+            tree_values = self._tree_shap_values_for_plot()
+            for column in range(self.data.shape[1]):
+                shap.dependence_plot(
+                    column,
+                    tree_values,
+                    self.data
+                )
         else:
             for column in range(self.data.shape[1]):
                 shap.dependence_plot(
@@ -395,18 +411,11 @@ None
 
         self.plot_type = plot_type
         if self.is_tree:
-            try:
-                self.plot = shap.summary_plot(
-                    self.shap_values[1],
-                    self.data,
-                    plot_type=self.plot_type
-                )
-            except Exception:
-                self.plot = shap.summary_plot(
-                    self.shap_values,
-                    self.data,
-                    plot_type=self.plot_type
-                )
+            self.plot = shap.summary_plot(
+                self._tree_shap_values_for_plot(),
+                self.data,
+                plot_type=self.plot_type
+            )
         else:
             self.plot = shap.summary_plot(
                 self.shap_values,
@@ -461,18 +470,11 @@ None
         shap.initjs()
 
         if self.is_tree:
-            try:
-                self.plot = shap.summary_plot(
-                    self.shap_values[1],
-                    self.data,
-                    plot_type='bar'
-                )
-            except IndexError:
-                self.plot = shap.summary_plot(
-                    self.shap_values,
-                    self.data,
-                    plot_type='bar'
-                )
+            self.plot = shap.summary_plot(
+                self._tree_shap_values_for_plot(),
+                self.data,
+                plot_type='bar'
+            )
         else:
             try:
                 self.plot = shap.plots.bar(self.shap_values)

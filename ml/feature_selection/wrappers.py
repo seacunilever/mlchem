@@ -35,12 +35,17 @@ import pandas as pd
 import numpy as np
 from typing import Literal, Iterable, Callable, Optional
 from math import comb
-import os
 import logging
 from sklearn.base import clone
 
 import matplotlib.pyplot as plt
-from mlchem.helper import loadingbar, generate_combination_cascade, coerce_log_level
+from mlchem.helper import (
+    loadingbar,
+    generate_combination_cascade,
+    coerce_log_level,
+    resolve_n_jobs,
+    validate_task_type,
+)
 from mlchem.ml.modelling.model_evaluation import crossval
 
 
@@ -180,7 +185,7 @@ class SequentialForwardSelection:
         self.max_features = max_features
         self.cv_iter = cv_iter
         self.logic = logic
-        self.task_type = task_type
+        self.task_type = validate_task_type(task_type)
         self.verbose = bool(verbose)
         self.log_level = coerce_log_level(log_level)
 
@@ -248,7 +253,7 @@ class SequentialForwardSelection:
         self.test_set = test_set
         self.y_test = y_test
         self.feature_labels = self.train_set.columns
-        self.n_jobs = self._resolve_n_jobs(n_jobs)
+        self.n_jobs = resolve_n_jobs(n_jobs)
 
         self._log(
             logging.INFO,
@@ -361,14 +366,6 @@ class SequentialForwardSelection:
             "SFS completed: selected_features=%d",
             len(self.extending_features),
         )
-
-    @staticmethod
-    def _resolve_n_jobs(n_jobs: int) -> int:
-        if n_jobs == -1:
-            return os.cpu_count() or 1
-        if n_jobs < -1 or n_jobs == 0:
-            raise ValueError("'n_jobs' must be -1 or a positive integer.")
-        return n_jobs
 
     def find_best(self, which: Optional[int] = None) -> dict:
         """
@@ -683,7 +680,7 @@ class CombinatorialSelection:
         self.estimator = estimator
         self.metric = metric
         self.logic = logic
-        self.task_type = task_type
+        self.task_type = validate_task_type(task_type)
         self.verbose = bool(verbose)
         self.log_level = coerce_log_level(log_level)
 
@@ -925,7 +922,7 @@ class CombinatorialSelection:
         self.cv_train_ratio = cv_train_ratio
         self.cv_iter = cv_iter
         self.max_subsets = max_subsets
-        self.n_jobs = self._resolve_n_jobs(n_jobs)
+        self.n_jobs = resolve_n_jobs(n_jobs)
 
         self._log(
             logging.INFO,
@@ -1120,7 +1117,7 @@ class CombinatorialSelection:
             return a > b if self.logic == 'greater' else a < b
 
         self.cv_iter = cv_iter
-        self.n_jobs = self._resolve_n_jobs(n_jobs)
+        self.n_jobs = resolve_n_jobs(n_jobs)
         self.best_recurrent = np.unique(
             np.hstack(
                 self.df_results_stage1.head(top_n_subsets).
@@ -1253,14 +1250,6 @@ class CombinatorialSelection:
             len(self.df_results_stage2),
         )
         return self.df_results_stage2
-
-    @staticmethod
-    def _resolve_n_jobs(n_jobs: int) -> int:
-        if n_jobs == -1:
-            return os.cpu_count() or 1
-        if n_jobs < -1 or n_jobs == 0:
-            raise ValueError("'n_jobs' must be -1 or a positive integer.")
-        return n_jobs
 
     def display_best(self, row: int = 1) -> None:
         """
