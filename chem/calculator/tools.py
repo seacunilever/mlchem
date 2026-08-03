@@ -122,7 +122,13 @@ Examples
 0.5
 """
 
-    return np.exp(logit) / (np.exp(logit) + 1)
+    # Numerically stable sigmoid for extreme positive/negative logits.
+    if logit >= 0:
+        z = np.exp(-logit)
+        return 1 / (1 + z)
+
+    z = np.exp(logit)
+    return z / (1 + z)
 
 
 def pairwise_euclidean_distance(matrix: np.ndarray) -> np.ndarray:
@@ -218,6 +224,11 @@ Returns
 np.ndarray
     The coordinates of the centroid.
 
+Raises
+------
+ValueError
+    If masses are provided and their sum is zero.
+
 Examples
 --------
 >>> calc_centroid(np.array([[0, 0], [2, 0], [1, 2]]))
@@ -229,6 +240,8 @@ Examples
     else:
         masses = np.array(masses)
         total_mass = np.sum(masses)
+        if total_mass == 0:
+            raise ValueError("Total mass must be non-zero.")
         centroid = np.sum(coordinates.T * masses, axis=1) / total_mass
     return centroid
 

@@ -132,18 +132,18 @@ def test_plot(chemical_space, monkeypatch, tmp_path):
 
 
 def test_process_invalid_diversity_filter_raises(chemical_space):
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         chemical_space.process(diversity_filter=-0.1, collinearity_filter=0.9)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         chemical_space.process(diversity_filter=1.0, collinearity_filter=0.9)
 
 
 def test_process_invalid_collinearity_filter_raises(chemical_space):
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         chemical_space.process(diversity_filter=0.0, collinearity_filter=-0.1)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         chemical_space.process(diversity_filter=0.0, collinearity_filter=1.1)
 
 
@@ -156,7 +156,7 @@ def test_prepare_rejects_wrong_columns(chemical_space):
         },
         index=['CCO', 'CCN', 'CCC'],
     )
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         chemical_space.prepare(df_compressed)
 
 

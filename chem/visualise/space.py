@@ -165,7 +165,7 @@ None
 
 Raises
 ------
-AssertionError
+ValueError
     If `diversity_filter` or `collinearity_filter` are outside [0, 1).
 
 Examples
@@ -178,14 +178,10 @@ Examples
         from mlchem.ml.feature_selection import filters
         from mlchem.ml.preprocessing.scaling import scale_df_standard
 
-        if diversity_filter:
-            assert 0. <= diversity_filter < 1., (
-                "'diversity_filter' argument must be a float 0 <= x < 1."
-            )
-        if collinearity_filter:
-            assert 0. < collinearity_filter <= 1., (
-                "'collinearity_filter' argument must be a float 0 < x <= 1."
-            )
+        if diversity_filter is not None and not (0. <= diversity_filter < 1.):
+            raise ValueError("'diversity_filter' argument must be a float 0 <= x < 1.")
+        if collinearity_filter is not None and not (0. < collinearity_filter <= 1.):
+            raise ValueError("'collinearity_filter' argument must be a float 0 < x <= 1.")
           
         if diversity_filter:
           print("Before filtering:", self.df_descriptors.shape)
@@ -229,7 +225,7 @@ None
 
 Raises
 ------
-AssertionError
+ValueError
     If `df_compressed` does not have exactly two columns named
     ['DIM_1', 'DIM_2'].
 ValueError
@@ -248,11 +244,8 @@ Examples
 
       self.df_compressed = df_compressed
 
-      assert list(self.df_compressed.columns) == [
-          'DIM_1',
-          'DIM_2'
-          ]
-      "'df_compressed' must have only 2 columns: ['DIM_1','DIM_2']."
+      if list(self.df_compressed.columns) != ['DIM_1', 'DIM_2']:
+          raise ValueError("'df_compressed' must have only 2 columns: ['DIM_1','DIM_2'].")
 
       try:
           self.df_compressed.reset_index(inplace=True)

@@ -67,7 +67,6 @@ def test_logit_to_proba():
     assert 0 <= result <= 1
 
 
-@pytest.mark.xfail(strict=True, reason="logit_to_proba is numerically unstable for extreme logits")
 def test_logit_to_proba_extreme_values_finite():
     assert np.isfinite(logit_to_proba(1000.0))
     assert np.isfinite(logit_to_proba(-1000.0))
@@ -116,7 +115,6 @@ def test_calc_centroid_with_masses():
     assert np.allclose(result, [1.33333333, 1.33333333])
 
 
-@pytest.mark.xfail(strict=True, reason="calc_centroid should raise on zero total mass")
 def test_calc_centroid_zero_total_mass_raises():
     coordinates = np.array([[0, 0], [1, 1], [2, 2]])
     masses = [0, 0, 0]

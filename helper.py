@@ -1044,15 +1044,12 @@ bokeh.models.DataTable
 Raises
 ------
 KeyError
-    If required columns are missing from the DataFrame.
+    If required core columns are missing from the DataFrame.
 """
 
     from bokeh.models import ColumnDataSource, TableColumn
 
-    required_columns = [
-        'DIM_1', 'DIM_2', 'SMILES', 'MOLFILE',
-        'NAME', 'NAME_SHORT', 'METADATA'
-    ]
+    required_columns = ['DIM_1', 'DIM_2', 'SMILES', 'MOLFILE', 'NAME', 'NAME_SHORT']
     missing_columns = [column for column in required_columns if column not in df.columns]
     if missing_columns:
         raise KeyError(f"Missing required columns: {missing_columns}")
@@ -1065,8 +1062,11 @@ KeyError
         TableColumn(field='MOLFILE', title='MOLFILE'),
         TableColumn(field='NAME', title='NAME'),
         TableColumn(field='NAME_SHORT', title='NAME_SHORT'),
-        TableColumn(field='METADATA', title='METADATA')
     ]
+
+    if 'METADATA' in df.columns:
+        columns.append(TableColumn(field='METADATA', title='METADATA'))
+
     return DataTable(source=source, columns=columns,
                      height=height, width=width)
 
