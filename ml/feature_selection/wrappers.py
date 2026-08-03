@@ -34,6 +34,7 @@
 import pandas as pd
 import numpy as np
 from typing import Literal, Iterable, Callable, Optional
+from math import comb
 
 import matplotlib.pyplot as plt
 from mlchem.helper import loadingbar, generate_combination_cascade
@@ -536,6 +537,27 @@ class CombinatorialSelection:
         self.logic = logic
         self.task_type = task_type
 
+    @staticmethod
+    def _validate_subset_limit(
+        n_features: int,
+        subset_size: int,
+        max_subsets: int,
+        stage_name: str,
+    ) -> None:
+        if max_subsets < 1:
+            raise ValueError("'max_subsets' must be at least 1.")
+
+        total_subsets = comb(n_features, subset_size)
+        if total_subsets > max_subsets:
+            raise ValueError(
+                (
+                    f"{stage_name} would generate {total_subsets} subsets, "
+                    f"which exceeds max_subsets={max_subsets}. "
+                    "Increase max_subsets or reduce search space "
+                    "(fewer features, smaller subset size, or tighter thresholds)."
+                )
+            )
+
     def fit_stage_1(
         self,
         train_set: pd.DataFrame,
@@ -546,7 +568,8 @@ class CombinatorialSelection:
         k: int = 2,
         training_threshold: float = 0.25,
         cv_train_ratio: float = 0.7,
-        cv_iter: int = 5
+        cv_iter: int = 5,
+        max_subsets: int = 10_000,
     ) -> pd.DataFrame:
         """
         Perform the first stage of combinatorial feature selection.
@@ -573,6 +596,9 @@ class CombinatorialSelection:
             is 0.7.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
+        max_subsets : int, optional
+            Hard cap on the number of generated feature subsets.
+            Default is 10_000.
 
         Returns
         -------
@@ -602,6 +628,7 @@ class CombinatorialSelection:
         self.training_threshold = training_threshold
         self.cv_train_ratio = cv_train_ratio
         self.cv_iter = cv_iter
+        self.max_subsets = max_subsets
 
         assert 0 <= self.cv_train_ratio <= 1, \
             "'cv_train_ratio' must be between 0 and 1."
@@ -613,6 +640,13 @@ class CombinatorialSelection:
         
         self.ascending_decision = False if self.logic == 'greater' else \
         True
+
+        self._validate_subset_limit(
+            n_features=len(self.features),
+            subset_size=self.k,
+            max_subsets=self.max_subsets,
+            stage_name='fit_stage_1',
+        )
 
         self.feature_subsets = generate_combination_cascade(self.features,
                                                             self.k)
@@ -672,7 +706,8 @@ class CombinatorialSelection:
 
     def fit_stage_2(self,
                     top_n_subsets: int = 10,
-                    cv_iter: int = 5) -> pd.DataFrame:
+                    cv_iter: int = 5,
+                    max_subsets: int = 10_000) -> pd.DataFrame:
         """
         Perform the second stage of combinatorial feature selection.
 
@@ -683,6 +718,9 @@ class CombinatorialSelection:
             Default is 10.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
+        max_subsets : int, optional
+            Hard cap on the number of generated feature subsets.
+            Default is 10_000.
 
         Returns
         -------
@@ -706,6 +744,13 @@ class CombinatorialSelection:
                 self.df_results_stage1.head(top_n_subsets).
                 feature_subsets.values)
                 )
+
+        self._validate_subset_limit(
+            n_features=len(self.best_recurrent),
+            subset_size=top_n_subsets,
+            max_subsets=max_subsets,
+            stage_name='fit_stage_2',
+        )
 
         self.feature_subsets = generate_combination_cascade(
             self.best_recurrent, top_n_subsets

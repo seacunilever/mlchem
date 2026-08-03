@@ -145,5 +145,49 @@ def test_combinatorial_selection_display_best(fitted_cs_stage_2, capsys):
     assert "CV Score" in captured.out
     assert "Test Score" in captured.out
 
+
+def test_combinatorial_selection_stage_1_max_subsets_guard():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+
+    X, y = make_classification(60, 6, n_informative=3, random_state=9)
+    train_size = 0.8
+    train_samples = int(train_size * len(X))
+
+    X_train, y_train = X[:train_samples], y[:train_samples]
+    X_test, y_test = X[train_samples:], y[train_samples:]
+
+    train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+    test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+    # C(6, 3) = 20, so max_subsets=10 must fail before subset generation.
+    with pytest.raises(ValueError, match='exceeds max_subsets=10'):
+        cs.fit_stage_1(
+            train_set=train_set,
+            y_train=y_train,
+            test_set=test_set,
+            y_test=y_test,
+            features=train_set.columns,
+            k=3,
+            training_threshold=0.5,
+            max_subsets=10,
+        )
+
+
+def test_combinatorial_selection_stage_2_max_subsets_guard(fitted_cs_stage_1):
+    # Force a deterministic recurrent pool: C(4, 2) = 6 > max_subsets=1.
+    fitted_cs_stage_1.df_results_stage1 = pd.DataFrame(
+        {
+            'feature_subsets': [[0, 1], [1, 2], [2, 3]],
+            'training_score': [0.9, 0.85, 0.8],
+            'cv_score': [0.9, 0.85, 0.8],
+            'test_score': [0.9, 0.85, 0.8],
+        }
+    )
+
+    with pytest.raises(ValueError, match='exceeds max_subsets=1'):
+        fitted_cs_stage_1.fit_stage_2(top_n_subsets=2, cv_iter=3, max_subsets=1)
+
 if __name__ == '__main__':
     pytest.main()
