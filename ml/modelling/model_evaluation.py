@@ -224,7 +224,7 @@ None
 class MajorityVote:
     """
 MajorityVote(train_set, test_set, y_train, y_test, task_type, 
-estimator_list, column_list, estimator_names=[])
+estimator_list, column_list, estimator_names=None)
 
 Ensemble model using majority voting (for classification) or averaging (for regression).
 
@@ -268,12 +268,12 @@ estimator_names : list of str, optional
         task_type: Literal['classification', 'regression'],
         estimator_list: list,
         column_list: list[str],
-        estimator_names: list[str] = []
+        estimator_names: list[str] | None = None
          ) -> None:
 
         self.task_type = task_type
         self.estimator_list = estimator_list
-        self.estimator_names = estimator_names
+        self.estimator_names = [] if estimator_names is None else list(estimator_names)
         self.column_list = column_list
         self.train_set = train_set
         self.test_set = test_set

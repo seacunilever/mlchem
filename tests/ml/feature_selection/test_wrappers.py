@@ -234,6 +234,34 @@ def test_combinatorial_selection_stage_1_max_subsets_guard():
         )
 
 
+def test_combinatorial_selection_stage_1_copies_features_input():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+
+    X, y = make_classification(60, 5, n_informative=3, random_state=12)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+    features = train_set.columns.tolist()
+
+    cs.fit_stage_1(
+        train_set=train_set,
+        y_train=y_train,
+        test_set=test_set,
+        y_test=y_test,
+        features=features,
+        k=2,
+        training_threshold=1.1,
+    )
+
+    features.append('external-mutation')
+
+    assert cs.features == train_set.columns.tolist()
+
+
 def test_combinatorial_selection_stage_1_max_subsets_none_and_parallel():
     estimator = LogisticRegression()
     metric = get_geometric_S

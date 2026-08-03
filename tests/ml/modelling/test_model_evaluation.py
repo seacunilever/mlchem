@@ -232,6 +232,55 @@ def test_majority_vote_init(majority_vote_classification):
     assert isinstance(mv.y_train, np.ndarray)
     assert isinstance(mv.y_test, np.ndarray)
 
+
+def test_majority_vote_default_estimator_names_are_isolated(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    estimator_list = [LogisticRegression(random_state=1)]
+    column_list = [train_set.columns.tolist()]
+
+    mv_a = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=estimator_list,
+        column_list=column_list,
+    )
+    mv_b = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=estimator_list,
+        column_list=column_list,
+    )
+
+    mv_a.estimator_names.append('mutated')
+
+    assert mv_b.estimator_names == []
+
+
+def test_majority_vote_copies_estimator_names_input(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    estimator_names = ['lr']
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=[LogisticRegression(random_state=1)],
+        column_list=[train_set.columns.tolist()],
+        estimator_names=estimator_names,
+    )
+
+    estimator_names.append('external-mutation')
+
+    assert mv.estimator_names == ['lr']
+
 def test_majority_vote_fit(majority_vote_classification):
     mv = majority_vote_classification
     mv.fit()

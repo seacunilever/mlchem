@@ -745,7 +745,7 @@ class CombinatorialSelection:
         y_train: Iterable,
         test_set: pd.DataFrame,
         y_test: Iterable,
-        features: list[str] = [],
+        features: list[str] | None = None,
         k: int = 2,
         training_threshold: float = 0.25,
         cv_train_ratio: float = 0.7,
@@ -834,7 +834,7 @@ class CombinatorialSelection:
         self.test_set = test_set
         self.y_test = y_test
 
-        self.features = features
+        self.features = [] if features is None else list(features)
         self.k = k
         self.training_threshold = training_threshold
         self.cv_train_ratio = cv_train_ratio
