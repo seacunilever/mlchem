@@ -313,6 +313,97 @@ def test_combinatorial_selection_stage_2_parallel_and_no_limit(fitted_cs_stage_1
     assert isinstance(results, pd.DataFrame)
 
 
+def test_rank_features_by_relevance_redundancy_outputs_ranked_features():
+    X, y = make_classification(120, 8, n_informative=4, random_state=23)
+    train_set = pd.DataFrame(X, columns=np.arange(X.shape[1]))
+
+    cs = CombinatorialSelection(
+        estimator=LogisticRegression(),
+        metric=get_geometric_S,
+        logic='greater'
+    )
+
+    ranking = cs.rank_features_by_relevance_redundancy(
+        dataframe=train_set,
+        target=y,
+        features=train_set.columns.tolist(),
+        alpha=1.0,
+        beta=0.3,
+        top_features=5,
+        relevance_metric='mutual_info',
+        redundancy_metric='pearson',
+    )
+
+    assert isinstance(ranking, pd.DataFrame)
+    assert list(ranking.columns) == [
+        'rank', 'feature', 'relevance', 'redundancy',
+        'score', 'alpha', 'beta'
+    ]
+    assert len(ranking) == 5
+    assert ranking['rank'].tolist() == [1, 2, 3, 4, 5]
+    assert ranking['score'].is_monotonic_decreasing
+
+
+def test_combinatorial_stage_1_uses_ranked_features_subset():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+
+    X, y = make_classification(90, 9, n_informative=4, random_state=29)
+    train_size = 0.8
+    train_samples = int(train_size * len(X))
+
+    X_train, y_train = X[:train_samples], y[:train_samples]
+    X_test, y_test = X[train_samples:], y[train_samples:]
+
+    train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+    test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+    cs.fit_stage_1(
+        train_set=train_set,
+        y_train=y_train,
+        test_set=test_set,
+        y_test=y_test,
+        features=train_set.columns.tolist(),
+        k=2,
+        training_threshold=0.0,
+        cv_train_ratio=0.0,
+        ranking_target=y_train,
+        alpha=1.0,
+        beta=0.2,
+        top_ranked_features=4,
+        relevance_metric='mutual_info',
+        redundancy_metric='pearson',
+    )
+
+    assert hasattr(cs, 'df_feature_ranking')
+    assert len(cs.features) == 4
+    assert set(cs.features).issubset(set(train_set.columns))
+
+
+def test_combinatorial_stage_1_ranking_requires_target_when_top_requested():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+
+    X, y = make_classification(50, 6, n_informative=3, random_state=31)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+
+    with pytest.raises(ValueError, match="ranking_target"):
+        cs.fit_stage_1(
+            train_set=train_set,
+            y_train=y_train,
+            test_set=test_set,
+            y_test=y_test,
+            features=train_set.columns.tolist(),
+            top_ranked_features=3,
+        )
+
+
 def test_sfs_outer_parallel_forces_inner_estimator_n_jobs_to_one():
     seen_n_jobs = []
 

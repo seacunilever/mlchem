@@ -64,6 +64,25 @@ def _clone_for_search(estimator, outer_n_jobs: int):
     return estimator_copy
 
 
+def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> float:
+    if len(x) == 0 or len(y) == 0:
+        return 0.0
+
+    if np.std(x) == 0 or np.std(y) == 0:
+        return 0.0
+
+    if method == 'pearson':
+        corr = np.corrcoef(x, y)[0, 1]
+    elif method == 'spearman':
+        corr = pd.Series(x).corr(pd.Series(y), method='spearman')
+    else:
+        raise ValueError("'method' must be either 'pearson' or 'spearman'.")
+
+    if np.isnan(corr):
+        return 0.0
+    return float(abs(corr))
+
+
 class SequentialForwardSelection:
     """
   Sequential Forward Feature Selection wrapper.
@@ -618,6 +637,108 @@ class CombinatorialSelection:
                 )
             )
 
+    def rank_features_by_relevance_redundancy(
+        self,
+        dataframe: pd.DataFrame,
+        target: Iterable,
+        features: list[str] | None = None,
+        alpha: float = 1.0,
+        beta: float = 0.2,
+        top_features: int | None = None,
+        relevance_metric: Literal['mutual_info', 'pearson', 'spearman'] = 'mutual_info',
+        redundancy_metric: Literal['pearson', 'spearman'] = 'pearson',
+        random_state: int = 42,
+    ) -> pd.DataFrame:
+        """
+        Rank features with a global relevance-redundancy criterion.
+
+        Higher `alpha` increases target relevance importance.
+        Higher `beta` increases redundancy penalty importance.
+        """
+
+        if alpha < 0 or beta < 0:
+            raise ValueError("'alpha' and 'beta' must be non-negative.")
+        if redundancy_metric not in ('pearson', 'spearman'):
+            raise ValueError("'redundancy_metric' must be either 'pearson' or 'spearman'.")
+
+        feature_pool = list(features) if features is not None else list(dataframe.columns)
+        if len(feature_pool) == 0:
+            raise ValueError("No features available for ranking.")
+
+        y = np.asarray(target)
+        if y.ndim > 1:
+            y = y.ravel()
+        if len(y) != len(dataframe):
+            raise ValueError("'target' length must match dataframe rows.")
+
+        if top_features is None:
+            top_features = len(feature_pool)
+        if top_features < 1:
+            raise ValueError("'top_features' must be at least 1.")
+        top_features = min(top_features, len(feature_pool))
+
+        if relevance_metric == 'mutual_info':
+            if self.task_type == 'classification':
+                from sklearn.feature_selection import mutual_info_classif
+                relevance_array = mutual_info_classif(
+                    dataframe[feature_pool].values,
+                    y,
+                    random_state=random_state,
+                )
+            else:
+                from sklearn.feature_selection import mutual_info_regression
+                relevance_array = mutual_info_regression(
+                    dataframe[feature_pool].values,
+                    y,
+                    random_state=random_state,
+                )
+            relevance_scores = {
+                feat: float(score)
+                for feat, score in zip(feature_pool, relevance_array)
+            }
+        else:
+            relevance_scores = {
+                feat: _safe_abs_corr(
+                    dataframe[feat].values,
+                    y,
+                    method=relevance_metric,
+                )
+                for feat in feature_pool
+            }
+
+        if len(feature_pool) == 1:
+            redundancy_scores = {feature_pool[0]: 0.0}
+        else:
+            corr_matrix = dataframe[feature_pool].corr(method=redundancy_metric).abs()
+            diagonal_mask = np.eye(len(corr_matrix), dtype=bool)
+            corr_matrix = corr_matrix.mask(diagonal_mask)
+            redundancy_series = corr_matrix.mean(axis=1, skipna=True).fillna(0.0)
+            redundancy_scores = {
+                feat: float(redundancy_series.loc[feat])
+                for feat in feature_pool
+            }
+
+        records = []
+        for feat in feature_pool:
+            relevance = relevance_scores[feat]
+            redundancy = redundancy_scores[feat]
+            score = alpha * relevance - beta * redundancy
+            records.append({
+                'feature': feat,
+                'relevance': relevance,
+                'redundancy': redundancy,
+                'score': score,
+                'alpha': alpha,
+                'beta': beta,
+            })
+
+        df_ranking = pd.DataFrame(records)
+        df_ranking.sort_values(by='score', ascending=False, inplace=True)
+        df_ranking = df_ranking.head(top_features).copy()
+        df_ranking.insert(0, 'rank', np.arange(1, len(df_ranking) + 1))
+        df_ranking.reset_index(drop=True, inplace=True)
+        return df_ranking
+
     def fit_stage_1(
         self,
         train_set: pd.DataFrame,
@@ -631,6 +752,13 @@ class CombinatorialSelection:
         cv_iter: int = 5,
         max_subsets: int | None = None,
         n_jobs: int = 1,
+        ranking_target: Iterable | None = None,
+        alpha: float = 1.0,
+        beta: float = 0.2,
+        top_ranked_features: int | None = None,
+        relevance_metric: Literal['mutual_info', 'pearson', 'spearman'] = 'mutual_info',
+        redundancy_metric: Literal['pearson', 'spearman'] = 'pearson',
+        ranking_random_state: int = 42,
     ) -> pd.DataFrame:
         """
         Perform the first stage of combinatorial feature selection.
@@ -664,6 +792,24 @@ class CombinatorialSelection:
             Number of parallel workers used to evaluate candidate
             feature subsets. Use -1 to use all available CPUs.
             Default is 1.
+        ranking_target : iterable or None, optional
+            Target variable used by relevance-redundancy feature ranking.
+            If None, no pre-ranking is applied unless `top_ranked_features`
+            is provided (which then raises an error).
+        alpha : float, optional
+            Relevance coefficient in ranking score.
+        beta : float, optional
+            Redundancy penalty coefficient in ranking score.
+        top_ranked_features : int or None, optional
+            Number of top ranked features to keep before combinatorial
+            subset generation. If None and ranking is enabled, all ranked
+            features are kept.
+        relevance_metric : {'mutual_info', 'pearson', 'spearman'}, optional
+            Relevance metric used in ranking.
+        redundancy_metric : {'pearson', 'spearman'}, optional
+            Redundancy metric used in ranking.
+        ranking_random_state : int, optional
+            Random seed used by mutual information estimators.
 
         Returns
         -------
@@ -706,6 +852,25 @@ class CombinatorialSelection:
         
         self.ascending_decision = False if self.logic == 'greater' else \
         True
+
+        if top_ranked_features is not None and ranking_target is None:
+            raise ValueError(
+                "'ranking_target' must be provided when 'top_ranked_features' is set."
+            )
+
+        if ranking_target is not None:
+            self.df_feature_ranking = self.rank_features_by_relevance_redundancy(
+                dataframe=self.train_set,
+                target=ranking_target,
+                features=list(self.features),
+                alpha=alpha,
+                beta=beta,
+                top_features=top_ranked_features,
+                relevance_metric=relevance_metric,
+                redundancy_metric=redundancy_metric,
+                random_state=ranking_random_state,
+            )
+            self.features = self.df_feature_ranking.feature.tolist()
 
         self._validate_subset_limit(
             n_features=len(self.features),
