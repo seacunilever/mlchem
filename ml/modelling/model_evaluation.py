@@ -34,6 +34,7 @@
 from typing import Literal, Callable, Iterable
 import pandas as pd
 import numpy as np
+import warnings
 
 
 def crossval(estimator,
@@ -293,8 +294,9 @@ None
             self.df_test_predictions_soft = pd.\
                 DataFrame(index=self.test_set.index)
 
-            for estimator, columns in zip(self.estimator_list,
-                            self.column_list):
+            for i, (estimator, columns) in enumerate(
+                zip(self.estimator_list, self.column_list)
+            ):
                 X_train = self.train_set[columns]
                 X_train = X_train.loc[:, ~X_train.columns.
                                       duplicated(keep='first')].copy()
@@ -302,25 +304,37 @@ None
                 X_test = X_test.loc[:, ~X_test.columns.
                                     duplicated(keep='first')].copy()
                 if len(self.estimator_names) > 0:
-                    i = self.estimator_list.index(estimator)
                     estimator_name = self.estimator_names[i]
                 else:
                     estimator_name = str(estimator)
                 try:
                     estimator.fit(X_train, self.y_train)
+                    y_train_hard = estimator.predict(X_train)
+                    y_test_hard = estimator.predict(X_test)
+                    y_train_soft = estimator.predict_proba(X_train)[:, 1]
+                    y_test_soft = estimator.predict_proba(X_test)[:, 1]
                 except Exception as ex:
-                    print
-                    (f"Problem encountered with the estimator {estimator}: {ex}")
+                    warnings.warn(
+                        (
+                            f"Skipping estimator '{estimator_name}' during "
+                            f"MajorityVote.fit (classification): {ex}"
+                        ),
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    continue
 
-                self.df_train_predictions_hard[estimator_name] = estimator.\
-                    predict(X_train)
-                self.df_test_predictions_hard[estimator_name] = estimator.\
-                    predict(X_test)
+                self.df_train_predictions_hard[estimator_name] = y_train_hard
+                self.df_test_predictions_hard[estimator_name] = y_test_hard
 
-                self.df_train_predictions_soft[estimator_name] = estimator.\
-                    predict_proba(X_train)[:, 1]
-                self.df_test_predictions_soft[estimator_name] = estimator.\
-                    predict_proba(X_test)[:, 1]
+                self.df_train_predictions_soft[estimator_name] = y_train_soft
+                self.df_test_predictions_soft[estimator_name] = y_test_soft
+
+            if self.df_train_predictions_hard.shape[1] == 0:
+                raise RuntimeError(
+                    "No estimators were successfully fitted in "
+                    "MajorityVote.fit for classification."
+                )
 
             self.df_train_predictions_hard['Y'] = self.y_train
             self.df_test_predictions_hard['Y'] = self.y_test
@@ -332,7 +346,9 @@ None
             self.df_train_predictions = pd.DataFrame(index=self.train_set.index)
             self.df_test_predictions = pd.DataFrame(index=self.test_set.index)
 
-            for estimator, columns in zip(self.estimator_list, self.column_list):
+            for i, (estimator, columns) in enumerate(
+                zip(self.estimator_list, self.column_list)
+            ):
                 X_train = self.train_set[columns]
                 X_train = X_train.loc[:, ~X_train.columns.
                                       duplicated(keep='first')].copy()
@@ -340,19 +356,32 @@ None
                 X_test = X_test.loc[:, ~X_test.columns.
                                     duplicated(keep='first')].copy()
                 if len(self.estimator_names) > 0:
-                    i = self.estimator_list.index(estimator)
                     estimator_name = self.estimator_names[i]
                 else:
                     estimator_name = str(estimator)
                 try:
                     estimator.fit(X_train, self.y_train)
+                    y_train_pred = estimator.predict(X_train)
+                    y_test_pred = estimator.predict(X_test)
                 except Exception as exc:
-                    (f"Problem encountered with the estimator {estimator}: {exc}")
+                    warnings.warn(
+                        (
+                            f"Skipping estimator '{estimator_name}' during "
+                            f"MajorityVote.fit (regression): {exc}"
+                        ),
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    continue
 
-                self.df_train_predictions[estimator_name] = estimator.\
-                    predict(X_train)
-                self.df_test_predictions[estimator_name] = estimator.\
-                    predict(X_test)
+                self.df_train_predictions[estimator_name] = y_train_pred
+                self.df_test_predictions[estimator_name] = y_test_pred
+
+            if self.df_train_predictions.shape[1] == 0:
+                raise RuntimeError(
+                    "No estimators were successfully fitted in "
+                    "MajorityVote.fit for regression."
+                )
 
             self.df_train_predictions['Y'] = self.y_train
             self.df_test_predictions['Y'] = self.y_test

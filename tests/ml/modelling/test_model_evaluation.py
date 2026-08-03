@@ -46,6 +46,16 @@ from mlchem.ml.modelling.model_evaluation import (crossval,
                                                   MajorityVote)
 from mlchem.metrics import get_geometric_S
 
+
+class FailingEstimator:
+    def fit(self, X, y):
+        raise RuntimeError("Intentional fit failure")
+
+
+class FailingRegressor:
+    def fit(self, X, y):
+        raise RuntimeError("Intentional fit failure")
+
 @pytest.fixture
 def sample_data():
     X, y = make_classification(100, 10, n_informative=5)
@@ -180,6 +190,48 @@ def test_majority_vote_fit(majority_vote_classification):
     assert not mv.df_train_predictions_soft.empty
     assert not mv.df_test_predictions_soft.empty
 
+
+def test_majority_vote_fit_skips_failed_classification_estimator(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    good_estimator = LogisticRegression(random_state=1)
+    bad_estimator = FailingEstimator()
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=[good_estimator, bad_estimator],
+        column_list=[train_set.columns.tolist(), train_set.columns.tolist()],
+        estimator_names=['good_lr', 'bad_fit']
+    )
+
+    with pytest.warns(RuntimeWarning, match="Skipping estimator 'bad_fit'"):
+        mv.fit()
+
+    assert 'good_lr' in mv.df_train_predictions_hard.columns
+    assert 'bad_fit' not in mv.df_train_predictions_hard.columns
+
+
+def test_majority_vote_fit_raises_when_all_classification_estimators_fail(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=[FailingEstimator()],
+        column_list=[train_set.columns.tolist()],
+        estimator_names=['bad_fit']
+    )
+
+    with pytest.warns(RuntimeWarning):
+        with pytest.raises(RuntimeError, match="No estimators were successfully fitted"):
+            mv.fit()
+
 def test_majority_vote_predict(majority_vote_classification):
     mv = majority_vote_classification
     mv.fit()
@@ -232,6 +284,50 @@ def test_majority_vote_regression_fit_and_predict(majority_vote_regression):
     assert not mv.final_results.empty
     assert 'mae_train' in mv.final_results.columns
     assert 'mae_test' in mv.final_results.columns
+
+
+def test_majority_vote_fit_skips_failed_regression_estimator(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    y_train = y_train.astype(float)
+    y_test = y_test.astype(float)
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='regression',
+        estimator_list=[LinearRegression(), FailingRegressor()],
+        column_list=[train_set.columns.tolist(), train_set.columns.tolist()],
+        estimator_names=['good_lr', 'bad_fit']
+    )
+
+    with pytest.warns(RuntimeWarning, match="Skipping estimator 'bad_fit'"):
+        mv.fit()
+
+    assert 'good_lr' in mv.df_train_predictions.columns
+    assert 'bad_fit' not in mv.df_train_predictions.columns
+
+
+def test_majority_vote_fit_raises_when_all_regression_estimators_fail(sample_data):
+    train_set, y_train, test_set, y_test = sample_data
+    y_train = y_train.astype(float)
+    y_test = y_test.astype(float)
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='regression',
+        estimator_list=[FailingRegressor()],
+        column_list=[train_set.columns.tolist()],
+        estimator_names=['bad_fit']
+    )
+
+    with pytest.warns(RuntimeWarning):
+        with pytest.raises(RuntimeError, match="No estimators were successfully fitted"):
+            mv.fit()
 
 if __name__ == "__main__":
     pytest.main()
