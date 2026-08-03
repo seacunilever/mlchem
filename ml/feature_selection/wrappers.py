@@ -842,8 +842,12 @@ class CombinatorialSelection:
         self.max_subsets = max_subsets
         self.n_jobs = self._resolve_n_jobs(n_jobs)
 
-        assert 0 <= self.cv_train_ratio <= 1, \
-            "'cv_train_ratio' must be between 0 and 1."
+        if not 0 <= self.cv_train_ratio <= 1:
+            raise ValueError("'cv_train_ratio' must be between 0 and 1.")
+        if self.logic == 'lower' and self.cv_train_ratio == 0:
+            raise ValueError(
+                "'cv_train_ratio' must be greater than 0 when logic='lower'."
+            )
 
         # Set cv threshold based on the desired cv/train ratio
         self.cv_threshold = self.training_threshold * self.cv_train_ratio \

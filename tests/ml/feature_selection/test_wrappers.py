@@ -272,6 +272,29 @@ def test_combinatorial_selection_stage_1_copies_features_input():
     assert cs.features == train_set.columns.tolist()
 
 
+def test_combinatorial_selection_lower_logic_rejects_zero_cv_train_ratio():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='lower')
+
+    X, y = make_classification(60, 5, n_informative=3, random_state=18)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+
+    with pytest.raises(ValueError, match="greater than 0 when logic='lower'"):
+        cs.fit_stage_1(
+            train_set=train_set,
+            y_train=y_train,
+            test_set=test_set,
+            y_test=y_test,
+            features=train_set.columns.tolist(),
+            cv_train_ratio=0.0,
+        )
+
+
 def test_combinatorial_selection_stage_1_max_subsets_none_and_parallel():
     estimator = LogisticRegression()
     metric = get_geometric_S
