@@ -36,10 +36,32 @@ import numpy as np
 from typing import Literal, Iterable, Callable, Optional
 from math import comb
 import os
+from sklearn.base import clone
 
 import matplotlib.pyplot as plt
 from mlchem.helper import loadingbar, generate_combination_cascade
 from mlchem.ml.modelling.model_evaluation import crossval
+
+
+def _clone_for_search(estimator, outer_n_jobs: int):
+    """
+    Clone estimator and avoid nested parallelism when the outer wrapper
+    already parallelizes candidate evaluation.
+    """
+    estimator_copy = clone(estimator)
+    if outer_n_jobs == 1:
+        return estimator_copy
+
+    if hasattr(estimator_copy, 'get_params') and hasattr(estimator_copy, 'set_params'):
+        params = estimator_copy.get_params(deep=False)
+        if 'n_jobs' in params and params.get('n_jobs') not in (None, 1):
+            try:
+                estimator_copy.set_params(n_jobs=1)
+            except Exception:
+                # Not all estimators with n_jobs support runtime rewrites.
+                pass
+
+    return estimator_copy
 
 
 class SequentialForwardSelection:
@@ -190,13 +212,12 @@ class SequentialForwardSelection:
         self.feature_labels = self.train_set.columns
         self.n_jobs = self._resolve_n_jobs(n_jobs)
 
-        from sklearn.base import clone
         from joblib import Parallel, delayed
 
         def evaluate_feature(feat):
             features_to_test = self.extending_features + [feat]
             train_set_temp = self.train_set[features_to_test]
-            estimator_copy = clone(self.estimator)
+            estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(train_set_temp, self.y_train)
             cvscores = crossval(
                 estimator_copy,
@@ -703,12 +724,11 @@ class CombinatorialSelection:
             'test_score': []
             }
 
-        from sklearn.base import clone
         from joblib import Parallel, delayed
 
         def evaluate_subset(subset):
             x = self.train_set[subset]
-            estimator_copy = clone(self.estimator)
+            estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(x.values, self.y_train)
             y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
@@ -849,12 +869,11 @@ class CombinatorialSelection:
             'test_score': [],
             }
 
-        from sklearn.base import clone
         from joblib import Parallel, delayed
 
         def evaluate_subset(subset):
             x = self.train_set[subset]
-            estimator_copy = clone(self.estimator)
+            estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(x.values, self.y_train)
             y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)

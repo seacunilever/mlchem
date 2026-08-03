@@ -37,10 +37,23 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
+from sklearn.base import BaseEstimator, ClassifierMixin
 from mlchem.ml.feature_selection.wrappers import (SequentialForwardSelection,
                                                   CombinatorialSelection)
 from mlchem.metrics import get_geometric_S
 import matplotlib.pyplot as plt
+
+
+class _ParallelAwareEstimator(BaseEstimator, ClassifierMixin):
+    def __init__(self, n_jobs=4):
+        self.n_jobs = n_jobs
+
+    def fit(self, X, y):
+        self.classes_ = np.unique(y)
+        return self
+
+    def predict(self, X):
+        return np.zeros(len(X), dtype=int)
 
 @pytest.fixture
 def fitted_sfs():
@@ -298,6 +311,73 @@ def test_combinatorial_selection_stage_2_parallel_and_no_limit(fitted_cs_stage_1
     )
 
     assert isinstance(results, pd.DataFrame)
+
+
+def test_sfs_outer_parallel_forces_inner_estimator_n_jobs_to_one():
+    seen_n_jobs = []
+
+    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='classification', random_state=None, shuffle=False):
+        seen_n_jobs.append(getattr(estimator, 'n_jobs', None))
+        return np.array([0.6, 0.6, 0.6])
+
+    sfs = SequentialForwardSelection(
+        estimator=_ParallelAwareEstimator(n_jobs=4),
+        estimator_string='parallel-aware',
+        metric=lambda y_true, y_pred: (np.array(y_true) == np.array(y_pred)).mean(),
+        max_features=2,
+        cv_iter=3,
+        logic='greater',
+    )
+
+    X, y = make_classification(80, 6, n_informative=3, random_state=13)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+
+    with patch('mlchem.ml.feature_selection.wrappers.crossval', side_effect=fake_crossval):
+        sfs.fit(train_set, y_train, test_set, y_test, n_jobs=2)
+
+    assert len(seen_n_jobs) > 0
+    assert all(value == 1 for value in seen_n_jobs)
+
+
+def test_combinatorial_outer_parallel_forces_inner_estimator_n_jobs_to_one():
+    seen_n_jobs = []
+
+    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='classification', random_state=None, shuffle=False):
+        seen_n_jobs.append(getattr(estimator, 'n_jobs', None))
+        return np.array([0.6, 0.6, 0.6])
+
+    cs = CombinatorialSelection(
+        estimator=_ParallelAwareEstimator(n_jobs=8),
+        metric=lambda y_true, y_pred: (np.array(y_true) == np.array(y_pred)).mean(),
+        logic='greater'
+    )
+
+    X, y = make_classification(80, 6, n_informative=3, random_state=17)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+
+    with patch('mlchem.ml.feature_selection.wrappers.crossval', side_effect=fake_crossval):
+        cs.fit_stage_1(
+            train_set=train_set,
+            y_train=y_train,
+            test_set=test_set,
+            y_test=y_test,
+            features=train_set.columns,
+            k=2,
+            training_threshold=0.0,
+            cv_train_ratio=0.0,
+            n_jobs=2,
+        )
+
+    assert len(seen_n_jobs) > 0
+    assert all(value == 1 for value in seen_n_jobs)
 
 if __name__ == '__main__':
     pytest.main()
