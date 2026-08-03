@@ -152,7 +152,7 @@ def test_undersample_cycles_exceed_majority_raises_clean_error(sample_data):
         )
 
 
-def test_undersample_random_seed_zero_skips_seeding(sample_data):
+def test_undersample_random_seed_zero_seeds_rng(sample_data):
     train_set, test_set = sample_data
     with patch('random.seed') as seed_mock:
         undersample(
@@ -163,7 +163,7 @@ def test_undersample_random_seed_zero_skips_seeding(sample_data):
             add_dropped_to_test=False,
             random_seed=0,
         )
-    seed_mock.assert_not_called()
+    seed_mock.assert_called_once_with(0)
 
 if __name__ == "__main__":
     pytest.main()

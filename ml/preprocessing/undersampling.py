@@ -117,7 +117,7 @@ tuple of pandas.DataFrame
                                   )
     print('Samples to remove:', cycles)
 
-    if random_seed:
+    if random_seed is not None:
         random.seed(random_seed)
     to_drop_indices = random.sample(
         list(train_set[train_set[class_column] == majority_class_label].index),
