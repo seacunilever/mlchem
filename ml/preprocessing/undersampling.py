@@ -98,6 +98,11 @@ tuple of pandas.DataFrame
 
     import random
 
+    if not 0 < desired_proportion_majority < 1:
+        raise ValueError(
+            "'desired_proportion_majority' must be strictly between 0 and 1."
+        )
+
     zero_class_training = train_set[class_column].value_counts().get(0, 0)
     one_class_training = train_set[class_column].value_counts().get(1, 0)
 

@@ -83,10 +83,9 @@ def test_undersample_add_dropped_to_test(sample_data):
     assert len(undersampled_test_set) == 11
 
 
-@pytest.mark.xfail(strict=True, reason="undersample should validate ratio bounds explicitly")
 def test_undersample_ratio_equal_1_raises_valueerror(sample_data):
     train_set, test_set = sample_data
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="strictly between 0 and 1"):
         undersample(
             train_set=train_set,
             test_set=test_set,
@@ -97,10 +96,9 @@ def test_undersample_ratio_equal_1_raises_valueerror(sample_data):
         )
 
 
-@pytest.mark.xfail(strict=True, reason="undersample should validate ratio bounds explicitly")
 def test_undersample_ratio_zero_raises_valueerror(sample_data):
     train_set, test_set = sample_data
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="strictly between 0 and 1"):
         undersample(
             train_set=train_set,
             test_set=test_set,
@@ -111,10 +109,9 @@ def test_undersample_ratio_zero_raises_valueerror(sample_data):
         )
 
 
-@pytest.mark.xfail(strict=True, reason="undersample should validate ratio bounds explicitly")
 def test_undersample_ratio_negative_raises_valueerror(sample_data):
     train_set, test_set = sample_data
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="strictly between 0 and 1"):
         undersample(
             train_set=train_set,
             test_set=test_set,
@@ -127,7 +124,7 @@ def test_undersample_ratio_negative_raises_valueerror(sample_data):
 
 def test_undersample_ratio_above_one_raises_valueerror(sample_data):
     train_set, test_set = sample_data
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="strictly between 0 and 1"):
         undersample(
             train_set=train_set,
             test_set=test_set,
@@ -138,10 +135,9 @@ def test_undersample_ratio_above_one_raises_valueerror(sample_data):
         )
 
 
-@pytest.mark.xfail(strict=True, reason="undersample should normalize sampling errors into a clear ValueError")
-def test_undersample_cycles_exceed_majority_raises_clean_error(sample_data):
+def test_undersample_ratio_above_one_raises_clean_error(sample_data):
     train_set, test_set = sample_data
-    with pytest.raises(ValueError, match="Invalid undersampling configuration"):
+    with pytest.raises(ValueError, match="strictly between 0 and 1"):
         undersample(
             train_set=train_set,
             test_set=test_set,
