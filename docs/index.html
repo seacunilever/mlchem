@@ -71,6 +71,8 @@
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#usage">Usage</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-chemotypes-faster-on-larger-datasets">calculate chemotypes faster on larger datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#control-ml-verbosity-in-notebooks-and-development-runs">control ML verbosity in notebooks and development runs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#optional-diagnostics-for-undersampling-and-y-scrambling">optional diagnostics for undersampling and y-scrambling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-fingerprints">calculate fingerprints</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#pattern-recognition">pattern recognition</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
@@ -547,6 +549,8 @@
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.display_best"><code class="docutils literal notranslate"><span class="pre">display_best()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">fit_stage_1()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_2"><code class="docutils literal notranslate"><span class="pre">fit_stage_2()</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.rank_features_by_relevance_redundancy"><code class="docutils literal notranslate"><span class="pre">rank_features_by_relevance_redundancy()</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.set_verbosity"><code class="docutils literal notranslate"><span class="pre">set_verbosity()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l8"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a><ul>
@@ -557,10 +561,13 @@
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter"><code class="docutils literal notranslate"><span class="pre">cv_iter</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic"><code class="docutils literal notranslate"><span class="pre">logic</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type"><code class="docutils literal notranslate"><span class="pre">task_type</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.verbose"><code class="docutils literal notranslate"><span class="pre">verbose</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level"><code class="docutils literal notranslate"><span class="pre">log_level</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best"><code class="docutils literal notranslate"><span class="pre">find_best()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.set_verbosity"><code class="docutils literal notranslate"><span class="pre">set_verbosity()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -680,6 +687,7 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.add_inchi_to_dataframe"><code class="docutils literal notranslate"><span class="pre">add_inchi_to_dataframe()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.assign_sign"><code class="docutils literal notranslate"><span class="pre">assign_sign()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.bokeh_plot"><code class="docutils literal notranslate"><span class="pre">bokeh_plot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.coerce_log_level"><code class="docutils literal notranslate"><span class="pre">coerce_log_level()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.compute_alpha"><code class="docutils literal notranslate"><span class="pre">compute_alpha()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.convert_rgb"><code class="docutils literal notranslate"><span class="pre">convert_rgb()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.convert_size"><code class="docutils literal notranslate"><span class="pre">convert_size()</span></code></a></li>
@@ -703,12 +711,14 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.prepare_datatable"><code class="docutils literal notranslate"><span class="pre">prepare_datatable()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.process_custom_string"><code class="docutils literal notranslate"><span class="pre">process_custom_string()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.reset_string"><code class="docutils literal notranslate"><span class="pre">reset_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.resolve_n_jobs"><code class="docutils literal notranslate"><span class="pre">resolve_n_jobs()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.show_png"><code class="docutils literal notranslate"><span class="pre">show_png()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.size_ratio"><code class="docutils literal notranslate"><span class="pre">size_ratio()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.sort_list_by_other_list"><code class="docutils literal notranslate"><span class="pre">sort_list_by_other_list()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.standardise_path"><code class="docutils literal notranslate"><span class="pre">standardise_path()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.suppress_warnings"><code class="docutils literal notranslate"><span class="pre">suppress_warnings()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.try_except"><code class="docutils literal notranslate"><span class="pre">try_except()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.validate_task_type"><code class="docutils literal notranslate"><span class="pre">validate_task_type()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.visualise_colour"><code class="docutils literal notranslate"><span class="pre">visualise_colour()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.visualise_colour_grid"><code class="docutils literal notranslate"><span class="pre">visualise_colour_grid()</span></code></a></li>
 </ul>

@@ -167,6 +167,26 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.helper.coerce_log_level">
+<span class="sig-name descname"><span class="pre">coerce_log_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#mlchem.helper.coerce_log_level" title="Link to this definition">¶</a></dt>
+<dd><p>Resolve a logging level name or integer into a numeric logging level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>level</strong> (<em>int</em><em> or </em><em>str</em>) – Logging level as integer (e.g. 20) or level name (e.g. ‘INFO’).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Numeric logging level.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If level is not a valid logging level name or integer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.helper.compute_alpha">
 <span class="sig-name descname"><span class="pre">compute_alpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.helper.compute_alpha" title="Link to this definition">¶</a></dt>
 <dd><p>Compute transparency value based on sample size.</p>
@@ -626,6 +646,26 @@ list and formatting the result.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.helper.resolve_n_jobs">
+<span class="sig-name descname"><span class="pre">resolve_n_jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#mlchem.helper.resolve_n_jobs" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize n_jobs values used by parallel wrappers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_jobs</strong> (<em>int</em>) – Requested number of workers. -1 means all CPUs.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Resolved positive worker count.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If n_jobs is not -1 or a positive integer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.helper.show_png">
 <span class="sig-name descname"><span class="pre">show_png</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Image</span></span></span><a class="headerlink" href="#mlchem.helper.show_png" title="Link to this definition">¶</a></dt>
 <dd><p>Display a PNG image from binary data.</p>
@@ -726,6 +766,26 @@ list and formatting the result.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.helper.validate_task_type">
+<span class="sig-name descname"><span class="pre">validate_task_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.helper.validate_task_type" title="Link to this definition">¶</a></dt>
+<dd><p>Validate task type used by ML helpers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>task_type</strong> (<em>str</em>) – Task kind.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The validated task type.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If task_type is not ‘classification’ or ‘regression’.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1263,6 +1323,7 @@ are used.</p></li>
 <li><a class="reference internal" href="#mlchem.helper.add_inchi_to_dataframe"><code class="docutils literal notranslate"><span class="pre">add_inchi_to_dataframe()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.assign_sign"><code class="docutils literal notranslate"><span class="pre">assign_sign()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.bokeh_plot"><code class="docutils literal notranslate"><span class="pre">bokeh_plot()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.coerce_log_level"><code class="docutils literal notranslate"><span class="pre">coerce_log_level()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.compute_alpha"><code class="docutils literal notranslate"><span class="pre">compute_alpha()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.convert_rgb"><code class="docutils literal notranslate"><span class="pre">convert_rgb()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.convert_size"><code class="docutils literal notranslate"><span class="pre">convert_size()</span></code></a></li>
@@ -1286,12 +1347,14 @@ are used.</p></li>
 <li><a class="reference internal" href="#mlchem.helper.prepare_datatable"><code class="docutils literal notranslate"><span class="pre">prepare_datatable()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.process_custom_string"><code class="docutils literal notranslate"><span class="pre">process_custom_string()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.reset_string"><code class="docutils literal notranslate"><span class="pre">reset_string()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.resolve_n_jobs"><code class="docutils literal notranslate"><span class="pre">resolve_n_jobs()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.show_png"><code class="docutils literal notranslate"><span class="pre">show_png()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.size_ratio"><code class="docutils literal notranslate"><span class="pre">size_ratio()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.sort_list_by_other_list"><code class="docutils literal notranslate"><span class="pre">sort_list_by_other_list()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.standardise_path"><code class="docutils literal notranslate"><span class="pre">standardise_path()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.suppress_warnings"><code class="docutils literal notranslate"><span class="pre">suppress_warnings()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.try_except"><code class="docutils literal notranslate"><span class="pre">try_except()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.validate_task_type"><code class="docutils literal notranslate"><span class="pre">validate_task_type()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.visualise_colour"><code class="docutils literal notranslate"><span class="pre">visualise_colour()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.visualise_colour_grid"><code class="docutils literal notranslate"><span class="pre">visualise_colour_grid()</span></code></a></li>
 </ul>

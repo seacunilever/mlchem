@@ -115,6 +115,12 @@ class SequentialForwardSelection:
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
+  verbose : bool, optional
+      If True, emit progress and score diagnostics through logging.
+      Default is False.
+  log_level : int or str, optional
+      Logging level used when `verbose=True` (for example 'INFO' or
+      'DEBUG'). Default is logging.INFO.
 
   Examples
   --------
@@ -175,6 +181,12 @@ class SequentialForwardSelection:
       Whether to minimise or maximise the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
+  verbose : bool, optional
+      If True, emit progress and score diagnostics through logging.
+      Default is False.
+  log_level : int or str, optional
+      Logging level used when `verbose=True` (for example 'INFO' or
+      'DEBUG'). Default is logging.INFO.
   """
 
         self.estimator = estimator
@@ -675,6 +687,12 @@ class CombinatorialSelection:
             Default is 'greater'.
         task_type : {'classification', 'regression'}, optional
             Specifies the type of task. Default is 'classification'.
+        verbose : bool, optional
+            If True, emit progress and score diagnostics through logging.
+            Default is False.
+        log_level : int or str, optional
+            Logging level used when `verbose=True` (for example 'INFO' or
+            'DEBUG'). Default is logging.INFO.
         """
 
         self.estimator = estimator

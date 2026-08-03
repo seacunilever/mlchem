@@ -232,6 +232,67 @@ Performance note: chemotype execution now reuses per-molecule rule results
 and avoids repeated molecule preparation. This is especially important for
 large rule dictionaries and medium-to-large training sets.
 
+### control ML verbosity in notebooks and development runs
+```python
+import logging
+from sklearn.linear_model import LogisticRegression
+from mlchem.ml.feature_selection.wrappers import (
+  SequentialForwardSelection,
+  CombinatorialSelection,
+)
+
+# Enable library logs in your notebook session
+logging.basicConfig(level=logging.INFO)
+
+sfs = SequentialForwardSelection(
+  estimator=LogisticRegression(),
+  estimator_string='lr',
+  metric=lambda y_true, y_pred: (y_true == y_pred).mean(),
+  verbose=True,
+  log_level='INFO',
+)
+
+# Runtime toggle (use DEBUG for very verbose traces)
+sfs.set_verbosity(True, 'DEBUG')
+sfs.set_verbosity(False)
+
+cs = CombinatorialSelection(
+  estimator=LogisticRegression(),
+  metric=lambda y_true, y_pred: (y_true == y_pred).mean(),
+  verbose=True,
+  log_level='INFO',
+)
+```
+
+### optional diagnostics for undersampling and y-scrambling
+```python
+from mlchem.ml.preprocessing.undersampling import undersample
+from mlchem.ml.modelling.model_evaluation import y_scrambling
+
+# Silent by default; set verbose=True when diagnostics are needed
+train_balanced, test_updated = undersample(
+  train_set=train_df,
+  test_set=test_df,
+  class_column='class',
+  desired_proportion_majority=0.6,
+  verbose=True,
+  log_level='INFO',
+)
+
+y_scrambling(
+  estimator=model,
+  train_set=X_train,
+  y_train=y_train,
+  test_set=X_test,
+  y_test=y_test,
+  metric_function=metric_fn,
+  n_iter=50,
+  plot=False,
+  verbose=True,
+  log_level='INFO',
+)
+```
+
 ### calculate fingerprints
 ```python
 from mlchem.chem.calculator import descriptors

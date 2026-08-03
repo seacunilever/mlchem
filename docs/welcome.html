@@ -265,6 +265,69 @@ python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w">
 and avoids repeated molecule preparation. This is especially important for
 large rule dictionaries and medium-to-large training sets.</p>
 </section>
+<section id="control-ml-verbosity-in-notebooks-and-development-runs">
+<h3>control ML verbosity in notebooks and development runs<a class="headerlink" href="#control-ml-verbosity-in-notebooks-and-development-runs" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.feature_selection.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+  <span class="n">SequentialForwardSelection</span><span class="p">,</span>
+  <span class="n">CombinatorialSelection</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Enable library logs in your notebook session</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span>
+  <span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
+  <span class="n">estimator_string</span><span class="o">=</span><span class="s1">&#39;lr&#39;</span><span class="p">,</span>
+  <span class="n">metric</span><span class="o">=</span><span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+  <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Runtime toggle (use DEBUG for very verbose traces)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">cs</span> <span class="o">=</span> <span class="n">CombinatorialSelection</span><span class="p">(</span>
+  <span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
+  <span class="n">metric</span><span class="o">=</span><span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+  <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="optional-diagnostics-for-undersampling-and-y-scrambling">
+<h3>optional diagnostics for undersampling and y-scrambling<a class="headerlink" href="#optional-diagnostics-for-undersampling-and-y-scrambling" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.preprocessing.undersampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">undersample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">y_scrambling</span>
+
+<span class="c1"># Silent by default; set verbose=True when diagnostics are needed</span>
+<span class="n">train_balanced</span><span class="p">,</span> <span class="n">test_updated</span> <span class="o">=</span> <span class="n">undersample</span><span class="p">(</span>
+  <span class="n">train_set</span><span class="o">=</span><span class="n">train_df</span><span class="p">,</span>
+  <span class="n">test_set</span><span class="o">=</span><span class="n">test_df</span><span class="p">,</span>
+  <span class="n">class_column</span><span class="o">=</span><span class="s1">&#39;class&#39;</span><span class="p">,</span>
+  <span class="n">desired_proportion_majority</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
+  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+  <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">y_scrambling</span><span class="p">(</span>
+  <span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+  <span class="n">train_set</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+  <span class="n">y_train</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
+  <span class="n">test_set</span><span class="o">=</span><span class="n">X_test</span><span class="p">,</span>
+  <span class="n">y_test</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
+  <span class="n">metric_function</span><span class="o">=</span><span class="n">metric_fn</span><span class="p">,</span>
+  <span class="n">n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+  <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+  <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 <section id="calculate-fingerprints">
 <h3>calculate fingerprints<a class="headerlink" href="#calculate-fingerprints" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
@@ -413,6 +476,8 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
 <li><a class="reference internal" href="#calculate-chemotypes-faster-on-larger-datasets">calculate chemotypes faster on larger datasets</a></li>
+<li><a class="reference internal" href="#control-ml-verbosity-in-notebooks-and-development-runs">control ML verbosity in notebooks and development runs</a></li>
+<li><a class="reference internal" href="#optional-diagnostics-for-undersampling-and-y-scrambling">optional diagnostics for undersampling and y-scrambling</a></li>
 <li><a class="reference internal" href="#calculate-fingerprints">calculate fingerprints</a></li>
 <li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
 <li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>

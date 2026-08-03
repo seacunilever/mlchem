@@ -1,6 +1,11 @@
 mlchem.ml.modelling package
 ===========================
 
+Model evaluation utilities keep default execution quiet, and expose
+optional logging diagnostics where relevant (for example in
+`y_scrambling`). SHAP plotting paths also perform explicit shape-layout
+validation for safer error handling.
+
 *Submodules*
 ____________
 

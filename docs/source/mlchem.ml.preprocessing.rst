@@ -1,6 +1,10 @@
 mlchem.ml.preprocessing package
 ===============================
 
+Undersampling utilities provide optional logging diagnostics with
+`verbose` and `log_level`, include stricter boundary checks, and support
+generic binary labels (any two-class label values).
+
 *Submodules*
 ____________
 
