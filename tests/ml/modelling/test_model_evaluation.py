@@ -89,6 +89,57 @@ def test_crossval_regression(sample_data):
     assert isinstance(scores, np.ndarray)
     assert len(scores) == 5
 
+
+@pytest.mark.parametrize('task_type, estimator, y_values', [
+    ('classification', LogisticRegression(), 'classification'),
+    ('regression', LinearRegression(), 'regression'),
+])
+def test_crossval_shuffle_false_ignores_random_state(sample_data, task_type, estimator, y_values):
+    train_set, y_train, _, _ = sample_data
+    metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
+    y_input = y_train if y_values == 'classification' else y_train.astype(float)
+
+    # Must not raise when random_state is provided with shuffle disabled.
+    scores = crossval(
+        estimator,
+        train_set.values,
+        y_input,
+        metric_function,
+        n_fold=5,
+        task_type=task_type,
+        random_state=123,
+        shuffle=False,
+    )
+
+    assert isinstance(scores, np.ndarray)
+    assert len(scores) == 5
+
+
+@pytest.mark.parametrize('task_type, estimator, y_values', [
+    ('classification', LogisticRegression(), 'classification'),
+    ('regression', LinearRegression(), 'regression'),
+])
+def test_crossval_shuffle_true_propagates_random_state(sample_data, task_type, estimator, y_values):
+    train_set, y_train, _, _ = sample_data
+    metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
+    y_input = y_train if y_values == 'classification' else y_train.astype(float)
+
+    with patch('sklearn.model_selection.cross_val_score', return_value=np.array([1.0])) as mock_cross_val_score:
+        crossval(
+            estimator,
+            train_set.values,
+            y_input,
+            metric_function,
+            n_fold=5,
+            task_type=task_type,
+            random_state=77,
+            shuffle=True,
+        )
+
+    cv_splitter = mock_cross_val_score.call_args.kwargs['cv']
+    assert cv_splitter.shuffle is True
+    assert cv_splitter.random_state == 77
+
 def test_y_scrambling(sample_data, tmp_path, monkeypatch):
     train_set, y_train, test_set, y_test = sample_data
     estimator = LogisticRegression()

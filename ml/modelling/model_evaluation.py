@@ -44,7 +44,8 @@ def crossval(estimator,
              n_fold: int = 5,
              task_type: Literal['classification',
                                 'regression'] = 'classification',
-             random_state: int | None = None
+             random_state: int | None = None,
+             shuffle: bool = False
              ) -> np.ndarray:
     """
 Evaluate an estimator using cross-validation.
@@ -77,6 +78,9 @@ task_type : {'classification', 'regression'}, optional (default='classification'
 random_state : int or None, optional (default=None)
     Random seed for reproducibility.
 
+shuffle : bool, optional (default=False)
+    Whether to shuffle samples before splitting into batches.
+
 Returns
 -------
 numpy.ndarray
@@ -86,22 +90,27 @@ numpy.ndarray
     from sklearn.model_selection import cross_val_score
     from sklearn.metrics import make_scorer
 
+    cv_kwargs = {
+        'n_splits': n_fold,
+        'shuffle': shuffle,
+    }
+    if shuffle:
+        cv_kwargs['random_state'] = random_state
+
     if task_type == 'classification':
 
         from sklearn.model_selection import StratifiedKFold
         return cross_val_score(estimator,
                                 X,
                                 y,
-                                cv=StratifiedKFold(n_fold,
-                                                random_state=random_state),
+                                cv=StratifiedKFold(**cv_kwargs),
                                 scoring=make_scorer(metric_function))
     else:
         from sklearn.model_selection import KFold
     return cross_val_score(estimator,
                             X,
                             y,
-                            cv=KFold(n_fold,
-                                     random_state=random_state),
+                            cv=KFold(**cv_kwargs),
                             scoring=make_scorer(metric_function))
 
 
