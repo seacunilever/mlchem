@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 from typing import Literal, Iterable, Callable, Any
+import logging
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -312,6 +313,38 @@ Image.Image
 
 
 # MISCELLANEOUS #
+
+
+def coerce_log_level(level: int | str) -> int:
+    """
+Resolve a logging level name or integer into a numeric logging level.
+
+Parameters
+----------
+level : int or str
+    Logging level as integer (e.g. 20) or level name (e.g. 'INFO').
+
+Returns
+-------
+int
+    Numeric logging level.
+
+Raises
+------
+ValueError
+    If level is not a valid logging level name or integer.
+"""
+
+    if isinstance(level, int):
+        return level
+
+    if isinstance(level, str):
+        level_map = logging.getLevelNamesMapping()
+        key = level.upper()
+        if key in level_map:
+            return level_map[key]
+
+    raise ValueError("'log_level' must be a valid logging level name or integer.")
 
 
 def suppress_warnings() -> None:

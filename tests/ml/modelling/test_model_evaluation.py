@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+import logging
 from unittest.mock import patch
 import pandas as pd
 import numpy as np
@@ -173,6 +174,44 @@ def test_y_scrambling_with_dataframe_inputs(sample_data):
         n_iter=2,
         plot=False,
     )
+
+
+def test_y_scrambling_logging_toggle(sample_data, caplog):
+    train_set, y_train, test_set, y_test = sample_data
+    estimator = LogisticRegression(max_iter=250)
+    metric_function = get_geometric_S
+
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.modelling.model_evaluation'):
+        y_scrambling(
+            estimator,
+            train_set,
+            y_train,
+            test_set,
+            y_test,
+            metric_function,
+            n_iter=2,
+            plot=False,
+            verbose=False,
+        )
+    assert len(caplog.messages) == 0
+
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.modelling.model_evaluation'):
+        y_scrambling(
+            estimator,
+            train_set,
+            y_train,
+            test_set,
+            y_test,
+            metric_function,
+            n_iter=2,
+            plot=False,
+            verbose=True,
+            log_level='INFO',
+        )
+    full_text = '\n'.join(caplog.messages)
+    assert 'Probability to obtain a better model by chance' in full_text
+    assert 'Safety margin:' in full_text
 
 
 def test_leverage():

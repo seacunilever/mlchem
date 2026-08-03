@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+import logging
 import pandas as pd
 from unittest.mock import patch
 from mlchem.ml.preprocessing.undersampling import check_class_balance, undersample
@@ -48,13 +49,20 @@ def sample_data():
     })
     return train_set, test_set
 
-def test_check_class_balance(capsys,sample_data):
+def test_check_class_balance_logs_when_verbose(sample_data, caplog):
     train_set, test_set = sample_data
     y_train = train_set['class'].values.tolist()
-    check_class_balance(y_train)
-    captured = capsys.readouterr()
-    assert "CLASS BALANCE" in captured.out
-    assert "[0]: 2  [1]: 8  (0.20/0.80)" in captured.out
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.preprocessing.undersampling'):
+        check_class_balance(y_train, verbose=True, log_level='INFO')
+    assert any('CLASS BALANCE [0]: 2 [1]: 8 (0.20/0.80)' in msg for msg in caplog.messages)
+
+
+def test_check_class_balance_is_silent_by_default(sample_data, caplog):
+    train_set, test_set = sample_data
+    y_train = train_set['class'].values.tolist()
+    with caplog.at_level(logging.INFO, logger='mlchem.ml.preprocessing.undersampling'):
+        check_class_balance(y_train)
+    assert len(caplog.messages) == 0
 
 def test_undersample(sample_data):
     train_set, test_set = sample_data

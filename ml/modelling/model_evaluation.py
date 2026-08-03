@@ -35,6 +35,11 @@ from typing import Literal, Callable, Iterable
 import pandas as pd
 import numpy as np
 import warnings
+import logging
+from mlchem.helper import coerce_log_level
+
+
+logger = logging.getLogger(__name__)
 
 
 def crossval(estimator,
@@ -121,7 +126,9 @@ def y_scrambling(estimator,
                  y_test: Iterable,
                  metric_function: Callable,
                  n_iter: int,
-                 plot: bool = True) -> None:
+                 plot: bool = True,
+                 verbose: bool = False,
+                 log_level: int | str = logging.INFO) -> None:
     """
 Perform y-scrambling to assess model performance due to chance.
 
@@ -156,6 +163,12 @@ n_iter : int
 plot : bool, optional (default=True)
     Whether to display a histogram of the scrambled scores.
 
+verbose : bool, optional (default=False)
+    If True, emit y-scrambling diagnostics through logging.
+
+log_level : int or str, optional (default=logging.INFO)
+    Logging level used when `verbose=True`.
+
 Returns
 -------
 None
@@ -166,6 +179,8 @@ None
     import numpy as np
     import seaborn as sns
     import matplotlib.pyplot as plt
+
+    resolved_log_level = coerce_log_level(log_level)
 
     estimator_copy = clone(estimator)
     y_train_copy = y_train.copy()
@@ -206,8 +221,17 @@ None
     # Rucker et al, https://doi.org/10.1021/ci700157b
     safety_margin = 2.3 * ys_std
 
-    print(f'Probability to obtain a better model by chance: {value:.3f}')
-    print(f'Safety margin: {(obtained_margin / (2.3 * ys_std)):.2f}')
+    if verbose:
+        logger.log(
+            resolved_log_level,
+            'Probability to obtain a better model by chance: %.3f',
+            value,
+        )
+        logger.log(
+            resolved_log_level,
+            'Safety margin: %.2f',
+            (obtained_margin / (2.3 * ys_std)),
+        )
 
     if plot:
         sns.histplot(scores)

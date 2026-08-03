@@ -32,10 +32,24 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 from typing import Iterable, Optional
+import logging
 import pandas as pd
+from mlchem.helper import coerce_log_level
 
 
-def check_class_balance(y_train: Iterable) -> None:
+logger = logging.getLogger(__name__)
+
+
+def _log_if_verbose(verbose: bool, log_level: int, msg: str, *args) -> None:
+    if verbose:
+        logger.log(log_level, msg, *args)
+
+
+def check_class_balance(
+    y_train: Iterable,
+    verbose: bool = False,
+    log_level: int | str = logging.INFO,
+) -> None:
     """
 Check and print the class distribution in training labels.
 
@@ -54,8 +68,16 @@ None
     total = zero_class_training + one_class_training
     zero_ratio = zero_class_training / total
     one_ratio = 1 - zero_ratio
-    print(f'CLASS BALANCE\n\n\n\n[0]: {zero_class_training}  [1]: '
-          f'{one_class_training}  ({zero_ratio:.2f}/{one_ratio:.2f})')
+    resolved_log_level = coerce_log_level(log_level)
+    _log_if_verbose(
+        verbose,
+        resolved_log_level,
+        'CLASS BALANCE [0]: %d [1]: %d (%.2f/%.2f)',
+        zero_class_training,
+        one_class_training,
+        zero_ratio,
+        one_ratio,
+    )
 
 
 def undersample(
@@ -64,7 +86,9 @@ def undersample(
     class_column: str,
     desired_proportion_majority: float,
     add_dropped_to_test: bool = False,
-    random_seed: Optional[int] = 1
+    random_seed: Optional[int] = 1,
+    verbose: bool = False,
+    log_level: int | str = logging.INFO,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
 Undersample the majority class in a training set to achieve a desired 
@@ -90,6 +114,12 @@ add_dropped_to_test : bool, default=False
 random_seed : int, optional
     Random seed for reproducibility.
 
+verbose : bool, default=False
+    If True, emit class-balance and sampling diagnostics through logging.
+
+log_level : int or str, default=logging.INFO
+    Logging level used when `verbose=True`.
+
 Returns
 -------
 tuple of pandas.DataFrame
@@ -97,6 +127,7 @@ tuple of pandas.DataFrame
 """
 
     import random
+    resolved_log_level = coerce_log_level(log_level)
 
     if not 0 < desired_proportion_majority < 1:
         raise ValueError(
@@ -120,7 +151,7 @@ tuple of pandas.DataFrame
                                   desired_proportion_majority /
                                   (1 - desired_proportion_majority)
                                   )
-    print('Samples to remove:', cycles)
+    _log_if_verbose(verbose, resolved_log_level, 'Samples to remove: %d', cycles)
 
     if random_seed is not None:
         random.seed(random_seed)
@@ -140,9 +171,15 @@ tuple of pandas.DataFrame
     zero_ratio_undersampled = zero_class_training_undersampled / \
         total_undersampled
     one_ratio_undersampled = 1 - zero_ratio_undersampled
-    print(f'CLASS BALANCE\n\n\n\n[0]: {zero_class_training_undersampled}  [1]:'
-          f' {one_class_training_undersampled} ({zero_ratio_undersampled:.2f}/'
-          f' {one_ratio_undersampled:.2f})')
+    _log_if_verbose(
+        verbose,
+        resolved_log_level,
+        'CLASS BALANCE [0]: %d [1]: %d (%.2f/%.2f)',
+        zero_class_training_undersampled,
+        one_class_training_undersampled,
+        zero_ratio_undersampled,
+        one_ratio_undersampled,
+    )
 
     if add_dropped_to_test:
         to_add = train_set.loc[to_drop_indices]

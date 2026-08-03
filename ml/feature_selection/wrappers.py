@@ -40,21 +40,11 @@ import logging
 from sklearn.base import clone
 
 import matplotlib.pyplot as plt
-from mlchem.helper import loadingbar, generate_combination_cascade
+from mlchem.helper import loadingbar, generate_combination_cascade, coerce_log_level
 from mlchem.ml.modelling.model_evaluation import crossval
 
 
 logger = logging.getLogger(__name__)
-
-
-def _coerce_log_level(level: int | str) -> int:
-    if isinstance(level, int):
-        return level
-    if isinstance(level, str):
-        resolved = logging.getLevelName(level.upper())
-        if isinstance(resolved, int):
-            return resolved
-    raise ValueError("'log_level' must be a valid logging level name or integer.")
 
 
 def _clone_for_search(estimator, outer_n_jobs: int):
@@ -192,7 +182,7 @@ class SequentialForwardSelection:
         self.logic = logic
         self.task_type = task_type
         self.verbose = bool(verbose)
-        self.log_level = _coerce_log_level(log_level)
+        self.log_level = coerce_log_level(log_level)
 
         # Where to store the temporarily best feature set at each iteration
         self.extending_features = []
@@ -216,7 +206,7 @@ class SequentialForwardSelection:
         """Enable/disable wrapper logs and optionally change log level."""
         self.verbose = bool(verbose)
         if log_level is not None:
-            self.log_level = _coerce_log_level(log_level)
+            self.log_level = coerce_log_level(log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
         if self.verbose and level >= self.log_level:
@@ -695,14 +685,14 @@ class CombinatorialSelection:
         self.logic = logic
         self.task_type = task_type
         self.verbose = bool(verbose)
-        self.log_level = _coerce_log_level(log_level)
+        self.log_level = coerce_log_level(log_level)
 
     def set_verbosity(self, verbose: bool = True,
                       log_level: int | str | None = None) -> None:
         """Enable/disable wrapper logs and optionally change log level."""
         self.verbose = bool(verbose)
         if log_level is not None:
-            self.log_level = _coerce_log_level(log_level)
+            self.log_level = coerce_log_level(log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
         if self.verbose and level >= self.log_level:
