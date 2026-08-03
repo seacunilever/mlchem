@@ -1040,9 +1040,22 @@ Returns
 -------
 bokeh.models.DataTable
     Bokeh DataTable object.
+
+Raises
+------
+KeyError
+    If required columns are missing from the DataFrame.
 """
 
     from bokeh.models import ColumnDataSource, TableColumn
+
+    required_columns = [
+        'DIM_1', 'DIM_2', 'SMILES', 'MOLFILE',
+        'NAME', 'NAME_SHORT', 'METADATA'
+    ]
+    missing_columns = [column for column in required_columns if column not in df.columns]
+    if missing_columns:
+        raise KeyError(f"Missing required columns: {missing_columns}")
 
     source = ColumnDataSource(df)
     columns = [
@@ -1117,8 +1130,11 @@ float
 Raises
 ------
 ValueError
-    If both sizes are zero.
+    If either size is negative or both sizes are zero.
 """
+
+    if size1 < 0 or size2 < 0:
+        raise ValueError("'size1' and 'size2' must be non-negative.")
 
     if size1 + size2 == 0:
         raise ValueError("'size1' and 'size2' cannot both be zero.")
@@ -1221,11 +1237,15 @@ list of float
 
     import math
 
-    max_abs_weight = max(math.fabs(v) for v in values)
+    values_list = list(values)
+    if not values_list:
+        return []
+
+    max_abs_weight = max(math.fabs(v) for v in values_list)
 
     if max_abs_weight > 0:
-        return [v / max_abs_weight for v in values]
-    return list(values)
+        return [v / max_abs_weight for v in values_list]
+    return values_list
 
 
 # DESCRIPTORS #

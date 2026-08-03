@@ -259,6 +259,12 @@ def test_prepare_datatable():
     datatable = prepare_datatable(df)
     assert isinstance(datatable, DataTable)
 
+
+def test_prepare_datatable_missing_columns():
+    df = pd.DataFrame({"DIM_1": [1], "DIM_2": [2]})
+    with pytest.raises(KeyError):
+        prepare_datatable(df)
+
 def test_compute_alpha():
     assert compute_alpha(50) == 0.95
     assert compute_alpha(100) == 0.9
@@ -279,6 +285,9 @@ def test_size_ratio():
 
     with pytest.raises(ValueError):
         size_ratio(0, 0)
+
+    with pytest.raises(ValueError):
+        size_ratio(-1, 1)
 
 def test_bokeh_plot(monkeypatch):
     from bokeh.plotting import figure
@@ -308,6 +317,8 @@ def test_normalise_iterable():
     assert normalise_iterable([1, 2, 3, 4]) == [1/4, 2/4, 3/4, 4/4]
     assert normalise_iterable([-1, -2, -3, -4]) == [-1/4, -2/4, -3/4, -4/4]
     assert normalise_iterable([0, 0, 0]) == [0, 0, 0]
+    assert normalise_iterable([]) == []
+    assert normalise_iterable((x for x in [1, 2, 3])) == [1/3, 2/3, 1]
 
 def test_dfs_to_excel(tmpdir):
     df1 = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
