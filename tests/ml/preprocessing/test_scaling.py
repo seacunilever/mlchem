@@ -46,47 +46,107 @@ def sample_dataframe():
         'feature3': [7, 8, 9]
     })
 
+
+@pytest.fixture
+def sample_dataframe_with_binary():
+    return pd.DataFrame({
+        'continuous': [10.0, 20.0, 30.0],
+        'binary': [0, 1, 0],
+        'tail': [100, 101, 102],
+    })
+
 def test_scale_df_standard(sample_dataframe):
     scaled_df, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=1)
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, StandardScaler)
-    assert scaled_df.shape == (3, 2)
-    assert 'feature3' not in scaled_df.columns
+    assert scaled_df.shape == (3, 3)
+    assert 'feature3' in scaled_df.columns
+    assert scaled_df['feature3'].equals(sample_dataframe['feature3'])
 
 def test_scale_df_minmax(sample_dataframe):
     scaled_df, scaler = scale_df_minmax(sample_dataframe, last_columns_to_preserve=1)
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, MinMaxScaler)
-    assert scaled_df.shape == (3, 2)
-    assert 'feature3' not in scaled_df.columns
+    assert scaled_df.shape == (3, 3)
+    assert 'feature3' in scaled_df.columns
+    assert scaled_df['feature3'].equals(sample_dataframe['feature3'])
 
 def test_scale_df_robust(sample_dataframe):
     scaled_df, scaler = scale_df_robust(sample_dataframe, last_columns_to_preserve=1)
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, RobustScaler)
-    assert scaled_df.shape == (3, 2)
-    assert 'feature3' not in scaled_df.columns
+    assert scaled_df.shape == (3, 3)
+    assert 'feature3' in scaled_df.columns
+    assert scaled_df['feature3'].equals(sample_dataframe['feature3'])
 
 def test_transform_df_standard(sample_dataframe):
     _, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=1)
     transformed_df, _ = transform_df(sample_dataframe, scaler, last_columns_to_preserve=1)
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == (3, 2)
-    assert 'feature3' not in transformed_df.columns
+    assert transformed_df.shape == (3, 3)
+    assert 'feature3' in transformed_df.columns
+    assert transformed_df['feature3'].equals(sample_dataframe['feature3'])
 
 def test_transform_df_minmax(sample_dataframe):
     _, scaler = scale_df_minmax(sample_dataframe, last_columns_to_preserve=1)
     transformed_df, _ = transform_df(sample_dataframe, scaler, last_columns_to_preserve=1)
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == (3, 2)
-    assert 'feature3' not in transformed_df.columns
+    assert transformed_df.shape == (3, 3)
+    assert 'feature3' in transformed_df.columns
+    assert transformed_df['feature3'].equals(sample_dataframe['feature3'])
 
 def test_transform_df_robust(sample_dataframe):
     _, scaler = scale_df_robust(sample_dataframe, last_columns_to_preserve=1)
     transformed_df, _ = transform_df(sample_dataframe, scaler, last_columns_to_preserve=1)
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == (3, 2)
-    assert 'feature3' not in transformed_df.columns
+    assert transformed_df.shape == (3, 3)
+    assert 'feature3' in transformed_df.columns
+    assert transformed_df['feature3'].equals(sample_dataframe['feature3'])
+
+
+@pytest.mark.parametrize(
+    'scale_func, scaler_cls',
+    [
+        (scale_df_standard, StandardScaler),
+        (scale_df_minmax, MinMaxScaler),
+        (scale_df_robust, RobustScaler),
+    ],
+)
+def test_scale_df_skip_binary_columns(scale_func, scaler_cls, sample_dataframe_with_binary):
+    scaled_df, scaler = scale_func(
+        sample_dataframe_with_binary,
+        last_columns_to_preserve=1,
+        skip_binary_columns=True,
+    )
+
+    assert isinstance(scaled_df, pd.DataFrame)
+    assert isinstance(scaler, scaler_cls)
+    assert scaled_df.shape == sample_dataframe_with_binary.shape
+    assert not np.allclose(
+        scaled_df['continuous'].to_numpy(),
+        sample_dataframe_with_binary['continuous'].to_numpy(),
+    )
+    assert scaled_df['binary'].equals(sample_dataframe_with_binary['binary'])
+    assert scaled_df['tail'].equals(sample_dataframe_with_binary['tail'])
+
+
+@pytest.mark.parametrize('scale_func', [scale_df_standard, scale_df_minmax, scale_df_robust])
+def test_transform_df_skip_binary_columns(scale_func, sample_dataframe_with_binary):
+    _, scaler = scale_func(
+        sample_dataframe_with_binary,
+        last_columns_to_preserve=1,
+        skip_binary_columns=True,
+    )
+    transformed_df, _ = transform_df(
+        sample_dataframe_with_binary,
+        scaler,
+        last_columns_to_preserve=1,
+    )
+
+    assert isinstance(transformed_df, pd.DataFrame)
+    assert transformed_df.shape == sample_dataframe_with_binary.shape
+    assert transformed_df['binary'].equals(sample_dataframe_with_binary['binary'])
+    assert transformed_df['tail'].equals(sample_dataframe_with_binary['tail'])
 
 
 def test_scale_df_standard_zero_columns_preserved(sample_dataframe):

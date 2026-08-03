@@ -37,9 +37,94 @@ from sklearn.preprocessing import (StandardScaler,
                                    RobustScaler)
 
 
+def _is_binary_column(series: pd.Series) -> bool:
+    unique_values = pd.unique(series.dropna())
+    if len(unique_values) == 0:
+        return False
+    return set(unique_values).issubset({0, 1, 0.0, 1.0, False, True})
+
+
+def _split_scale_columns(
+    df: pd.DataFrame,
+    last_columns_to_preserve: int,
+    skip_binary_columns: bool
+) -> tuple[pd.DataFrame, list[str]]:
+    if last_columns_to_preserve == 0:
+        sliced_df = df
+    elif last_columns_to_preserve > 0:
+        sliced_df = df.iloc[:, :-last_columns_to_preserve]
+    else:
+        raise ValueError("'last_columns_to_preserve' must be >= 0")
+
+    if skip_binary_columns:
+        columns_to_scale = [
+            column for column in sliced_df.columns
+            if not _is_binary_column(sliced_df[column])
+        ]
+    else:
+        columns_to_scale = sliced_df.columns.to_list()
+
+    return sliced_df, columns_to_scale
+
+
+def _fit_transform_columns(
+    scaler: StandardScaler | MinMaxScaler | RobustScaler,
+    sliced_df: pd.DataFrame,
+    columns_to_scale: list[str],
+    index: pd.Index
+) -> pd.DataFrame:
+    if not columns_to_scale:
+        return pd.DataFrame(index=index)
+
+    scale_df = sliced_df[columns_to_scale]
+    try:
+        return pd.DataFrame(
+            scaler.fit_transform(scale_df),
+            columns=columns_to_scale,
+            index=index
+        )
+    except IndexError:
+        try:
+            return pd.DataFrame(
+                scaler.fit_transform(scale_df.values),
+                columns=columns_to_scale,
+                index=index
+            )
+        except ValueError as e:
+            raise ValueError(f"Error in scaling data: {e}")
+
+
+def _transform_columns(
+    scaler: StandardScaler | MinMaxScaler | RobustScaler,
+    sliced_df: pd.DataFrame,
+    columns_to_scale: list[str],
+    index: pd.Index
+) -> pd.DataFrame:
+    if not columns_to_scale:
+        return pd.DataFrame(index=index)
+
+    scale_df = sliced_df[columns_to_scale]
+    try:
+        return pd.DataFrame(
+            scaler.transform(scale_df),
+            columns=columns_to_scale,
+            index=index
+        )
+    except IndexError:
+        try:
+            return pd.DataFrame(
+                scaler.transform(scale_df.values),
+                columns=columns_to_scale,
+                index=index
+            )
+        except ValueError as e:
+            raise ValueError(f"Error in scaling data: {e}")
+
+
 def scale_df_standard(
     df: pd.DataFrame,
-    last_columns_to_preserve: int = 0
+    last_columns_to_preserve: int = 0,
+    skip_binary_columns: bool = False
 ) -> tuple[pd.DataFrame, StandardScaler]:
     """
 Scale a DataFrame using standard scaling, preserving specified columns.
@@ -52,43 +137,43 @@ df : pandas.DataFrame
 last_columns_to_preserve : int, default=0
     Number of columns at the end of the DataFrame to exclude from scaling.
 
+skip_binary_columns : bool, default=False
+    If True, binary 0/1 columns are excluded from scaling.
+
 Returns
 -------
 tuple of pandas.DataFrame and StandardScaler
     The scaled DataFrame and the fitted StandardScaler.
 """
-
-
     scaler = StandardScaler()
-    if last_columns_to_preserve == 0:
-        sliced_df = df
-    elif last_columns_to_preserve > 0:
-        sliced_df = df.iloc[:, :-last_columns_to_preserve]
-    else:
-        raise ValueError("'last_columns_to_preserve' must be >= 0")
+    sliced_df, columns_to_scale = _split_scale_columns(
+        df=df,
+        last_columns_to_preserve=last_columns_to_preserve,
+        skip_binary_columns=skip_binary_columns,
+    )
+    dataframe_scaled = _fit_transform_columns(
+        scaler=scaler,
+        sliced_df=sliced_df,
+        columns_to_scale=columns_to_scale,
+        index=df.index,
+    )
 
-    sliced_columns = sliced_df.columns
-    try:
-        dataframe_scaled = pd.DataFrame(
-            scaler.fit_transform(sliced_df),
-            columns=sliced_columns,
-            index=df.index
-        )
-    except IndexError:
-        try:
-            dataframe_scaled = pd.DataFrame(
-                scaler.fit_transform(df.values),
-                columns=df.columns,
-                index=df.index
-            )
-        except ValueError as e:
-            raise ValueError(f"Error in scaling data: {e}")
-    return dataframe_scaled, scaler
+    scaled_output = df.copy()
+    if columns_to_scale:
+        for column in columns_to_scale:
+            scaled_output[column] = dataframe_scaled[column]
+
+    scaler._mlchem_columns_scaled = columns_to_scale
+    scaler._mlchem_last_columns_to_preserve = last_columns_to_preserve
+    scaler._mlchem_skip_binary_columns = skip_binary_columns
+
+    return scaled_output, scaler
 
 
 def scale_df_minmax(
     df: pd.DataFrame,
-    last_columns_to_preserve: int = 0
+    last_columns_to_preserve: int = 0,
+    skip_binary_columns: bool = False
 ) -> tuple[pd.DataFrame, MinMaxScaler]:
     """
     Scale a DataFrame using min-max scaling, preserving specified columns.
@@ -101,43 +186,43 @@ def scale_df_minmax(
     last_columns_to_preserve : int, default=0
         Number of columns at the end of the DataFrame to exclude from scaling.
 
+    skip_binary_columns : bool, default=False
+        If True, binary 0/1 columns are excluded from scaling.
+
     Returns
     -------
     tuple of pandas.DataFrame and MinMaxScaler
         The scaled DataFrame and the fitted MinMaxScaler.
     """
-
-
     scaler = MinMaxScaler()
-    if last_columns_to_preserve == 0:
-        sliced_df = df
-    elif last_columns_to_preserve > 0:
-        sliced_df = df.iloc[:, :-last_columns_to_preserve]
-    else:
-        raise ValueError("'last_columns_to_preserve' must be >= 0")
+    sliced_df, columns_to_scale = _split_scale_columns(
+        df=df,
+        last_columns_to_preserve=last_columns_to_preserve,
+        skip_binary_columns=skip_binary_columns,
+    )
+    dataframe_scaled = _fit_transform_columns(
+        scaler=scaler,
+        sliced_df=sliced_df,
+        columns_to_scale=columns_to_scale,
+        index=df.index,
+    )
 
-    sliced_columns = sliced_df.columns
-    try:
-        dataframe_scaled = pd.DataFrame(
-            scaler.fit_transform(sliced_df),
-            columns=sliced_columns,
-            index=df.index
-        )
-    except IndexError:
-        try:
-            dataframe_scaled = pd.DataFrame(
-                scaler.fit_transform(df.values),
-                columns=df.columns,
-                index=df.index
-            )
-        except ValueError as e:
-            raise ValueError(f"Error in scaling data: {e}")
-    return dataframe_scaled, scaler
+    scaled_output = df.copy()
+    if columns_to_scale:
+        for column in columns_to_scale:
+            scaled_output[column] = dataframe_scaled[column]
+
+    scaler._mlchem_columns_scaled = columns_to_scale
+    scaler._mlchem_last_columns_to_preserve = last_columns_to_preserve
+    scaler._mlchem_skip_binary_columns = skip_binary_columns
+
+    return scaled_output, scaler
 
 
 def scale_df_robust(
     df: pd.DataFrame,
-    last_columns_to_preserve: int = 0
+    last_columns_to_preserve: int = 0,
+    skip_binary_columns: bool = False
 ) -> tuple[pd.DataFrame, RobustScaler]:
     """
 Scale a DataFrame using robust scaling, preserving specified columns.
@@ -150,44 +235,44 @@ df : pandas.DataFrame
 last_columns_to_preserve : int, default=0
     Number of columns at the end of the DataFrame to exclude from scaling.
 
+skip_binary_columns : bool, default=False
+    If True, binary 0/1 columns are excluded from scaling.
+
 Returns
 -------
 tuple of pandas.DataFrame and RobustScaler
     The scaled DataFrame and the fitted RobustScaler.
 """
-
-
     scaler = RobustScaler()
-    if last_columns_to_preserve == 0:
-        sliced_df = df
-    elif last_columns_to_preserve > 0:
-        sliced_df = df.iloc[:, :-last_columns_to_preserve]
-    else:
-        raise ValueError("'last_columns_to_preserve' must be >= 0")
+    sliced_df, columns_to_scale = _split_scale_columns(
+        df=df,
+        last_columns_to_preserve=last_columns_to_preserve,
+        skip_binary_columns=skip_binary_columns,
+    )
+    dataframe_scaled = _fit_transform_columns(
+        scaler=scaler,
+        sliced_df=sliced_df,
+        columns_to_scale=columns_to_scale,
+        index=df.index,
+    )
 
-    sliced_columns = sliced_df.columns
-    try:
-        dataframe_scaled = pd.DataFrame(
-            scaler.fit_transform(sliced_df),
-            columns=sliced_columns,
-            index=df.index
-        )
-    except IndexError:
-        try:
-            dataframe_scaled = pd.DataFrame(
-                scaler.fit_transform(df.values),
-                columns=df.columns,
-                index=df.index
-            )
-        except ValueError as e:
-            raise ValueError(f"Error in scaling data: {e}")
-    return dataframe_scaled, scaler
+    scaled_output = df.copy()
+    if columns_to_scale:
+        for column in columns_to_scale:
+            scaled_output[column] = dataframe_scaled[column]
+
+    scaler._mlchem_columns_scaled = columns_to_scale
+    scaler._mlchem_last_columns_to_preserve = last_columns_to_preserve
+    scaler._mlchem_skip_binary_columns = skip_binary_columns
+
+    return scaled_output, scaler
 
 
 def transform_df(
     df: pd.DataFrame,
     scaler: StandardScaler | MinMaxScaler | RobustScaler,
-    last_columns_to_preserve: int
+    last_columns_to_preserve: int,
+    skip_binary_columns: bool = False
 ) -> tuple[pd.DataFrame, StandardScaler | MinMaxScaler | RobustScaler]:
     """
 Transform a DataFrame using a provided scaler, preserving specified columns.
@@ -204,33 +289,39 @@ last_columns_to_preserve : int
     Number of columns at the end of the DataFrame to exclude from 
     transformation.
 
+skip_binary_columns : bool, default=False
+    If True, binary 0/1 columns are excluded from transformation.
+
 Returns
 -------
 tuple of pandas.DataFrame and scaler
     The transformed DataFrame and the scaler used.
 """
+    sliced_df, derived_columns_to_scale = _split_scale_columns(
+        df=df,
+        last_columns_to_preserve=last_columns_to_preserve,
+        skip_binary_columns=skip_binary_columns,
+    )
 
-    if last_columns_to_preserve == 0:
-        sliced_df = df
-    elif last_columns_to_preserve > 0:
-        sliced_df = df.iloc[:, :-last_columns_to_preserve]
+    fitted_columns = getattr(scaler, '_mlchem_columns_scaled', None)
+    if isinstance(fitted_columns, list):
+        columns_to_scale = [
+            column for column in fitted_columns
+            if column in sliced_df.columns
+        ]
     else:
-        raise ValueError("'last_columns_to_preserve' must be >= 0")
+        columns_to_scale = derived_columns_to_scale
 
-    sliced_columns = sliced_df.columns
-    try:
-        dataframe_transformed = pd.DataFrame(
-            scaler.transform(sliced_df),
-            columns=sliced_columns,
-            index=df.index
-        )
-    except IndexError:
-        try:
-            dataframe_transformed = pd.DataFrame(
-                scaler.transform(df.values),
-                columns=df.columns,
-                index=df.index
-            )
-        except ValueError as e:
-            raise ValueError(f"Error in scaling data: {e}")
-    return dataframe_transformed, scaler
+    dataframe_transformed = _transform_columns(
+        scaler=scaler,
+        sliced_df=sliced_df,
+        columns_to_scale=columns_to_scale,
+        index=df.index,
+    )
+
+    transformed_output = df.copy()
+    if columns_to_scale:
+        for column in columns_to_scale:
+            transformed_output[column] = dataframe_transformed[column]
+
+    return transformed_output, scaler
