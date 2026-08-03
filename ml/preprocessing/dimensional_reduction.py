@@ -215,6 +215,7 @@ Returns
 None
 """
         from sklearn.manifold import TSNE
+        df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
             if isinstance(neighbours_number_or_fraction, float):
@@ -223,9 +224,9 @@ None
                     "if float."
                 )
                 self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(self.dataframe))
+                                          len(df))
             else:
-                assert neighbours_number_or_fraction < len(self.dataframe), (
+                assert neighbours_number_or_fraction < len(df), (
                     "'neighbours_number_or_fraction' must be less than the "
                     "number of samples if int."
                 )
@@ -240,7 +241,6 @@ None
         else:
             self.algorithm = TSNE(**dict_params)
         self.params_ = self.algorithm.get_params()
-        df = dataframe if dataframe is not None else self.dataframe
         self.X_compressed = self.algorithm.fit_transform(
             df.values[:, self.initial_columns_to_ignore:]
         )
@@ -290,6 +290,7 @@ None
 """
 
         from sklearn.manifold import SpectralEmbedding
+        df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
             if isinstance(neighbours_number_or_fraction, float):
@@ -298,7 +299,7 @@ None
                     "if float."
                 )
                 self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(self.dataframe))
+                                          len(df))
             else:
                 self.n_neighbours = neighbours_number_or_fraction
             self.algorithm = SpectralEmbedding(
@@ -310,7 +311,6 @@ None
         else:
             self.algorithm = SpectralEmbedding(**dict_params)
         self.params_ = self.algorithm.get_params()
-        df = dataframe if dataframe is not None else self.dataframe
         self.X_compressed = self.algorithm.fit_transform(
             df.values[:, self.initial_columns_to_ignore:]
         )
@@ -366,6 +366,7 @@ None
                 category=ImportWarning,
             )
             import umap
+        df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
             if isinstance(neighbours_number_or_fraction, float):
@@ -374,7 +375,7 @@ None
                     "if float."
                 )
                 self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(self.dataframe))
+                                          len(df))
             else:
                 self.n_neighbours = neighbours_number_or_fraction
             self.algorithm = umap.UMAP(
@@ -386,7 +387,6 @@ None
         else:
             self.algorithm = umap.UMAP(**dict_params)
         self.params_ = self.algorithm.get_params()
-        df = dataframe if dataframe is not None else self.dataframe
         self.X_compressed = self.algorithm.fit_transform(
             df.values[:, self.initial_columns_to_ignore:]
         )
@@ -493,6 +493,7 @@ None
 """
 
         from sklearn.manifold import LocallyLinearEmbedding
+        df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
             if isinstance(neighbours_number_or_fraction, float):
@@ -501,7 +502,7 @@ None
                     "and 1 if float."
                 )
                 self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(self.dataframe))
+                                          len(df))
             else:
                 self.n_neighbours = neighbours_number_or_fraction
             self.algorithm = LocallyLinearEmbedding(
@@ -513,7 +514,6 @@ None
         else:
             self.algorithm = LocallyLinearEmbedding(**dict_params)
         self.params_ = self.algorithm.get_params()
-        df = dataframe if dataframe is not None else self.dataframe
         self.X_compressed = self.algorithm.fit_transform(
             df.values[:, self.initial_columns_to_ignore:]
         )
@@ -560,6 +560,7 @@ None
 """
 
         from sklearn.manifold import Isomap
+        df = dataframe if dataframe is not None else self.dataframe
 
         if dict_params is None:
             if isinstance(neighbours_number_or_fraction, float):
@@ -568,7 +569,7 @@ None
                     " and 1 if float."
                 )
                 self.n_neighbours = round(neighbours_number_or_fraction *
-                                          len(self.dataframe))
+                                          len(df))
             else:
                 self.n_neighbours = neighbours_number_or_fraction
             self.algorithm = Isomap(
@@ -579,7 +580,6 @@ None
         else:
             self.algorithm = Isomap(**dict_params)
         self.params_ = self.algorithm.get_params()
-        df = dataframe if dataframe is not None else self.dataframe
         self.X_compressed = self.algorithm.fit_transform(
             df.values[:, self.initial_columns_to_ignore:]
         )

@@ -112,6 +112,20 @@ def test_compress_se_float_neighbours_path(compressor):
     assert compressor.dataframe_compressed.shape[1] == 2
 
 
+def test_compress_se_uses_override_dataframe_for_fractional_neighbours(sample_dataframe):
+    compressor = Compressor(dataframe=sample_dataframe)
+    override_df = sample_dataframe.iloc[:10].copy()
+
+    compressor.compress_SE(
+        n_components=2,
+        neighbours_number_or_fraction=0.3,
+        dataframe=override_df,
+    )
+
+    assert compressor.n_neighbours == round(0.3 * len(override_df))
+    assert compressor.dataframe_compressed.shape[0] == len(override_df)
+
+
 def test_compress_umap_dict_params_and_custom_dataframe(sample_dataframe):
     compressor = Compressor(dataframe=sample_dataframe.iloc[:20])
     compressor.compress_UMAP(
