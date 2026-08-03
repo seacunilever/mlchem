@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+import inspect
 from unittest.mock import patch
 import numpy as np
 import pandas as pd
@@ -87,6 +88,15 @@ def test_sequential_forward_selection_fit(fitted_sfs):
     assert len(sfs.cv_scores) > 0
     assert len(sfs.cv_stds) > 0
     assert len(sfs.unseen_scores) > 0
+
+
+def test_sequential_forward_selection_task_type_annotation_uses_classification():
+    annotation = inspect.signature(
+        SequentialForwardSelection.__init__
+    ).parameters['task_type'].annotation
+
+    assert 'classification' in str(annotation)
+    assert 'classfication' not in str(annotation)
 
 def test_sequential_forward_selection_find_best(fitted_sfs):
     best_features = fitted_sfs.find_best()

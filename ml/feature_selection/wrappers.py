@@ -104,7 +104,7 @@ class SequentialForwardSelection:
       Number of cross-validation iterations. Default is 5.
   logic : {'lower', 'greater'}, optional
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
-  task_type : {'classfication', 'regression'}, optional
+  task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
 
   Examples
@@ -143,7 +143,7 @@ class SequentialForwardSelection:
                  cv_iter: int = 5,
                  logic: Literal['lower', 'greater'] = 'greater',
                  task_type: Literal[
-                     'classfication', 'regression'] = 'classification'
+                     'classification', 'regression'] = 'classification'
                  ) -> None:
         """
   Initialise the SequentialForwardSelection object.
@@ -162,7 +162,7 @@ class SequentialForwardSelection:
       Number of cross-validation iterations. Default is 5.
   logic : {'lower', 'greater'}, optional
       Whether to minimise or maximise the cross-validation score. Default is 'greater'.
-  task_type : {'classfication', 'regression'}, optional
+  task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
   """
 
