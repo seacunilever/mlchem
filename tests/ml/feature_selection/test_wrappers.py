@@ -90,6 +90,52 @@ def test_sequential_forward_selection_plot(fitted_sfs, tmp_path, monkeypatch):
         mock_show.assert_called_once()  # Ensure plt.show() is called
     assert True  # If no exceptions are raised, the test passes
 
+
+def test_sequential_forward_selection_parallel_fit():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+    )
+
+    X, y = make_classification(100, 8, n_informative=4, random_state=11)
+    train_samples = int(0.8 * len(X))
+    X_train, y_train = X[:train_samples], y[:train_samples]
+    X_test, y_test = X[train_samples:], y[train_samples:]
+
+    train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+    test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+    sfs.fit(train_set, y_train, test_set, y_test, n_jobs=2)
+
+    assert len(sfs.extending_features) == 3
+    assert len(sfs.cv_scores) == 3
+    assert len(sfs.unseen_scores) == 3
+
+
+def test_sequential_forward_selection_invalid_n_jobs():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=2,
+        cv_iter=2,
+        logic='greater',
+    )
+
+    X, y = make_classification(60, 6, n_informative=3, random_state=7)
+    train_samples = int(0.8 * len(X))
+    X_train, y_train = X[:train_samples], y[:train_samples]
+    X_test, y_test = X[train_samples:], y[train_samples:]
+    train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+    test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+    with pytest.raises(ValueError, match="must be -1 or a positive integer"):
+        sfs.fit(train_set, y_train, test_set, y_test, n_jobs=0)
+
 @pytest.fixture
 def fitted_cs_stage_1():
     estimator = LogisticRegression()
@@ -175,6 +221,59 @@ def test_combinatorial_selection_stage_1_max_subsets_guard():
         )
 
 
+def test_combinatorial_selection_stage_1_max_subsets_none_and_parallel():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+
+    X, y = make_classification(70, 7, n_informative=3, random_state=5)
+    train_size = 0.8
+    train_samples = int(train_size * len(X))
+
+    X_train, y_train = X[:train_samples], y[:train_samples]
+    X_test, y_test = X[train_samples:], y[train_samples:]
+
+    train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+    test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+    results = cs.fit_stage_1(
+        train_set=train_set,
+        y_train=y_train,
+        test_set=test_set,
+        y_test=y_test,
+        features=train_set.columns,
+        k=3,
+        training_threshold=0.5,
+        max_subsets=None,
+        n_jobs=2,
+    )
+
+    assert isinstance(results, pd.DataFrame)
+
+
+def test_combinatorial_selection_invalid_n_jobs_in_stage_1():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+    cs = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+
+    X, y = make_classification(50, 6, n_informative=3, random_state=3)
+    train_samples = int(0.8 * len(X))
+    X_train, y_train = X[:train_samples], y[:train_samples]
+    X_test, y_test = X[train_samples:], y[train_samples:]
+    train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+    test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+    with pytest.raises(ValueError, match="must be -1 or a positive integer"):
+        cs.fit_stage_1(
+            train_set=train_set,
+            y_train=y_train,
+            test_set=test_set,
+            y_test=y_test,
+            features=train_set.columns,
+            n_jobs=0,
+        )
+
+
 def test_combinatorial_selection_stage_2_max_subsets_guard(fitted_cs_stage_1):
     # Force a deterministic recurrent pool: C(4, 2) = 6 > max_subsets=1.
     fitted_cs_stage_1.df_results_stage1 = pd.DataFrame(
@@ -188,6 +287,17 @@ def test_combinatorial_selection_stage_2_max_subsets_guard(fitted_cs_stage_1):
 
     with pytest.raises(ValueError, match='exceeds max_subsets=1'):
         fitted_cs_stage_1.fit_stage_2(top_n_subsets=2, cv_iter=3, max_subsets=1)
+
+
+def test_combinatorial_selection_stage_2_parallel_and_no_limit(fitted_cs_stage_1):
+    results = fitted_cs_stage_1.fit_stage_2(
+        top_n_subsets=2,
+        cv_iter=3,
+        max_subsets=None,
+        n_jobs=2,
+    )
+
+    assert isinstance(results, pd.DataFrame)
 
 if __name__ == '__main__':
     pytest.main()

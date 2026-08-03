@@ -35,6 +35,7 @@ import pandas as pd
 import numpy as np
 from typing import Literal, Iterable, Callable, Optional
 from math import comb
+import os
 
 import matplotlib.pyplot as plt
 from mlchem.helper import loadingbar, generate_combination_cascade
@@ -156,7 +157,8 @@ class SequentialForwardSelection:
         train_set: pd.DataFrame,
         y_train: Iterable,
         test_set: pd.DataFrame,
-        y_test: Iterable
+        y_test: Iterable,
+        n_jobs: int = 1,
     ) -> None:
         """
         Fit the Sequential Forward Selection model.
@@ -171,6 +173,10 @@ class SequentialForwardSelection:
             Test dataset.
         y_test : iterable
             Target values for the test set.
+        n_jobs : int, optional
+            Number of parallel workers used to evaluate candidate
+            features at each SFS cycle. Use -1 to use all available CPUs.
+            Default is 1.
 
         Returns
         -------
@@ -182,6 +188,25 @@ class SequentialForwardSelection:
         self.test_set = test_set
         self.y_test = y_test
         self.feature_labels = self.train_set.columns
+        self.n_jobs = self._resolve_n_jobs(n_jobs)
+
+        from sklearn.base import clone
+        from joblib import Parallel, delayed
+
+        def evaluate_feature(feat):
+            features_to_test = self.extending_features + [feat]
+            train_set_temp = self.train_set[features_to_test]
+            estimator_copy = clone(self.estimator)
+            estimator_copy.fit(train_set_temp, self.y_train)
+            cvscores = crossval(
+                estimator_copy,
+                train_set_temp.values,
+                y_train,
+                self.metric,
+                self.cv_iter,
+                self.task_type,
+            )
+            return np.mean(cvscores), np.std(cvscores)
 
         for cycle in range(self.max_features):
 
@@ -198,15 +223,18 @@ class SequentialForwardSelection:
 
             # Hypothetically assess model if an extra feature is added.
             # Do it for all unexplored features.
-            for feat in self.list_available_features:
-                features_to_test = self.extending_features + [feat]
-                train_set_temp = self.train_set[features_to_test]
-                self.estimator.fit(train_set_temp, self.y_train)
-                cvscores = crossval(self.estimator, train_set_temp.values,
-                                    y_train, self.metric,
-                                    self.cv_iter, self.task_type)
-                cv_scores_storage.append(np.mean(cvscores))
-                cv_stds_storage.append(np.std(cvscores))
+            if self.n_jobs == 1:
+                for feat in self.list_available_features:
+                    cv_mean, cv_std = evaluate_feature(feat)
+                    cv_scores_storage.append(cv_mean)
+                    cv_stds_storage.append(cv_std)
+            else:
+                scored = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    delayed(evaluate_feature)(feat)
+                    for feat in self.list_available_features
+                )
+                cv_scores_storage = [score for score, _ in scored]
+                cv_stds_storage = [std for _, std in scored]
 
             # Include in the model the feature with best CV gains.
             if self.logic == 'greater':
@@ -228,6 +256,14 @@ class SequentialForwardSelection:
             y_test_pred = self.estimator.predict(test_set_temp)
             self.train_scores.append(self.metric(self.y_train, y_train_pred))
             self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
+
+    @staticmethod
+    def _resolve_n_jobs(n_jobs: int) -> int:
+        if n_jobs == -1:
+            return os.cpu_count() or 1
+        if n_jobs < -1 or n_jobs == 0:
+            raise ValueError("'n_jobs' must be -1 or a positive integer.")
+        return n_jobs
 
     def find_best(self, which: Optional[int] = None) -> dict:
         """
@@ -541,9 +577,12 @@ class CombinatorialSelection:
     def _validate_subset_limit(
         n_features: int,
         subset_size: int,
-        max_subsets: int,
+        max_subsets: int | None,
         stage_name: str,
     ) -> None:
+        if max_subsets is None:
+            return
+
         if max_subsets < 1:
             raise ValueError("'max_subsets' must be at least 1.")
 
@@ -569,7 +608,8 @@ class CombinatorialSelection:
         training_threshold: float = 0.25,
         cv_train_ratio: float = 0.7,
         cv_iter: int = 5,
-        max_subsets: int = 10_000,
+        max_subsets: int | None = None,
+        n_jobs: int = 1,
     ) -> pd.DataFrame:
         """
         Perform the first stage of combinatorial feature selection.
@@ -596,9 +636,13 @@ class CombinatorialSelection:
             is 0.7.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
-        max_subsets : int, optional
+        max_subsets : int or None, optional
             Hard cap on the number of generated feature subsets.
-            Default is 10_000.
+            If None, no hard cap is applied. Default is None.
+        n_jobs : int, optional
+            Number of parallel workers used to evaluate candidate
+            feature subsets. Use -1 to use all available CPUs.
+            Default is 1.
 
         Returns
         -------
@@ -629,6 +673,7 @@ class CombinatorialSelection:
         self.cv_train_ratio = cv_train_ratio
         self.cv_iter = cv_iter
         self.max_subsets = max_subsets
+        self.n_jobs = self._resolve_n_jobs(n_jobs)
 
         assert 0 <= self.cv_train_ratio <= 1, \
             "'cv_train_ratio' must be between 0 and 1."
@@ -658,37 +703,60 @@ class CombinatorialSelection:
             'test_score': []
             }
 
-        for i, subset in enumerate(self.feature_subsets):
-            loadingbar(i+1,
-                       len(self.feature_subsets),
-                       50)
+        from sklearn.base import clone
+        from joblib import Parallel, delayed
+
+        def evaluate_subset(subset):
             x = self.train_set[subset]
-            self.estimator.fit(x.values, self.y_train)
-            y_train_pred = self.estimator.predict(x.values)
+            estimator_copy = clone(self.estimator)
+            estimator_copy.fit(x.values, self.y_train)
+            y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
             if not is_better(train_score, self.training_threshold):
-                pass
-            else:
-                cv_score = crossval(
-                    self.estimator,
-                    x,
-                    y_train,
-                    self.metric,
-                    self.cv_iter,
-                    self.task_type
-                    ).mean()
+                return None
 
-                if not is_better(cv_score, self.cv_threshold):
-                    pass
-                else:
-                    self.dict_results['feature_subsets'].append(subset)
-                    y_test_pred = self.estimator.predict(
-                        self.test_set[subset].values
-                    )
-                    test_score = self.metric(self.y_test, y_test_pred)
-                    self.dict_results['training_score'].append(train_score)
-                    self.dict_results['cv_score'].append(cv_score)
-                    self.dict_results['test_score'].append(test_score)
+            cv_score = crossval(
+                estimator_copy,
+                x,
+                y_train,
+                self.metric,
+                self.cv_iter,
+                self.task_type,
+            ).mean()
+            if not is_better(cv_score, self.cv_threshold):
+                return None
+
+            y_test_pred = estimator_copy.predict(self.test_set[subset].values)
+            test_score = self.metric(self.y_test, y_test_pred)
+            return subset, train_score, cv_score, test_score
+
+        if self.n_jobs == 1:
+            for i, subset in enumerate(self.feature_subsets):
+                loadingbar(i+1,
+                           len(self.feature_subsets),
+                           50)
+                result = evaluate_subset(subset)
+                if result is None:
+                    continue
+                subset, train_score, cv_score, test_score = result
+                self.dict_results['feature_subsets'].append(subset)
+                self.dict_results['training_score'].append(train_score)
+                self.dict_results['cv_score'].append(cv_score)
+                self.dict_results['test_score'].append(test_score)
+        else:
+            results = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                delayed(evaluate_subset)(subset)
+                for subset in self.feature_subsets
+            )
+            loadingbar(len(self.feature_subsets), len(self.feature_subsets), 50)
+            for result in results:
+                if result is None:
+                    continue
+                subset, train_score, cv_score, test_score = result
+                self.dict_results['feature_subsets'].append(subset)
+                self.dict_results['training_score'].append(train_score)
+                self.dict_results['cv_score'].append(cv_score)
+                self.dict_results['test_score'].append(test_score)
         self.df_results_stage1 = pd.DataFrame(
             self.dict_results,
             columns=self.dict_results.keys()
@@ -707,7 +775,8 @@ class CombinatorialSelection:
     def fit_stage_2(self,
                     top_n_subsets: int = 10,
                     cv_iter: int = 5,
-                    max_subsets: int = 10_000) -> pd.DataFrame:
+                    max_subsets: int | None = None,
+                    n_jobs: int = 1) -> pd.DataFrame:
         """
         Perform the second stage of combinatorial feature selection.
 
@@ -718,9 +787,13 @@ class CombinatorialSelection:
             Default is 10.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
-        max_subsets : int, optional
+        max_subsets : int or None, optional
             Hard cap on the number of generated feature subsets.
-            Default is 10_000.
+            If None, no hard cap is applied. Default is None.
+        n_jobs : int, optional
+            Number of parallel workers used to evaluate candidate
+            feature subsets. Use -1 to use all available CPUs.
+            Default is 1.
 
         Returns
         -------
@@ -739,6 +812,7 @@ class CombinatorialSelection:
             return a > b if self.logic == 'greater' else a < b
 
         self.cv_iter = cv_iter
+        self.n_jobs = self._resolve_n_jobs(n_jobs)
         self.best_recurrent = np.unique(
             np.hstack(
                 self.df_results_stage1.head(top_n_subsets).
@@ -775,33 +849,58 @@ class CombinatorialSelection:
             'test_score': [],
             }
 
-        for i, subset in enumerate(self.feature_subsets):
-            loadingbar(i+1, len(self.feature_subsets), 50)
+        from sklearn.base import clone
+        from joblib import Parallel, delayed
+
+        def evaluate_subset(subset):
             x = self.train_set[subset]
-            self.estimator.fit(x.values, self.y_train)
-            y_train_pred = self.estimator.predict(x.values)
+            estimator_copy = clone(self.estimator)
+            estimator_copy.fit(x.values, self.y_train)
+            y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
             if not is_better(train_score, self.training_threshold_2):
-                pass
-            else:
-                cv_score = crossval(self.estimator,
-                                    x,
-                                    self.y_train,
-                                    self.metric,
-                                    self.cv_iter,
-                                    self.task_type
-                                    ).mean()
-                if not is_better(cv_score, self.cv_threshold_2):
-                    pass
-                else:
-                    self.dict_results_2['feature_subsets'].append(subset)
-                    y_test_pred = self.estimator.predict(
-                        self.test_set[subset].values
-                    )
-                    test_score = self.metric(self.y_test, y_test_pred)
-                    self.dict_results_2['training_score'].append(train_score)
-                    self.dict_results_2['cv_score'].append(cv_score)
-                    self.dict_results_2['test_score'].append(test_score)
+                return None
+
+            cv_score = crossval(
+                estimator_copy,
+                x,
+                self.y_train,
+                self.metric,
+                self.cv_iter,
+                self.task_type,
+            ).mean()
+            if not is_better(cv_score, self.cv_threshold_2):
+                return None
+
+            y_test_pred = estimator_copy.predict(self.test_set[subset].values)
+            test_score = self.metric(self.y_test, y_test_pred)
+            return subset, train_score, cv_score, test_score
+
+        if self.n_jobs == 1:
+            for i, subset in enumerate(self.feature_subsets):
+                loadingbar(i+1, len(self.feature_subsets), 50)
+                result = evaluate_subset(subset)
+                if result is None:
+                    continue
+                subset, train_score, cv_score, test_score = result
+                self.dict_results_2['feature_subsets'].append(subset)
+                self.dict_results_2['training_score'].append(train_score)
+                self.dict_results_2['cv_score'].append(cv_score)
+                self.dict_results_2['test_score'].append(test_score)
+        else:
+            results = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                delayed(evaluate_subset)(subset)
+                for subset in self.feature_subsets
+            )
+            loadingbar(len(self.feature_subsets), len(self.feature_subsets), 50)
+            for result in results:
+                if result is None:
+                    continue
+                subset, train_score, cv_score, test_score = result
+                self.dict_results_2['feature_subsets'].append(subset)
+                self.dict_results_2['training_score'].append(train_score)
+                self.dict_results_2['cv_score'].append(cv_score)
+                self.dict_results_2['test_score'].append(test_score)
         self.df_results_stage2 = pd.DataFrame(
             self.dict_results_2, columns=self.dict_results_2.keys()
             )
@@ -815,6 +914,14 @@ class CombinatorialSelection:
             ascending=self.ascending_decision,
             inplace=True)
         return self.df_results_stage2
+
+    @staticmethod
+    def _resolve_n_jobs(n_jobs: int) -> int:
+        if n_jobs == -1:
+            return os.cpu_count() or 1
+        if n_jobs < -1 or n_jobs == 0:
+            raise ValueError("'n_jobs' must be -1 or a positive integer.")
+        return n_jobs
 
     def display_best(self, row: int = 1) -> None:
         """
