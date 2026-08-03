@@ -105,6 +105,11 @@ def test_interpretable_descriptors_mordred():
     assert 'nRing' in interpretable_descriptors_mordred
     assert 'TPSA' in interpretable_descriptors_mordred
 
+
+def test_interpretable_descriptor_catalogs_have_no_duplicates():
+    assert len(interpretable_descriptors_rdkit) == len(set(interpretable_descriptors_rdkit))
+    assert len(interpretable_descriptors_mordred) == len(set(interpretable_descriptors_mordred))
+
 def test_similarity_metric_dictionary():
     assert isinstance(similarity_metric_dictionary, dict)
     assert 'Tanimoto' in similarity_metric_dictionary
