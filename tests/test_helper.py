@@ -47,7 +47,7 @@ from mlchem.helper import (
     process_custom_string, sort_list_by_other_list, merge_dicts_with_duplicates,
     add_inchi_to_dataframe, identify_df_duplicates, create_structure_files,
     prepare_dataframe, prepare_datatable, compute_alpha, size_ratio, bokeh_plot,
-    create_mask, assign_sign, normalise_iterable, dfs_to_excel
+    create_mask, assign_sign, normalise_iterable, dfs_to_excel, generate_cartesian_product
 )
 
 def test_convert_size():
@@ -326,6 +326,83 @@ def test_dfs_to_excel(tmpdir):
     file_path = tmpdir.join("test.xlsx")
     dfs_to_excel(file_path, [df1, df2], ["Sheet1", "Sheet2"])
     assert file_path.exists()
+
+def test_generate_cartesian_product_two_lists():
+    """Test Cartesian product of two lists."""
+    result = generate_cartesian_product([1, 2], ['a', 'b'])
+    expected = [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
+    assert result == expected
+    # Verify output is list of lists, not tuples
+    assert all(isinstance(combo, list) for combo in result)
+
+def test_generate_cartesian_product_three_lists():
+    """Test Cartesian product of three lists."""
+    result = generate_cartesian_product([True, False], ['x', 'y'], [1])
+    expected = [[True, 'x', 1], [True, 'y', 1], [False, 'x', 1], [False, 'y', 1]]
+    assert result == expected
+
+def test_generate_cartesian_product_single_element_lists():
+    """Test Cartesian product when lists have single elements."""
+    result = generate_cartesian_product([1], ['a'], [True])
+    expected = [[1, 'a', True]]
+    assert result == expected
+
+def test_generate_cartesian_product_many_lists():
+    """Test Cartesian product with many lists."""
+    result = generate_cartesian_product([1, 2], ['a'], [True, False], [10])
+    expected = [
+        [1, 'a', True, 10],
+        [1, 'a', False, 10],
+        [2, 'a', True, 10],
+        [2, 'a', False, 10]
+    ]
+    assert result == expected
+
+def test_generate_cartesian_product_with_tuples():
+    """Test that tuples are accepted as input."""
+    result = generate_cartesian_product((1, 2), ('a', 'b'))
+    expected = [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
+    assert result == expected
+
+def test_generate_cartesian_product_mixed_types():
+    """Test Cartesian product with mixed data types."""
+    result = generate_cartesian_product([1, 2.5], ['a', None], [True])
+    assert len(result) == 4
+    assert [1, 'a', True] in result
+    assert [2.5, None, True] in result
+
+def test_generate_cartesian_product_fewer_than_two_lists():
+    """Test that ValueError is raised with fewer than two lists."""
+    with pytest.raises(ValueError, match="At least two lists are required"):
+        generate_cartesian_product([1, 2])
+    
+    with pytest.raises(ValueError, match="At least two lists are required"):
+        generate_cartesian_product()
+
+def test_generate_cartesian_product_empty_list():
+    """Test that ValueError is raised when any list is empty."""
+    with pytest.raises(ValueError, match="is empty"):
+        generate_cartesian_product([1, 2], [])
+    
+    with pytest.raises(ValueError, match="is empty"):
+        generate_cartesian_product([], [1, 2])
+
+def test_generate_cartesian_product_non_list_argument():
+    """Test that TypeError is raised for non-list/tuple arguments."""
+    with pytest.raises(TypeError, match="must be a list or tuple"):
+        generate_cartesian_product([1, 2], 'abc')
+    
+    with pytest.raises(TypeError, match="must be a list or tuple"):
+        generate_cartesian_product([1, 2], {'a': 1})
+
+def test_generate_cartesian_product_large_output():
+    """Test that function correctly computes large Cartesian products."""
+    # 3 x 3 x 3 = 27 combinations
+    result = generate_cartesian_product([1, 2, 3], ['a', 'b', 'c'], [10, 20, 30])
+    assert len(result) == 27
+    # Check first and last combinations
+    assert result[0] == [1, 'a', 10]
+    assert result[-1] == [3, 'c', 30]
 
 if __name__ == "__main__":
     pytest.main()

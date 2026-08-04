@@ -589,6 +589,58 @@ str
     return path.replace("\\", "/")
 
 
+
+
+def generate_cartesian_product(*lists: Iterable) -> list[list]:
+    """
+Generate the Cartesian product of multiple lists.
+
+Produces all combinations where each combination contains exactly one element
+from each input list. For example, given lists A, B, and C, returns all tuples
+(a, b, c) where a ∈ A, b ∈ B, c ∈ C.
+
+Parameters
+----------
+*lists : iterable
+    Two or more iterables (lists, tuples, etc.) to combine.
+
+Returns
+-------
+list of list
+    List of combinations, where each combination is a list containing
+    one element from each input list.
+
+Raises
+------
+ValueError
+    If fewer than two lists are provided, or if any list is empty.
+
+TypeError
+    If any argument is not a list or tuple.
+
+Examples
+--------
+>>> generate_cartesian_product([1, 2], ['a', 'b'])
+[[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
+
+>>> generate_cartesian_product([True, False], ['x', 'y'], [1])
+[[True, 'x', 1], [True, 'y', 1], [False, 'x', 1], [False, 'y', 1]]
+"""
+    from itertools import product
+
+    # Validate input
+    if not lists or len(lists) < 2:
+        raise ValueError("At least two lists are required.")
+    
+    for idx, lst in enumerate(lists, start=1):
+        if not isinstance(lst, (list, tuple)):
+            raise TypeError(f"Argument {idx} must be a list or tuple.")
+        if len(lst) == 0:
+            raise ValueError(f"List {idx} is empty; cannot generate combinations.")
+    
+    # Generate all combinations and convert tuples to lists
+    return [list(combo) for combo in product(*lists)]
+
 def generate_combination_cascade(
     elements: Iterable,
     n: int
