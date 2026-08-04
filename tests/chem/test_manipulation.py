@@ -40,6 +40,7 @@ from mlchem.chem.manipulation import (mol_from_string,
                                       kekulise_smiles,
                                       unkekulise_smiles,
                                       smarts_from_string,
+                                      convert_molecule_string,
                                       mol_to_binary,
                                       generate_resonance,
                                       neutralise_mol,
@@ -122,6 +123,44 @@ def test_smarts_from_string():
     smiles = "CCO"
     expected_smarts = "[#6]-[#6]-[#8]"
     assert smarts_from_string(smiles) == expected_smarts
+
+def test_convert_molecule_string():
+    """Test unified molecular string conversion function."""
+    # Test SMILES to SMARTS
+    smiles = "CCO"
+    smarts = convert_molecule_string(smiles, to_format='SMARTS')
+    assert smarts == "[#6]-[#6]-[#8]"
+    
+    # Test SMARTS to SMILES
+    # [#6][OX2H] is a SMARTS pattern for C-O with 2 connections and explicit H
+    smarts_input = "[#6][OX2H]"
+    smiles_output = convert_molecule_string(smarts_input, to_format='SMILES')
+    # Convert back to canonical to verify correctness
+    canonical = convert_molecule_string(smiles_output, to_format='SMILES', canonical=True)
+    assert canonical == "CO"
+    
+    # Test SMILES to InChI
+    smiles = "CCO"
+    inchi = convert_molecule_string(smiles, to_format='InChI')
+    assert inchi == 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'
+    
+    # Test InChI to SMILES
+    inchi_input = 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'
+    smiles_output = convert_molecule_string(inchi_input, to_format='SMILES')
+    assert smiles_output == "CCO"
+    
+    # Test Kekulé form
+    smiles = "c1ccccc1"
+    kekule = convert_molecule_string(smiles, to_format='SMILES', kekuleSmiles=True)
+    assert kekule == "C1=CC=CC=C1"
+    
+    # Test invalid format
+    with pytest.raises(ValueError):
+        convert_molecule_string("CCO", to_format='INVALID')
+    
+    # Test invalid input
+    with pytest.raises(ValueError):
+        convert_molecule_string("invalid_input", to_format='SMILES')
 
 def test_mol_to_binary():
     smiles = "CCO"

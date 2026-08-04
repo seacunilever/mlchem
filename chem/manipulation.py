@@ -35,6 +35,7 @@
 from rdkit import Chem
 import numpy as np
 import pandas as pd
+import warnings
 from typing import Literal, Optional, Iterable, Callable
 from IPython.display import display
 from functools import lru_cache
@@ -87,28 +88,32 @@ ValueError
 
 def smiles_to_inchi(smiles: str) -> str:
     """
-Convert a SMILES string to an InChI string.
+    Convert a SMILES string to an InChI string.
 
-Parameters
-----------
-smiles : str
-    A string representing a molecule in SMILES format.
+    **Deprecated:** Use `convert_molecule_string(smiles, to_format='InChI')` instead.
 
-Returns
--------
-str
-    An InChI string corresponding to the input SMILES.
+    Parameters
+    ----------
+    smiles : str
+        A string representing a molecule in SMILES format.
 
-Raises
-------
-ValueError
-    If the SMILES string is invalid.
-"""
+    Returns
+    -------
+    str
+        An InChI string corresponding to the input SMILES.
 
-    try:
-        return Chem.MolToInchi(Chem.MolFromSmiles(smiles))
-    except Exception:
-      raise ValueError(f"Invalid SMILES: {smiles}")
+    Raises
+    ------
+    ValueError
+        If the SMILES string is invalid.
+    """
+    warnings.warn(
+        "smiles_to_inchi() is deprecated and will be removed in a future version. "
+        "Use convert_molecule_string(smiles, to_format='InChI') instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return convert_molecule_string(smiles, to_format='InChI')
 
 
 def create_molecule(mol_input: str | np.str_ | Chem.rdchem.Mol,
@@ -258,6 +263,8 @@ def smarts_from_string(string: str) -> str:
     """
 Convert a SMILES or InChI string into a SMARTS string.
 
+**Deprecated:** Use `convert_molecule_string(string, to_format='SMARTS')` instead.
+
 Parameters
 ----------
 string : str
@@ -268,7 +275,144 @@ Returns
 str
     A SMARTS string representing the molecular pattern.
 """
-    return Chem.MolToSmarts(create_molecule(string))
+    warnings.warn(
+        "smarts_from_string() is deprecated and will be removed in a future version. "
+        "Use convert_molecule_string(string, to_format='SMARTS') instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return convert_molecule_string(string, to_format='SMARTS')
+
+
+def smiles_from_smarts(smarts_string: str,
+                       canonical: bool = True,
+                       kekuleSmiles: bool = False,
+                       isomericSmiles: bool = False) -> str:
+    """
+Convert a SMARTS pattern to a SMILES string.
+
+**Deprecated:** Use `convert_molecule_string(smarts_string, to_format='SMILES', ...)` instead.
+
+This function parses a SMARTS pattern and generates a canonical SMILES
+representation of the generic chemical structure it describes.
+
+Parameters
+----------
+smarts_string : str
+    A SMARTS pattern string defining the chemical structure.
+canonical : bool, optional
+    Whether to generate canonical SMILES. Default is True.
+kekuleSmiles : bool, optional
+    Whether to generate Kekulé form. Default is False.
+isomericSmiles : bool, optional
+    Whether to include stereochemistry information. Default is False.
+
+Returns
+-------
+str
+    A SMILES string representing the SMARTS pattern.
+
+Raises
+------
+ValueError
+    If the SMARTS pattern is invalid.
+"""
+    warnings.warn(
+        "smiles_from_smarts() is deprecated and will be removed in a future version. "
+        "Use convert_molecule_string(smarts_string, to_format='SMILES', ...) instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return convert_molecule_string(smarts_string,
+                                   to_format='SMILES',
+                                   canonical=canonical,
+                                   kekuleSmiles=kekuleSmiles,
+                                   isomericSmiles=isomericSmiles)
+
+
+def convert_molecule_string(mol_input: str,
+                            to_format: Literal['SMILES', 'SMARTS', 'InChI'] = 'SMILES',
+                            canonical: bool = True,
+                            kekuleSmiles: bool = False,
+                            isomericSmiles: bool = False) -> str:
+    """
+Convert a molecular string between different formats.
+
+This function provides unified molecular string conversion. It parses the input
+as any supported format (SMILES, SMARTS, or InChI) and converts to the target format.
+Useful for format standardization, chemical pattern definition, and cross-format
+compatibility.
+
+Parameters
+----------
+mol_input : str
+    Input molecular string in any supported format (SMILES, SMARTS, or InChI).
+to_format : {'SMILES', 'SMARTS', 'InChI'}, optional
+    Target output format. Default is 'SMILES'.
+canonical : bool, optional
+    For SMILES output: whether to generate canonical SMILES. Default is True.
+kekuleSmiles : bool, optional
+    For SMILES output: whether to generate Kekulé form (explicit single/double bonds).
+    Default is False (aromatic form).
+isomericSmiles : bool, optional
+    For SMILES output: whether to include stereochemistry information. Default is False.
+
+Returns
+-------
+str
+    Molecular string in the requested format.
+
+Raises
+------
+ValueError
+    If the input is invalid or conversion fails.
+
+Examples
+--------
+>>> # SMILES to SMARTS
+>>> convert_molecule_string('c1ccccc1', to_format='SMARTS')
+'c1ccccc1'
+
+>>> # SMARTS to SMILES
+>>> convert_molecule_string('[#6][OX2H]', to_format='SMILES')
+'CO'
+
+>>> # SMILES to InChI
+>>> convert_molecule_string('CCO', to_format='InChI')
+'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'
+
+>>> # InChI to SMILES
+>>> convert_molecule_string('InChI=1S/CH4/h1H4', to_format='SMILES')
+'C'
+
+>>> # SMARTS to InChI (converts via intermediate SMILES)
+>>> convert_molecule_string('[#6][OX2H]', to_format='InChI')
+'InChI=1S/CH4O/c1-2/h2H,1H3'
+"""
+    try:
+        # Try to parse input as SMILES/InChI first
+        try:
+            mol = create_molecule(mol_input)
+        except ValueError:
+            # If that fails, try SMARTS pattern
+            mol = Chem.MolFromSmarts(mol_input)
+            if mol is None:
+                raise ValueError(f"Invalid SMILES, SMARTS, or InChI: {mol_input}")
+        
+        if to_format == 'SMILES':
+            return Chem.MolToSmiles(mol,
+                                   canonical=canonical,
+                                   kekuleSmiles=kekuleSmiles,
+                                   isomericSmiles=isomericSmiles)
+        elif to_format == 'SMARTS':
+            return Chem.MolToSmarts(mol)
+        elif to_format == 'InChI':
+            return Chem.MolToInchi(mol)
+        else:
+            raise ValueError(f"Unsupported output format: {to_format}. "
+                           f"Must be one of: SMILES, SMARTS, InChI")
+    except Exception as e:
+        raise ValueError(f"Could not convert '{mol_input}' to {to_format}: {str(e)}")
 
 
 def detect_smarts_vs_smiles(string: str) -> str:
@@ -3603,9 +3747,6 @@ None
                                       ))
                               count_attempts += 1
                               if decoded_selfies not in self.smiles_generated:
-                                  self.template_smarts = smarts_from_string(
-                                      self.template_smiles
-                                      )
                                   pattern_result = PatternRecognition.\
                                       Base.\
                                       check_smarts_pattern(decoded_selfies,
