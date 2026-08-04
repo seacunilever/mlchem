@@ -36,7 +36,9 @@ import pandas as pd
 import numpy as np
 import warnings
 import logging
-from mlchem.helper import coerce_log_level, validate_task_type
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
+from mlchem.helper import coerce_log_level, validate_task_type, resolve_n_jobs
 
 
 logger = logging.getLogger(__name__)
@@ -135,7 +137,9 @@ def y_scrambling(estimator,
                  y_test: Iterable,
                  metric_function: Callable,
                  n_iter: int,
-                 plot: bool = True,                 log_level: int | str = logging.INFO) -> None:
+                 plot: bool = True,
+                 n_jobs: int = 1,
+                 log_level: int | str = logging.INFO) -> None:
     """
 Perform y-scrambling to assess model performance due to chance.
 
@@ -170,8 +174,11 @@ n_iter : int
 plot : bool, optional (default=True)
     Whether to display a histogram of the scrambled scores.
 
+n_jobs : int, optional (default=1)
+    Number of parallel workers for iterations. -1 uses all available CPUs.
+
 log_level : int or str, optional (default=logging.INFO)
-    Logging level used when `verbose=True`.
+    Logging level for diagnostics.
 
 Returns
 -------
@@ -180,15 +187,13 @@ None
 
     from sklearn.base import clone
     import random
-    import numpy as np
-    import seaborn as sns
-    import matplotlib.pyplot as plt
 
     resolved_log_level = coerce_log_level(log_level)
     _configure_module_logging(resolved_log_level)
+    n_jobs = resolve_n_jobs(n_jobs)
 
     estimator_copy = clone(estimator)
-    y_train_copy = y_train.copy()
+    y_train_copy = list(y_train) if not isinstance(y_train, list) else y_train.copy()
     if isinstance(train_set, pd.DataFrame):
         X_train = train_set.values
     else:
@@ -198,20 +203,33 @@ None
     else:
         X_test = test_set
 
-    estimator_copy.fit(X_train, y_train)
+    estimator_copy.fit(X_train, y_train_copy)
     ref_score = metric_function(y_test,
                                 estimator_copy.predict(X_test))
 
+    def evaluate_scramble(seed_val):
+        """Evaluate model performance on a single scrambled iteration."""
+        rng = random.Random(seed_val)
+        y_shuffled = y_train_copy.copy()
+        rng.shuffle(y_shuffled)
+        est = clone(estimator)
+        est.fit(X_train, y_shuffled)
+        y_pred = est.predict(X_test)
+        return metric_function(y_true=y_test, y_pred=y_pred)
+
+    # Run scrambling iterations in parallel
     scores = []
-    for i in range(n_iter):
-        random.seed(i)
-        random.shuffle(y_train_copy)
-        estimator_copy.fit(X_train, y_train_copy)
-        y_pred_bootstrap = estimator_copy.predict(X_test)
-        scores.append(
-           metric_function(y_true=y_test,
-                           y_pred=y_pred_bootstrap)
-                           )
+    if n_jobs == 1:
+        # Sequential execution
+        for i in tqdm(range(n_iter), desc="Y-scrambling", disable=False):
+            scores.append(evaluate_scramble(i))
+    else:
+        # Parallel execution with ThreadPoolExecutor
+        max_workers = n_jobs if n_jobs > 0 else None
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {executor.submit(evaluate_scramble, i): i for i in range(n_iter)}
+            for future in tqdm(as_completed(futures), total=n_iter, desc="Y-scrambling", disable=False):
+                scores.append(future.result())
 
     scores = np.array(scores)
     ys_max = max(scores)
@@ -238,6 +256,8 @@ None
     )
 
     if plot:
+        import seaborn as sns
+        import matplotlib.pyplot as plt
         sns.histplot(scores)
         plt.axvline(ref_score,
                     color='red',
@@ -252,13 +272,13 @@ None
 class MajorityVote:
     """
 MajorityVote(train_set, test_set, y_train, y_test, task_type, 
-estimator_list, column_list, estimator_names=None)
+estimator_list, column_list, estimator_names=None, n_jobs=1, log_level=logging.INFO)
 
 Ensemble model using majority voting (for classification) or averaging (for regression).
 
 This class combines predictions from multiple estimators to 
 improve model performance and robustness by leveraging the strengths of
-different models.
+different models. Supports parallel execution of estimator fitting and evaluation.
 
 Parameters
 ----------
@@ -285,6 +305,12 @@ column_list : list of str
 
 estimator_names : list of str, optional
     A list of names for the estimators. Defaults to an empty list.
+
+n_jobs : int, optional (default=1)
+    Number of parallel workers for fitting and evaluation. -1 uses all available CPUs.
+
+log_level : int or str, optional (default=logging.INFO)
+    Logging level for diagnostics.
 """
 
     def __init__(
@@ -296,7 +322,9 @@ estimator_names : list of str, optional
         task_type: Literal['classification', 'regression'],
         estimator_list: list,
         column_list: list[str],
-        estimator_names: list[str] | None = None
+        estimator_names: list[str] | None = None,
+        n_jobs: int = 1,
+        log_level: int | str = logging.INFO
          ) -> None:
 
         self.task_type = validate_task_type(task_type)
@@ -307,6 +335,9 @@ estimator_names : list of str, optional
         self.test_set = test_set
         self.y_train = y_train
         self.y_test = y_test
+        self.n_jobs = resolve_n_jobs(n_jobs)
+        self.log_level = coerce_log_level(log_level)
+        _configure_module_logging(self.log_level)
 
     def fit(self) -> None:
         """
@@ -314,11 +345,51 @@ Fit the estimators on the training data and store predictions.
 
 For classification tasks, both hard (class labels) and soft (probabilities)
 predictions are stored. For regression tasks, predicted values are stored.
+Supports parallel execution via n_jobs parameter.
 
 Returns
 -------
 None
 """
+
+        def fit_and_predict(est_data):
+            """Fit a single estimator and return predictions."""
+            i, estimator, columns = est_data
+            X_train = self.train_set[columns]
+            X_train = X_train.loc[:, ~X_train.columns.
+                                  duplicated(keep='first')].copy()
+            X_test = self.test_set[columns]
+            X_test = X_test.loc[:, ~X_test.columns.
+                                duplicated(keep='first')].copy()
+            if len(self.estimator_names) > 0:
+                estimator_name = self.estimator_names[i]
+            else:
+                estimator_name = str(estimator)
+            
+            try:
+                estimator.fit(X_train, self.y_train)
+                if self.task_type == 'classification':
+                    y_train_hard = estimator.predict(X_train)
+                    y_test_hard = estimator.predict(X_test)
+                    y_train_soft = estimator.predict_proba(X_train)[:, 1]
+                    y_test_soft = estimator.predict_proba(X_test)[:, 1]
+                    return (estimator_name, 'classification',
+                            y_train_hard, y_test_hard, y_train_soft, y_test_soft)
+                else:  # regression
+                    y_train_pred = estimator.predict(X_train)
+                    y_test_pred = estimator.predict(X_test)
+                    return (estimator_name, 'regression',
+                            y_train_pred, y_test_pred)
+            except Exception as ex:
+                warnings.warn(
+                    (
+                        f"Skipping estimator '{estimator_name}' during "
+                        f"MajorityVote.fit ({self.task_type}): {ex}"
+                    ),
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                return None
 
         if self.task_type == 'classification':
             self.df_train_predictions_hard = pd.\
@@ -331,39 +402,28 @@ None
             self.df_test_predictions_soft = pd.\
                 DataFrame(index=self.test_set.index)
 
-            for i, (estimator, columns) in enumerate(
+            # Parallel execution
+            est_data_list = list(enumerate(
                 zip(self.estimator_list, self.column_list)
-            ):
-                X_train = self.train_set[columns]
-                X_train = X_train.loc[:, ~X_train.columns.
-                                      duplicated(keep='first')].copy()
-                X_test = self.test_set[columns]
-                X_test = X_test.loc[:, ~X_test.columns.
-                                    duplicated(keep='first')].copy()
-                if len(self.estimator_names) > 0:
-                    estimator_name = self.estimator_names[i]
-                else:
-                    estimator_name = str(estimator)
-                try:
-                    estimator.fit(X_train, self.y_train)
-                    y_train_hard = estimator.predict(X_train)
-                    y_test_hard = estimator.predict(X_test)
-                    y_train_soft = estimator.predict_proba(X_train)[:, 1]
-                    y_test_soft = estimator.predict_proba(X_test)[:, 1]
-                except Exception as ex:
-                    warnings.warn(
-                        (
-                            f"Skipping estimator '{estimator_name}' during "
-                            f"MajorityVote.fit (classification): {ex}"
-                        ),
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-                    continue
+            ))
+            est_data_list = [(i, est, cols) for i, (est, cols) in est_data_list]
+            
+            if self.n_jobs == 1:
+                results = [fit_and_predict(data) for data in tqdm(est_data_list, desc="Fitting estimators", disable=False)]
+            else:
+                max_workers = self.n_jobs if self.n_jobs > 0 else None
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    futures = {executor.submit(fit_and_predict, data): data for data in est_data_list}
+                    results = []
+                    for future in tqdm(as_completed(futures), total=len(futures), desc="Fitting estimators", disable=False):
+                        results.append(future.result())
 
+            for result in results:
+                if result is None:
+                    continue
+                estimator_name, task_type, y_train_hard, y_test_hard, y_train_soft, y_test_soft = result
                 self.df_train_predictions_hard[estimator_name] = y_train_hard
                 self.df_test_predictions_hard[estimator_name] = y_test_hard
-
                 self.df_train_predictions_soft[estimator_name] = y_train_soft
                 self.df_test_predictions_soft[estimator_name] = y_test_soft
 
@@ -383,34 +443,26 @@ None
             self.df_train_predictions = pd.DataFrame(index=self.train_set.index)
             self.df_test_predictions = pd.DataFrame(index=self.test_set.index)
 
-            for i, (estimator, columns) in enumerate(
+            # Parallel execution
+            est_data_list = list(enumerate(
                 zip(self.estimator_list, self.column_list)
-            ):
-                X_train = self.train_set[columns]
-                X_train = X_train.loc[:, ~X_train.columns.
-                                      duplicated(keep='first')].copy()
-                X_test = self.test_set[columns]
-                X_test = X_test.loc[:, ~X_test.columns.
-                                    duplicated(keep='first')].copy()
-                if len(self.estimator_names) > 0:
-                    estimator_name = self.estimator_names[i]
-                else:
-                    estimator_name = str(estimator)
-                try:
-                    estimator.fit(X_train, self.y_train)
-                    y_train_pred = estimator.predict(X_train)
-                    y_test_pred = estimator.predict(X_test)
-                except Exception as exc:
-                    warnings.warn(
-                        (
-                            f"Skipping estimator '{estimator_name}' during "
-                            f"MajorityVote.fit (regression): {exc}"
-                        ),
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-                    continue
+            ))
+            est_data_list = [(i, est, cols) for i, (est, cols) in est_data_list]
+            
+            if self.n_jobs == 1:
+                results = [fit_and_predict(data) for data in tqdm(est_data_list, desc="Fitting estimators", disable=False)]
+            else:
+                max_workers = self.n_jobs if self.n_jobs > 0 else None
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    futures = {executor.submit(fit_and_predict, data): data for data in est_data_list}
+                    results = []
+                    for future in tqdm(as_completed(futures), total=len(futures), desc="Fitting estimators", disable=False):
+                        results.append(future.result())
 
+            for result in results:
+                if result is None:
+                    continue
+                estimator_name, task_type, y_train_pred, y_test_pred = result
                 self.df_train_predictions[estimator_name] = y_train_pred
                 self.df_test_predictions[estimator_name] = y_test_pred
 
@@ -433,7 +485,8 @@ specified metric.
 
 For classification, both hard and soft voting are evaluated. 
 For regression, predictions are averaged. Results are stored for each 
-combination of estimators up to a specified maximum.
+combination of estimators up to a specified maximum. Supports parallel 
+evaluation via n_jobs parameter.
 
 Parameters
 ----------
@@ -467,12 +520,46 @@ None
             else:
                 return np.round(dataframe_probe.mean(axis=1))
 
-        def extract_from(results, models):
-            """
-            Extract scores from the results dictionary for the given
-            models.
-            """
-            return [results[model] for model in models]
+        def evaluate_combination(comb_data):
+            """Evaluate a single combination and return results."""
+            combination, is_classification = comb_data
+            train_results = {}
+            test_results = {}
+            
+            if is_classification:
+                # Soft predictions
+                key_soft = f'{combination}_soft_{metric_name}'
+                train_results[key_soft] = metric(
+                    self.df_train_predictions_soft.Y.values,
+                    majority_vote(self.df_train_predictions_soft, combination, hard=False)
+                )
+                test_results[key_soft] = metric(
+                    self.df_test_predictions_soft.Y.values,
+                    majority_vote(self.df_test_predictions_soft, combination, hard=False)
+                )
+                
+                # Hard predictions
+                key_hard = f'{combination}_hard_{metric_name}'
+                train_results[key_hard] = metric(
+                    self.df_train_predictions_hard.Y.values,
+                    majority_vote(self.df_train_predictions_hard, combination, hard=True)
+                )
+                test_results[key_hard] = metric(
+                    self.df_test_predictions_hard.Y.values,
+                    majority_vote(self.df_test_predictions_hard, combination, hard=True)
+                )
+            else:  # regression
+                key = f'{combination}_{metric_name}'
+                train_results[key] = metric(
+                    self.df_train_predictions.Y.values,
+                    majority_vote(self.df_train_predictions, combination, hard=False)
+                )
+                test_results[key] = metric(
+                    self.df_test_predictions.Y.values,
+                    majority_vote(self.df_test_predictions, combination, hard=False)
+                )
+            
+            return {'train': train_results, 'test': test_results}
 
         if self.task_type == 'classification':
             self.combinations = generate_combination_cascade(
@@ -490,51 +577,33 @@ None
                 self.n_estimators_max
                 )
 
+        # Prepare combination data for parallel processing
+        comb_data_list = [(comb, self.task_type == 'classification') for comb in self.combinations]
+
+        # Parallel execution of combinations
+        if self.n_jobs == 1:
+            all_results = [evaluate_combination(data) for data in tqdm(comb_data_list, desc="Evaluating combinations", disable=False)]
+        else:
+            max_workers = self.n_jobs if self.n_jobs > 0 else None
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(evaluate_combination, data): data for data in comb_data_list}
+                all_results = []
+                for future in tqdm(as_completed(futures), total=len(futures), desc="Evaluating combinations", disable=False):
+                    all_results.append(future.result())
+
+        # Merge all results
         dict_results_train = {}
         dict_results_test = {}
-        for combination in self.combinations:
-            if self.task_type == 'classification':
-                dict_results_train[f'{combination}_soft_{metric_name}'] = \
-                    metric(self.df_train_predictions_soft.Y.values,
-                           majority_vote(self.df_train_predictions_soft,
-                                         combination,
-                                         hard=False)
-                           )
-                dict_results_train[f'{combination}_hard_{metric_name}'] = \
-                    metric(self.df_train_predictions_hard.Y.values,
-                           majority_vote(
-                               self.df_train_predictions_hard,
-                               combination,
-                               hard=True)
-                           )
+        for result_pair in all_results:
+            dict_results_train.update(result_pair['train'])
+            dict_results_test.update(result_pair['test'])
 
-                dict_results_test[f'{combination}_soft_{metric_name}'] = \
-                    metric(self.df_test_predictions_soft.Y.values,
-                           majority_vote(
-                               self.df_test_predictions_soft,
-                               combination,
-                               hard=False)
-                           )
-                dict_results_test[f'{combination}_hard_{metric_name}'] = \
-                    metric(self.df_test_predictions_hard.Y.values,
-                           majority_vote(
-                               self.df_test_predictions_hard,
-                               combination,
-                               hard=True)
-                           )
-            else:
-                dict_results_train[f'{combination}_{metric_name}'] = \
-                    metric(self.df_train_predictions.Y.values,
-                           majority_vote(self.df_train_predictions,
-                                         combination,
-                                         hard=False)
-                           )
-                dict_results_test[f'{combination}_{metric_name}'] = \
-                    metric(self.df_test_predictions.Y.values,
-                           majority_vote(self.df_test_predictions,
-                                         combination,
-                                         hard=False)
-                           )
+        def extract_from(results, models):
+            """
+            Extract scores from the results dictionary for the given
+            models.
+            """
+            return [results[model] for model in models]
 
         models = [a for a in
                   dict_results_train.keys()]
