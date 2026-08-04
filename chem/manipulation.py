@@ -271,6 +271,36 @@ str
     return Chem.MolToSmarts(create_molecule(string))
 
 
+def detect_smarts_vs_smiles(string: str) -> str:
+    """
+Detect whether a string is SMARTS or SMILES format.
+
+This function checks for SMARTS-specific patterns. SMARTS strings typically
+contain recursive SMARTS ($), connectivity operators (X, D, v), or other
+advanced SMARTS syntax that distinguishes them from SMILES.
+
+Parameters
+----------
+string : str
+    A string representing a molecule in SMILES or SMARTS format.
+
+Returns
+-------
+str
+    Either 'SMARTS' or 'SMILES' indicating the detected format.
+"""
+    # SMARTS-specific characters and patterns
+    smarts_indicators = ['$', '[#', '[D', '[v', '[X', '[x', '[!']
+    
+    # Check for SMARTS-specific patterns
+    for indicator in smarts_indicators:
+        if indicator in string:
+            return 'SMARTS'
+    
+    # Default to SMILES
+    return 'SMILES'
+
+
 def mol_to_binary(mol: Chem.rdchem.Mol) -> bytes:
     """
 Convert an RDKit molecule object to its binary representation.
@@ -3420,7 +3450,7 @@ None
     def generate_smiles(self,
                         n_molecules: int,
                         n_fragments: int,
-                        template_smiles: str = None,
+                        template_string: str = None,
                         substitution_sites: list = None,
                         n_substitutions: int = None,
                         include_extremities: bool = True,
@@ -3433,14 +3463,22 @@ None
       randomly combining SELFIES fragments or by substituting fragments into
       a template molecule at specified positions.
 
+      The template can be provided as either a SMILES string or a SMARTS pattern,
+      allowing flexible definition of the chemical structure to reproduce. SMARTS
+      patterns enable specification of chemical features (e.g., aromatic rings,
+      specific functional groups) with more control than SMILES alone.
+
       Parameters
       ----------
       n_molecules : int
           The number of molecules to generate.
       n_fragments : int
           The number of fragments to use for each molecule.
-      template_smiles : str, optional
-          A template SMILES string to use for generating molecules.
+      template_string : str, optional
+          A template string to use for generating molecules. Can be either:
+          - SMILES string (e.g., 'c1ccccc1' for benzene)
+          - SMARTS pattern (e.g., '[#6][#6]' for any carbon-carbon bond)
+          Detected automatically based on content.
       substitution_sites : list of int, optional
           Indices in the SELFIES string where substitutions should occur.
       n_substitutions : int, optional
@@ -3458,8 +3496,10 @@ None
 
       Updates
       -------
-      template_smiles : str
-          The template SMILES string used for generation.
+      template_string : str
+          The template SMILES or SMARTS string used for generation.
+      template_smarts : str
+          The SMARTS pattern derived from the template.
       smiles_generated : list of str
           The list of generated SMILES strings.
       selfies_generated : list of str
@@ -3473,9 +3513,16 @@ None
 
       Examples
       --------
-      >>> generator.generate_smiles(template_smiles='c1ccccc1',
+      >>> # Using SMILES template
+      >>> generator.generate_smiles(template_string='c1ccccc1',
       ...                           n_molecules=5,
       ...                           n_fragments=3,
+      ...                           n_substitutions=1)
+      
+      >>> # Using SMARTS pattern for aromatic carbon-carbon bonds
+      >>> generator.generate_smiles(template_string='[#6]~[#6]',
+      ...                           n_molecules=10,
+      ...                           n_fragments=2,
       ...                           n_substitutions=1)
       """
       
@@ -3484,13 +3531,13 @@ None
               import selfies as sf
               from mlchem.helper import insert_string_piece, find_all_occurrences
 
-              self.template_smiles = template_smiles
+              self.template_string = template_string
               self.smiles_generated = []
               self.selfies_generated = []
               self.mols_generated = []
               self.pattern_atoms = []
 
-              if self.template_smiles is None:
+              if self.template_string is None:
                   for _ in range(n_molecules):
                       rnd_selfies = ''.join(
                           random.choice(list(
@@ -3508,7 +3555,24 @@ None
                       raise AssertionError(
                           'only 1 substitution is accepted for this configuration')
 
-                  self.template_selfies = sf.encoder(self.template_smiles)
+                  # Detect whether template_string is SMARTS or SMILES
+                  template_format = detect_smarts_vs_smiles(self.template_string)
+                  
+                  if template_format == 'SMARTS':
+                      # Use SMARTS directly for pattern matching
+                      self.template_smarts = self.template_string
+                      # Convert SMARTS to SMILES for SELFIES encoding
+                      # Parse the SMARTS pattern and convert to SMILES
+                      smarts_mol = Chem.MolFromSmarts(self.template_string)
+                      if smarts_mol is None:
+                          raise ValueError(f"Invalid SMARTS pattern: {self.template_string}")
+                      template_smiles_for_encoding = Chem.MolToSmiles(smarts_mol)
+                  else:
+                      # Use SMILES directly; convert to SMARTS for pattern matching
+                      template_smiles_for_encoding = self.template_string
+                      self.template_smarts = smarts_from_string(self.template_string)
+                  
+                  self.template_selfies = sf.encoder(template_smiles_for_encoding)
 
                   if substitution_sites is not None:
                       self.substitution_sites = [0, len(self.template_selfies)] + \
