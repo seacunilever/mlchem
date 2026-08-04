@@ -47,5 +47,5 @@ setup(
     package_dir={'mlchem': '.'},
     packages=['mlchem'] + [f'mlchem.{p}' for p in _subpkgs],
     install_requires=requirements,
-    python_requires='>=3.10',
+    python_requires='>=3.12',
 )
