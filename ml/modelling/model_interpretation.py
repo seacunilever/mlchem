@@ -898,7 +898,6 @@ log_level : int or str or Literal, optional (default=logging.INFO)
             self.metric,
             self.logic,
             self.task_type,
-            n_jobs=self.n_jobs,
             log_level=self.log_level
         )
 
@@ -943,7 +942,8 @@ None
             k=k,
             training_threshold=training_threshold,
             cv_train_ratio=cv_train_ratio,
-            cv_iter=cv_iter
+            cv_iter=cv_iter,
+            n_jobs=self.n_jobs
         )
 
     def fit_stage_2(
@@ -974,7 +974,8 @@ None
 
         self.df_results_stage_2 = self.CombSelector.fit_stage_2(
             top_n_subsets=top_n_subsets,
-            cv_iter=cv_iter
+            cv_iter=cv_iter,
+            n_jobs=self.n_jobs
         )
 
     def display(self, subset_index: int) -> None:
