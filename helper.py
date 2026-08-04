@@ -641,6 +641,32 @@ Examples
     # Generate all combinations and convert tuples to lists
     return [list(combo) for combo in product(*lists)]
 
+
+def disable_estimator_parallelization(estimator):
+    """
+Disable internal parallelization in sklearn estimators to avoid nested parallelization.
+
+When wrapper-level parallelization (ThreadPoolExecutor) is used, individual 
+estimators should use n_jobs=1 to prevent sklearn warnings and avoid thread conflicts.
+
+Parameters
+----------
+estimator : object
+    A scikit-learn estimator object.
+
+Returns
+-------
+object
+    The estimator with n_jobs=1 set if applicable, otherwise unchanged.
+"""
+    if hasattr(estimator, 'n_jobs'):
+        try:
+            estimator.set_params(n_jobs=1)
+        except (ValueError, TypeError):
+            pass  # Estimator doesn't support set_params or n_jobs parameter
+    return estimator
+
+
 def generate_combination_cascade(
     elements: Iterable,
     n: int

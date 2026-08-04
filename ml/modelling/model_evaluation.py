@@ -38,7 +38,7 @@ import warnings
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-from mlchem.helper import coerce_log_level, validate_task_type, resolve_n_jobs
+from mlchem.helper import coerce_log_level, validate_task_type, resolve_n_jobs, disable_estimator_parallelization
 
 
 logger = logging.getLogger(__name__)
@@ -213,6 +213,7 @@ None
         y_shuffled = y_train_copy.copy()
         rng.shuffle(y_shuffled)
         est = clone(estimator)
+        disable_estimator_parallelization(est)  # Prevent nested parallelization warnings
         est.fit(X_train, y_shuffled)
         y_pred = est.predict(X_test)
         return metric_function(y_true=y_test, y_pred=y_pred)
@@ -367,6 +368,7 @@ None
                 estimator_name = str(estimator)
             
             try:
+                disable_estimator_parallelization(estimator)  # Prevent nested parallelization warnings
                 estimator.fit(X_train, self.y_train)
                 if self.task_type == 'classification':
                     y_train_hard = estimator.predict(X_train)
