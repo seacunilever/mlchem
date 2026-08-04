@@ -67,18 +67,16 @@ def test_check_class_balance_logs_at_info_level(sample_data, caplog):
     assert any('CLASS BALANCE' in msg for msg in caplog.messages)
 
 
-def test_check_class_balance_show_prints_user_friendly_summary(sample_data, capsys):
+def test_check_class_balance_returns_correct_summary(sample_data):
     train_set, _ = sample_data
     y_train = train_set['class'].values.tolist()
 
-    summary = check_class_balance(y_train, show=True)
-    out = capsys.readouterr().out
+    summary = check_class_balance(y_train)
 
-    assert 'CLASS BALANCE (n=10)' in out
-    assert '[0]: 2 (20.00%)' in out
-    assert '[1]: 8 (80.00%)' in out
     assert summary[0]['count'] == 2
     assert summary[1]['count'] == 8
+    assert abs(summary[0]['proportion'] - 0.2) < 0.01
+    assert abs(summary[1]['proportion'] - 0.8) < 0.01
 
 def test_undersample(sample_data):
     train_set, test_set = sample_data

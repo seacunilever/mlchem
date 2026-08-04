@@ -48,16 +48,19 @@ def _configure_module_logging(level: int) -> None:
 
 
 def check_class_balance(
-    y_train: Iterable,    log_level: int | str = logging.INFO,
-    show: bool = False,
+    y_train: Iterable,
+    log_level: int | str = logging.INFO,
 ) -> dict:
     """
-Check and print the class distribution in training labels.
+Check and log the class distribution in training labels.
 
 Parameters
 ----------
 y_train : Iterable
     Training target values.
+
+log_level : int or str, default=logging.INFO
+    Logging level for output.
 
 Returns
 -------
@@ -88,14 +91,6 @@ dict
         }
         for label, count in counts.items()
     }
-
-    if show:
-        print(f"CLASS BALANCE (n={total})")
-        for label, values in summary.items():
-            print(
-                f"  [{label}]: {values['count']} "
-                f"({values['proportion']:.2%})"
-            )
 
     return summary
 
