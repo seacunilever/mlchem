@@ -139,7 +139,7 @@ def y_scrambling(estimator,
                  n_iter: int,
                  plot: bool = True,
                  n_jobs: int = 1,
-                 log_level: int | str = logging.INFO) -> None:
+                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO) -> None:
     """
 Perform y-scrambling to assess model performance due to chance.
 
@@ -324,7 +324,7 @@ log_level : int or str, optional (default=logging.INFO)
         column_list: list[str],
         estimator_names: list[str] | None = None,
         n_jobs: int = 1,
-        log_level: int | str = logging.INFO
+        log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO
          ) -> None:
 
         self.task_type = validate_task_type(task_type)

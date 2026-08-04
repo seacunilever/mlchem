@@ -31,7 +31,7 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Literal
 import logging
 import pandas as pd
 from mlchem.helper import coerce_log_level
@@ -49,7 +49,7 @@ def _configure_module_logging(level: int) -> None:
 
 def check_class_balance(
     y_train: Iterable,
-    log_level: int | str = logging.INFO,
+    log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
 ) -> None:
     """
 Check and log the class distribution in training labels.
@@ -85,7 +85,8 @@ def undersample(
     class_column: str,
     desired_proportion_majority: float,
     add_dropped_to_test: bool = False,
-    random_seed: Optional[int] = 1,    log_level: int | str = logging.INFO,
+    random_seed: Optional[int] = 1,
+    log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
 Undersample the majority class in a training set to achieve a desired 

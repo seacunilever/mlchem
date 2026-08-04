@@ -389,7 +389,7 @@ Examples
 >>> sfs.fit(X_train, y_train, X_test, y_test)
 """
 
-    def __init__(self, log_level: int | str = logging.INFO,
+    def __init__(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  to_console: bool = True,
                  to_file: str | None = None) -> None:
         from io import StringIO
@@ -465,7 +465,7 @@ str
         self.stop()
 
 
-def start_logging(log_level: int | str = logging.INFO,
+def start_logging(log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                   to_console: bool = True,
                   to_file: str | None = None) -> LogCapture:
     """
