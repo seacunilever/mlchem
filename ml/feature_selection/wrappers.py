@@ -123,9 +123,10 @@ class SequentialForwardSelection:
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
-  log_level : int or str, optional
-      Logging level used when `verbose=True` (for example 'INFO' or
-      'DEBUG'). Default is logging.INFO.
+  log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
+      Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+      'INFO' for standard output, 'WARNING' to suppress most output.
+      Default is logging.INFO.
 
   Examples
   --------
@@ -164,8 +165,7 @@ class SequentialForwardSelection:
                  logic: Literal['lower', 'greater'] = 'greater',
                  task_type: Literal[
                      'classification', 'regression'] = 'classification',
-                 verbose: bool = False,
-                 log_level: int | str = logging.INFO,
+                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> None:
         """
   Initialise the SequentialForwardSelection object.
@@ -186,9 +186,10 @@ class SequentialForwardSelection:
       Whether to minimise or maximise the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
-  log_level : int or str, optional
-      Logging level used when `verbose=True` (for example 'INFO' or
-      'DEBUG'). Default is logging.INFO.
+  log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
+      Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+      'INFO' for standard output, 'WARNING' to suppress most output.
+      Default is logging.INFO.
   """
 
         self.estimator = estimator
@@ -220,8 +221,15 @@ class SequentialForwardSelection:
         # Where to store test scores
         self.unseen_scores = []
 
-    def set_log_level(self, log_level: int | str) -> None:
-        """Set the logging level for wrapper diagnostics."""
+    def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
+        """Set the logging level for wrapper diagnostics.
+        
+        Parameters
+        ----------
+        log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int
+            Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+            'INFO' for standard output, 'WARNING' to suppress most output.
+        """
         self.log_level = coerce_log_level(log_level)
         _configure_wrapper_logging(self.log_level)
 
@@ -669,7 +677,7 @@ class CombinatorialSelection:
                  task_type: Literal[
                      'classification', 'regression'
                      ] = 'classification',
-                                  log_level: int | str = logging.INFO,
+                                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> None:
         """
         Initialise the CombinatorialSelection object.
@@ -685,12 +693,10 @@ class CombinatorialSelection:
             Default is 'greater'.
         task_type : {'classification', 'regression'}, optional
             Specifies the type of task. Default is 'classification'.
-        verbose : bool, optional
-            If True, emit progress and score diagnostics through logging.
-            Default is False.
-        log_level : int or str, optional
-            Logging level used when `verbose=True` (for example 'INFO' or
-            'DEBUG'). Default is logging.INFO.
+        log_level : {{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}} or int, optional
+            Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+            'INFO' for standard output, 'WARNING' to suppress most output.
+            Default is logging.INFO.
         """
 
         self.estimator = estimator
@@ -700,8 +706,15 @@ class CombinatorialSelection:
         self.log_level = coerce_log_level(log_level)
         _configure_wrapper_logging(self.log_level)
 
-    def set_log_level(self, log_level: int | str) -> None:
-        """Set the logging level for wrapper diagnostics."""
+    def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
+        """Set the logging level for wrapper diagnostics.
+        
+        Parameters
+        ----------
+        log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int
+            Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+            'INFO' for standard output, 'WARNING' to suppress most output.
+        """
         self.log_level = coerce_log_level(log_level)
         _configure_wrapper_logging(self.log_level)
 
