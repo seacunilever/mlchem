@@ -42,6 +42,14 @@ from mlchem.helper import coerce_log_level, validate_task_type
 logger = logging.getLogger(__name__)
 
 
+def _configure_module_logging(enabled: bool, level: int) -> None:
+    """Configure module logger visibility for interactive sessions."""
+    if enabled:
+        if not logging.getLogger().handlers:
+            logging.basicConfig(level=level)
+        logger.setLevel(level)
+
+
 def crossval(estimator,
              X: np.ndarray | pd.DataFrame,
              y: np.ndarray | pd.DataFrame,
@@ -183,6 +191,7 @@ None
     import matplotlib.pyplot as plt
 
     resolved_log_level = coerce_log_level(log_level)
+    _configure_module_logging(verbose, resolved_log_level)
 
     estimator_copy = clone(estimator)
     y_train_copy = y_train.copy()

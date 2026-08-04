@@ -52,6 +52,14 @@ from mlchem.ml.modelling.model_evaluation import crossval
 logger = logging.getLogger(__name__)
 
 
+def _configure_wrapper_logging(enabled: bool, level: int) -> None:
+    """Configure wrapper logger visibility for interactive sessions."""
+    if enabled:
+        if not logging.getLogger().handlers:
+            logging.basicConfig(level=level)
+        logger.setLevel(level)
+
+
 def _clone_for_search(estimator, outer_n_jobs: int):
     """
     Clone estimator and avoid nested parallelism when the outer wrapper
@@ -147,7 +155,7 @@ class SequentialForwardSelection:
   >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
 
   >>> sfs.fit(train_set, y_train, test_set, y_test)
-  >>> sfs.plot(best_feature='auto')
+  >>> sfs.plot(best_feature='None')
   """
 
     def __init__(self,
@@ -200,6 +208,7 @@ class SequentialForwardSelection:
         self.task_type = validate_task_type(task_type)
         self.verbose = bool(verbose)
         self.log_level = coerce_log_level(log_level)
+        _configure_wrapper_logging(self.verbose, self.log_level)
 
         # Where to store the temporarily best feature set at each iteration
         self.extending_features = []
@@ -224,6 +233,7 @@ class SequentialForwardSelection:
         self.verbose = bool(verbose)
         if log_level is not None:
             self.log_level = coerce_log_level(log_level)
+        _configure_wrapper_logging(self.verbose, self.log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
         if self.verbose and level >= self.log_level:
@@ -701,6 +711,7 @@ class CombinatorialSelection:
         self.task_type = validate_task_type(task_type)
         self.verbose = bool(verbose)
         self.log_level = coerce_log_level(log_level)
+        _configure_wrapper_logging(self.verbose, self.log_level)
 
     def set_verbosity(self, verbose: bool = True,
                       log_level: int | str | None = None) -> None:
@@ -708,6 +719,7 @@ class CombinatorialSelection:
         self.verbose = bool(verbose)
         if log_level is not None:
             self.log_level = coerce_log_level(log_level)
+        _configure_wrapper_logging(self.verbose, self.log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
         if self.verbose and level >= self.log_level:
@@ -858,7 +870,7 @@ class CombinatorialSelection:
         top_ranked_features: int | None = None,
         relevance_metric: Literal['mutual_info', 'pearson', 'spearman'] = 'mutual_info',
         redundancy_metric: Literal['pearson', 'spearman'] = 'pearson',
-        ranking_random_state: int = 42,
+        ranking_random_state: int = 1,
     ) -> pd.DataFrame:
         """
         Perform the first stage of combinatorial feature selection.

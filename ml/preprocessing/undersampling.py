@@ -40,6 +40,14 @@ from mlchem.helper import coerce_log_level
 logger = logging.getLogger(__name__)
 
 
+def _configure_module_logging(enabled: bool, level: int) -> None:
+    """Configure module logger visibility for interactive sessions."""
+    if enabled:
+        if not logging.getLogger().handlers:
+            logging.basicConfig(level=level)
+        logger.setLevel(level)
+
+
 def _log_if_verbose(verbose: bool, log_level: int, msg: str, *args) -> None:
     if verbose:
         logger.log(log_level, msg, *args)
@@ -49,7 +57,8 @@ def check_class_balance(
     y_train: Iterable,
     verbose: bool = False,
     log_level: int | str = logging.INFO,
-) -> None:
+    show: bool = False,
+) -> dict:
     """
 Check and print the class distribution in training labels.
 
@@ -60,7 +69,9 @@ y_train : Iterable
 
 Returns
 -------
-None
+dict
+    Dictionary with class labels as keys and a nested dictionary with
+    ``count`` and ``proportion`` values.
 """
 
     counts = pd.Series(list(y_train)).value_counts()
@@ -73,12 +84,31 @@ None
         for label, count in counts.items()
     ]
     resolved_log_level = coerce_log_level(log_level)
+    _configure_module_logging(verbose, resolved_log_level)
     _log_if_verbose(
         verbose,
         resolved_log_level,
         'CLASS BALANCE %s',
         ' '.join(balance_parts),
     )
+
+    summary = {
+        label: {
+            'count': int(count),
+            'proportion': float(count / total),
+        }
+        for label, count in counts.items()
+    }
+
+    if show:
+        print(f"CLASS BALANCE (n={total})")
+        for label, values in summary.items():
+            print(
+                f"  [{label}]: {values['count']} "
+                f"({values['proportion']:.2%})"
+            )
+
+    return summary
 
 
 def undersample(
@@ -129,6 +159,7 @@ tuple of pandas.DataFrame
 
     import random
     resolved_log_level = coerce_log_level(log_level)
+    _configure_module_logging(verbose, resolved_log_level)
 
     if not 0 < desired_proportion_majority < 1:
         raise ValueError(
