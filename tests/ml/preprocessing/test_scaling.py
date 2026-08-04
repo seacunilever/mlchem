@@ -121,12 +121,19 @@ def test_scale_df_skip_binary_columns(scale_func, scaler_cls, sample_dataframe_w
 
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, scaler_cls)
-    assert scaled_df.shape == sample_dataframe_with_binary.shape
+    # Binary columns in the scaled portion are excluded from scaling but reintroduced in output
+    # Non-binary preserved columns (tail) are included; binary target variables (preserved) are excluded
+    assert scaled_df.shape == (3, 3)  # continuous (scaled) + binary (reintroduced) + tail (preserved, non-binary)
+    assert 'continuous' in scaled_df.columns
+    assert 'binary' in scaled_df.columns  # Binary feature column reintroduced
+    assert 'tail' in scaled_df.columns
     assert not np.allclose(
         scaled_df['continuous'].to_numpy(),
         sample_dataframe_with_binary['continuous'].to_numpy(),
     )
+    # Binary column should be unchanged (not scaled)
     assert scaled_df['binary'].equals(sample_dataframe_with_binary['binary'])
+    # Preserved non-binary column should be unchanged
     assert scaled_df['tail'].equals(sample_dataframe_with_binary['tail'])
 
 
@@ -144,8 +151,11 @@ def test_transform_df_skip_binary_columns(scale_func, sample_dataframe_with_bina
     )
 
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == sample_dataframe_with_binary.shape
-    assert transformed_df['binary'].equals(sample_dataframe_with_binary['binary'])
+    # Binary columns in the scaled portion are excluded when skip_binary_columns=True
+    assert transformed_df.shape == (3, 2)  # continuous (scaled) + tail (preserved, non-binary)
+    assert 'continuous' in transformed_df.columns
+    assert 'tail' in transformed_df.columns
+    assert 'binary' not in transformed_df.columns  # Binary column excluded
     assert transformed_df['tail'].equals(sample_dataframe_with_binary['tail'])
 
 

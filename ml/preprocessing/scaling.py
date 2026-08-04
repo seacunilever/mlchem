@@ -158,10 +158,34 @@ tuple of pandas.DataFrame and StandardScaler
         index=df.index,
     )
 
-    scaled_output = df.copy()
-    if columns_to_scale:
-        for column in columns_to_scale:
-            scaled_output[column] = dataframe_scaled[column]
+    # Build output: scaled columns + skipped binary columns (reintroduced)
+    scaled_dfs = [dataframe_scaled] if not dataframe_scaled.empty else []
+    
+    # Reintroduce binary feature columns that were skipped from scaling
+    if skip_binary_columns:
+        binary_feature_cols = [
+            col for col in sliced_df.columns
+            if col not in columns_to_scale and _is_binary_column(sliced_df[col])
+        ]
+        if binary_feature_cols:
+            scaled_dfs.append(sliced_df[binary_feature_cols])
+    
+    # Add preserved columns (end of dataframe), but exclude binary target variables
+    if last_columns_to_preserve > 0:
+        preserved_cols = df.iloc[:, -last_columns_to_preserve:]
+        if skip_binary_columns:
+            # Only include non-binary preserved columns (exclude binary target variables)
+            preserved_cols = preserved_cols[[
+                col for col in preserved_cols.columns 
+                if not _is_binary_column(preserved_cols[col])
+            ]]
+        if not preserved_cols.empty:
+            scaled_dfs.append(preserved_cols)
+    
+    if scaled_dfs:
+        scaled_output = pd.concat(scaled_dfs, axis=1)
+    else:
+        scaled_output = pd.DataFrame(index=df.index)
 
     scaler._mlchem_columns_scaled = columns_to_scale
     scaler._mlchem_last_columns_to_preserve = last_columns_to_preserve
@@ -207,10 +231,34 @@ def scale_df_minmax(
         index=df.index,
     )
 
-    scaled_output = df.copy()
-    if columns_to_scale:
-        for column in columns_to_scale:
-            scaled_output[column] = dataframe_scaled[column]
+    # Build output: scaled columns + skipped binary columns (reintroduced)
+    scaled_dfs = [dataframe_scaled] if not dataframe_scaled.empty else []
+    
+    # Reintroduce binary feature columns that were skipped from scaling
+    if skip_binary_columns:
+        binary_feature_cols = [
+            col for col in sliced_df.columns
+            if col not in columns_to_scale and _is_binary_column(sliced_df[col])
+        ]
+        if binary_feature_cols:
+            scaled_dfs.append(sliced_df[binary_feature_cols])
+    
+    # Add preserved columns (end of dataframe), but exclude binary target variables
+    if last_columns_to_preserve > 0:
+        preserved_cols = df.iloc[:, -last_columns_to_preserve:]
+        if skip_binary_columns:
+            # Only include non-binary preserved columns (exclude binary target variables)
+            preserved_cols = preserved_cols[[
+                col for col in preserved_cols.columns 
+                if not _is_binary_column(preserved_cols[col])
+            ]]
+        if not preserved_cols.empty:
+            scaled_dfs.append(preserved_cols)
+    
+    if scaled_dfs:
+        scaled_output = pd.concat(scaled_dfs, axis=1)
+    else:
+        scaled_output = pd.DataFrame(index=df.index)
 
     scaler._mlchem_columns_scaled = columns_to_scale
     scaler._mlchem_last_columns_to_preserve = last_columns_to_preserve
@@ -256,10 +304,34 @@ tuple of pandas.DataFrame and RobustScaler
         index=df.index,
     )
 
-    scaled_output = df.copy()
-    if columns_to_scale:
-        for column in columns_to_scale:
-            scaled_output[column] = dataframe_scaled[column]
+    # Build output: scaled columns + skipped binary columns (reintroduced)
+    scaled_dfs = [dataframe_scaled] if not dataframe_scaled.empty else []
+    
+    # Reintroduce binary feature columns that were skipped from scaling
+    if skip_binary_columns:
+        binary_feature_cols = [
+            col for col in sliced_df.columns
+            if col not in columns_to_scale and _is_binary_column(sliced_df[col])
+        ]
+        if binary_feature_cols:
+            scaled_dfs.append(sliced_df[binary_feature_cols])
+    
+    # Add preserved columns (end of dataframe), but exclude binary target variables
+    if last_columns_to_preserve > 0:
+        preserved_cols = df.iloc[:, -last_columns_to_preserve:]
+        if skip_binary_columns:
+            # Only include non-binary preserved columns (exclude binary target variables)
+            preserved_cols = preserved_cols[[
+                col for col in preserved_cols.columns 
+                if not _is_binary_column(preserved_cols[col])
+            ]]
+        if not preserved_cols.empty:
+            scaled_dfs.append(preserved_cols)
+    
+    if scaled_dfs:
+        scaled_output = pd.concat(scaled_dfs, axis=1)
+    else:
+        scaled_output = pd.DataFrame(index=df.index)
 
     scaler._mlchem_columns_scaled = columns_to_scale
     scaler._mlchem_last_columns_to_preserve = last_columns_to_preserve
@@ -319,9 +391,33 @@ tuple of pandas.DataFrame and scaler
         index=df.index,
     )
 
-    transformed_output = df.copy()
-    if columns_to_scale:
-        for column in columns_to_scale:
-            transformed_output[column] = dataframe_transformed[column]
+    # Build output: transformed columns + skipped binary columns (reintroduced)
+    transformed_dfs = [dataframe_transformed] if not dataframe_transformed.empty else []
+    
+    # Reintroduce binary feature columns that were skipped from transformation
+    if skip_binary_columns:
+        binary_feature_cols = [
+            col for col in sliced_df.columns
+            if col not in columns_to_scale and _is_binary_column(sliced_df[col])
+        ]
+        if binary_feature_cols:
+            transformed_dfs.append(sliced_df[binary_feature_cols])
+    
+    # Add preserved columns (end of dataframe), but exclude binary target variables
+    if last_columns_to_preserve > 0:
+        preserved_cols = df.iloc[:, -last_columns_to_preserve:]
+        if skip_binary_columns:
+            # Only include non-binary preserved columns (exclude binary target variables)
+            preserved_cols = preserved_cols[[
+                col for col in preserved_cols.columns 
+                if not _is_binary_column(preserved_cols[col])
+            ]]
+        if not preserved_cols.empty:
+            transformed_dfs.append(preserved_cols)
+    
+    if transformed_dfs:
+        transformed_output = pd.concat(transformed_dfs, axis=1)
+    else:
+        transformed_output = pd.DataFrame(index=df.index)
 
     return transformed_output, scaler
