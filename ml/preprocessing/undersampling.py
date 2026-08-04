@@ -50,7 +50,7 @@ def _configure_module_logging(level: int) -> None:
 def check_class_balance(
     y_train: Iterable,
     log_level: int | str = logging.INFO,
-) -> dict:
+) -> None:
     """
 Check and log the class distribution in training labels.
 
@@ -61,12 +61,6 @@ y_train : Iterable
 
 log_level : int or str, default=logging.INFO
     Logging level for output.
-
-Returns
--------
-dict
-    Dictionary with class labels as keys and a nested dictionary with
-    ``count`` and ``proportion`` values.
 """
 
     counts = pd.Series(list(y_train)).value_counts()
@@ -83,16 +77,6 @@ dict
     logger.log(resolved_log_level, 'CLASS BALANCE %s',
         ' '.join(balance_parts),
     )
-
-    summary = {
-        label: {
-            'count': int(count),
-            'proportion': float(count / total),
-        }
-        for label, count in counts.items()
-    }
-
-    return summary
 
 
 def undersample(

@@ -38,6 +38,7 @@ from math import comb
 import logging
 from sklearn.base import clone
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import matplotlib.pyplot as plt
 from mlchem.helper import (
@@ -997,8 +998,6 @@ class CombinatorialSelection:
             'test_score': []
             }
 
-        from joblib import Parallel, delayed
-
         def evaluate_subset(subset):
             x = self.train_set[subset]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
@@ -1054,18 +1053,18 @@ class CombinatorialSelection:
                 self.dict_results['cv_score'].append(cv_score)
                 self.dict_results['test_score'].append(test_score)
         else:
-            results = Parallel(n_jobs=self.n_jobs, prefer='threads')(
-                delayed(evaluate_subset)(subset)
-                for subset in self.feature_subsets
-            )
-            for result in tqdm(results, total=len(self.feature_subsets), desc="Stage 1", disable=False):
-                if result is None:
-                    continue
-                subset, train_score, cv_score, test_score = result
-                self.dict_results['feature_subsets'].append(subset)
-                self.dict_results['training_score'].append(train_score)
-                self.dict_results['cv_score'].append(cv_score)
-                self.dict_results['test_score'].append(test_score)
+            max_workers = self.n_jobs if self.n_jobs > 0 else None
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
+                for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 1", disable=False):
+                    result = future.result()
+                    if result is None:
+                        continue
+                    subset, train_score, cv_score, test_score = result
+                    self.dict_results['feature_subsets'].append(subset)
+                    self.dict_results['training_score'].append(train_score)
+                    self.dict_results['cv_score'].append(cv_score)
+                    self.dict_results['test_score'].append(test_score)
         self.df_results_stage1 = pd.DataFrame(
             self.dict_results,
             columns=self.dict_results.keys()
@@ -1170,8 +1169,6 @@ class CombinatorialSelection:
             'test_score': [],
             }
 
-        from joblib import Parallel, delayed
-
         def evaluate_subset(subset):
             x = self.train_set[subset]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
@@ -1227,18 +1224,18 @@ class CombinatorialSelection:
                 self.dict_results_2['cv_score'].append(cv_score)
                 self.dict_results_2['test_score'].append(test_score)
         else:
-            results = Parallel(n_jobs=self.n_jobs, prefer='threads')(
-                delayed(evaluate_subset)(subset)
-                for subset in self.feature_subsets
-            )
-            for result in tqdm(results, total=len(self.feature_subsets), desc="Stage 2", disable=False):
-                if result is None:
-                    continue
-                subset, train_score, cv_score, test_score = result
-                self.dict_results_2['feature_subsets'].append(subset)
-                self.dict_results_2['training_score'].append(train_score)
-                self.dict_results_2['cv_score'].append(cv_score)
-                self.dict_results_2['test_score'].append(test_score)
+            max_workers = self.n_jobs if self.n_jobs > 0 else None
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
+                for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 2", disable=False):
+                    result = future.result()
+                    if result is None:
+                        continue
+                    subset, train_score, cv_score, test_score = result
+                    self.dict_results_2['feature_subsets'].append(subset)
+                    self.dict_results_2['training_score'].append(train_score)
+                    self.dict_results_2['cv_score'].append(cv_score)
+                    self.dict_results_2['test_score'].append(test_score)
         self.df_results_stage2 = pd.DataFrame(
             self.dict_results_2, columns=self.dict_results_2.keys()
             )
