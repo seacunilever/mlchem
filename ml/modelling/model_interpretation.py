@@ -37,6 +37,7 @@ import warnings
 from typing import Literal, Iterable
 import pandas as pd
 from IPython.display import HTML
+import logging
 
 
 class ShapExplainer:
@@ -104,7 +105,7 @@ decision_plot(interval_lower, interval_upper)
 
 
     def __init__(self, estimator, data: pd.DataFrame,
-                 y: Iterable, is_tree: bool = False) -> None:
+                 y: Iterable, is_tree: bool = False, max_samples: int | None = None) -> None:
         """
 Initialise the ShapExplainer with a model, dataset, and target values.
 
@@ -121,6 +122,10 @@ y : Iterable
 
 is_tree : bool, optional (default=False)
     Whether the model is a tree-based model (e.g., XGBoost, LightGBM).
+
+max_samples : int or None, optional (default=None)
+    Maximum number of samples to use for background dataset. If None, uses all samples.
+    Set to the dataset size to avoid subsampling warnings.
 """
 
 
@@ -128,6 +133,7 @@ is_tree : bool, optional (default=False)
         self.data = data
         self.y = y
         self.is_tree = is_tree
+        self.max_samples = max_samples if max_samples is not None else len(data)
 
     def _tree_shap_values_for_plot(self):
         """Return a 2D SHAP matrix for tree plots with explicit layout checks."""
@@ -192,7 +198,7 @@ is_tree : bool, optional (default=False)
             self.predictive_function = lambda x: self.estimator.\
                 predict_proba(x)[:, 1]
             self.explainer = shap.Explainer(self.predictive_function,
-                                            self.data)
+                                            shap.maskers.Independent(self.data, max_samples=self.max_samples))
             self.shap_explanation_object = self.explainer(self.data)
             self.base_values = self.shap_explanation_object.base_values
             self.shap_values = self.shap_explanation_object.values
@@ -833,6 +839,8 @@ task_type : {'classification', 'regression'}
             metric,
             logic: Literal['lower', 'greater'] = 'greater',
             task_type: Literal['classification', 'regression'] = 'regression',
+            n_jobs: int = 1,
+            log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
             ) -> None:
         """
 Initialise the DescriptorExplainer with training/testing data, model, 
@@ -863,6 +871,12 @@ logic : {'lower', 'greater'}, optional (default='greater')
 
 task_type : {'classification', 'regression'}, optional (default='regression')
     The type of task to perform.
+
+n_jobs : int, optional (default=1)
+    Number of parallel workers for feature selection stages. -1 uses all available CPUs.
+
+log_level : int or str or Literal, optional (default=logging.INFO)
+    Logging level for diagnostics. Can be integer (10, 20, 30, etc.) or string ('DEBUG', 'INFO', etc.).
 """
 
         from mlchem.ml.feature_selection import wrappers
@@ -877,11 +891,15 @@ task_type : {'classification', 'regression'}, optional (default='regression')
         self.estimator = estimator
         self.metric = metric
         self.logic = logic
+        self.n_jobs = n_jobs
+        self.log_level = log_level
         self.CombSelector = wrappers.CombinatorialSelection(
             self.estimator,
             self.metric,
             self.logic,
-            self.task_type
+            self.task_type,
+            n_jobs=self.n_jobs,
+            log_level=self.log_level
         )
 
     def fit_stage_1(
@@ -894,7 +912,8 @@ task_type : {'classification', 'regression'}, optional (default='regression')
 Perform the first stage of combinatorial feature selection.
 
 This method evaluates combinations of features using cross-validation
-and filters subsets based on a training score threshold.
+and filters subsets based on a training score threshold. Parallelization
+is controlled by the n_jobs parameter specified during initialization.
 
 Parameters
 ----------
@@ -937,6 +956,8 @@ Perform the second stage of combinatorial feature selection.
 
 This method evaluates the top feature subsets from stage 1 using
 cross-validation to identify the best-performing combinations.
+Parallelization is controlled by the n_jobs parameter specified 
+during initialization.
 
 Parameters
 ----------
