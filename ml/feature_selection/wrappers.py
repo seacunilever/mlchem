@@ -37,10 +37,10 @@ from typing import Literal, Iterable, Callable, Optional
 from math import comb
 import logging
 from sklearn.base import clone
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 from mlchem.helper import (
-    loadingbar,
     generate_combination_cascade,
     coerce_log_level,
     resolve_n_jobs,
@@ -301,7 +301,7 @@ class SequentialForwardSelection:
             )
             return np.mean(cvscores), np.std(cvscores)
 
-        for cycle in range(self.max_features):
+        for cycle in tqdm(range(self.max_features), desc="SFS", disable=False):
 
             # Temporary lists where to store cross-validation scores
             # and standard deviations.
@@ -345,7 +345,6 @@ class SequentialForwardSelection:
             self.cv_stds.append(cv_stds_storage[index])
             feature_to_add = self.list_available_features[index]
             self.extending_features.append(feature_to_add)
-            loadingbar(cycle + 1, self.max_features, 50)
 
             self._log(
                 logging.INFO,
@@ -1045,10 +1044,7 @@ class CombinatorialSelection:
             return subset, train_score, cv_score, test_score
 
         if self.n_jobs == 1:
-            for i, subset in enumerate(self.feature_subsets):
-                loadingbar(i+1,
-                           len(self.feature_subsets),
-                           50)
+            for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 1", disable=False)):
                 result = evaluate_subset(subset)
                 if result is None:
                     continue
@@ -1062,8 +1058,7 @@ class CombinatorialSelection:
                 delayed(evaluate_subset)(subset)
                 for subset in self.feature_subsets
             )
-            loadingbar(len(self.feature_subsets), len(self.feature_subsets), 50)
-            for result in results:
+            for result in tqdm(results, total=len(self.feature_subsets), desc="Stage 1", disable=False):
                 if result is None:
                     continue
                 subset, train_score, cv_score, test_score = result
@@ -1222,8 +1217,7 @@ class CombinatorialSelection:
             return subset, train_score, cv_score, test_score
 
         if self.n_jobs == 1:
-            for i, subset in enumerate(self.feature_subsets):
-                loadingbar(i+1, len(self.feature_subsets), 50)
+            for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 2", disable=False)):
                 result = evaluate_subset(subset)
                 if result is None:
                     continue
@@ -1237,8 +1231,7 @@ class CombinatorialSelection:
                 delayed(evaluate_subset)(subset)
                 for subset in self.feature_subsets
             )
-            loadingbar(len(self.feature_subsets), len(self.feature_subsets), 50)
-            for result in results:
+            for result in tqdm(results, total=len(self.feature_subsets), desc="Stage 2", disable=False):
                 if result is None:
                     continue
                 subset, train_score, cv_score, test_score = result
