@@ -347,6 +347,130 @@ ValueError
     raise ValueError("'log_level' must be a valid logging level name or integer.")
 
 
+class LogCapture:
+    """
+Capture and inspect mlchem pipeline logs for later analysis.
+
+Enables both real-time console output and post-run log inspection without
+requiring verbose=True flags on every function call.
+
+Parameters
+----------
+log_level : int or str, default='INFO'
+    Logging level threshold (e.g., 'INFO', 'DEBUG').
+
+to_console : bool, default=True
+    Whether to also print logs to console for immediate visibility.
+
+Attributes
+----------
+stream : StringIO
+    In-memory buffer containing captured logs.
+
+Examples
+--------
+>>> logs = LogCapture()
+>>> sfs = SequentialForwardSelection(...)
+>>> sfs.fit(X_train, y_train, X_test, y_test)  # No verbose needed
+>>> print(logs.get_logs())  # Inspect all captured output after pipeline
+
+Or use as context manager:
+>>> with LogCapture() as logs:
+...     sfs.fit(X_train, y_train, X_test, y_test)
+>>> print(logs.get_logs())
+"""
+
+    def __init__(self, log_level: int | str = logging.INFO,
+                 to_console: bool = True) -> None:
+        from io import StringIO
+
+        self.to_console = to_console
+        self.level = coerce_log_level(log_level)
+        self.stream = StringIO()
+        self._memory_handler = None
+        self._console_handler = None
+        self._root_logger = logging.getLogger()
+        self._original_level = self._root_logger.level
+
+        # Set up memory handler
+        self._memory_handler = logging.StreamHandler(self.stream)
+        self._memory_handler.setLevel(self.level)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%H:%M:%S'
+        )
+        self._memory_handler.setFormatter(formatter)
+        self._root_logger.addHandler(self._memory_handler)
+        self._root_logger.setLevel(self.level)
+
+        # Set up console handler if requested
+        if self.to_console:
+            self._console_handler = logging.StreamHandler()
+            self._console_handler.setLevel(self.level)
+            self._console_handler.setFormatter(formatter)
+            self._root_logger.addHandler(self._console_handler)
+
+    def get_logs(self) -> str:
+        """
+Retrieve all captured logs as a string.
+
+Returns
+-------
+str
+    Complete captured log output.
+"""
+        return self.stream.getvalue()
+
+    def clear(self) -> None:
+        """Clear captured logs."""
+        self.stream.truncate(0)
+        self.stream.seek(0)
+
+    def stop(self) -> None:
+        """Stop capturing logs and remove handlers."""
+        if self._memory_handler:
+            self._root_logger.removeHandler(self._memory_handler)
+        if self._console_handler:
+            self._root_logger.removeHandler(self._console_handler)
+        self._root_logger.setLevel(self._original_level)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.stop()
+
+
+def start_logging(log_level: int | str = logging.INFO,
+                  to_console: bool = True) -> LogCapture:
+    """
+Start capturing mlchem pipeline logs for inspection.
+
+Convenience function for quick log capture setup. Returns a LogCapture
+object that captures all logs to memory and optionally to console.
+
+Parameters
+----------
+log_level : int or str, default='INFO'
+    Logging level threshold.
+
+to_console : bool, default=True
+    Whether to print logs to console in real-time.
+
+Returns
+-------
+LogCapture
+    Log capture object with .get_logs() method for later inspection.
+
+Examples
+--------
+>>> logs = start_logging()
+>>> sfs.fit(X_train, y_train, X_test, y_test)
+>>> print(logs.get_logs())
+"""
+    return LogCapture(log_level=log_level, to_console=to_console)
+
+
 def validate_task_type(task_type: str) -> str:
     """
 Validate task type used by ML helpers.
