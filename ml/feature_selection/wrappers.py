@@ -52,12 +52,11 @@ from mlchem.ml.modelling.model_evaluation import crossval
 logger = logging.getLogger(__name__)
 
 
-def _configure_wrapper_logging(enabled: bool, level: int) -> None:
-    """Configure wrapper logger visibility for interactive sessions."""
-    if enabled:
-        if not logging.getLogger().handlers:
-            logging.basicConfig(level=level)
-        logger.setLevel(level)
+def _configure_wrapper_logging(level: int) -> None:
+    """Configure wrapper logger to emit at the specified level."""
+    if not logging.getLogger().handlers:
+        logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger.setLevel(level)
 
 
 def _clone_for_search(estimator, outer_n_jobs: int):
@@ -123,9 +122,6 @@ class SequentialForwardSelection:
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
-  verbose : bool, optional
-      If True, emit progress and score diagnostics through logging.
-      Default is False.
   log_level : int or str, optional
       Logging level used when `verbose=True` (for example 'INFO' or
       'DEBUG'). Default is logging.INFO.
@@ -189,9 +185,6 @@ class SequentialForwardSelection:
       Whether to minimise or maximise the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
-  verbose : bool, optional
-      If True, emit progress and score diagnostics through logging.
-      Default is False.
   log_level : int or str, optional
       Logging level used when `verbose=True` (for example 'INFO' or
       'DEBUG'). Default is logging.INFO.
@@ -206,9 +199,8 @@ class SequentialForwardSelection:
         self.cv_iter = cv_iter
         self.logic = logic
         self.task_type = validate_task_type(task_type)
-        self.verbose = bool(verbose)
         self.log_level = coerce_log_level(log_level)
-        _configure_wrapper_logging(self.verbose, self.log_level)
+        _configure_wrapper_logging(self.log_level)
 
         # Where to store the temporarily best feature set at each iteration
         self.extending_features = []
@@ -227,16 +219,13 @@ class SequentialForwardSelection:
         # Where to store test scores
         self.unseen_scores = []
 
-    def set_verbosity(self, verbose: bool = True,
-                      log_level: int | str | None = None) -> None:
-        """Enable/disable wrapper logs and optionally change log level."""
-        self.verbose = bool(verbose)
-        if log_level is not None:
-            self.log_level = coerce_log_level(log_level)
-        _configure_wrapper_logging(self.verbose, self.log_level)
+    def set_log_level(self, log_level: int | str) -> None:
+        """Set the logging level for wrapper diagnostics."""
+        self.log_level = coerce_log_level(log_level)
+        _configure_wrapper_logging(self.log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
-        if self.verbose and level >= self.log_level:
+        if level >= self.log_level:
             logger.log(level, msg, *args)
 
     def fit(
@@ -680,8 +669,7 @@ class CombinatorialSelection:
                  task_type: Literal[
                      'classification', 'regression'
                      ] = 'classification',
-                 verbose: bool = False,
-                 log_level: int | str = logging.INFO,
+                                  log_level: int | str = logging.INFO,
                  ) -> None:
         """
         Initialise the CombinatorialSelection object.
@@ -709,20 +697,16 @@ class CombinatorialSelection:
         self.metric = metric
         self.logic = logic
         self.task_type = validate_task_type(task_type)
-        self.verbose = bool(verbose)
         self.log_level = coerce_log_level(log_level)
-        _configure_wrapper_logging(self.verbose, self.log_level)
+        _configure_wrapper_logging(self.log_level)
 
-    def set_verbosity(self, verbose: bool = True,
-                      log_level: int | str | None = None) -> None:
-        """Enable/disable wrapper logs and optionally change log level."""
-        self.verbose = bool(verbose)
-        if log_level is not None:
-            self.log_level = coerce_log_level(log_level)
-        _configure_wrapper_logging(self.verbose, self.log_level)
+    def set_log_level(self, log_level: int | str) -> None:
+        """Set the logging level for wrapper diagnostics."""
+        self.log_level = coerce_log_level(log_level)
+        _configure_wrapper_logging(self.log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
-        if self.verbose and level >= self.log_level:
+        if level >= self.log_level:
             logger.log(level, msg, *args)
 
     @staticmethod

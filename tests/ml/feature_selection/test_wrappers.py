@@ -217,7 +217,7 @@ def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     assert 'test_score' in results_stage_2.columns
 
 def test_combinatorial_selection_display_best_logs_summary(fitted_cs_stage_2, caplog):
-    fitted_cs_stage_2.set_verbosity(True, 'INFO')
+    fitted_cs_stage_2.set_log_level('INFO')
 
     with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
         fitted_cs_stage_2.display_best(row=1)
@@ -229,14 +229,15 @@ def test_combinatorial_selection_display_best_logs_summary(fitted_cs_stage_2, ca
     assert "Test Score" in full_text
 
 
-def test_wrapper_logging_toggle_controls_verbosity(fitted_cs_stage_2, caplog):
-    fitted_cs_stage_2.set_verbosity(False)
+def test_wrapper_logging_level_controls_output(fitted_cs_stage_2, caplog):
+    fitted_cs_stage_2.set_log_level('WARNING')
     with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
         fitted_cs_stage_2.display_best(row=1)
-    assert len(caplog.messages) == 0
+    # At WARNING level, INFO logs should not appear
+    assert len([m for m in caplog.messages if 'Best Features' in m]) == 0
 
     caplog.clear()
-    fitted_cs_stage_2.set_verbosity(True, 'INFO')
+    fitted_cs_stage_2.set_log_level('INFO')
     with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
         fitted_cs_stage_2.display_best(row=1)
     assert any('Best Features' in msg for msg in caplog.messages)

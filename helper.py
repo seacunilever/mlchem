@@ -349,18 +349,22 @@ ValueError
 
 class LogCapture:
     """
-Capture and inspect mlchem pipeline logs for later analysis.
+Configure mlchem pipeline logging with optional file persistence.
 
-Enables both real-time console output and post-run log inspection without
-requiring verbose=True flags on every function call.
+By default, mlchem functions emit INFO-level logs to console. Use LogCapture
+to add file logging, change the log level, or silence console output.
 
 Parameters
 ----------
 log_level : int or str, default='INFO'
-    Logging level threshold (e.g., 'INFO', 'DEBUG').
+    Logging level threshold (e.g., 'INFO', 'DEBUG', 'WARNING').
 
 to_console : bool, default=True
-    Whether to also print logs to console for immediate visibility.
+    Whether to print logs to console. Set False to log only to file.
+
+to_file : str or None, default=None
+    Optional file path to write logs to. If provided, logs are appended
+    to the file as well as console (if to_console=True).
 
 Attributes
 ----------
@@ -369,36 +373,46 @@ stream : StringIO
 
 Examples
 --------
->>> logs = LogCapture()
+>>> # Default: logs appear on console automatically
 >>> sfs = SequentialForwardSelection(...)
->>> sfs.fit(X_train, y_train, X_test, y_test)  # No verbose needed
->>> print(logs.get_logs())  # Inspect all captured output after pipeline
+>>> sfs.fit(X_train, y_train, X_test, y_test)
+>>> # Output appears on console immediately
 
-Or use as context manager:
->>> with LogCapture() as logs:
-...     sfs.fit(X_train, y_train, X_test, y_test)
->>> print(logs.get_logs())
+>>> # Optionally: capture to file + memory for inspection
+>>> logs = LogCapture(to_file='pipeline.log')
+>>> sfs.fit(X_train, y_train, X_test, y_test)
+>>> print(logs.get_logs())  # View memory capture
+>>> # Also check pipeline.log file
+
+>>> # Silent mode: only to file
+>>> logs = LogCapture(to_console=False, to_file='pipeline.log')
+>>> sfs.fit(X_train, y_train, X_test, y_test)
 """
 
     def __init__(self, log_level: int | str = logging.INFO,
-                 to_console: bool = True) -> None:
+                 to_console: bool = True,
+                 to_file: str | None = None) -> None:
         from io import StringIO
 
         self.to_console = to_console
+        self.to_file = to_file
         self.level = coerce_log_level(log_level)
         self.stream = StringIO()
         self._memory_handler = None
         self._console_handler = None
+        self._file_handler = None
         self._root_logger = logging.getLogger()
         self._original_level = self._root_logger.level
+        self._original_handlers = list(self._root_logger.handlers)
 
-        # Set up memory handler
-        self._memory_handler = logging.StreamHandler(self.stream)
-        self._memory_handler.setLevel(self.level)
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             datefmt='%H:%M:%S'
         )
+
+        # Set up memory handler
+        self._memory_handler = logging.StreamHandler(self.stream)
+        self._memory_handler.setLevel(self.level)
         self._memory_handler.setFormatter(formatter)
         self._root_logger.addHandler(self._memory_handler)
         self._root_logger.setLevel(self.level)
@@ -410,19 +424,26 @@ Or use as context manager:
             self._console_handler.setFormatter(formatter)
             self._root_logger.addHandler(self._console_handler)
 
+        # Set up file handler if requested
+        if self.to_file:
+            self._file_handler = logging.FileHandler(self.to_file, mode='a')
+            self._file_handler.setLevel(self.level)
+            self._file_handler.setFormatter(formatter)
+            self._root_logger.addHandler(self._file_handler)
+
     def get_logs(self) -> str:
         """
-Retrieve all captured logs as a string.
+Retrieve all captured logs from memory as a string.
 
 Returns
 -------
 str
-    Complete captured log output.
+    Complete captured log output from in-memory buffer.
 """
         return self.stream.getvalue()
 
     def clear(self) -> None:
-        """Clear captured logs."""
+        """Clear captured logs from memory buffer."""
         self.stream.truncate(0)
         self.stream.seek(0)
 
@@ -432,6 +453,9 @@ str
             self._root_logger.removeHandler(self._memory_handler)
         if self._console_handler:
             self._root_logger.removeHandler(self._console_handler)
+        if self._file_handler:
+            self._file_handler.close()
+            self._root_logger.removeHandler(self._file_handler)
         self._root_logger.setLevel(self._original_level)
 
     def __enter__(self):
@@ -442,33 +466,42 @@ str
 
 
 def start_logging(log_level: int | str = logging.INFO,
-                  to_console: bool = True) -> LogCapture:
+                  to_console: bool = True,
+                  to_file: str | None = None) -> LogCapture:
     """
-Start capturing mlchem pipeline logs for inspection.
+Configure mlchem pipeline logging with optional file persistence.
 
-Convenience function for quick log capture setup. Returns a LogCapture
-object that captures all logs to memory and optionally to console.
+Convenience function to set up logging. Logs are emitted to console by
+default; optionally also to a file for later inspection.
 
 Parameters
 ----------
 log_level : int or str, default='INFO'
-    Logging level threshold.
+    Logging level threshold (e.g., 'INFO', 'DEBUG', 'WARNING').
 
 to_console : bool, default=True
-    Whether to print logs to console in real-time.
+    Whether to print logs to console.
+
+to_file : str or None, default=None
+    Optional file path to write logs to.
 
 Returns
 -------
 LogCapture
-    Log capture object with .get_logs() method for later inspection.
+    Log manager object with .get_logs() for memory inspection.
 
 Examples
 --------
->>> logs = start_logging()
+>>> # Log to console + file
+>>> logs = start_logging(to_file='pipeline.log')
 >>> sfs.fit(X_train, y_train, X_test, y_test)
->>> print(logs.get_logs())
+>>> print(logs.get_logs())  # Inspect memory
+
+>>> # Log only to file (silent)
+>>> logs = start_logging(to_console=False, to_file='pipeline.log')
+>>> sfs.fit(X_train, y_train, X_test, y_test)
 """
-    return LogCapture(log_level=log_level, to_console=to_console)
+    return LogCapture(log_level=log_level, to_console=to_console, to_file=to_file)
 
 
 def validate_task_type(task_type: str) -> str:

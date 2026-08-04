@@ -49,22 +49,36 @@ def sample_data():
     })
     return train_set, test_set
 
-def test_check_class_balance_logs_when_verbose(sample_data, caplog):
+def test_check_class_balance_logs_by_default(sample_data, caplog):
     train_set, test_set = sample_data
     y_train = train_set['class'].values.tolist()
     with caplog.at_level(logging.INFO, logger='mlchem.ml.preprocessing.undersampling'):
-        check_class_balance(y_train, verbose=True, log_level='INFO')
+        check_class_balance(y_train)
     assert any('CLASS BALANCE' in msg for msg in caplog.messages)
     assert any('[0]: 2 (0.20)' in msg for msg in caplog.messages)
     assert any('[1]: 8 (0.80)' in msg for msg in caplog.messages)
 
 
-def test_check_class_balance_is_silent_by_default(sample_data, caplog):
+def test_check_class_balance_logs_at_info_level(sample_data, caplog):
     train_set, test_set = sample_data
     y_train = train_set['class'].values.tolist()
     with caplog.at_level(logging.INFO, logger='mlchem.ml.preprocessing.undersampling'):
-        check_class_balance(y_train)
-    assert len(caplog.messages) == 0
+        check_class_balance(y_train, log_level='INFO')
+    assert any('CLASS BALANCE' in msg for msg in caplog.messages)
+
+
+def test_check_class_balance_show_prints_user_friendly_summary(sample_data, capsys):
+    train_set, _ = sample_data
+    y_train = train_set['class'].values.tolist()
+
+    summary = check_class_balance(y_train, show=True)
+    out = capsys.readouterr().out
+
+    assert 'CLASS BALANCE (n=10)' in out
+    assert '[0]: 2 (20.00%)' in out
+    assert '[1]: 8 (80.00%)' in out
+    assert summary[0]['count'] == 2
+    assert summary[1]['count'] == 8
 
 def test_undersample(sample_data):
     train_set, test_set = sample_data

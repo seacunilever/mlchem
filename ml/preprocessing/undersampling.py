@@ -40,23 +40,15 @@ from mlchem.helper import coerce_log_level
 logger = logging.getLogger(__name__)
 
 
-def _configure_module_logging(enabled: bool, level: int) -> None:
-    """Configure module logger visibility for interactive sessions."""
-    if enabled:
-        if not logging.getLogger().handlers:
-            logging.basicConfig(level=level)
-        logger.setLevel(level)
-
-
-def _log_if_verbose(verbose: bool, log_level: int, msg: str, *args) -> None:
-    if verbose:
-        logger.log(log_level, msg, *args)
+def _configure_module_logging(level: int) -> None:
+    """Configure module logger to emit at the specified level."""
+    if not logging.getLogger().handlers:
+        logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger.setLevel(level)
 
 
 def check_class_balance(
-    y_train: Iterable,
-    verbose: bool = False,
-    log_level: int | str = logging.INFO,
+    y_train: Iterable,    log_level: int | str = logging.INFO,
     show: bool = False,
 ) -> dict:
     """
@@ -84,11 +76,8 @@ dict
         for label, count in counts.items()
     ]
     resolved_log_level = coerce_log_level(log_level)
-    _configure_module_logging(verbose, resolved_log_level)
-    _log_if_verbose(
-        verbose,
-        resolved_log_level,
-        'CLASS BALANCE %s',
+    _configure_module_logging(resolved_log_level)
+    logger.log(resolved_log_level, 'CLASS BALANCE %s',
         ' '.join(balance_parts),
     )
 
@@ -117,9 +106,7 @@ def undersample(
     class_column: str,
     desired_proportion_majority: float,
     add_dropped_to_test: bool = False,
-    random_seed: Optional[int] = 1,
-    verbose: bool = False,
-    log_level: int | str = logging.INFO,
+    random_seed: Optional[int] = 1,    log_level: int | str = logging.INFO,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
 Undersample the majority class in a training set to achieve a desired 
@@ -145,9 +132,6 @@ add_dropped_to_test : bool, default=False
 random_seed : int, optional
     Random seed for reproducibility.
 
-verbose : bool, default=False
-    If True, emit class-balance and sampling diagnostics through logging.
-
 log_level : int or str, default=logging.INFO
     Logging level used when `verbose=True`.
 
@@ -159,7 +143,7 @@ tuple of pandas.DataFrame
 
     import random
     resolved_log_level = coerce_log_level(log_level)
-    _configure_module_logging(verbose, resolved_log_level)
+    _configure_module_logging(resolved_log_level)
 
     if not 0 < desired_proportion_majority < 1:
         raise ValueError(
@@ -191,7 +175,7 @@ tuple of pandas.DataFrame
         raise ValueError(
             "Computed majority-class removals exceed available samples."
         )
-    _log_if_verbose(verbose, resolved_log_level, 'Samples to remove: %d', cycles)
+    logger.log(resolved_log_level, 'Samples to remove: %d', cycles)
 
     if random_seed is not None:
         random.seed(random_seed)
@@ -207,10 +191,7 @@ tuple of pandas.DataFrame
         f"[{label}]: {int(count)} ({(count / total_undersampled):.2f})"
         for label, count in undersampled_counts.items()
     ]
-    _log_if_verbose(
-        verbose,
-        resolved_log_level,
-        'CLASS BALANCE %s',
+    logger.log(resolved_log_level, 'CLASS BALANCE %s',
         ' '.join(balance_parts),
     )
 

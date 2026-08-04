@@ -42,12 +42,11 @@ from mlchem.helper import coerce_log_level, validate_task_type
 logger = logging.getLogger(__name__)
 
 
-def _configure_module_logging(enabled: bool, level: int) -> None:
-    """Configure module logger visibility for interactive sessions."""
-    if enabled:
-        if not logging.getLogger().handlers:
-            logging.basicConfig(level=level)
-        logger.setLevel(level)
+def _configure_module_logging(level: int) -> None:
+    """Configure module logger to emit at the specified level."""
+    if not logging.getLogger().handlers:
+        logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger.setLevel(level)
 
 
 def crossval(estimator,
@@ -136,9 +135,7 @@ def y_scrambling(estimator,
                  y_test: Iterable,
                  metric_function: Callable,
                  n_iter: int,
-                 plot: bool = True,
-                 verbose: bool = False,
-                 log_level: int | str = logging.INFO) -> None:
+                 plot: bool = True,                 log_level: int | str = logging.INFO) -> None:
     """
 Perform y-scrambling to assess model performance due to chance.
 
@@ -173,9 +170,6 @@ n_iter : int
 plot : bool, optional (default=True)
     Whether to display a histogram of the scrambled scores.
 
-verbose : bool, optional (default=False)
-    If True, emit y-scrambling diagnostics through logging.
-
 log_level : int or str, optional (default=logging.INFO)
     Logging level used when `verbose=True`.
 
@@ -191,7 +185,7 @@ None
     import matplotlib.pyplot as plt
 
     resolved_log_level = coerce_log_level(log_level)
-    _configure_module_logging(verbose, resolved_log_level)
+    _configure_module_logging(resolved_log_level)
 
     estimator_copy = clone(estimator)
     y_train_copy = y_train.copy()
@@ -232,17 +226,16 @@ None
     # Rucker et al, https://doi.org/10.1021/ci700157b
     safety_margin = 2.3 * ys_std
 
-    if verbose:
-        logger.log(
-            resolved_log_level,
-            'Probability to obtain a better model by chance: %.3f',
-            value,
-        )
-        logger.log(
-            resolved_log_level,
-            'Safety margin: %.2f',
-            (obtained_margin / (2.3 * ys_std)),
-        )
+    logger.log(
+        resolved_log_level,
+        'Probability to obtain a better model by chance: %.3f',
+        value,
+    )
+    logger.log(
+        resolved_log_level,
+        'Safety margin: %.2f',
+        (obtained_margin / (2.3 * ys_std)),
+    )
 
     if plot:
         sns.histplot(scores)

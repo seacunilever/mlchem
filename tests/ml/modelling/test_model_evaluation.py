@@ -215,12 +215,14 @@ def test_y_scrambling_logging_toggle(sample_data, caplog):
             metric_function,
             n_iter=2,
             plot=False,
-            verbose=False,
+            log_level='INFO',
         )
-    assert len(caplog.messages) == 0
+    full_text = '\n'.join(caplog.messages)
+    assert 'Probability to obtain a better model by chance' in full_text
+    assert 'Safety margin:' in full_text
 
     caplog.clear()
-    with caplog.at_level(logging.INFO, logger='mlchem.ml.modelling.model_evaluation'):
+    with caplog.at_level(logging.WARNING, logger='mlchem.ml.modelling.model_evaluation'):
         y_scrambling(
             estimator,
             train_set,
@@ -230,12 +232,11 @@ def test_y_scrambling_logging_toggle(sample_data, caplog):
             metric_function,
             n_iter=2,
             plot=False,
-            verbose=True,
-            log_level='INFO',
+            log_level='WARNING',
         )
-    full_text = '\n'.join(caplog.messages)
-    assert 'Probability to obtain a better model by chance' in full_text
-    assert 'Safety margin:' in full_text
+    # At WARNING level, only WARNING+ logs should be emitted
+    # Since we're logging at WARNING level, we should see the logs
+    assert len([m for m in caplog.messages if 'Probability' in m]) == 1
 
 
 def test_leverage():
