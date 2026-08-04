@@ -100,6 +100,58 @@ pip install -e .
 pip install -r requirements.txt
 ```
 
+## Logging
+
+**mlchem** emits diagnostic logs during pipeline execution (feature selection, model evaluation, data preprocessing) to help users track progress and debug issues. Logs are emitted at the `INFO` level by default and appear on the console.
+
+### Basic Usage
+
+Logs appear automatically when running mlchem functions:
+
+```python
+from mlchem.ml.feature_selection.wrappers import SequentialForwardSelection
+from mlchem.metrics import get_geometric_S
+
+sfs = SequentialForwardSelection(estimator=..., metric=get_geometric_S, ...)
+sfs.fit(X_train, y_train, X_test, y_test)
+# Logs appear on console: e.g., "10:35:55 - mlchem.ml.feature_selection.wrappers - INFO - SFS start: ..."
+```
+
+### Controlling Log Level
+
+Change the logging level to filter output (e.g., show only warnings, suppress info messages):
+
+```python
+sfs = SequentialForwardSelection(..., log_level='WARNING')
+sfs.fit(...)  # Only WARNING+ logs appear
+```
+
+Valid log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
+
+### Post-Pipeline Inspection and File Logging
+
+Capture logs to memory or file for later inspection without modifying function calls:
+
+```python
+from mlchem.helper import start_logging
+
+# Capture to console + memory
+logs = start_logging(log_level='INFO', to_console=True)
+sfs.fit(X_train, y_train, X_test, y_test)
+print(logs.get_logs())  # View captured logs
+
+# Capture to file + console
+logs = start_logging(log_level='INFO', to_file='pipeline.log')
+sfs.fit(...)
+# Logs written to pipeline.log + displayed on console
+
+# Capture to file only (silent)
+logs = start_logging(to_console=False, to_file='pipeline.log')
+sfs.fit(...)  # Silent; logs only in file
+```
+
+Use this for non-interactive scripts and production environments.
+
 ## Compatibility checks (Python 3.12, 3.13, 3.14)
 
 This repository now includes a local matrix runner and CI workflow scaffold to
