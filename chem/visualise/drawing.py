@@ -138,8 +138,23 @@ draw_mol(...)
     # Colour of the SMARTS query
     'queryColour': 'red',
 
-    # The color used for molecule, atom, bond, and SGroup notes
+    # The color used for RDKit query annotations
     'annotationColour': 'black',
+
+    # The color used for custom atom notes (from assign_atom_notes)
+    'atomNoteColour': 'black',
+
+    # The color used for custom bond notes (from assign_bond_notes)
+    'bondNoteColour': 'black',
+
+    # The color used for legend text
+    'legendColour': 'black',
+
+    # The color used for symbol text
+    'symbolColour': 'black',
+
+    # The color used for variable attachment points
+    'variableAttachmentColour': 'black',
 
     # Drawing style controls #
 
@@ -1098,6 +1113,126 @@ Use circle-style weight map:
             ("An improper colour tuple was passed. Correct custom palette "
              "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
              "will set overwrite colour ""to purple.")
+
+        # process atomNoteColour
+        atom_note_colour = self.drawing_options['atomNoteColour']
+        assert (isinstance(atom_note_colour, str) or
+                isinstance(atom_note_colour, tuple)), (
+                    "Atom note colour must be a valid string or tuple."
+                    )
+        if isinstance(atom_note_colour, str):
+            if atom_note_colour in self.colour_dictionary.keys():
+                atom_note_tuple = self.colour_dictionary[atom_note_colour]
+                dopts.setAtomNoteColour(atom_note_tuple)
+            else:
+                raise ValueError(
+                    "An improper colour string was passed. '%s' is not a valid "
+                    "colour in mlchem.importables.colour_dictionary palette." %
+                    atom_note_colour)
+        else:
+            try:
+                dopts.setAtomNoteColour(atom_note_colour)
+            except Exception:
+                raise ValueError(
+                    "An improper colour tuple was passed. Correct custom palette "
+                    "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
+                    "will set atom note colour to purple.")
+
+        # process bondNoteColour
+        bond_note_colour = self.drawing_options['bondNoteColour']
+        assert (isinstance(bond_note_colour, str) or
+                isinstance(bond_note_colour, tuple)), (
+                    "Bond note colour must be a valid string or tuple."
+                    )
+        if isinstance(bond_note_colour, str):
+            if bond_note_colour in self.colour_dictionary.keys():
+                bond_note_tuple = self.colour_dictionary[bond_note_colour]
+                dopts.setBondNoteColour(bond_note_tuple)
+            else:
+                raise ValueError(
+                    "An improper colour string was passed. '%s' is not a valid "
+                    "colour in mlchem.importables.colour_dictionary palette." %
+                    bond_note_colour)
+        else:
+            try:
+                dopts.setBondNoteColour(bond_note_colour)
+            except Exception:
+                raise ValueError(
+                    "An improper colour tuple was passed. Correct custom palette "
+                    "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
+                    "will set bond note colour to purple.")
+
+        # process legendColour
+        legend_colour = self.drawing_options['legendColour']
+        assert (isinstance(legend_colour, str) or
+                isinstance(legend_colour, tuple)), (
+                    "Legend colour must be a valid string or tuple."
+                    )
+        if isinstance(legend_colour, str):
+            if legend_colour in self.colour_dictionary.keys():
+                legend_tuple = self.colour_dictionary[legend_colour]
+                dopts.setLegendColour(legend_tuple)
+            else:
+                raise ValueError(
+                    "An improper colour string was passed. '%s' is not a valid "
+                    "colour in mlchem.importables.colour_dictionary palette." %
+                    legend_colour)
+        else:
+            try:
+                dopts.setLegendColour(legend_colour)
+            except Exception:
+                raise ValueError(
+                    "An improper colour tuple was passed. Correct custom palette "
+                    "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
+                    "will set legend colour to purple.")
+
+        # process symbolColour
+        symbol_colour = self.drawing_options['symbolColour']
+        assert (isinstance(symbol_colour, str) or
+                isinstance(symbol_colour, tuple)), (
+                    "Symbol colour must be a valid string or tuple."
+                    )
+        if isinstance(symbol_colour, str):
+            if symbol_colour in self.colour_dictionary.keys():
+                symbol_tuple = self.colour_dictionary[symbol_colour]
+                dopts.setSymbolColour(symbol_tuple)
+            else:
+                raise ValueError(
+                    "An improper colour string was passed. '%s' is not a valid "
+                    "colour in mlchem.importables.colour_dictionary palette." %
+                    symbol_colour)
+        else:
+            try:
+                dopts.setSymbolColour(symbol_colour)
+            except Exception:
+                raise ValueError(
+                    "An improper colour tuple was passed. Correct custom palette "
+                    "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
+                    "will set symbol colour to purple.")
+
+        # process variableAttachmentColour
+        variable_attachment_colour = self.drawing_options['variableAttachmentColour']
+        assert (isinstance(variable_attachment_colour, str) or
+                isinstance(variable_attachment_colour, tuple)), (
+                    "Variable attachment colour must be a valid string or tuple."
+                    )
+        if isinstance(variable_attachment_colour, str):
+            if variable_attachment_colour in self.colour_dictionary.keys():
+                variable_attachment_tuple = self.colour_dictionary[variable_attachment_colour]
+                dopts.setVariableAttachmentColour(variable_attachment_tuple)
+            else:
+                raise ValueError(
+                    "An improper colour string was passed. '%s' is not a valid "
+                    "colour in mlchem.importables.colour_dictionary palette." %
+                    variable_attachment_colour)
+        else:
+            try:
+                dopts.setVariableAttachmentColour(variable_attachment_colour)
+            except Exception:
+                raise ValueError(
+                    "An improper colour tuple was passed. Correct custom palette "
+                    "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
+                    "will set variable attachment colour to purple.")
 
         # draw custom shapes
 
