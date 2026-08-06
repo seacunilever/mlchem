@@ -94,7 +94,7 @@ Example
 >>> from mlchem.chem.calculator.descriptors import get_rdkitDesc
 >>> from mlchem.ml.preprocessing import scaling
 >>> df = get_rdkitDesc(['CCCC', 'CCN', 'c1ccccc1', 'CF', 'CCO', 'CCCNC(OCCC)CCO'])
->>> df = scaling.scale_df_standard(df, last_columns_to_preserve=0)[0]
+>>> df = scaling.scale_df_standard(df, columns_to_preserve=[])[0]
 >>> c = Compressor(df)
 >>> c.compress_PCA(n_components_or_variance=0.6)
 >>> df_pca = c.dataframe_compressed

@@ -56,52 +56,46 @@ def sample_dataframe_with_binary():
     })
 
 def test_scale_df_standard(sample_dataframe):
-    scaled_df, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=1)
+    scaled_df, scaler = scale_df_standard(sample_dataframe, columns_to_preserve=['feature3'])
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, StandardScaler)
-    assert scaled_df.shape == (3, 3)
-    assert 'feature3' in scaled_df.columns
-    assert scaled_df['feature3'].equals(sample_dataframe['feature3'])
+    assert scaled_df.shape == (3, 2)
+    assert 'feature3' not in scaled_df.columns
 
 def test_scale_df_minmax(sample_dataframe):
-    scaled_df, scaler = scale_df_minmax(sample_dataframe, last_columns_to_preserve=1)
+    scaled_df, scaler = scale_df_minmax(sample_dataframe, columns_to_preserve=['feature3'])
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, MinMaxScaler)
-    assert scaled_df.shape == (3, 3)
-    assert 'feature3' in scaled_df.columns
-    assert scaled_df['feature3'].equals(sample_dataframe['feature3'])
+    assert scaled_df.shape == (3, 2)
+    assert 'feature3' not in scaled_df.columns
 
 def test_scale_df_robust(sample_dataframe):
-    scaled_df, scaler = scale_df_robust(sample_dataframe, last_columns_to_preserve=1)
+    scaled_df, scaler = scale_df_robust(sample_dataframe, columns_to_preserve=['feature3'])
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, RobustScaler)
-    assert scaled_df.shape == (3, 3)
-    assert 'feature3' in scaled_df.columns
-    assert scaled_df['feature3'].equals(sample_dataframe['feature3'])
+    assert scaled_df.shape == (3, 2)
+    assert 'feature3' not in scaled_df.columns
 
 def test_transform_df_standard(sample_dataframe):
-    _, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=1)
-    transformed_df, _ = transform_df(sample_dataframe, scaler, last_columns_to_preserve=1)
+    _, scaler = scale_df_standard(sample_dataframe, columns_to_preserve=['feature3'])
+    transformed_df, _ = transform_df(sample_dataframe, scaler, columns_to_preserve=['feature3'])
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == (3, 3)
-    assert 'feature3' in transformed_df.columns
-    assert transformed_df['feature3'].equals(sample_dataframe['feature3'])
+    assert transformed_df.shape == (3, 2)
+    assert 'feature3' not in transformed_df.columns
 
 def test_transform_df_minmax(sample_dataframe):
-    _, scaler = scale_df_minmax(sample_dataframe, last_columns_to_preserve=1)
-    transformed_df, _ = transform_df(sample_dataframe, scaler, last_columns_to_preserve=1)
+    _, scaler = scale_df_minmax(sample_dataframe, columns_to_preserve=['feature3'])
+    transformed_df, _ = transform_df(sample_dataframe, scaler, columns_to_preserve=['feature3'])
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == (3, 3)
-    assert 'feature3' in transformed_df.columns
-    assert transformed_df['feature3'].equals(sample_dataframe['feature3'])
+    assert transformed_df.shape == (3, 2)
+    assert 'feature3' not in transformed_df.columns
 
 def test_transform_df_robust(sample_dataframe):
-    _, scaler = scale_df_robust(sample_dataframe, last_columns_to_preserve=1)
-    transformed_df, _ = transform_df(sample_dataframe, scaler, last_columns_to_preserve=1)
+    _, scaler = scale_df_robust(sample_dataframe, columns_to_preserve=['feature3'])
+    transformed_df, _ = transform_df(sample_dataframe, scaler, columns_to_preserve=['feature3'])
     assert isinstance(transformed_df, pd.DataFrame)
-    assert transformed_df.shape == (3, 3)
-    assert 'feature3' in transformed_df.columns
-    assert transformed_df['feature3'].equals(sample_dataframe['feature3'])
+    assert transformed_df.shape == (3, 2)
+    assert 'feature3' not in transformed_df.columns
 
 
 @pytest.mark.parametrize(
@@ -115,74 +109,104 @@ def test_transform_df_robust(sample_dataframe):
 def test_scale_df_skip_binary_columns(scale_func, scaler_cls, sample_dataframe_with_binary):
     scaled_df, scaler = scale_func(
         sample_dataframe_with_binary,
-        last_columns_to_preserve=1,
+        columns_to_preserve=['tail'],
         skip_binary_columns=True,
     )
 
     assert isinstance(scaled_df, pd.DataFrame)
     assert isinstance(scaler, scaler_cls)
-    # Binary columns in the scaled portion are excluded from scaling but reintroduced in output
-    # Non-binary preserved columns (tail) are included; binary target variables (preserved) are excluded
-    assert scaled_df.shape == (3, 3)  # continuous (scaled) + binary (reintroduced) + tail (preserved, non-binary)
+    # Tail is excluded from scaling and excluded from output; binary is reintroduced.
+    assert scaled_df.shape == (3, 2)
     assert 'continuous' in scaled_df.columns
-    assert 'binary' in scaled_df.columns  # Binary feature column reintroduced
-    assert 'tail' in scaled_df.columns
+    assert 'binary' in scaled_df.columns
+    assert 'tail' not in scaled_df.columns
     assert not np.allclose(
         scaled_df['continuous'].to_numpy(),
         sample_dataframe_with_binary['continuous'].to_numpy(),
     )
     # Binary column should be unchanged (not scaled)
     assert scaled_df['binary'].equals(sample_dataframe_with_binary['binary'])
-    # Preserved non-binary column should be unchanged
-    assert scaled_df['tail'].equals(sample_dataframe_with_binary['tail'])
+
 
 
 @pytest.mark.parametrize('scale_func', [scale_df_standard, scale_df_minmax, scale_df_robust])
 def test_transform_df_skip_binary_columns(scale_func, sample_dataframe_with_binary):
     _, scaler = scale_func(
         sample_dataframe_with_binary,
-        last_columns_to_preserve=1,
+        columns_to_preserve=['tail'],
         skip_binary_columns=True,
     )
     transformed_df, _ = transform_df(
         sample_dataframe_with_binary,
         scaler,
-        last_columns_to_preserve=1,
+        columns_to_preserve=['tail'],
+        skip_binary_columns=True,
     )
 
     assert isinstance(transformed_df, pd.DataFrame)
-    # Binary columns in the scaled portion are excluded when skip_binary_columns=True
-    assert transformed_df.shape == (3, 2)  # continuous (scaled) + tail (preserved, non-binary)
+    assert transformed_df.shape == (3, 2)
     assert 'continuous' in transformed_df.columns
-    assert 'tail' in transformed_df.columns
-    assert 'binary' not in transformed_df.columns  # Binary column excluded
-    assert transformed_df['tail'].equals(sample_dataframe_with_binary['tail'])
+    assert 'binary' in transformed_df.columns
+    assert 'tail' not in transformed_df.columns
 
 
 def test_scale_df_standard_zero_columns_preserved(sample_dataframe):
-    scaled_df, _ = scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
+    scaled_df, _ = scale_df_standard(sample_dataframe, columns_to_preserve=[])
     assert scaled_df.shape == sample_dataframe.shape
 
 
-def test_scale_df_standard_negative_columns_preserved_raises(sample_dataframe):
-    with pytest.raises(ValueError, match="must be >= 0"):
-        scale_df_standard(sample_dataframe, last_columns_to_preserve=-1)
+def test_scale_df_standard_string_columns_preserved_raises(sample_dataframe):
+    with pytest.raises(TypeError, match="iterable of column names"):
+        scale_df_standard(sample_dataframe, columns_to_preserve='feature3')
 
 
-def test_scale_df_minmax_negative_columns_preserved_raises(sample_dataframe):
-    with pytest.raises(ValueError, match="must be >= 0"):
-        scale_df_minmax(sample_dataframe, last_columns_to_preserve=-1)
+def test_scale_df_minmax_missing_column_raises(sample_dataframe):
+    with pytest.raises(KeyError, match='Columns not found in dataframe'):
+        scale_df_minmax(sample_dataframe, columns_to_preserve=['missing'])
 
 
-def test_scale_df_robust_negative_columns_preserved_raises(sample_dataframe):
-    with pytest.raises(ValueError, match="must be >= 0"):
-        scale_df_robust(sample_dataframe, last_columns_to_preserve=-1)
+def test_scale_df_robust_missing_column_raises(sample_dataframe):
+    with pytest.raises(KeyError, match='Columns not found in dataframe'):
+        scale_df_robust(sample_dataframe, columns_to_preserve=['missing'])
 
 
-def test_transform_df_negative_columns_preserved_raises(sample_dataframe):
-    _, scaler = scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
-    with pytest.raises(ValueError, match="must be >= 0"):
-        transform_df(sample_dataframe, scaler, last_columns_to_preserve=-1)
+def test_transform_df_missing_column_raises(sample_dataframe):
+    _, scaler = scale_df_standard(sample_dataframe, columns_to_preserve=[])
+    with pytest.raises(KeyError, match='Columns not found in dataframe'):
+        transform_df(sample_dataframe, scaler, columns_to_preserve=['missing'])
+
+
+def test_transform_df_maintains_train_selected_columns_when_binary_changes():
+    train_df = pd.DataFrame(
+        {
+            'continuous': [10.0, 20.0, 30.0],
+            'binary_like': [0, 1, 0],
+            'target': [0, 1, 0],
+        }
+    )
+    test_df = pd.DataFrame(
+        {
+            'continuous': [11.0, 21.0, 31.0],
+            'binary_like': [0, 2, 0],
+            'target': [1, 0, 1],
+        }
+    )
+
+    train_scaled, scaler = scale_df_standard(
+        train_df,
+        columns_to_preserve=['target'],
+        skip_binary_columns=True,
+    )
+    test_scaled, _ = transform_df(
+        test_df,
+        scaler,
+        columns_to_preserve=['target'],
+        skip_binary_columns=True,
+    )
+
+    assert list(test_scaled.columns) == list(train_scaled.columns)
+    assert 'binary_like' in test_scaled.columns
+    assert test_scaled['binary_like'].equals(test_df['binary_like'])
 
 
 def test_scale_df_standard_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
@@ -191,7 +215,7 @@ def test_scale_df_standard_wraps_scaler_valueerror(monkeypatch, sample_dataframe
     monkeypatch.setattr('mlchem.ml.preprocessing.scaling.StandardScaler', lambda: scaler)
 
     with pytest.raises(ValueError, match='Error in scaling data: bad data'):
-        scale_df_standard(sample_dataframe, last_columns_to_preserve=0)
+        scale_df_standard(sample_dataframe, columns_to_preserve=[])
 
 
 def test_scale_df_minmax_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
@@ -200,7 +224,7 @@ def test_scale_df_minmax_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
     monkeypatch.setattr('mlchem.ml.preprocessing.scaling.MinMaxScaler', lambda: scaler)
 
     with pytest.raises(ValueError, match='Error in scaling data: bad data'):
-        scale_df_minmax(sample_dataframe, last_columns_to_preserve=0)
+        scale_df_minmax(sample_dataframe, columns_to_preserve=[])
 
 
 def test_scale_df_robust_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
@@ -209,7 +233,7 @@ def test_scale_df_robust_wraps_scaler_valueerror(monkeypatch, sample_dataframe):
     monkeypatch.setattr('mlchem.ml.preprocessing.scaling.RobustScaler', lambda: scaler)
 
     with pytest.raises(ValueError, match='Error in scaling data: bad data'):
-        scale_df_robust(sample_dataframe, last_columns_to_preserve=0)
+        scale_df_robust(sample_dataframe, columns_to_preserve=[])
 
 
 def test_transform_df_wraps_scaler_valueerror(sample_dataframe):
@@ -217,7 +241,7 @@ def test_transform_df_wraps_scaler_valueerror(sample_dataframe):
     scaler.transform.side_effect = [IndexError('shape'), ValueError('bad data')]
 
     with pytest.raises(ValueError, match='Error in scaling data: bad data'):
-        transform_df(sample_dataframe, scaler, last_columns_to_preserve=0)
+        transform_df(sample_dataframe, scaler, columns_to_preserve=[])
 
 
 def test_scale_df_standard_handles_duplicate_columns():
@@ -226,7 +250,7 @@ def test_scale_df_standard_handles_duplicate_columns():
         columns=['feature', 'feature', 'tail'],
     )
     with pytest.raises(Exception, match='Expected unique column names'):
-        scale_df_standard(df, last_columns_to_preserve=1)
+        scale_df_standard(df, columns_to_preserve=['tail'])
 
 
 def test_transform_df_handles_duplicate_columns():
@@ -235,7 +259,7 @@ def test_transform_df_handles_duplicate_columns():
         columns=['feature', 'feature', 'tail'],
     )
     with pytest.raises(Exception, match='Expected unique column names'):
-        scale_df_minmax(df, last_columns_to_preserve=1)
+        scale_df_minmax(df, columns_to_preserve=['tail'])
 
 if __name__ == "__main__":
     pytest.main()
