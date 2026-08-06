@@ -307,7 +307,7 @@ Examples
 		contour_colour: str | tuple = 'black',
 		contourLines: int = 10, alpha: float = 0.5,
 		contour_width: int | float = 1, resolution: float = 0.05,
-		dash_negative : bool = True, draw2d = None, **kwargs
+		dash_negative : bool = True, draw2d = None, draw_molecule: bool = True, legend: str = '', **kwargs
 	) -> Draw.rdMolDraw2D.MolDraw2D | Figure:
 		"""
 Generate a similarity map visualisation from atomic weights.
@@ -349,6 +349,14 @@ dash_negative : bool, default=True
     Whether to use dashed lines for negative weights.
 draw2d : rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D, optional
     RDKit drawing object. Required for rendering.
+draw_molecule : bool, default=True
+    If True, draws the molecule on the canvas after contours.
+    If False, only draws contours; caller is responsible for drawing the molecule.
+    Useful when integrating with mlchem's draw_mol() to apply color options first.
+legend : str, default=''
+    Legacy parameter, kept for backwards compatibility but not used.
+    For gaussian contours, legends are added by the caller (mlchem's draw_mol)
+    after rendering to ensure proper alignment with contours.
 **kwargs : dict
     Additional keyword arguments passed to matplotlib drawing.
 
@@ -443,6 +451,9 @@ Examples
 				draw2d, locs, weights, sigmas, nContours=contourLines, params=ps
 				)
 			draw2d.drawOptions().clearBackground = False
-			draw2d.DrawMolecule(mol)
+			if draw_molecule:
+				# Draw molecule WITHOUT legend to preserve alignment with contours
+				# Legend will be added separately by caller if needed
+				draw2d.DrawMolecule(mol)
 			return draw2d
 		raise ValueError("the draw2d argument must be provided")

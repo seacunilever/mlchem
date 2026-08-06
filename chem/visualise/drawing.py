@@ -278,70 +278,62 @@ draw_mol(...)
 
 
     # Similarity maps drawing style
-    # (GC or C; Gaussian Contours or Circles)
+    # 'GC': Gaussian Contours - smooth gaussian overlay (RDKit-based)
+    #       Best for continuous properties (electrostatic maps, similarity)
+    # 'C':  Circle Contours - concentric gradient circles per atom (mlchem-custom)
+    #       Best for discrete atom properties (SHAP values, per-atom charges)
+    # Note: mlchem's circle contours are a custom implementation providing
+    #       an alternative to RDKit's gaussian contours, with better atom-level clarity.
     'mapStyle': 'GC',
 
     # Colour map for similarity maps; default is None.
     # A list of 3 tuples/colour names is accepted too.
     'colourMap': None,
 
-    # Colour of atoms having positive weights (style: both)
+    # Colour of atoms having positive weights (applies to both GC and C styles)
     'positiveColour': 'green',
 
-    # Colour of atoms having negative weights (style: both)
+    # Colour of atoms having negative weights (applies to both GC and C styles)
     'negativeColour': 'mediumvioletred',
 
-    # List of atom indices with numerical property
-    # to display (style: both)
+    # List of atomic weights to visualize via contours.
+    # Should be a list/array with one value per atom in the molecule.
+    # If provided with mapStyle='GC' or mapStyle='C', contours will be drawn.
+    # Example: atomWeights = [0.1, -0.2, 0.3, 0.05, ...]
     'atomWeights': [],
 
-    # Baseline alpha of weight colour (style: both)
+    # Baseline alpha (transparency) of weight color overlays (style: both GC and C)
     'weightAlpha': 0.2,
 
-    # Circle radius scale (style: circles)
+    # Circle radius scale factor (style: circles only)
+    # Controls how large circles scale based on atomic weight magnitude
     'scalingFactor': 2,
 
-    # Minimum circle radius (style: circles)
+    # Minimum circle radius in pixels (style: circles only)
     'minRadius': 2,
 
-    # Maximum circle radius (style: circles)
+    # Maximum circle radius in pixels (style: circles only)
     'maxRadius': 30,
 
-    # Number of concentrical circles per atom (style: both)
+    # Number of concentrical circles/contour lines per visualization (style: both)
+    # For circles: number of concentric rings per atom
+    # For gaussian: number of contour levels
     'numContours': 10,
 
-    # Line width of the contours (style: gaussian contours)
+    # Line width of the gaussian contours (style: gaussian contours only)
     'contourWidth': 1,
 
-    # Resolution of gaussian contours (style: gaussian contours)
+    # Resolution (grid step) of gaussian contour calculation (style: gaussian contours only)
+    # Lower values = higher resolution but slower computation
     'mapRes': 0.05,
 
-    # Contour colour (style: gaussian contours)
+    # Contour line colour (style: gaussian contours only)
     'contourColour': 'black',
 
-    # Whether to display negative weights as dashed
+    # Whether to display negative weights as dashed lines (style: both)
+    # True: negative weights shown with dashed contours for clear distinction
     'dashNegative' : True,
 
-
-    # Optional shapes #
-
-
-    # Sets the type of shape to render. Current choices are: 'circle'.
-    'shapeTypes': [],
-
-    # Sets the size of the shape to render. Int or float
-    # values are accepted.
-    'shapeSizes': [],
-
-    # Sets the colour of the shapes to draw.
-    # Every colour in the iterable should be either a string
-    # (any colour present in the 'colour_dictionary')
-    # or a RGB/RGBA tuple
-    'shapeColours': [],
-
-    # Sets the 2D coordinates of the shapes. Accepts an
-    # iterable per shape.
-    'shapeCoords': [],
 
 
     # Miscellaneous #
@@ -560,7 +552,7 @@ Examples
 """
 
         if source=='mlchem':
-            self.drawing_options = MolDrawer.MLCHEM_DEFAULTS
+            self.drawing_options = MolDrawer.MLCHEM_DEFAULTS.copy()
         elif source=='rdkit':
             self.drawing_options = MolDrawer.get_rdkit_defaults().copy()
 
@@ -737,8 +729,31 @@ Examples
 Render and return a single molecule image.
 
 The method applies the active `drawing_options`, supports atom highlighting,
-optional similarity maps (`mapStyle='GC'` or `'C'` when `atomWeights` are
-provided), optional custom shape overlays, and ACS 1996 styling.
+optional contour visualization of atomic weights (`mapStyle='GC'` or `'C'` 
+when `atomWeights` are provided), optional custom shape overlays, and ACS 1996 
+styling.
+
+**Contour Visualization (Atomic Weights)**
+
+When `atomWeights` is provided in drawing_options, mlchem can visualize these 
+values using two different contour styles:
+
+- `mapStyle='GC'` (Gaussian Contours): Renders smooth gaussian overlays using 
+  RDKit's ContourAndDrawGaussians. Best for continuous properties like 
+  electrostatic potential or similarity gradients. Contours blend smoothly 
+  across the molecular surface.
+
+- `mapStyle='C'` (Circle Contours): Custom mlchem implementation using gradient 
+  circles around atoms. Best for discrete atom-by-atom properties like 
+  per-atom charges or SHAP contributions. Provides clear visual separation 
+  between atoms.
+
+This extends RDKit's native gaussian contour support with:
+- A second visualization style (circle contours)
+- Seamless integration with all other drawing options
+- Proper legend handling (solves RDKit's alignment issues)
+- Fine-grained color control via atomNoteColour, legendColour, etc.
+- Automatic 2D coordinate handling
 
 Parameters
 ----------
@@ -773,15 +788,17 @@ Examples
 >>> drawer = MolDrawer()
 >>> img = drawer.draw_mol(mol, legend="Ethanol", highlightAtoms=[1])
 
-Use gaussian contour similarity map:
+Draw with gaussian contour similarity map (smooth overlay):
 
->>> drawer.update_drawing_options(atomWeights=[0.1, -0.2, 0.3], mapStyle='GC')
->>> img = drawer.draw_mol(mol)
+>>> from mlchem.chem.manipulation import PropManager as PM
+>>> weights = PM.Mol.get_gasteiger_charges(mol)
+>>> drawer.update_drawing_options(atomWeights=weights, mapStyle='GC')
+>>> img = drawer.draw_mol(mol, legend="Gaussian contours")
 
-Use circle-style weight map:
+Draw with circle-style weight map (atom-by-atom visualization):
 
->>> drawer.update_drawing_options(atomWeights=[0.1, -0.2, 0.3], mapStyle='C')
->>> img = drawer.draw_mol(mol)
+>>> drawer.update_drawing_options(atomWeights=weights, mapStyle='C')
+>>> img = drawer.draw_mol(mol, legend="Circle contours")
 """
 
         from rdkit.Chem import Draw
@@ -817,134 +834,12 @@ Use circle-style weight map:
         self.legend_list.append(legend)
 
         d2d = Draw.MolDraw2DCairo(size[0], size[1])
-
-        # Apply similaritymap GaussianContour options
-        atom_weights = self.drawing_options['atomWeights']
-        resolution = self.drawing_options['mapRes']
-        if atom_weights and self.drawing_options['mapStyle'] == 'GC':
-            
-
-            from mlchem.chem.visualise.simmaps import SimMaps as SM
-
-            if self.drawing_options['colourMap'] is None:
-                map_background_colour = self.\
-                  drawing_options['backgroundColour']
-                map_negative_colour = self.\
-                  drawing_options['negativeColour']
-                map_positive_colour = self.\
-                  drawing_options['positiveColour']
-
-                # Background colour
-
-                assert (isinstance(map_background_colour, str) or
-                        isinstance(map_background_colour, Iterable)), (
-                            "Colour map background colour must be"
-                            "a valid string or Iterable.")
-                if isinstance(map_background_colour, str):
-                    if \
-                       map_background_colour in self.colour_dictionary.keys():
-                        map_background_tuple = self.colour_dictionary[
-                            map_background_colour
-                            ]
-                    else:
-                        raise ValueError(
-                            "An improper colour string was passed. '%s' is not"
-                            "a valid colour in mlchem.importables."
-                            "colour_dictionary palette." %
-                            map_background_colour)
-
-                else:
-                    assert len(map_background_colour) == 3, (
-                        "Colour iterable must have 3 elements (RGB)."
-                        )
-
-                    assert all(isinstance(c, (int, float)) for c in
-                               map_background_colour), (
-                        "Some elements of the colour RGB iterable "
-                        "are not numbers."
-                    )
-
-                    map_background_tuple = map_background_colour
-
-                # Negative colour
-
-                assert (isinstance(map_negative_colour, str) or
-                        isinstance(map_negative_colour, Iterable))
-                if isinstance(map_negative_colour, str):
-                    if map_negative_colour in self.colour_dictionary.keys():
-                        map_negative_tuple = self.colour_dictionary[
-                            map_negative_colour]
-                    else:
-                        raise ValueError(
-                            "An improper colour string was passed."
-                            " '%s' is not a valid colour in "
-                            "mlchem.importables.colour_dictionary palette." %
-                            map_negative_colour)
-
-                else:
-                    assert len(map_negative_colour) == 3, (
-                        "Colour iterable must have 3 elements (RGB)."
-                        )
-
-                    assert all(isinstance(c, (int, float)) for c in
-                               map_negative_colour), (
-                        "Some elements of the colour RGB iterable are"
-                        " not numbers."
-                    )
-
-                    map_negative_tuple = map_negative_colour
-
-                # Positive colour
-
-                assert (isinstance(map_positive_colour, str) or
-                        isinstance(map_positive_colour, Iterable))
-                if isinstance(map_positive_colour, str):
-                    if map_positive_colour in self.colour_dictionary.keys():
-                        map_positive_tuple = self.colour_dictionary[
-                            map_positive_colour]
-                    else:
-                        raise ValueError(
-                            "An improper colour string was passed."
-                            " '%s' is not a valid colour in "
-                            "mlchem.importables.colour_dictionary palette." %
-                            map_positive_colour)
-
-                else:
-                    assert len(map_positive_colour) == 3, (
-                        "Colour iterable must have 3 elements (RGB)."
-                        )
-
-                    assert all(isinstance(c, (int, float)) for c in
-                               map_positive_colour), (
-                        "Some elements of the colour RGB iterable "
-                        "are not numbers."
-                    )
-
-                    map_positive_tuple = map_positive_colour
-
-                colourMap = [
-                    map_negative_tuple,
-                    map_background_tuple,
-                    map_positive_tuple
-                    ]
-            else:
-                colourMap = self.drawing_options['colourMap']
-            d2d = SM.get_similarity_map_from_weights(
-                mol=mol,
-                weights=atom_weights,
-                draw2d=d2d,
-                resolution=resolution,
-                contourLines=self.drawing_options['numContours'],
-                contour_width=self.drawing_options['contourWidth'],
-                colorMap=colourMap,
-                dash_negative=self.drawing_options['dashNegative'],
-                contour_colour=self.drawing_options['contourColour'])
         dopts = d2d.drawOptions()
 
         # apply drawing options #
 
         atom_weights = self.drawing_options['atomWeights']
-        if atom_weights:
+        if atom_weights and self.drawing_options['mapStyle'] == 'C':
             self.drawing_options['padding'] = 0.07 \
                 * self.drawing_options['scalingFactor']
 
@@ -1234,84 +1129,6 @@ Use circle-style weight map:
                     "has to be: (R,G,B)\nExample: (0.7,0.0,0.7)) "
                     "will set variable attachment colour to purple.")
 
-        # draw custom shapes
-
-        shape_types = self.drawing_options['shapeTypes']
-        shape_sizes = self.drawing_options['shapeSizes']
-        shape_colours = self.drawing_options['shapeColours']
-        shape_coords = self.drawing_options['shapeCoords']
-        if (len(shape_types) > 0 and
-            len(shape_sizes) > 0 and
-            len(shape_colours) > 0 and
-            len(shape_coords) > 0) and (
-                len(shape_types) ==
-                len(shape_sizes) ==
-                len(shape_colours) ==
-                len(shape_coords)
-                                        ):
-
-            from rdkit.Geometry import Point2D
-            import numpy as np
-
-            d2d.DrawMolecule(mol)
-
-            for typ, siz, col, pos in zip(
-                shape_types,
-                shape_sizes,
-                shape_colours,
-                shape_coords,
-                            ):
-
-                assert isinstance(typ, str)
-                assert (isinstance(siz, float) or
-                        isinstance(siz, int))
-                assert (isinstance(col, str) or
-                        isinstance(col, Iterable))
-                assert isinstance(pos, Iterable)
-                pos = np.array(pos)
-                if isinstance(col, str):
-                    if col in self.colour_dictionary.keys():
-                        d2d.SetColour(self.colour_dictionary[col])
-                    else:
-                        raise
-                    ValueError
-                    ("An improper colour string was passed. '%s' is not a "
-                     "valid colour in mlchem.importables."
-                     "colour_dictionary palette." %
-                     col)
-
-                elif isinstance(col, tuple):      # if colour is str + alpha
-                    if isinstance(col[0], str) and (isinstance(col[1], float)
-                                                    or isinstance(
-                                                        col[1], int)):
-                        try:
-                            initial_tuple = self.colour_dictionary[col[0]]
-                            final_tuple = initial_tuple+(col[1],)
-
-                            d2d.SetColour(final_tuple)
-                        except Exception:
-                            raise
-                        ValueError
-                        (
-                         "An improper colour tuple was passed. Try pass "
-                         "[(<colour_string>, <alpha_float_value>)] "
-                         "as argument.")
-                    else:
-                        try:
-                            d2d.SetColour(col)
-                        except Exception:
-                            raise
-                        ValueError
-                        ("An improper colour tuple was passed. Correct custom"
-                         " palette has to be: (R,G,B)or (R,G,B,A)\nExample: "
-                         "(0.7,0.0,0.7,0.5)) will set overwrite colour to "
-                         "purple with 50% transparency.")
-
-                shape_center = Point2D(0, 0)
-                shape_center.x, shape_center.y, = pos[:2]
-                if typ == 'circle':
-                    d2d.DrawArc(shape_center, siz, 0, 359.9999999999)
-
         if ACS1996_mode is True:
             d2d = Draw.MolDraw2DCairo(-1, -1)
             Draw.DrawMoleculeACS1996(d2d, mol, legend=legend)
@@ -1319,7 +1136,13 @@ Use circle-style weight map:
             self.DrawingText = d2d.GetDrawingText()
             return show_png(self.DrawingText)
         else:
-            d2d.DrawMolecule(mol, legend=legend, highlightAtoms=highlightAtoms)
+            # Draw molecule for non-GC styles
+            # For GC, let SimMaps handle both molecule and contours
+            if not (atom_weights and self.drawing_options['mapStyle'] == 'GC'):
+                d2d.DrawMolecule(mol, legend=legend, highlightAtoms=highlightAtoms)
+            
+            # Shapes will be drawn via PIL after rendering for consistent coordinate transformation
+            
             if atom_weights and self.drawing_options['mapStyle'] == 'C':
                 max_weight = max(atom_weights)
                 min_weight = min(atom_weights)
@@ -1337,7 +1160,7 @@ Use circle-style weight map:
                     atom in mol.GetAtoms()
                     }
 
-                # Create a base image for the molecule
+                # Create a base image from d2d (now includes shapes for non-GC)
                 molecule_image = Image.open(
                     io.BytesIO(
                         d2d.GetDrawingText()
@@ -1345,6 +1168,7 @@ Use circle-style weight map:
                         )
 
                 # Draw concentric smooth gradient circles around each atom
+                from PIL import ImageDraw
                 for i, atom in enumerate(mol.GetAtoms()):
                     x, y = atom_coords[atom.GetIdx()]
                     weight = atom_weights[i]
@@ -1397,8 +1221,85 @@ Use circle-style weight map:
                                 int(y - radius * j)), gradient_circle)
                 return molecule_image
 
+            # Draw gaussian contours for GC mapStyle
+            if atom_weights and self.drawing_options['mapStyle'] == 'GC':
+                from mlchem.chem.visualise.simmaps import SimMaps as SM
+                
+                resolution = self.drawing_options['mapRes']
+                if self.drawing_options['colourMap'] is None:
+                    map_background_colour = self.drawing_options['backgroundColour']
+                    map_negative_colour = self.drawing_options['negativeColour']
+                    map_positive_colour = self.drawing_options['positiveColour']
+                    
+                    map_background_tuple = self.colour_dictionary[map_background_colour] if isinstance(map_background_colour, str) else map_background_colour
+                    map_negative_tuple = self.colour_dictionary[map_negative_colour] if isinstance(map_negative_colour, str) else map_negative_colour
+                    map_positive_tuple = self.colour_dictionary[map_positive_colour] if isinstance(map_positive_colour, str) else map_positive_colour
+                    
+                    colourMap = [
+                        map_negative_tuple,
+                        map_background_tuple,
+                        map_positive_tuple
+                    ]
+                else:
+                    colourMap = self.drawing_options['colourMap']
+                
+                d2d = SM.get_similarity_map_from_weights(
+                    mol=mol,
+                    weights=atom_weights,
+                    draw2d=d2d,
+                    resolution=resolution,
+                    contourLines=self.drawing_options['numContours'],
+                    contour_width=self.drawing_options['contourWidth'],
+                    colorMap=colourMap,
+                    dash_negative=self.drawing_options['dashNegative'],
+                    contour_colour=self.drawing_options['contourColour'],
+                    draw_molecule=True,  # Always draw molecule + contours for proper rendering
+                    legend=legend)
+
             d2d.FinishDrawing()
             self.DrawingText = d2d.GetDrawingText()
+            
+            # For GC contours with legend, add legend manually using PIL
+            # to prevent RDKit from shifting the molecule and breaking contour alignment
+            if atom_weights and self.drawing_options['mapStyle'] == 'GC' and legend:
+                import io
+                img = Image.open(io.BytesIO(self.DrawingText))
+                from PIL import ImageDraw, ImageFont
+                draw = ImageDraw.Draw(img)
+                
+                # Try to use a reasonable font size based on legendFontSize
+                legend_font_size = self.drawing_options['legendFontSize']
+                try:
+                    # Try to load a default font at the specified size
+                    font = ImageFont.truetype("arial.ttf", legend_font_size)
+                except (IOError, OSError):
+                    # Fall back to default font if arial is not available
+                    font = ImageFont.load_default()
+                
+                # Calculate text position (centered at bottom)
+                bbox = draw.textbbox((0, 0), legend, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                x = (img.width - text_width) // 2
+                y = img.height - text_height - 10
+                
+                # Get legend color
+                legend_colour = self.drawing_options['legendColour']
+                if isinstance(legend_colour, str):
+                    legend_tuple = self.colour_dictionary[legend_colour]
+                else:
+                    legend_tuple = legend_colour
+                # Convert from 0-1 to 0-255
+                legend_rgb = tuple(int(c * 255) for c in legend_tuple)
+                
+                # Draw the legend text
+                draw.text((x, y), legend, fill=legend_rgb, font=font)
+                
+                # Convert back to PNG bytes
+                buffer = io.BytesIO()
+                img.save(buffer, format='PNG')
+                self.DrawingText = buffer.getvalue()
+            
             return show_png(self.DrawingText)
         
 

@@ -367,8 +367,6 @@ fp, bit_info = descriptors.get_fingerprint('CCO', fp_type='m', include_bit_info=
 ### show pre-defined colour palette
 ![image](assets/figure4.png)
 
-### explore molecule drawing options
-![image](assets/figure5.png)
 
 More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
