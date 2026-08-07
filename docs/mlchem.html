@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>chem and ml subpackages &#8212; mlchem 0.1 documentation</title>
+    <title>chem and ml subpackages &#8212; mlchem 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="modules.html" title="mlchem package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" accesskey="U"><strong>mlchem package</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>chem and ml subpackages</strong></a></li> 
       </ul>
@@ -72,7 +72,9 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.MolGenerator"><code class="docutils literal notranslate"><span class="pre">MolGenerator</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.PatternRecognition"><code class="docutils literal notranslate"><span class="pre">PatternRecognition</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.PropManager"><code class="docutils literal notranslate"><span class="pre">PropManager</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.convert_molecule_string"><code class="docutils literal notranslate"><span class="pre">convert_molecule_string()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.create_molecule"><code class="docutils literal notranslate"><span class="pre">create_molecule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.detect_smarts_vs_smiles"><code class="docutils literal notranslate"><span class="pre">detect_smarts_vs_smiles()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.generate_resonance"><code class="docutils literal notranslate"><span class="pre">generate_resonance()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.kekulise_smiles"><code class="docutils literal notranslate"><span class="pre">kekulise_smiles()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.mol_from_string"><code class="docutils literal notranslate"><span class="pre">mol_from_string()</span></code></a></li>
@@ -80,6 +82,7 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.neutralise_mol"><code class="docutils literal notranslate"><span class="pre">neutralise_mol()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.remove_smarts_pattern"><code class="docutils literal notranslate"><span class="pre">remove_smarts_pattern()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.smarts_from_string"><code class="docutils literal notranslate"><span class="pre">smarts_from_string()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.smiles_from_smarts"><code class="docutils literal notranslate"><span class="pre">smiles_from_smarts()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.smiles_to_inchi"><code class="docutils literal notranslate"><span class="pre">smiles_to_inchi()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.unkekulise_smiles"><code class="docutils literal notranslate"><span class="pre">unkekulise_smiles()</span></code></a></li>
 </ul>
@@ -110,6 +113,86 @@
 </div>
 <section id="module-mlchem.helper">
 <span id="mlchem-helper-module"></span><h2>mlchem.helper module<a class="headerlink" href="#module-mlchem.helper" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mlchem.helper.LogCapture">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LogCapture</span></span><a class="headerlink" href="#mlchem.helper.LogCapture" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configure mlchem pipeline logging with optional file persistence.</p>
+<p>By default, mlchem functions emit INFO-level logs to console. Use LogCapture
+to add file logging, change the log level, or silence console output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_level</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>default='INFO'</em>) – Logging level threshold (e.g., ‘INFO’, ‘DEBUG’, ‘WARNING’).</p></li>
+<li><p><strong>to_console</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to print logs to console. Set False to log only to file.</p></li>
+<li><p><strong>to_file</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – Optional file path to write logs to. If provided, logs are appended
+to the file as well as console (if to_console=True).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.helper.LogCapture.stream">
+<span class="sig-name descname"><span class="pre">stream</span></span><a class="headerlink" href="#mlchem.helper.LogCapture.stream" title="Link to this definition">¶</a></dt>
+<dd><p>In-memory buffer containing captured logs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>StringIO</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Default: logs appear on console automatically</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Output appears on console immediately</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Optionally: capture to file + memory for inspection</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logs</span> <span class="o">=</span> <span class="n">LogCapture</span><span class="p">(</span><span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">logs</span><span class="o">.</span><span class="n">get_logs</span><span class="p">())</span>  <span class="c1"># View memory capture</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Also check pipeline.log file</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Silent mode: only to file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logs</span> <span class="o">=</span> <span class="n">LogCapture</span><span class="p">(</span><span class="n">to_console</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.helper.LogCapture.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_console</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.helper.LogCapture.__init__" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.helper.LogCapture.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.helper.LogCapture.clear" title="Link to this definition">¶</a></dt>
+<dd><p>Clear captured logs from memory buffer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.helper.LogCapture.get_logs">
+<span class="sig-name descname"><span class="pre">get_logs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.helper.LogCapture.get_logs" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve all captured logs from memory as a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Complete captured log output from in-memory buffer.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.helper.LogCapture.stop">
+<span class="sig-name descname"><span class="pre">stop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.helper.LogCapture.stop" title="Link to this definition">¶</a></dt>
+<dd><p>Stop capturing logs and remove handlers.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.helper.add_inchi_to_dataframe">
 <span class="sig-name descname"><span class="pre">add_inchi_to_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smiles_column_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.helper.add_inchi_to_dataframe" title="Link to this definition">¶</a></dt>
@@ -199,6 +282,9 @@
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If size is negative.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -371,6 +457,25 @@ if <cite>pixel_size</cite> is provided.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.helper.disable_estimator_parallelization">
+<span class="sig-name descname"><span class="pre">disable_estimator_parallelization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.helper.disable_estimator_parallelization" title="Link to this definition">¶</a></dt>
+<dd><p>Disable internal parallelization in sklearn estimators to avoid nested parallelization.</p>
+<p>When wrapper-level parallelization (ThreadPoolExecutor) is used, individual
+estimators should use n_jobs=1 to prevent sklearn warnings and avoid thread conflicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>estimator</strong> (<em>object</em>) – A scikit-learn estimator object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The estimator with n_jobs=1 set if applicable, otherwise unchanged.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.helper.find_all_occurrences">
 <span class="sig-name descname"><span class="pre">find_all_occurrences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">substring</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.helper.find_all_occurrences" title="Link to this definition">¶</a></dt>
 <dd><p>Find all starting indices of a substring in a text.</p>
@@ -405,6 +510,42 @@ if <cite>pixel_size</cite> is provided.</p>
 <dd class="field-odd"><p>tuple</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.helper.generate_cartesian_product">
+<span class="sig-name descname"><span class="pre">generate_cartesian_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">lists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.helper.generate_cartesian_product" title="Link to this definition">¶</a></dt>
+<dd><p>Generate the Cartesian product of multiple lists.</p>
+<p>Produces all combinations where each combination contains exactly one element
+from each input list. For example, given lists A, B, and C, returns all tuples
+(a, b, c) where a ∈ A, b ∈ B, c ∈ C.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*lists</strong> (<em>iterable</em>) – Two or more iterables (lists, tuples, etc.) to combine.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of combinations, where each combination is a list containing
+one element from each input list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of list</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If fewer than two lists are provided, or if any list is empty.</p></li>
+<li><p><strong>TypeError</strong> – If any argument is not a list or tuple.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">generate_cartesian_product</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">])</span>
+<span class="go">[[1, &#39;a&#39;], [1, &#39;b&#39;], [2, &#39;a&#39;], [2, &#39;b&#39;]]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">generate_cartesian_product</span><span class="p">([</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[[True, &#39;x&#39;, 1], [True, &#39;y&#39;, 1], [False, &#39;x&#39;, 1], [False, &#39;y&#39;, 1]]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -459,6 +600,12 @@ component in the range [0, 1].</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple of pandas.DataFrame</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>KeyError</strong> – If <cite>column_name</cite> does not exist in <cite>df</cite>.</p></li>
+<li><p><strong>ValueError</strong> – If <cite>keep</cite> is not ‘first’ or ‘last’.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -602,6 +749,9 @@ component in the range [0, 1].</p>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bokeh.models.DataTable</p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If required core columns are missing from the DataFrame.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -699,6 +849,9 @@ list and formatting the result.</p>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>float</p>
 </dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If either size is negative or both sizes are zero.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -740,6 +893,41 @@ list and formatting the result.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.helper.start_logging">
+<span class="sig-name descname"><span class="pre">start_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_console</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#mlchem.helper.LogCapture" title="mlchem.helper.LogCapture"><span class="pre">LogCapture</span></a></span></span><a class="headerlink" href="#mlchem.helper.start_logging" title="Link to this definition">¶</a></dt>
+<dd><p>Configure mlchem pipeline logging with optional file persistence.</p>
+<p>Convenience function to set up logging. Logs are emitted to console by
+default; optionally also to a file for later inspection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_level</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>default='INFO'</em>) – Logging level threshold (e.g., ‘INFO’, ‘DEBUG’, ‘WARNING’).</p></li>
+<li><p><strong>to_console</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to print logs to console.</p></li>
+<li><p><strong>to_file</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – Optional file path to write logs to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Log manager object with .get_logs() for memory inspection.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#mlchem.helper.LogCapture" title="mlchem.helper.LogCapture">LogCapture</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Log to console + file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">logs</span><span class="o">.</span><span class="n">get_logs</span><span class="p">())</span>  <span class="c1"># Inspect memory</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Log only to file (silent)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">to_console</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.helper.suppress_warnings">
 <span class="sig-name descname"><span class="pre">suppress_warnings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.helper.suppress_warnings" title="Link to this definition">¶</a></dt>
 <dd><p>Suppress all warnings in the current Python session.</p>
@@ -752,13 +940,14 @@ list and formatting the result.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.helper.try_except">
-<span class="sig-name descname"><span class="pre">try_except</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mlchem.helper.try_except" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">try_except</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">func:</span> <span class="pre">~typing.Callable[[],</span> <span class="pre">~typing.Any],</span> <span class="pre">exc:</span> <span class="pre">~typing.Any</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">exceptions:</span> <span class="pre">type[BaseException]</span> <span class="pre">|</span> <span class="pre">tuple[type[BaseException],</span> <span class="pre">...]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'Exception'&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#mlchem.helper.try_except" title="Link to this definition">¶</a></dt>
 <dd><p>Execute a function and return its result or a fallback value on exception.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>func</strong> (<em>callable</em>) – Function to execute.</p></li>
 <li><p><strong>exc</strong> (<em>any</em><em>, </em><em>optional</em>) – Value to return if an exception occurs. Default is None.</p></li>
+<li><p><strong>exceptions</strong> (<em>exception type</em><em> or </em><em>tuple</em><em> of </em><em>exception types</em><em>, </em><em>optional</em>) – Exception types to catch. Default catches Exception.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -766,6 +955,9 @@ list and formatting the result.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>TypeError</strong> – If <cite>exceptions</cite> is not an exception class or tuple of exception classes.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1320,6 +1512,14 @@ are used.</p></li>
     <ul>
 <li><a class="reference internal" href="#"><strong>chem and ml subpackages</strong></a><ul>
 <li><a class="reference internal" href="#module-mlchem.helper">mlchem.helper module</a><ul>
+<li><a class="reference internal" href="#mlchem.helper.LogCapture"><code class="docutils literal notranslate"><span class="pre">LogCapture</span></code></a><ul>
+<li><a class="reference internal" href="#mlchem.helper.LogCapture.stream"><code class="docutils literal notranslate"><span class="pre">stream</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.LogCapture.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.LogCapture.clear"><code class="docutils literal notranslate"><span class="pre">clear()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.LogCapture.get_logs"><code class="docutils literal notranslate"><span class="pre">get_logs()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.LogCapture.stop"><code class="docutils literal notranslate"><span class="pre">stop()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#mlchem.helper.add_inchi_to_dataframe"><code class="docutils literal notranslate"><span class="pre">add_inchi_to_dataframe()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.assign_sign"><code class="docutils literal notranslate"><span class="pre">assign_sign()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.bokeh_plot"><code class="docutils literal notranslate"><span class="pre">bokeh_plot()</span></code></a></li>
@@ -1333,8 +1533,10 @@ are used.</p></li>
 <li><a class="reference internal" href="#mlchem.helper.create_smooth_gradient_circle"><code class="docutils literal notranslate"><span class="pre">create_smooth_gradient_circle()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.create_structure_files"><code class="docutils literal notranslate"><span class="pre">create_structure_files()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.dfs_to_excel"><code class="docutils literal notranslate"><span class="pre">dfs_to_excel()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.disable_estimator_parallelization"><code class="docutils literal notranslate"><span class="pre">disable_estimator_parallelization()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.find_all_occurrences"><code class="docutils literal notranslate"><span class="pre">find_all_occurrences()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.flatten"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.generate_cartesian_product"><code class="docutils literal notranslate"><span class="pre">generate_cartesian_product()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.generate_combination_cascade"><code class="docutils literal notranslate"><span class="pre">generate_combination_cascade()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.generate_random_rgb"><code class="docutils literal notranslate"><span class="pre">generate_random_rgb()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.identify_df_duplicates"><code class="docutils literal notranslate"><span class="pre">identify_df_duplicates()</span></code></a></li>
@@ -1352,6 +1554,7 @@ are used.</p></li>
 <li><a class="reference internal" href="#mlchem.helper.size_ratio"><code class="docutils literal notranslate"><span class="pre">size_ratio()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.sort_list_by_other_list"><code class="docutils literal notranslate"><span class="pre">sort_list_by_other_list()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.standardise_path"><code class="docutils literal notranslate"><span class="pre">standardise_path()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.helper.start_logging"><code class="docutils literal notranslate"><span class="pre">start_logging()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.suppress_warnings"><code class="docutils literal notranslate"><span class="pre">suppress_warnings()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.try_except"><code class="docutils literal notranslate"><span class="pre">try_except()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.helper.validate_task_type"><code class="docutils literal notranslate"><span class="pre">validate_task_type()</span></code></a></li>
@@ -1436,7 +1639,7 @@ are used.</p></li>
         <li class="right" >
           <a href="modules.html" title="mlchem package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>chem and ml subpackages</strong></a></li> 
       </ul>

@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contents &#8212; mlchem 0.1 documentation</title>
+    <title>Contents &#8212; mlchem 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="welcome.html" title="mlchem"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">mlchem 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Contents</a></li> 
       </ul>
     </div>  
@@ -63,6 +63,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#logging">Logging</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#controlling-log-level">Controlling Log Level</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#post-pipeline-inspection-and-file-logging">Post-Pipeline Inspection and File Logging</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#compatibility-checks-python-3-12-3-13-3-14">Compatibility checks (Python 3.12, 3.13, 3.14)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#local-matrix-default-envs-under-envs">Local matrix (default envs under ~/Envs)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#tox-entrypoint">tox entrypoint</a></li>
@@ -77,7 +83,6 @@
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#pattern-recognition">pattern recognition</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#explore-molecule-drawing-options">explore molecule drawing options</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#building-the-documentation">Building the documentation</a><ul>
@@ -514,7 +519,9 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.convert_molecule_string"><code class="docutils literal notranslate"><span class="pre">convert_molecule_string()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.create_molecule"><code class="docutils literal notranslate"><span class="pre">create_molecule()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.detect_smarts_vs_smiles"><code class="docutils literal notranslate"><span class="pre">detect_smarts_vs_smiles()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.generate_resonance"><code class="docutils literal notranslate"><span class="pre">generate_resonance()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.kekulise_smiles"><code class="docutils literal notranslate"><span class="pre">kekulise_smiles()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.mol_from_string"><code class="docutils literal notranslate"><span class="pre">mol_from_string()</span></code></a></li>
@@ -522,6 +529,7 @@
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.neutralise_mol"><code class="docutils literal notranslate"><span class="pre">neutralise_mol()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.remove_smarts_pattern"><code class="docutils literal notranslate"><span class="pre">remove_smarts_pattern()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.smarts_from_string"><code class="docutils literal notranslate"><span class="pre">smarts_from_string()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.smiles_from_smarts"><code class="docutils literal notranslate"><span class="pre">smiles_from_smarts()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.smiles_to_inchi"><code class="docutils literal notranslate"><span class="pre">smiles_to_inchi()</span></code></a></li>
 <li class="toctree-l6"><a class="reference internal" href="mlchem.chem.html#mlchem.chem.manipulation.unkekulise_smiles"><code class="docutils literal notranslate"><span class="pre">unkekulise_smiles()</span></code></a></li>
 </ul>
@@ -550,7 +558,7 @@
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">fit_stage_1()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_2"><code class="docutils literal notranslate"><span class="pre">fit_stage_2()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.rank_features_by_relevance_redundancy"><code class="docutils literal notranslate"><span class="pre">rank_features_by_relevance_redundancy()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.set_verbosity"><code class="docutils literal notranslate"><span class="pre">set_verbosity()</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.set_log_level"><code class="docutils literal notranslate"><span class="pre">set_log_level()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l8"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a><ul>
@@ -561,13 +569,12 @@
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter"><code class="docutils literal notranslate"><span class="pre">cv_iter</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic"><code class="docutils literal notranslate"><span class="pre">logic</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type"><code class="docutils literal notranslate"><span class="pre">task_type</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.verbose"><code class="docutils literal notranslate"><span class="pre">verbose</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level"><code class="docutils literal notranslate"><span class="pre">log_level</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best"><code class="docutils literal notranslate"><span class="pre">find_best()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
 <li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.set_verbosity"><code class="docutils literal notranslate"><span class="pre">set_verbosity()</span></code></a></li>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.set_log_level"><code class="docutils literal notranslate"><span class="pre">set_log_level()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -684,6 +691,14 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="mlchem.html#module-mlchem.helper">mlchem.helper module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.LogCapture"><code class="docutils literal notranslate"><span class="pre">LogCapture</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="mlchem.html#mlchem.helper.LogCapture.stream"><code class="docutils literal notranslate"><span class="pre">stream</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="mlchem.html#mlchem.helper.LogCapture.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="mlchem.html#mlchem.helper.LogCapture.clear"><code class="docutils literal notranslate"><span class="pre">clear()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="mlchem.html#mlchem.helper.LogCapture.get_logs"><code class="docutils literal notranslate"><span class="pre">get_logs()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="mlchem.html#mlchem.helper.LogCapture.stop"><code class="docutils literal notranslate"><span class="pre">stop()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.add_inchi_to_dataframe"><code class="docutils literal notranslate"><span class="pre">add_inchi_to_dataframe()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.assign_sign"><code class="docutils literal notranslate"><span class="pre">assign_sign()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.bokeh_plot"><code class="docutils literal notranslate"><span class="pre">bokeh_plot()</span></code></a></li>
@@ -697,8 +712,10 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.create_smooth_gradient_circle"><code class="docutils literal notranslate"><span class="pre">create_smooth_gradient_circle()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.create_structure_files"><code class="docutils literal notranslate"><span class="pre">create_structure_files()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.dfs_to_excel"><code class="docutils literal notranslate"><span class="pre">dfs_to_excel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.disable_estimator_parallelization"><code class="docutils literal notranslate"><span class="pre">disable_estimator_parallelization()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.find_all_occurrences"><code class="docutils literal notranslate"><span class="pre">find_all_occurrences()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.flatten"><code class="docutils literal notranslate"><span class="pre">flatten()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.generate_cartesian_product"><code class="docutils literal notranslate"><span class="pre">generate_cartesian_product()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.generate_combination_cascade"><code class="docutils literal notranslate"><span class="pre">generate_combination_cascade()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.generate_random_rgb"><code class="docutils literal notranslate"><span class="pre">generate_random_rgb()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.identify_df_duplicates"><code class="docutils literal notranslate"><span class="pre">identify_df_duplicates()</span></code></a></li>
@@ -716,6 +733,7 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.size_ratio"><code class="docutils literal notranslate"><span class="pre">size_ratio()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.sort_list_by_other_list"><code class="docutils literal notranslate"><span class="pre">sort_list_by_other_list()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.standardise_path"><code class="docutils literal notranslate"><span class="pre">standardise_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.start_logging"><code class="docutils literal notranslate"><span class="pre">start_logging()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.suppress_warnings"><code class="docutils literal notranslate"><span class="pre">suppress_warnings()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.try_except"><code class="docutils literal notranslate"><span class="pre">try_except()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.validate_task_type"><code class="docutils literal notranslate"><span class="pre">validate_task_type()</span></code></a></li>
@@ -802,7 +820,7 @@
         <li class="right" >
           <a href="welcome.html" title="mlchem"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">mlchem 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Contents</a></li> 
       </ul>
     </div>

@@ -1,9 +1,9 @@
 mlchem.ml.feature\_selection package
 ====================================
 
-The wrapper selectors support optional runtime diagnostics through
-`verbose` and `log_level` constructor arguments, plus a
-`set_verbosity(...)` runtime toggle.
+The wrapper selectors support optional runtime diagnostics through the
+`log_level` constructor argument and the `set_log_level(...)` runtime
+toggle.
 
 *Submodules*
 ____________

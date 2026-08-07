@@ -113,7 +113,7 @@ random_seed : int, optional
     Random seed for reproducibility.
 
 log_level : int or str, default=logging.INFO
-    Logging level used when `verbose=True`.
+    Logging level threshold for emitted diagnostics.
 
 Returns
 -------

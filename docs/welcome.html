@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem &#8212; mlchem 0.1 documentation</title>
+    <title>mlchem &#8212; mlchem 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
@@ -53,8 +53,8 @@
 <h1>mlchem<a class="headerlink" href="#mlchem" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://www.python.org/"><img alt="Static Badge" src="https://img.shields.io/badge/python_version-3.12,3.13,3.14-limegreen" /></a>
 <a class="reference external" href="https://www.rdkit.org/"><img alt="Static Badge" src="https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black" /></a>
-<a class="reference internal" href="#assets/coverage.svg"><span class="xref myst"><img alt="Line Coverage" src="_images/coverage.svg" /></span></a>
-<a class="reference internal" href="#assets/coverage-branch.svg"><span class="xref myst"><img alt="Branch Coverage" src="_images/coverage-branch.svg" /></span></a></p>
+<a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/assets/coverage.svg"><img alt="Line Coverage" src="_images/coverage.svg" /></a>
+<a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/assets/coverage-branch.svg"><img alt="Branch Coverage" src="_images/coverage-branch.svg" /></a></p>
 <p><strong>mlchem</strong> is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
 <section id="documentation">
@@ -155,6 +155,53 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
+</section>
+<section id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading">¶</a></h2>
+<p><strong>mlchem</strong> emits diagnostic logs during pipeline execution (feature selection, model evaluation, data preprocessing) to help users track progress and debug issues. Logs are emitted at the <code class="docutils literal notranslate"><span class="pre">INFO</span></code> level by default and appear on the console.</p>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading">¶</a></h3>
+<p>Logs appear automatically when running mlchem functions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.feature_selection.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequentialForwardSelection</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
+
+<span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=...</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="c1"># Logs appear on console: e.g., &quot;10:35:55 - mlchem.ml.feature_selection.wrappers - INFO - SFS start: ...&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="controlling-log-level">
+<h3>Controlling Log Level<a class="headerlink" href="#controlling-log-level" title="Link to this heading">¶</a></h3>
+<p>Change the logging level to filter output (e.g., show only warnings, suppress info messages):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;WARNING&#39;</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Only WARNING+ logs appear</span>
+</pre></div>
+</div>
+<p>Valid log levels: <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>, <code class="docutils literal notranslate"><span class="pre">INFO</span></code>, <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code></p>
+</section>
+<section id="post-pipeline-inspection-and-file-logging">
+<h3>Post-Pipeline Inspection and File Logging<a class="headerlink" href="#post-pipeline-inspection-and-file-logging" title="Link to this heading">¶</a></h3>
+<p>Capture logs to memory or file for later inspection without modifying function calls:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">start_logging</span>
+
+<span class="c1"># Capture to console + memory</span>
+<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="n">to_console</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">logs</span><span class="o">.</span><span class="n">get_logs</span><span class="p">())</span>  <span class="c1"># View captured logs</span>
+
+<span class="c1"># Capture to file + console</span>
+<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="c1"># Logs written to pipeline.log + displayed on console</span>
+
+<span class="c1"># Capture to file only (silent)</span>
+<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">to_console</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Silent; logs only in file</span>
+</pre></div>
+</div>
+<p>Use this for non-interactive scripts and production environments.</p>
+</section>
 </section>
 <section id="compatibility-checks-python-3-12-3-13-3-14">
 <h2>Compatibility checks (Python 3.12, 3.13, 3.14)<a class="headerlink" href="#compatibility-checks-python-3-12-3-13-3-14" title="Link to this heading">¶</a></h2>
@@ -281,18 +328,16 @@ large rule dictionaries and medium-to-large training sets.</p>
   <span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
   <span class="n">estimator_string</span><span class="o">=</span><span class="s1">&#39;lr&#39;</span><span class="p">,</span>
   <span class="n">metric</span><span class="o">=</span><span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
   <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Runtime toggle (use DEBUG for very verbose traces)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">set_log_level</span><span class="p">(</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">set_log_level</span><span class="p">(</span><span class="s1">&#39;WARNING&#39;</span><span class="p">)</span>
 
 <span class="n">cs</span> <span class="o">=</span> <span class="n">CombinatorialSelection</span><span class="p">(</span>
   <span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
   <span class="n">metric</span><span class="o">=</span><span class="k">lambda</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">:</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">==</span> <span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
   <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -303,13 +348,11 @@ large rule dictionaries and medium-to-large training sets.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.preprocessing.undersampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">undersample</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">y_scrambling</span>
 
-<span class="c1"># Silent by default; set verbose=True when diagnostics are needed</span>
 <span class="n">train_balanced</span><span class="p">,</span> <span class="n">test_updated</span> <span class="o">=</span> <span class="n">undersample</span><span class="p">(</span>
   <span class="n">train_set</span><span class="o">=</span><span class="n">train_df</span><span class="p">,</span>
   <span class="n">test_set</span><span class="o">=</span><span class="n">test_df</span><span class="p">,</span>
   <span class="n">class_column</span><span class="o">=</span><span class="s1">&#39;class&#39;</span><span class="p">,</span>
   <span class="n">desired_proportion_majority</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
-  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
   <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -322,7 +365,6 @@ large rule dictionaries and medium-to-large training sets.</p>
   <span class="n">metric_function</span><span class="o">=</span><span class="n">metric_fn</span><span class="p">,</span>
   <span class="n">n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
   <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-  <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
   <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -353,10 +395,6 @@ large rule dictionaries and medium-to-large training sets.</p>
 <section id="show-pre-defined-colour-palette">
 <h3>show pre-defined colour palette<a class="headerlink" href="#show-pre-defined-colour-palette" title="Link to this heading">¶</a></h3>
 <p><img alt="image" src="_images/figure4.png" /></p>
-</section>
-<section id="explore-molecule-drawing-options">
-<h3>explore molecule drawing options<a class="headerlink" href="#explore-molecule-drawing-options" title="Link to this heading">¶</a></h3>
-<p><img alt="image" src="_images/figure5.png" /></p>
 <p>More examples in the <a class="reference external" href="https://github.com/seacunilever/mlchem/tree/master/examples">examples</a> folder.</p>
 </section>
 </section>
@@ -468,6 +506,12 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 </ul>
 </li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#logging">Logging</a><ul>
+<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li><a class="reference internal" href="#controlling-log-level">Controlling Log Level</a></li>
+<li><a class="reference internal" href="#post-pipeline-inspection-and-file-logging">Post-Pipeline Inspection and File Logging</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#compatibility-checks-python-3-12-3-13-3-14">Compatibility checks (Python 3.12, 3.13, 3.14)</a><ul>
 <li><a class="reference internal" href="#local-matrix-default-envs-under-envs">Local matrix (default envs under ~/Envs)</a></li>
 <li><a class="reference internal" href="#tox-entrypoint">tox entrypoint</a></li>
@@ -482,7 +526,6 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
 <li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
 <li><a class="reference internal" href="#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>
-<li><a class="reference internal" href="#explore-molecule-drawing-options">explore molecule drawing options</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#building-the-documentation">Building the documentation</a><ul>
@@ -546,7 +589,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
         <li class="right" >
           <a href="index.html" title="Contents"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>

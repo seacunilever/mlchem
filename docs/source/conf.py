@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../../..'))  # parent of the package dir
 project = 'mlchem'
 copyright = '2025, Leonardo Contreas'
 author = 'Leonardo Contreas'
-release = '0.1'
+release = '1.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

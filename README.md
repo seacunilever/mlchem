@@ -2,8 +2,8 @@
 
 [![Static Badge](https://img.shields.io/badge/python_version-3.12,3.13,3.14-limegreen)](https://www.python.org/)
 [![Static Badge](https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black)](https://www.rdkit.org/)
-[![Line Coverage](assets/coverage.svg)](assets/coverage.svg)
-[![Branch Coverage](assets/coverage-branch.svg)](assets/coverage-branch.svg)
+[![Line Coverage](assets/coverage.svg)](https://github.com/seacunilever/mlchem/blob/master/assets/coverage.svg)
+[![Branch Coverage](assets/coverage-branch.svg)](https://github.com/seacunilever/mlchem/blob/master/assets/coverage-branch.svg)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
 The library has been tested for python 3.12, 3.13 and 3.14 (experimental).
@@ -300,18 +300,16 @@ sfs = SequentialForwardSelection(
   estimator=LogisticRegression(),
   estimator_string='lr',
   metric=lambda y_true, y_pred: (y_true == y_pred).mean(),
-  verbose=True,
   log_level='INFO',
 )
 
 # Runtime toggle (use DEBUG for very verbose traces)
-sfs.set_verbosity(True, 'DEBUG')
-sfs.set_verbosity(False)
+sfs.set_log_level('DEBUG')
+sfs.set_log_level('WARNING')
 
 cs = CombinatorialSelection(
   estimator=LogisticRegression(),
   metric=lambda y_true, y_pred: (y_true == y_pred).mean(),
-  verbose=True,
   log_level='INFO',
 )
 ```
@@ -321,13 +319,11 @@ cs = CombinatorialSelection(
 from mlchem.ml.preprocessing.undersampling import undersample
 from mlchem.ml.modelling.model_evaluation import y_scrambling
 
-# Silent by default; set verbose=True when diagnostics are needed
 train_balanced, test_updated = undersample(
   train_set=train_df,
   test_set=test_df,
   class_column='class',
   desired_proportion_majority=0.6,
-  verbose=True,
   log_level='INFO',
 )
 
@@ -340,7 +336,6 @@ y_scrambling(
   metric_function=metric_fn,
   n_iter=50,
   plot=False,
-  verbose=True,
   log_level='INFO',
 )
 ```

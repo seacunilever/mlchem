@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.chem package &#8212; mlchem 0.1 documentation</title>
+    <title>mlchem.chem package &#8212; mlchem 1.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/documentation_options.js?v=fc837d61"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.html" title="chem and ml subpackages"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" accesskey="U"><strong>chem and ml subpackages</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>mlchem.chem package</strong></a></li> 
@@ -497,17 +497,24 @@ If None, a default dictionary is used.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.chem.manipulation.MolGenerator.generate_smiles">
-<span class="sig-name descname"><span class="pre">generate_smiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_molecules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_fragments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_smiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">substitution_sites</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_substitutions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_extremities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attempt_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.MolGenerator.generate_smiles" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">generate_smiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_molecules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_fragments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">substitution_sites</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_substitutions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_extremities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attempt_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.MolGenerator.generate_smiles" title="Link to this definition">¶</a></dt>
 <dd><p>Generate SMILES strings using a template or random fragments.</p>
 <p>This method generates a specified number of SMILES strings either by
 randomly combining SELFIES fragments or by substituting fragments into
 a template molecule at specified positions.</p>
+<p>The template can be provided as either a SMILES string or a SMARTS pattern,
+allowing flexible definition of the chemical structure to reproduce. SMARTS
+patterns enable specification of chemical features (e.g., aromatic rings,
+specific functional groups) with more control than SMILES alone.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_molecules</strong> (<em>int</em>) – The number of molecules to generate.</p></li>
 <li><p><strong>n_fragments</strong> (<em>int</em>) – The number of fragments to use for each molecule.</p></li>
-<li><p><strong>template_smiles</strong> (<em>str</em><em>, </em><em>optional</em>) – A template SMILES string to use for generating molecules.</p></li>
+<li><p><strong>template_string</strong> (<em>str</em><em>, </em><em>optional</em>) – A template string to use for generating molecules. Can be either:
+- SMILES string (e.g., ‘c1ccccc1’ for benzene)
+- SMARTS pattern (e.g., ‘[#6][#6]’ for any carbon-carbon bond)
+Detected automatically based on content.</p></li>
 <li><p><strong>substitution_sites</strong> (<em>list</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – Indices in the SELFIES string where substitutions should occur.</p></li>
 <li><p><strong>n_substitutions</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of substitutions to make in the template.</p></li>
 <li><p><strong>include_extremities</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include the start and end of the SELFIES string as
@@ -521,7 +528,8 @@ of molecules. Default is 1000.</p></li>
 <li><p><em>None</em></p></li>
 <li><p><em>Updates</em></p></li>
 <li><p><em>——-</em></p></li>
-<li><p><strong>template_smiles</strong> (<em>str</em>) – The template SMILES string used for generation.</p></li>
+<li><p><strong>template_string</strong> (<em>str</em>) – The template SMILES or SMARTS string used for generation.</p></li>
+<li><p><strong>template_smarts</strong> (<em>str</em>) – The SMARTS pattern derived from the template.</p></li>
 <li><p><strong>smiles_generated</strong> (<em>list of str</em>) – The list of generated SMILES strings.</p></li>
 <li><p><strong>selfies_generated</strong> (<em>list of str</em>) – The list of generated SELFIES strings.</p></li>
 <li><p><strong>mols_generated</strong> (<em>list of rdkit.Chem.rdchem.Mol</em>) – The list of RDKit Mol objects corresponding to the generated SMILES.</p></li>
@@ -532,9 +540,17 @@ of molecules. Default is 1000.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">generator</span><span class="o">.</span><span class="n">generate_smiles</span><span class="p">(</span><span class="n">template_smiles</span><span class="o">=</span><span class="s1">&#39;c1ccccc1&#39;</span><span class="p">,</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Using SMILES template</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generator</span><span class="o">.</span><span class="n">generate_smiles</span><span class="p">(</span><span class="n">template_string</span><span class="o">=</span><span class="s1">&#39;c1ccccc1&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">n_molecules</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">n_fragments</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">n_substitutions</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Using SMARTS pattern for aromatic carbon-carbon bonds</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generator</span><span class="o">.</span><span class="n">generate_smiles</span><span class="p">(</span><span class="n">template_string</span><span class="o">=</span><span class="s1">&#39;[#6]~[#6]&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">n_molecules</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">n_fragments</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="n">n_substitutions</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -7604,6 +7620,63 @@ of the molecule using RDKit’s depiction tools.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.chem.manipulation.convert_molecule_string">
+<span class="sig-name descname"><span class="pre">convert_molecule_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SMILES'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'SMARTS'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'InChI'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'SMILES'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canonical</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kekuleSmiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isomericSmiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.convert_molecule_string" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a molecular string between different formats.</p>
+<p>This function provides unified molecular string conversion. It parses the input
+as any supported format (SMILES, SMARTS, or InChI) and converts to the target format.
+Useful for format standardization, chemical pattern definition, and cross-format
+compatibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mol_input</strong> (<em>str</em>) – Input molecular string in any supported format (SMILES, SMARTS, or InChI).</p></li>
+<li><p><strong>to_format</strong> (<em>{'SMILES'</em><em>, </em><em>'SMARTS'</em><em>, </em><em>'InChI'}</em><em>, </em><em>optional</em>) – Target output format. Default is ‘SMILES’.</p></li>
+<li><p><strong>canonical</strong> (<em>bool</em><em>, </em><em>optional</em>) – For SMILES output: whether to generate canonical SMILES. Default is True.</p></li>
+<li><p><strong>kekuleSmiles</strong> (<em>bool</em><em>, </em><em>optional</em>) – For SMILES output: whether to generate Kekulé form (explicit single/double bonds).
+Default is False (aromatic form).</p></li>
+<li><p><strong>isomericSmiles</strong> (<em>bool</em><em>, </em><em>optional</em>) – For SMILES output: whether to include stereochemistry information. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Molecular string in the requested format.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the input is invalid or conversion fails.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># SMILES to SMARTS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">convert_molecule_string</span><span class="p">(</span><span class="s1">&#39;c1ccccc1&#39;</span><span class="p">,</span> <span class="n">to_format</span><span class="o">=</span><span class="s1">&#39;SMARTS&#39;</span><span class="p">)</span>
+<span class="go">&#39;c1ccccc1&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># SMARTS to SMILES</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">convert_molecule_string</span><span class="p">(</span><span class="s1">&#39;[#6][OX2H]&#39;</span><span class="p">,</span> <span class="n">to_format</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">)</span>
+<span class="go">&#39;CO&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># SMILES to InChI</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">convert_molecule_string</span><span class="p">(</span><span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="n">to_format</span><span class="o">=</span><span class="s1">&#39;InChI&#39;</span><span class="p">)</span>
+<span class="go">&#39;InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># InChI to SMILES</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">convert_molecule_string</span><span class="p">(</span><span class="s1">&#39;InChI=1S/CH4/h1H4&#39;</span><span class="p">,</span> <span class="n">to_format</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">)</span>
+<span class="go">&#39;C&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># SMARTS to InChI (converts via intermediate SMILES)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">convert_molecule_string</span><span class="p">(</span><span class="s1">&#39;[#6][OX2H]&#39;</span><span class="p">,</span> <span class="n">to_format</span><span class="o">=</span><span class="s1">&#39;InChI&#39;</span><span class="p">)</span>
+<span class="go">&#39;InChI=1S/CH4O/c1-2/h2H,1H3&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.manipulation.create_molecule">
 <span class="sig-name descname"><span class="pre">create_molecule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str_</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_hydrogens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solid_sticks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_3d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ETDG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ETKDG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ETKDGv2'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ETKDGv3'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ETKDGv3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[300,</span> <span class="pre">300]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimise</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimiser</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'MMFF94'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'UFF'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'MMFF94'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">61453</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.create_molecule" title="Link to this definition">¶</a></dt>
 <dd><p>Create and optionally display a molecule from a SMILES string or RDKit Mol object.</p>
@@ -7629,6 +7702,26 @@ and rendering options.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>rdkit.Chem.rdchem.Mol or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mlchem.chem.manipulation.detect_smarts_vs_smiles">
+<span class="sig-name descname"><span class="pre">detect_smarts_vs_smiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.detect_smarts_vs_smiles" title="Link to this definition">¶</a></dt>
+<dd><p>Detect whether a string is SMARTS or SMILES format.</p>
+<p>This function checks for SMARTS-specific patterns. SMARTS strings typically
+contain recursive SMARTS ($), connectivity operators (X, D, v), or other
+advanced SMARTS syntax that distinguishes them from SMILES.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>string</strong> (<em>str</em>) – A string representing a molecule in SMILES or SMARTS format.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Either ‘SMARTS’ or ‘SMILES’ indicating the detected format.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -7752,6 +7845,7 @@ Raises a ValueError if both conversions fail.</p>
 <dt class="sig sig-object py" id="mlchem.chem.manipulation.smarts_from_string">
 <span class="sig-name descname"><span class="pre">smarts_from_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.smarts_from_string" title="Link to this definition">¶</a></dt>
 <dd><p>Convert a SMILES or InChI string into a SMARTS string.</p>
+<p><strong>Deprecated:</strong> Use <cite>convert_molecule_string(string, to_format=’SMARTS’)</cite> instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>string</strong> (<em>str</em>) – A string representing a molecule in SMILES or InChI format.</p>
@@ -7766,9 +7860,38 @@ Raises a ValueError if both conversions fail.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.chem.manipulation.smiles_from_smarts">
+<span class="sig-name descname"><span class="pre">smiles_from_smarts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smarts_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">canonical</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kekuleSmiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isomericSmiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.smiles_from_smarts" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a SMARTS pattern to a SMILES string.</p>
+<p><strong>Deprecated:</strong> Use <cite>convert_molecule_string(smarts_string, to_format=’SMILES’, …)</cite> instead.</p>
+<p>This function parses a SMARTS pattern and generates a canonical SMILES
+representation of the generic chemical structure it describes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>smarts_string</strong> (<em>str</em>) – A SMARTS pattern string defining the chemical structure.</p></li>
+<li><p><strong>canonical</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to generate canonical SMILES. Default is True.</p></li>
+<li><p><strong>kekuleSmiles</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to generate Kekulé form. Default is False.</p></li>
+<li><p><strong>isomericSmiles</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include stereochemistry information. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A SMILES string representing the SMARTS pattern.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the SMARTS pattern is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.manipulation.smiles_to_inchi">
 <span class="sig-name descname"><span class="pre">smiles_to_inchi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#mlchem.chem.manipulation.smiles_to_inchi" title="Link to this definition">¶</a></dt>
 <dd><p>Convert a SMILES string to an InChI string.</p>
+<p><strong>Deprecated:</strong> Use <cite>convert_molecule_string(smiles, to_format=’InChI’)</cite> instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>smiles</strong> (<em>str</em>) – A string representing a molecule in SMILES format.</p>
@@ -8150,7 +8273,9 @@ Raises a ValueError if both conversions fail.</p>
 </li>
 </ul>
 </li>
+<li><a class="reference internal" href="#mlchem.chem.manipulation.convert_molecule_string"><code class="docutils literal notranslate"><span class="pre">convert_molecule_string()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.create_molecule"><code class="docutils literal notranslate"><span class="pre">create_molecule()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.manipulation.detect_smarts_vs_smiles"><code class="docutils literal notranslate"><span class="pre">detect_smarts_vs_smiles()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.generate_resonance"><code class="docutils literal notranslate"><span class="pre">generate_resonance()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.kekulise_smiles"><code class="docutils literal notranslate"><span class="pre">kekulise_smiles()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.mol_from_string"><code class="docutils literal notranslate"><span class="pre">mol_from_string()</span></code></a></li>
@@ -8158,6 +8283,7 @@ Raises a ValueError if both conversions fail.</p>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.neutralise_mol"><code class="docutils literal notranslate"><span class="pre">neutralise_mol()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.remove_smarts_pattern"><code class="docutils literal notranslate"><span class="pre">remove_smarts_pattern()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.smarts_from_string"><code class="docutils literal notranslate"><span class="pre">smarts_from_string()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.chem.manipulation.smiles_from_smarts"><code class="docutils literal notranslate"><span class="pre">smiles_from_smarts()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.smiles_to_inchi"><code class="docutils literal notranslate"><span class="pre">smiles_to_inchi()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.chem.manipulation.unkekulise_smiles"><code class="docutils literal notranslate"><span class="pre">unkekulise_smiles()</span></code></a></li>
 </ul>
@@ -8215,7 +8341,7 @@ Raises a ValueError if both conversions fail.</p>
         <li class="right" >
           <a href="mlchem.html" title="chem and ml subpackages"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>mlchem.chem package</strong></a></li> 
