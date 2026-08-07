@@ -35,11 +35,9 @@ import pytest
 from rdkit import Chem
 import numpy as np
 from mlchem.chem.manipulation import (mol_from_string,
-                                      smiles_to_inchi,
                                       create_molecule,
                                       kekulise_smiles,
                                       unkekulise_smiles,
-                                      smarts_from_string,
                                       convert_molecule_string,
                                       mol_to_binary,
                                       generate_resonance,
@@ -67,24 +65,6 @@ def test_mol_from_string():
     invalid = "invalid_string"
     with pytest.raises(ValueError):
         mol_from_string(invalid)
-
-def test_smiles_to_inchi():
-    # Test with a valid SMILES string
-    smiles = "CCO"
-    inchi = smiles_to_inchi(smiles)
-    assert inchi is not None, "Failed to convert valid SMILES string to InChI"
-    assert inchi == 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3', "InChI string does not match"
-
-    # Test with another valid SMILES string
-    smiles = "C1=CC=CC=C1"
-    inchi = smiles_to_inchi(smiles)
-    assert inchi is not None, "Failed to convert valid SMILES string to InChI"
-    assert inchi == 'InChI=1S/C6H6/c1-2-4-6-5-3-1/h1-6H', "InChI string does not match"
-
-    # Test with an invalid SMILES string
-    invalid_smiles = "invalid_smiles"
-    with pytest.raises(ValueError):
-        smiles_to_inchi(invalid_smiles)
 
 def test_create_molecule():
     # Test with SMILES string
@@ -118,11 +98,6 @@ def test_unkekulise_smiles():
     kekule_smiles = "C1=CC=CC=C1"
     expected_smiles = "c1ccccc1"
     assert unkekulise_smiles(kekule_smiles) == expected_smiles
-
-def test_smarts_from_string():
-    smiles = "CCO"
-    expected_smarts = "[#6]-[#6]-[#8]"
-    assert smarts_from_string(smiles) == expected_smarts
 
 def test_convert_molecule_string():
     """Test unified molecular string conversion function."""
