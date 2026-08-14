@@ -94,8 +94,7 @@ Examples
     import math
 
     q = 1 - p
-    combinations = math.factorial(n) / (
-        math.factorial(n - k) * math.factorial(k))
+    combinations = math.comb(n, k)
     probabilities = (p ** k) * (q ** (n - k))
     return combinations * probabilities
 
