@@ -36,6 +36,7 @@ from setuptools import setup, find_packages
 
 BASE_DIR = Path(__file__).resolve().parent
 requirements_path = BASE_DIR / 'requirements.txt'
+readme_path = BASE_DIR / 'README.md'
 if not requirements_path.exists():
     raise FileNotFoundError(
         "requirements.txt is required for packaging but was not found. "
@@ -48,6 +49,7 @@ requirements = [
     for line in requirements_path.read_text(encoding='utf-8').splitlines()
     if line.strip() and not line.strip().startswith('#')
 ]
+long_description = readme_path.read_text(encoding='utf-8') if readme_path.exists() else ''
 
 # The repo is laid out flat: the workspace root *is* the `mlchem` package,
 # with `chem/`, `ml/`, etc. as subpackages. Tell setuptools that explicitly.
@@ -56,6 +58,27 @@ _subpkgs = find_packages(exclude=['tests', 'tests.*', 'docs', 'docs.*'])
 setup(
     name='mlchem-ul',
     version='1.1.0',
+    description='A Python cheminformatics toolkit for molecular analysis and machine learning.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    url='https://github.com/seacunilever/mlchem',
+    project_urls={
+        'Documentation': 'https://seacunilever.github.io/mlchem/',
+        'Source': 'https://github.com/seacunilever/mlchem',
+        'Issues': 'https://github.com/seacunilever/mlchem/issues',
+    },
+    license='BSD-3-Clause',
+    classifiers=[
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD-3-Clause',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
+        'Topic :: Scientific/Engineering :: Chemistry',
+        'Topic :: Scientific/Engineering :: Machine Learning',
+        'Topic :: Scientific/Engineering :: Cheminformatics',
+    ],
     package_dir={'mlchem': '.'},
     packages=['mlchem'] + [f'mlchem.{p}' for p in _subpkgs],
     install_requires=requirements,
