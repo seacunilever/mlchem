@@ -230,6 +230,8 @@ def rmse_to_std_ratio(
     import numpy as np
 
     rmse = get_rmse(y_true, y_pred)
+    if rmse == 0:
+        return np.inf
     std = np.std(y_true)
     return std / rmse
 
@@ -255,7 +257,18 @@ def get_r2(
         The R-squared value.
     """
 
+    import numpy as np
     from scipy.stats import pearsonr
+
+    y_true_arr = np.asarray(y_true)
+    y_pred_arr = np.asarray(y_pred)
+
+    if y_true_arr.size == 0 or y_pred_arr.size == 0:
+        return np.nan
+
+    if np.std(y_true_arr) == 0 or np.std(y_pred_arr) == 0:
+        return np.nan
+
     return pearsonr(y_true, y_pred)[0] ** 2
 
 

@@ -102,12 +102,13 @@ def test_get_mordredDesc_3D():
 
 def test_get_mordredDesc_invalid_input():
     # Test with invalid input
-    with pytest.warns(RuntimeWarning, match="Problem encountered with: abc\^."):
+    with pytest.warns(RuntimeWarning, match=r"Problem encountered with: abc\^."):
         get_mordredDesc(['abc^'], include_3D=True)
 
 
 def test_get_mordredDesc_invalid_input_returns_null_descriptor_row():
-    result = get_mordredDesc(['abc^'], include_3D=True)
+    with pytest.warns(RuntimeWarning, match=r"Problem encountered with: abc\^."):
+        result = get_mordredDesc(['abc^'], include_3D=True)
     assert 'abc^' in result.index
     assert result.shape[1] > 0
     assert result.loc['abc^'].isna().all()

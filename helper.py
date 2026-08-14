@@ -646,8 +646,9 @@ def disable_estimator_parallelization(estimator):
     """
 Disable internal parallelization in sklearn estimators to avoid nested parallelization.
 
-When wrapper-level parallelization (ThreadPoolExecutor) is used, individual 
-estimators should use n_jobs=1 to prevent sklearn warnings and avoid thread conflicts.
+When wrapper-level parallelization (ThreadPoolExecutor) is used, individual
+estimators should disable internal job parallelism to prevent nested
+parallelism warnings and avoid thread conflicts.
 
 Parameters
 ----------
@@ -657,13 +658,17 @@ estimator : object
 Returns
 -------
 object
-    The estimator with n_jobs=1 set if applicable, otherwise unchanged.
+    The estimator with internal parallelization disabled if applicable,
+    otherwise unchanged.
 """
     if hasattr(estimator, 'n_jobs'):
         try:
-            estimator.set_params(n_jobs=1)
+            estimator.set_params(n_jobs=None)
         except (ValueError, TypeError):
-            pass  # Estimator doesn't support set_params or n_jobs parameter
+            try:
+                estimator.set_params(n_jobs=1)
+            except (ValueError, TypeError):
+                pass  # Estimator doesn't support set_params or n_jobs parameter
     return estimator
 
 

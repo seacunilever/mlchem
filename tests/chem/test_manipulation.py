@@ -2883,7 +2883,7 @@ class TestPatternRecognition:
         assert result[2] == "[-].[-]", "SMARTS pattern does not match"
 
         # Test with an invalid input
-        mol = Chem.MolFromSmiles("C/C=C(/C(=C/C)/C1=CC=C(C=C1)O)\C2=CC=C(C=C2)O")
+        mol = Chem.MolFromSmiles("C/C=C(/C(=C/C)/C1=CC=C(C=C1)O)\\C2=CC=C(C=C2)O")
         result = PatternRecognition.MolPatterns.check_neg_charge_2(mol)
         assert result[0] is False, "Two negatively charged atoms should not be found in the molecule"
         assert len(result[1]) == 0, "Atom indices should be empty"

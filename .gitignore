@@ -7,7 +7,7 @@ __pycache__/
 .coverage
 .coverage.*
 .pytest_cache/
-tests/.pytest_tmp/
+**/.pytest_tmp/**
 
 # Test/runtime-generated artifacts
 LogisticRegression()

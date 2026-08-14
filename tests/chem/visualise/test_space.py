@@ -160,7 +160,6 @@ def test_prepare_rejects_wrong_columns(chemical_space):
         chemical_space.prepare(df_compressed)
 
 
-@pytest.mark.xfail(strict=True, reason="prepare currently accepts malformed indices without explicit validation")
 def test_prepare_rejects_non_smiles_index(chemical_space):
     chemical_space.process(diversity_filter=0, collinearity_filter=0.9, standardise=True)
     df_compressed = pd.DataFrame(

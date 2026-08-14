@@ -247,6 +247,12 @@ Examples
       if list(self.df_compressed.columns) != ['DIM_1', 'DIM_2']:
           raise ValueError("'df_compressed' must have only 2 columns: ['DIM_1','DIM_2'].")
 
+      if not all(isinstance(item, str) for item in self.df_compressed.index):
+          raise ValueError("Index of df_compressed must be a series of SMILES strings.")
+
+      if not all(isinstance(item, str) for item in self.df_processed.index):
+          raise ValueError("Index of df_processed must be a series of SMILES strings.")
+
       try:
           self.df_compressed.reset_index(inplace=True)
           self.df_compressed.columns = ['SMILES'] + list(self.df_compressed.columns)[1:]
