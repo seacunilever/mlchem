@@ -735,7 +735,11 @@ class CombinatorialSelection:
         if max_subsets < 1:
             raise ValueError("'max_subsets' must be at least 1.")
 
-        total_subsets = comb(n_features, subset_size)
+        effective_subset_size = min(n_features, subset_size)
+        total_subsets = sum(
+            comb(n_features, current_subset_size)
+            for current_subset_size in range(1, effective_subset_size + 1)
+        )
         if total_subsets > max_subsets:
             raise ValueError(
                 (

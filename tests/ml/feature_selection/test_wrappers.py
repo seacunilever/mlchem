@@ -258,8 +258,8 @@ def test_combinatorial_selection_stage_1_max_subsets_guard():
     train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
     test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
 
-    # C(6, 3) = 20, so max_subsets=10 must fail before subset generation.
-    with pytest.raises(ValueError, match='exceeds max_subsets=10'):
+    # The stage-1 helper generates the full cascade up to k: 6 + 15 + 20 = 41.
+    with pytest.raises(ValueError, match='would generate 41 subsets, which exceeds max_subsets=10'):
         cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
@@ -386,7 +386,8 @@ def test_combinatorial_selection_invalid_task_type_raises():
 
 
 def test_combinatorial_selection_stage_2_max_subsets_guard(fitted_cs_stage_1):
-    # Force a deterministic recurrent pool: C(4, 2) = 6 > max_subsets=1.
+    # Force a deterministic recurrent pool. With top_n_subsets=2 the unique
+    # recurrent features are {0, 1, 2}, so the cascade is 3 + 3 = 6.
     fitted_cs_stage_1.df_results_stage1 = pd.DataFrame(
         {
             'feature_subsets': [[0, 1], [1, 2], [2, 3]],
@@ -396,7 +397,7 @@ def test_combinatorial_selection_stage_2_max_subsets_guard(fitted_cs_stage_1):
         }
     )
 
-    with pytest.raises(ValueError, match='exceeds max_subsets=1'):
+    with pytest.raises(ValueError, match='would generate 6 subsets, which exceeds max_subsets=1'):
         fitted_cs_stage_1.fit_stage_2(top_n_subsets=2, cv_iter=3, max_subsets=1)
 
 
