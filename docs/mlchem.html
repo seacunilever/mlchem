@@ -461,13 +461,15 @@ if <cite>pixel_size</cite> is provided.</p>
 <span class="sig-name descname"><span class="pre">disable_estimator_parallelization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mlchem.helper.disable_estimator_parallelization" title="Link to this definition">¶</a></dt>
 <dd><p>Disable internal parallelization in sklearn estimators to avoid nested parallelization.</p>
 <p>When wrapper-level parallelization (ThreadPoolExecutor) is used, individual
-estimators should use n_jobs=1 to prevent sklearn warnings and avoid thread conflicts.</p>
+estimators should disable internal job parallelism to prevent nested
+parallelism warnings and avoid thread conflicts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>estimator</strong> (<em>object</em>) – A scikit-learn estimator object.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The estimator with n_jobs=1 set if applicable, otherwise unchanged.</p>
+<dd class="field-even"><p>The estimator with internal parallelization disabled if applicable,
+otherwise unchanged.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>object</p>

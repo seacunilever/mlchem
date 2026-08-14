@@ -42,7 +42,7 @@ with open('requirements.txt') as f:
 _subpkgs = find_packages(exclude=['tests', 'tests.*', 'docs', 'docs.*'])
 
 setup(
-    name='mlchem',
+    name='mlchem-ul',
     version='1.1.0',
     package_dir={'mlchem': '.'},
     packages=['mlchem'] + [f'mlchem.{p}' for p in _subpkgs],

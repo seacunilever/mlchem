@@ -71,7 +71,13 @@ pip install git+https://github.com/seacunilever/mlchem.git
 When a release is published to PyPI, install with:
 
 ```bash
-pip install mlchem
+pip install mlchem-ul
+```
+
+Then import in Python as:
+
+```python
+import mlchem
 ```
 
 Development installation, to modify the code or contribute with some changes:

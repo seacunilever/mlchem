@@ -1,0 +1,79 @@
+name: Publish to TestPyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: "Optional override version for TestPyPI (e.g. 1.1.1rc1)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish-testpypi:
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/mlchem-ul/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Optionally override setup.py version for TestPyPI
+        if: ${{ inputs.version_override != '' }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          override = "${{ inputs.version_override }}".strip()
+          if not override:
+              raise SystemExit(0)
+
+          setup_path = Path("setup.py")
+          setup_text = setup_path.read_text(encoding="utf-8")
+          updated = re.sub(
+              r"version\s*=\s*['\"][^'\"]+['\"]",
+              f"version='{override}'",
+              setup_text,
+              count=1,
+          )
+
+          if updated == setup_text:
+              raise SystemExit("Could not update version in setup.py")
+
+          setup_path.write_text(updated, encoding="utf-8")
+          print(f"Using overridden version: {override}")
+          PY
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Build distributions
+        run: python -m build
+
+      - name: Check distributions
+        run: python -m twine check dist/*
+
+      - name: Smoke test built wheel (no deps)
+        run: |
+          python -m pip install --no-deps dist/*.whl
+          python -c "import mlchem; print('smoke-ok:', mlchem.__name__)"
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
