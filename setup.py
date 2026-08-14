@@ -31,11 +31,23 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
+from pathlib import Path
 from setuptools import setup, find_packages
 
-# Read the requirements from the requirements.txt file
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+BASE_DIR = Path(__file__).resolve().parent
+requirements_path = BASE_DIR / 'requirements.txt'
+if not requirements_path.exists():
+    raise FileNotFoundError(
+        "requirements.txt is required for packaging but was not found. "
+        "Ensure it is included in the source distribution."
+    )
+
+# Read install requirements from requirements.txt
+requirements = [
+    line.strip()
+    for line in requirements_path.read_text(encoding='utf-8').splitlines()
+    if line.strip() and not line.strip().startswith('#')
+]
 
 # The repo is laid out flat: the workspace root *is* the `mlchem` package,
 # with `chem/`, `ml/`, etc. as subpackages. Tell setuptools that explicitly.
