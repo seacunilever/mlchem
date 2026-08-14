@@ -2,6 +2,7 @@
 *.egg-info/
 *.log
 __pycache__/
+dist/
 
 # Python test/cache runtime outputs
 .coverage
