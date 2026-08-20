@@ -75,8 +75,7 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
         'Programming Language :: Python :: 3.14',
-        'Topic :: Scientific/Engineering :: Chemistry',
-        'Topic :: Scientific/Engineering :: Machine Learning',
+
     ],
     package_dir={'mlchem': '.'},
     packages=['mlchem'] + [f'mlchem.{p}' for p in _subpkgs],
