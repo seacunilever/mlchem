@@ -737,14 +737,21 @@ keywords for more intuitive pattern matching.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – A SMILES string or RDKit Mol object representing the target molecule.</p></li>
 <li><p><strong>smarts_pattern</strong> (<em>str</em>) – A SMARTS pattern to match against the target.</p></li>
-<li><p><strong>generic_keywords</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Generic keywords to substitute into the SMARTS pattern.</p></li>
+<li><p><strong>generic_keywords</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Generic keywords to substitute into the SMARTS pattern. Default is an
+empty list.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A tuple containing:
-- A boolean indicating whether the pattern was found.
-- A list of atom indices where the pattern matches.
-- The final SMARTS pattern used for matching.</p>
+<dd class="field-even"><p><p>Match result as <code class="docutils literal notranslate"><span class="pre">(found,</span> <span class="pre">atom_indices,</span> <span class="pre">smarts_pattern)</span></code>.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">found</span></code><span class="classifier">bool</span></dt><dd><p>Whether the pattern was found.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">atom_indices</span></code><span class="classifier">numpy.ndarray of int</span></dt><dd><p>Atom indices where the pattern matches.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">smarts_pattern</span></code><span class="classifier">str</span></dt><dd><p>Final SMARTS pattern used for matching.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple of (bool, numpy.ndarray of int, str)</p>
@@ -780,9 +787,14 @@ within the target molecule.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A tuple containing:
-- A boolean indicating whether the pattern was found.
-- A list of atom indices where the pattern matches.</p>
+<dd class="field-even"><p><p>Match result as <code class="docutils literal notranslate"><span class="pre">(found,</span> <span class="pre">atom_indices)</span></code>.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">found</span></code><span class="classifier">bool</span></dt><dd><p>Whether the pattern was found.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">atom_indices</span></code><span class="classifier">list of int</span></dt><dd><p>Atom indices where the pattern matches.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple of (bool, list of int)</p>
@@ -1018,9 +1030,10 @@ provided to refine the numerator (e.g. to count only aromatic carbon atoms).</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – The target molecule, as a SMILES string or RDKit Mol object.</p></li>
-<li><p><strong>func</strong> (<em>callable</em>) – A function that returns a tuple like (True, [atom_indices]) for the pattern.</p></li>
+<li><p><strong>func</strong> (<em>callable</em>) – Function that returns a tuple like <code class="docutils literal notranslate"><span class="pre">(True,</span> <span class="pre">[atom_indices])</span></code> for the
+pattern.</p></li>
 <li><p><strong>threshold</strong> (<em>float</em>) – The minimum fraction of atoms that must match the pattern.</p></li>
-<li><p><strong>hidden_pattern_function</strong> (<em>callable</em><em>, </em><em>optional</em>) – A secondary function to refine the atom subset in the numerator.</p></li>
+<li><p><strong>hidden_pattern_function</strong> (<em>callable</em><em>, </em><em>optional</em>) – Secondary function used to refine the atom subset in the numerator.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1090,8 +1103,9 @@ function can be passed if the primary function requires two arguments.</p>
 <li><p><strong>target</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – The target molecule, as a SMILES string or RDKit Mol object.</p></li>
 <li><p><strong>func1</strong> (<em>callable</em>) – Function identifying the primary pattern (numerator).</p></li>
 <li><p><strong>func2</strong> (<em>callable</em>) – Function identifying the reference pattern (denominator).</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – The minimum relative fraction required (e.g. 0.5 means 50% of func2 atoms must match func1).</p></li>
-<li><p><strong>hidden_pattern_function</strong> (<em>callable</em><em>, </em><em>optional</em>) – A secondary function to pass into <cite>func1</cite> if it requires it.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The minimum relative fraction required. For example, 0.5 means 50% of
+<code class="docutils literal notranslate"><span class="pre">func2</span></code> atoms must match <code class="docutils literal notranslate"><span class="pre">func1</span></code>.</p></li>
+<li><p><strong>hidden_pattern_function</strong> (<em>callable</em><em>, </em><em>optional</em>) – Secondary function passed into <code class="docutils literal notranslate"><span class="pre">func1</span></code> if it requires one.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

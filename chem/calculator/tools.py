@@ -300,12 +300,18 @@ gyration_tensor : np.ndarray
 Returns
 -------
 dict
-    A dictionary containing:
-    - 'moments_of_inertia'
-    - 'principal_axes'
-    - 'asphericity'
-    - 'acylindricity'
-    - 'relative_shape_anisotropy'
+    Dictionary containing the calculated shape descriptors.
+
+    ``moments_of_inertia`` : numpy.ndarray
+        Principal moments of inertia.
+    ``principal_axes`` : numpy.ndarray
+        Principal axes associated with the moments of inertia.
+    ``asphericity`` : float
+        Asphericity descriptor.
+    ``acylindricity`` : float
+        Acylindricity descriptor.
+    ``relative_shape_anisotropy`` : float
+        Relative shape anisotropy descriptor.
 
 Examples
 --------

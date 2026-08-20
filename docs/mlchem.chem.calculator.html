@@ -482,12 +482,20 @@ the Henderson-Hasselbalch equation.</p>
 <dd class="field-odd"><p><strong>gyration_tensor</strong> (<em>np.ndarray</em>) – A 3x3 gyration tensor.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A dictionary containing:
-- ‘moments_of_inertia’
-- ‘principal_axes’
-- ‘asphericity’
-- ‘acylindricity’
-- ‘relative_shape_anisotropy’</p>
+<dd class="field-even"><p><p>Dictionary containing the calculated shape descriptors.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">moments_of_inertia</span></code><span class="classifier">numpy.ndarray</span></dt><dd><p>Principal moments of inertia.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">principal_axes</span></code><span class="classifier">numpy.ndarray</span></dt><dd><p>Principal axes associated with the moments of inertia.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">asphericity</span></code><span class="classifier">float</span></dt><dd><p>Asphericity descriptor.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">acylindricity</span></code><span class="classifier">float</span></dt><dd><p>Acylindricity descriptor.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">relative_shape_anisotropy</span></code><span class="classifier">float</span></dt><dd><p>Relative shape anisotropy descriptor.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>

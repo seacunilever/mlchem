@@ -432,14 +432,21 @@ class SequentialForwardSelection:
         Returns
         -------
         dict
-            A dictionary containing:
-            - 'best_index': int
-            - 'features': list
-            - 'performance_score': float
-            - 'instability_score': float
-            - 'reliability_score': float
-            - 'best_score': float, retained as an alias of
-              'reliability_score' for backwards compatibility
+            Dictionary containing the selected subset and reliability scores.
+
+            ``best_index`` : int
+                Number of selected features in the winning prefix.
+            ``features`` : list
+                Selected feature names.
+            ``performance_score`` : float
+                Geometric performance contribution for the winning prefix.
+            ``instability_score`` : float
+                Sum of train/CV/test score gaps for the winning prefix.
+            ``reliability_score`` : float
+                Reliability score used for automatic selection.
+            ``best_score`` : float
+                Alias of ``reliability_score`` retained for backwards
+                compatibility.
 
         Notes
         -----

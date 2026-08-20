@@ -429,9 +429,18 @@ adding features that yield the highest gain in cross-validation score.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level">
 <span class="sig-name descname"><span class="pre">log_level</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level" title="Link to this definition">¶</a></dt>
-<dd><p>Logging level threshold. Use ‘DEBUG’ for detailed diagnostics,
+<dd><blockquote>
+<div><p>Logging level threshold. Use ‘DEBUG’ for detailed diagnostics,
 ‘INFO’ for standard output, ‘WARNING’ to suppress most output.
 Default is logging.INFO.</p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>Automatic best-subset selection uses a reliability score. For each
+selected prefix, <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">(train</span> <span class="pre">*</span> <span class="pre">cv</span> <span class="pre">*</span> <span class="pre">test)</span> <span class="pre">**</span> <span class="pre">(1/3)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span> <span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code>, and for
+higher-is-better metrics <code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span>
+<span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>. For lower-is-better metrics, the geometric
+mean is inverted first so the same reliability score can be maximised.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>{‘DEBUG’, ‘INFO’, ‘WARNING’, ‘ERROR’, ‘CRITICAL’} or int, optional</p>
@@ -496,48 +505,50 @@ Default is logging.INFO.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best">
 <span class="sig-name descname"><span class="pre">find_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best" title="Link to this definition">¶</a></dt>
-<dd><p>Find the best feature subset based on evaluation criteria.</p>
+<dd><p>Find the best feature subset based on reliability.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>which</strong> (<em>int</em><em>, </em><em>optional</em>) – If specified, returns the feature subset at the given index.
-If None, the best subset is determined automatically using a
-scoring algorithm.</p>
+If None, the best subset is determined automatically using the
+reliability score.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A dictionary containing:
-- ‘best_score’: float
-- ‘variability_contribution’: float
-- ‘geometric_contribution’: float
-- ‘train_test_difference’: float
-- ‘best_index’: int
-- ‘features’: list</p>
+<dd class="field-even"><p><p>Dictionary containing the selected subset and reliability scores.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">best_index</span></code><span class="classifier">int</span></dt><dd><p>Number of selected features in the winning prefix.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">features</span></code><span class="classifier">list</span></dt><dd><p>Selected feature names.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">performance_score</span></code><span class="classifier">float</span></dt><dd><p>Geometric performance contribution for the winning prefix.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">instability_score</span></code><span class="classifier">float</span></dt><dd><p>Sum of train/CV/test score gaps for the winning prefix.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">reliability_score</span></code><span class="classifier">float</span></dt><dd><p>Reliability score used for automatic selection.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">best_score</span></code><span class="classifier">float</span></dt><dd><p>Alias of <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code> retained for backwards
+compatibility.</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The automatic algorithm works as follows:</p>
-<ol class="arabic simple">
-<li><p>Calculate the standard deviation of the training,
-cross-validation, and unseen test scores for each feature subset.</p></li>
-<li><p>Initialise the best score and best index to zero.</p></li>
-<li><p>Define coefficients for variability contribution, percentile,
-and contributions from training, cross-validation, and unseen test scores.</p></li>
-<li><p>Iterate through each feature subset up to the maximum number
-of features:</p>
-<ul class="simple">
-<li><p>Add a variability contribution if the standard deviation is
-below a certain percentile.</p></li>
-<li><p>Add a geometric contribution based on the product of the
-training, cross-validation, and unseen test scores.</p></li>
-<li><p>Add the absolute difference between the training and unseen
-test scores.</p></li>
-<li><p>Update the best score and best index if the current total
-score is higher than the best score.</p></li>
-</ul>
-</li>
-</ol>
+<p>For each feature subset, the automatic algorithm computes:</p>
+<p><code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code></p>
+<p>where:</p>
+<p><code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span> <span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code></p>
+<p>and, for higher-is-better metrics:</p>
+<p><code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">(train_score</span> <span class="pre">*</span> <span class="pre">cv_score</span> <span class="pre">*</span> <span class="pre">test_score)</span> <span class="pre">**</span> <span class="pre">(1/3)</span></code></p>
+<p>For lower-is-better metrics, such as RMSE, lower performance scores
+are better, so the geometric mean is inverted before the same
+reliability calculation is applied:</p>
+<p><code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">((train_score</span> <span class="pre">*</span> <span class="pre">cv_score</span> <span class="pre">*</span> <span class="pre">test_score)</span> <span class="pre">**</span> <span class="pre">(1/3))</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code></p>
+<p>The subset with the highest reliability score is selected. The test
+score is intentionally included in the calculation.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -564,13 +575,14 @@ Default is 1.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best_feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['steelblue',</span> <span class="pre">'orange',</span> <span class="pre">'green']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#</span> <span class="pre">of</span> <span class="pre">features'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best_feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['steelblue',</span> <span class="pre">'orange',</span> <span class="pre">'green']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#</span> <span class="pre">of</span> <span class="pre">features'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot" title="Link to this definition">¶</a></dt>
 <dd><p>Plot the performance of the Sequential Forward Selection process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>best_feature</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of the best feature subset to highlight. If None, it
-is determined automatically.</p></li>
+<li><p><strong>best_feature</strong> (<em>int</em><em>, </em><em>'auto'</em><em>, or </em><em>None</em><em>, </em><em>optional</em>) – Index of the best feature subset to highlight. If ‘auto’ or
+None, it is determined automatically using reliability-score
+selection. Default is ‘auto’.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – Size of the plot. Default is (10, 6).</p></li>
 <li><p><strong>colours</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Colours for training, validation, and test scores. Default is
 [‘steelblue’, ‘orange’, ‘green’].</p></li>
@@ -589,7 +601,13 @@ is determined automatically.</p></li>
 </dl>
 <p class="rubric">Notes</p>
 <p>The automatic algorithm for determining the best feature subset
-is the same as described in <cite>find_best</cite>.</p>
+is the same as described in <cite>find_best</cite>: <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span>
+<span class="pre">(train</span> <span class="pre">*</span> <span class="pre">cv</span> <span class="pre">*</span> <span class="pre">test)</span> <span class="pre">**</span> <span class="pre">(1/3)</span></code>, <code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span>
+<span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code>, and for higher-is-better metrics
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>.
+For lower-is-better metrics, the geometric mean is inverted before
+applying the same reliability formula. The subset with the highest
+reliability score is highlighted.</p>
 </dd></dl>
 
 <dl class="py method">

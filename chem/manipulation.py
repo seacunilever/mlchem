@@ -3849,9 +3849,12 @@ smiles_pattern : str
 Returns
 -------
 tuple of (bool, list of int)
-    A tuple containing:
-    - A boolean indicating whether the pattern was found.
-    - A list of atom indices where the pattern matches.
+    Match result as ``(found, atom_indices)``.
+
+    ``found`` : bool
+        Whether the pattern was found.
+    ``atom_indices`` : list of int
+        Atom indices where the pattern matches.
 """
 
             from mlchem.helper import flatten
@@ -3891,15 +3894,20 @@ target : str or rdkit.Chem.rdchem.Mol
 smarts_pattern : str
     A SMARTS pattern to match against the target.
 generic_keywords : list of str, optional
-    Generic keywords to substitute into the SMARTS pattern.
+    Generic keywords to substitute into the SMARTS pattern. Default is an
+    empty list.
 
 Returns
 -------
 tuple of (bool, numpy.ndarray of int, str)
-    A tuple containing:
-    - A boolean indicating whether the pattern was found.
-    - A list of atom indices where the pattern matches.
-    - The final SMARTS pattern used for matching.
+    Match result as ``(found, atom_indices, smarts_pattern)``.
+
+    ``found`` : bool
+        Whether the pattern was found.
+    ``atom_indices`` : numpy.ndarray of int
+        Atom indices where the pattern matches.
+    ``smarts_pattern`` : str
+        Final SMARTS pattern used for matching.
 
 Examples
 --------
@@ -3969,11 +3977,12 @@ Parameters
 target : str or rdkit.Chem.rdchem.Mol
     The target molecule, as a SMILES string or RDKit Mol object.
 func : callable
-    A function that returns a tuple like (True, [atom_indices]) for the pattern.
+    Function that returns a tuple like ``(True, [atom_indices])`` for the
+    pattern.
 threshold : float
     The minimum fraction of atoms that must match the pattern.
 hidden_pattern_function : callable, optional
-    A secondary function to refine the atom subset in the numerator.
+    Secondary function used to refine the atom subset in the numerator.
 
 Returns
 -------
@@ -4061,9 +4070,10 @@ func1 : callable
 func2 : callable
     Function identifying the reference pattern (denominator).
 threshold : float
-    The minimum relative fraction required (e.g. 0.5 means 50% of func2 atoms must match func1).
+    The minimum relative fraction required. For example, 0.5 means 50% of
+    ``func2`` atoms must match ``func1``.
 hidden_pattern_function : callable, optional
-    A secondary function to pass into `func1` if it requires it.
+    Secondary function passed into ``func1`` if it requires one.
 
 Returns
 -------
