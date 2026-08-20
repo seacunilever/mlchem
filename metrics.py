@@ -31,7 +31,7 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Iterable
+from typing import Iterable, Literal
 from rdkit.Chem import DataStructs
 
 
@@ -52,7 +52,7 @@ def get_sensitivity(
         Predicted labels.
 
     labels : Iterable[int or str], optional
-        Label names to include in the calculation. If None, all labels 
+        Label names to include in the calculation. If None, all labels
         are used.
 
     Returns
@@ -204,6 +204,57 @@ def get_rmse(
     mse = mean_squared_error(y_true, y_pred)
     rmse = mse**0.5
     return rmse
+
+
+def calculate_reliability_components(
+    train_score: float,
+    cv_score: float,
+    test_score: float,
+    logic: Literal['lower', 'greater'],
+) -> dict[str, float]:
+    """
+    Calculate reliability-score components from train, CV, and test scores.
+
+    Parameters
+    ----------
+    train_score : float
+        Score obtained on the training set.
+    cv_score : float
+        Cross-validation score.
+    test_score : float
+        Score obtained on the test set.
+    logic : {'lower', 'greater'}
+        Whether lower or greater metric values are better.
+
+    Returns
+    -------
+    dict
+        Dictionary containing ``geometric_mean``, ``performance_score``,
+        ``instability_score``, and ``reliability_score``.
+    """
+    import numpy as np
+
+    if logic not in ('lower', 'greater'):
+        raise ValueError("'logic' must be either 'lower' or 'greater'.")
+
+    geometric_mean = (train_score * cv_score * test_score) ** (1/3)
+    performance_score = geometric_mean
+    if logic == 'lower':
+        performance_score = np.inf if geometric_mean == 0 else 1 / geometric_mean
+
+    instability_score = (
+        abs(train_score - cv_score) +
+        abs(train_score - test_score) +
+        abs(cv_score - test_score)
+    )
+    reliability_score = performance_score / (1 + instability_score)
+
+    return {
+        'geometric_mean': geometric_mean,
+        'performance_score': performance_score,
+        'instability_score': instability_score,
+        'reliability_score': reliability_score,
+    }
 
 
 def rmse_to_std_ratio(

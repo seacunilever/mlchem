@@ -39,7 +39,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
-from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from mlchem.ml.feature_selection.wrappers import (SequentialForwardSelection,
                                                   CombinatorialSelection)
 from mlchem.metrics import get_geometric_S
@@ -56,6 +56,14 @@ class _ParallelAwareEstimator(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         return np.zeros(len(X), dtype=int)
+
+
+class _FirstColumnRegressor(BaseEstimator, RegressorMixin):
+    def fit(self, X, y):
+        return self
+
+    def predict(self, X):
+        return np.asarray(X)[:, 0]
 
 @pytest.fixture
 def fitted_sfs():
@@ -276,6 +284,11 @@ def test_combinatorial_selection_fit_stage_1(fitted_cs_stage_1):
     assert 'training_score' in results_stage_1.columns
     assert 'cv_score' in results_stage_1.columns
     assert 'test_score' in results_stage_1.columns
+    assert 'performance_score' in results_stage_1.columns
+    assert 'instability_score' in results_stage_1.columns
+    assert 'reliability_score' in results_stage_1.columns
+    assert 'geometric_mean' in results_stage_1.columns
+    assert results_stage_1['reliability_score'].is_monotonic_decreasing
 
 def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     results_stage_2 = fitted_cs_stage_2.df_results_stage2
@@ -284,6 +297,49 @@ def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     assert 'training_score' in results_stage_2.columns
     assert 'cv_score' in results_stage_2.columns
     assert 'test_score' in results_stage_2.columns
+    assert 'performance_score' in results_stage_2.columns
+    assert 'instability_score' in results_stage_2.columns
+    assert 'reliability_score' in results_stage_2.columns
+    assert 'geometric_mean' in results_stage_2.columns
+    assert results_stage_2['reliability_score'].is_monotonic_decreasing
+
+
+def test_combinatorial_selection_lower_logic_inverts_performance_score():
+    def rmse(y_true, y_pred):
+        return float(np.sqrt(np.mean((np.asarray(y_true) - np.asarray(y_pred)) ** 2)))
+
+    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='regression', random_state=None, shuffle=False):
+        return np.array([metric(y, estimator.predict(X))])
+
+    train_set = pd.DataFrame({'low_error': [0.5, 0.5, 0.5], 'high_error': [1.0, 1.0, 1.0]})
+    test_set = train_set.copy()
+    y_train = np.zeros(len(train_set))
+    y_test = np.zeros(len(test_set))
+    cs = CombinatorialSelection(
+        estimator=_FirstColumnRegressor(),
+        metric=rmse,
+        logic='lower',
+        task_type='regression',
+    )
+
+    with patch('mlchem.ml.feature_selection.wrappers.crossval', side_effect=fake_crossval):
+        results = cs.fit_stage_1(
+            train_set=train_set,
+            y_train=y_train,
+            test_set=test_set,
+            y_test=y_test,
+            features=train_set.columns.tolist(),
+            k=1,
+            training_threshold=2.0,
+            cv_train_ratio=1.0,
+        )
+
+    winning_row = results.iloc[0]
+    assert winning_row['feature_subsets'] == ['low_error']
+    assert winning_row['geometric_mean'] == pytest.approx(0.5)
+    assert winning_row['performance_score'] == pytest.approx(2.0)
+    assert winning_row['instability_score'] == pytest.approx(0.0)
+    assert winning_row['reliability_score'] == pytest.approx(2.0)
 
 def test_combinatorial_selection_display_best_logs_summary(fitted_cs_stage_2, caplog):
     fitted_cs_stage_2.set_log_level('INFO')

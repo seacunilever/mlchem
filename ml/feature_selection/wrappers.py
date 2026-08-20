@@ -47,6 +47,7 @@ from mlchem.helper import (
     resolve_n_jobs,
     validate_task_type,
 )
+from mlchem.metrics import calculate_reliability_components
 from mlchem.ml.modelling.model_evaluation import crossval
 
 
@@ -100,6 +101,48 @@ def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> flo
     return float(abs(corr))
 
 
+def _calculate_reliability_components(
+    train_score: float,
+    cv_score: float,
+    test_score: float,
+    logic: Literal['lower', 'greater'],
+) -> dict[str, float]:
+    return calculate_reliability_components(
+        train_score=train_score,
+        cv_score=cv_score,
+        test_score=test_score,
+        logic=logic,
+    )
+
+
+def _add_reliability_columns(
+    dataframe: pd.DataFrame,
+    logic: Literal['lower', 'greater'],
+) -> pd.DataFrame:
+    score_columns = [
+        'geometric_mean',
+        'performance_score',
+        'instability_score',
+        'reliability_score',
+    ]
+    if dataframe.empty:
+        for column in score_columns:
+            dataframe[column] = pd.Series(dtype=float)
+        return dataframe
+
+    reliability_scores = dataframe.apply(
+        lambda row: calculate_reliability_components(
+            train_score=row.training_score,
+            cv_score=row.cv_score,
+            test_score=row.test_score,
+            logic=logic,
+        ),
+        axis=1,
+        result_type='expand',
+    )
+    return pd.concat([dataframe, reliability_scores], axis=1)
+
+
 class SequentialForwardSelection:
     """
   Sequential Forward Feature Selection wrapper.
@@ -127,7 +170,7 @@ class SequentialForwardSelection:
       Logging level threshold. Use 'DEBUG' for detailed diagnostics,
       'INFO' for standard output, 'WARNING' to suppress most output.
       Default is logging.INFO.
-  
+
     Notes
     -----
     Automatic best-subset selection uses a reliability score. For each
@@ -154,7 +197,7 @@ class SequentialForwardSelection:
   >>> X, y = make_classification(300, 10, n_informative=5)
   >>> train_size = 0.8
   >>> train_samples = int(train_size * len(X))
- 
+
   >>> X_train, y_train = X[:train_samples], y[:train_samples]
   >>> X_test, y_test = X[train_samples:], y[train_samples:]
 
@@ -232,7 +275,7 @@ class SequentialForwardSelection:
 
     def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
         """Set the logging level for wrapper diagnostics.
-        
+
         Parameters
         ----------
         log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int
@@ -401,21 +444,16 @@ class SequentialForwardSelection:
         cv_score: float,
         test_score: float,
     ) -> dict[str, float]:
-        performance_score = (train_score * cv_score * test_score) ** (1/3)
-        if self.logic == 'lower':
-            performance_score = np.inf if performance_score == 0 else 1 / performance_score
-
-        instability_score = (
-            abs(train_score - cv_score) +
-            abs(train_score - test_score) +
-            abs(cv_score - test_score)
+        scores = calculate_reliability_components(
+            train_score=train_score,
+            cv_score=cv_score,
+            test_score=test_score,
+            logic=self.logic,
         )
-        reliability_score = performance_score / (1 + instability_score)
-
         return {
-            'performance_score': performance_score,
-            'instability_score': instability_score,
-            'reliability_score': reliability_score,
+            'performance_score': scores['performance_score'],
+            'instability_score': scores['instability_score'],
+            'reliability_score': scores['reliability_score'],
         }
 
     def find_best(self, which: Optional[int] = None) -> dict:
@@ -533,7 +571,7 @@ class SequentialForwardSelection:
         figsize : tuple of int, optional
             Size of the plot. Default is (10, 6).
         colours : list of str, optional
-            Colours for training, validation, and test scores. Default is 
+            Colours for training, validation, and test scores. Default is
             ['steelblue', 'orange', 'green'].
         title : str, optional
             Title of the plot.
@@ -581,7 +619,7 @@ class SequentialForwardSelection:
             title_text = f'SFS - model'
         else:
             title_text = title
-          
+
         plt.title(title_text,fontsize=title_size)
         plt.grid(axis='y')
         plt.xlabel(xlabel, size=fontsize)
@@ -659,14 +697,19 @@ class CombinatorialSelection:
     Combinatorial feature selection using a given estimator and metric.
 
     This class performs a two-stage combinatorial feature selection process
-    to identify optimal feature subsets based on model performance.
+    to identify optimal feature subsets based on reliability score. For each
+    retained subset, ``performance_score`` is the geometric mean of training,
+    cross-validation, and test scores for higher-is-better metrics. For
+    lower-is-better metrics, the geometric mean is inverted. The final
+    ``reliability_score`` is ``performance_score / (1 + instability_score)``,
+    where ``instability_score = |train-cv| + |train-test| + |cv-test|``.
 
     Attributes
     ----------
     estimator : object
         The machine learning estimator used to fit the data.
     metric : callable
-        A metric function to evaluate estimator performance. Must accept 
+        A metric function to evaluate estimator performance. Must accept
         (y_true, y_pred).
     logic : {'greater', 'lower'}
         Determines whether a higher or lower score is considered better.
@@ -686,7 +729,7 @@ class CombinatorialSelection:
     >>> X, y = make_classification(500, 10, n_informative=4)
     >>> X_train, y_train = X[:350], y[:350]
     >>> X_test, y_test = X[350:], y[350:]
-  
+
     >>> train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
     >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
 
@@ -714,7 +757,7 @@ class CombinatorialSelection:
         metric : callable
             A metric function to evaluate estimator performance.
         logic : {'greater', 'lower'}, optional
-            Determines whether a higher or lower score is considered better. 
+            Determines whether a higher or lower score is considered better.
             Default is 'greater'.
         task_type : {'classification', 'regression'}, optional
             Specifies the type of task. Default is 'classification'.
@@ -733,7 +776,7 @@ class CombinatorialSelection:
 
     def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
         """Set the logging level for wrapper diagnostics.
-        
+
         Parameters
         ----------
         log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int
@@ -916,10 +959,10 @@ class CombinatorialSelection:
         k : int, optional
             Number of features to combine. Default is 2.
         training_threshold : float, optional
-            Minimum training score required to consider a subset. 
+            Minimum training score required to consider a subset.
             Default is 0.25.
         cv_train_ratio : float, optional
-            Minimum ratio of cross-validation to training score. Default 
+            Minimum ratio of cross-validation to training score. Default
             is 0.7.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
@@ -952,7 +995,7 @@ class CombinatorialSelection:
         Returns
         -------
         pandas.DataFrame
-            A DataFrame containing the results of the first stage of 
+            A DataFrame containing the results of the first stage of
             feature selection.
 
         Notes
@@ -960,7 +1003,9 @@ class CombinatorialSelection:
         - Generates all possible feature subsets of size `k`.
         - Evaluates each subset using training, cross-validation, and
           test scores.
-        - Filters and ranks subsets based on geometric mean of scores.
+                - Filters subsets using training/CV thresholds and ranks them by
+                    reliability score. The legacy `geometric_mean` column is retained
+                    for compatibility, but sorting uses `reliability_score`.
         """
 
 
@@ -1000,7 +1045,7 @@ class CombinatorialSelection:
         self.cv_threshold = self.training_threshold * self.cv_train_ratio \
             if self.logic == 'greater' else \
             self.training_threshold / self.cv_train_ratio
-        
+
         self.ascending_decision = False if self.logic == 'greater' else \
         True
 
@@ -1111,14 +1156,13 @@ class CombinatorialSelection:
             self.dict_results,
             columns=self.dict_results.keys()
             )
-        self.df_results_stage1['geometric_mean'] = (
-            self.df_results_stage1.training_score*
-            self.df_results_stage1.cv_score*
-            self.df_results_stage1.test_score
-            )**(1/3)
+        self.df_results_stage1 = _add_reliability_columns(
+            self.df_results_stage1,
+            self.logic,
+        )
         self.df_results_stage1.sort_values(
-            by='geometric_mean',
-            ascending=self.ascending_decision,
+            by='reliability_score',
+            ascending=False,
             inplace=True)
         self._log(
             logging.INFO,
@@ -1138,7 +1182,7 @@ class CombinatorialSelection:
         Parameters
         ----------
         top_n_subsets : int, optional
-            Number of top feature subsets from stage 1 to consider. 
+            Number of top feature subsets from stage 1 to consider.
             Default is 10.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
@@ -1153,14 +1197,16 @@ class CombinatorialSelection:
         Returns
         -------
         pandas.DataFrame
-            A DataFrame containing the results of the second stage of 
+            A DataFrame containing the results of the second stage of
             feature selection.
 
         Notes
         -----
         - Identifies most recurrent features from top subsets.
         - Generates new combinations and evaluates them.
-        - Filters and ranks based on geometric mean of scores.
+                - Filters subsets using training/CV thresholds and ranks them by
+                    reliability score. The legacy `geometric_mean` column is retained
+                    for compatibility, but sorting uses `reliability_score`.
         """
 
         def is_better(a: float | int, b: float | int) -> bool:
@@ -1281,14 +1327,13 @@ class CombinatorialSelection:
         self.df_results_stage2 = pd.DataFrame(
             self.dict_results_2, columns=self.dict_results_2.keys()
             )
-        self.df_results_stage2['geometric_mean'] = (
-            self.df_results_stage2.training_score*
-            self.df_results_stage2.cv_score*
-            self.df_results_stage2.test_score
-            )**(1/3)
+        self.df_results_stage2 = _add_reliability_columns(
+            self.df_results_stage2,
+            self.logic,
+        )
         self.df_results_stage2.sort_values(
-            by='geometric_mean',
-            ascending=self.ascending_decision,
+            by='reliability_score',
+            ascending=False,
             inplace=True)
         self._log(
             logging.INFO,

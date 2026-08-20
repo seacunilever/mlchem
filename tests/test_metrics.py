@@ -36,6 +36,7 @@ import numpy as np
 from rdkit.DataStructs import ExplicitBitVect
 from mlchem.metrics import (
     get_sensitivity, get_specificity, get_geometric_S, get_mcc, get_rmse,
+    calculate_reliability_components,
     rmse_to_std_ratio, get_r2, DiceSimilarity, OnBitSimilarity,
     SokalSimilarity, AllBitSimilarity, CosineSimilarity, RusselSimilarity,
     TverskySimilarity, TanimotoSimilarity, AsymmetricSimilarity,
@@ -111,6 +112,48 @@ def test_get_rmse(sample_regression_data):
     y_true, y_pred = sample_regression_data
     rmse = get_rmse(y_true, y_pred)
     assert rmse == pytest.approx(0.264, 0.01)
+
+
+def test_calculate_reliability_components_greater_logic():
+    scores = calculate_reliability_components(
+        train_score=0.9,
+        cv_score=0.8,
+        test_score=0.7,
+        logic='greater',
+    )
+
+    expected_geometric_mean = (0.9 * 0.8 * 0.7) ** (1/3)
+    expected_instability = abs(0.9 - 0.8) + abs(0.9 - 0.7) + abs(0.8 - 0.7)
+    assert scores['geometric_mean'] == pytest.approx(expected_geometric_mean)
+    assert scores['performance_score'] == pytest.approx(expected_geometric_mean)
+    assert scores['instability_score'] == pytest.approx(expected_instability)
+    assert scores['reliability_score'] == pytest.approx(
+        expected_geometric_mean / (1 + expected_instability)
+    )
+
+
+def test_calculate_reliability_components_lower_logic_inverts_performance():
+    scores = calculate_reliability_components(
+        train_score=0.5,
+        cv_score=0.6,
+        test_score=0.55,
+        logic='lower',
+    )
+
+    expected_geometric_mean = (0.5 * 0.6 * 0.55) ** (1/3)
+    expected_performance = 1 / expected_geometric_mean
+    expected_instability = abs(0.5 - 0.6) + abs(0.5 - 0.55) + abs(0.6 - 0.55)
+    assert scores['geometric_mean'] == pytest.approx(expected_geometric_mean)
+    assert scores['performance_score'] == pytest.approx(expected_performance)
+    assert scores['instability_score'] == pytest.approx(expected_instability)
+    assert scores['reliability_score'] == pytest.approx(
+        expected_performance / (1 + expected_instability)
+    )
+
+
+def test_calculate_reliability_components_rejects_invalid_logic():
+    with pytest.raises(ValueError, match="'logic' must be either 'lower' or 'greater'"):
+        calculate_reliability_components(0.9, 0.8, 0.7, logic='best')
 
 def test_rmse_to_std_ratio(sample_regression_data):
     y_true, y_pred = sample_regression_data
