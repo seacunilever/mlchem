@@ -973,12 +973,11 @@ class CombinatorialSelection:
 
         Notes
         -----
-        - Generates all possible feature subsets of size `k`.
-        - Evaluates each subset using training, cross-validation, and
-          test scores.
-                - Filters subsets using training/CV thresholds and ranks them by
-                    reliability score. The legacy `geometric_mean` column is retained
-                    for compatibility, but sorting uses `reliability_score`.
+                Generates all possible feature subsets of size ``k`` and evaluates
+                each subset using training, cross-validation, and test scores. Results
+                are filtered using training/CV thresholds and ranked by
+                ``reliability_score``. The legacy ``geometric_mean`` column is retained
+                for compatibility, but will be removed in a future version.
         """
 
 
@@ -1175,11 +1174,11 @@ class CombinatorialSelection:
 
         Notes
         -----
-        - Identifies most recurrent features from top subsets.
-        - Generates new combinations and evaluates them.
-                - Filters subsets using training/CV thresholds and ranks them by
-                    reliability score. The legacy `geometric_mean` column is retained
-                    for compatibility, but sorting uses `reliability_score`.
+                Identifies the most recurrent features from the top stage-1 subsets,
+                generates new combinations, and evaluates them. Results are filtered
+                using training/CV thresholds and ranked by ``reliability_score``. The
+                legacy ``geometric_mean`` column is retained for compatibility, but
+                will be removed in a future version.
         """
 
         def is_better(a: float | int, b: float | int) -> bool:

@@ -124,7 +124,12 @@ higher than the threshold.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Combinatorial feature selection using a given estimator and metric.</p>
 <p>This class performs a two-stage combinatorial feature selection process
-to identify optimal feature subsets based on model performance.</p>
+to identify optimal feature subsets based on reliability score. For each
+retained subset, <code class="docutils literal notranslate"><span class="pre">performance_score</span></code> is the geometric mean of training,
+cross-validation, and test scores for higher-is-better metrics. For
+lower-is-better metrics, the geometric mean is inverted. The final
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span></code> is <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span> <span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator">
 <span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator" title="Link to this definition">¶</a></dt>
@@ -279,12 +284,11 @@ feature selection.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Generates all possible feature subsets of size <cite>k</cite>.</p></li>
-<li><p>Evaluates each subset using training, cross-validation, and
-test scores.</p></li>
-<li><p>Filters and ranks subsets based on geometric mean of scores.</p></li>
-</ul>
+<p>Generates all possible feature subsets of size <code class="docutils literal notranslate"><span class="pre">k</span></code> and evaluates
+each subset using training, cross-validation, and test scores. Results
+are filtered using training/CV thresholds and ranked by
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>. The legacy <code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code> column is retained
+for compatibility, but will be removed in a future version.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -313,11 +317,11 @@ feature selection.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>Identifies most recurrent features from top subsets.</p></li>
-<li><p>Generates new combinations and evaluates them.</p></li>
-<li><p>Filters and ranks based on geometric mean of scores.</p></li>
-</ul>
+<p>Identifies the most recurrent features from the top stage-1 subsets,
+generates new combinations, and evaluates them. Results are filtered
+using training/CV thresholds and ranked by <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>. The
+legacy <code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code> column is retained for compatibility, but
+will be removed in a future version.</p>
 </dd></dl>
 
 <dl class="py method">

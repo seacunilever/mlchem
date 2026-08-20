@@ -1356,6 +1356,29 @@ default; optionally also to a file for later inspection.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mlchem.metrics.calculate_reliability_components">
+<span class="sig-name descname"><span class="pre">calculate_reliability_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.metrics.calculate_reliability_components" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate reliability-score components from train, CV, and test scores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_score</strong> (<em>float</em>) – Score obtained on the training set.</p></li>
+<li><p><strong>cv_score</strong> (<em>float</em>) – Cross-validation score.</p></li>
+<li><p><strong>test_score</strong> (<em>float</em>) – Score obtained on the test set.</p></li>
+<li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em>) – Whether lower or greater metric values are better.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing <code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">performance_score</span></code>,
+<code class="docutils literal notranslate"><span class="pre">instability_score</span></code>, and <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mlchem.metrics.get_geometric_S">
 <span class="sig-name descname"><span class="pre">get_geometric_S</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.metrics.get_geometric_S" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the geometric mean of sensitivity and specificity.</p>
@@ -1581,6 +1604,7 @@ are used.</p></li>
 <li><a class="reference internal" href="#mlchem.metrics.SokalSimilarity"><code class="docutils literal notranslate"><span class="pre">SokalSimilarity()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.metrics.TanimotoSimilarity"><code class="docutils literal notranslate"><span class="pre">TanimotoSimilarity()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.metrics.TverskySimilarity"><code class="docutils literal notranslate"><span class="pre">TverskySimilarity()</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.metrics.calculate_reliability_components"><code class="docutils literal notranslate"><span class="pre">calculate_reliability_components()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.metrics.get_geometric_S"><code class="docutils literal notranslate"><span class="pre">get_geometric_S()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.metrics.get_mcc"><code class="docutils literal notranslate"><span class="pre">get_mcc()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.metrics.get_r2"><code class="docutils literal notranslate"><span class="pre">get_r2()</span></code></a></li>
