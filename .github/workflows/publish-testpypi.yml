@@ -67,17 +67,34 @@ jobs:
       - name: Check distributions
         run: python -m twine check dist/*
 
-      - name: Smoke test built wheel (no deps)
+      - name: Smoke test built wheel with dependencies
         run: |
-          python -m pip install --no-deps dist/*.whl
+          python -m pip install dist/*.whl
+          cd "$(mktemp -d)"
           python - <<'PY'
           from importlib import metadata, util
+
+          import mlchem
+          import numpy
+          import pandas
+          import scipy
+          import sklearn
+          import matplotlib
+          from mlchem.metrics import get_geometric_S, get_rmse
 
           print('installed-dist-version:', metadata.version('mlchem-ul'))
           spec = util.find_spec('mlchem')
           if spec is None:
               raise SystemExit('Package namespace mlchem was not installed')
           print('installed-package-namespace:', spec.name)
+          print('installed-package-path:', mlchem.__file__)
+          print('smoke-imports-ok')
+
+          if get_geometric_S([0, 1], [0, 1]) != 1.0:
+            raise SystemExit('get_geometric_S smoke check failed')
+          if get_rmse([0.0, 1.0], [0.0, 1.0]) != 0.0:
+            raise SystemExit('get_rmse smoke check failed')
+          print('smoke-metrics-ok')
           PY
 
       - name: Publish to TestPyPI
