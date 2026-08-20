@@ -101,20 +101,6 @@ def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> flo
     return float(abs(corr))
 
 
-def _calculate_reliability_components(
-    train_score: float,
-    cv_score: float,
-    test_score: float,
-    logic: Literal['lower', 'greater'],
-) -> dict[str, float]:
-    return calculate_reliability_components(
-        train_score=train_score,
-        cv_score=cv_score,
-        test_score=test_score,
-        logic=logic,
-    )
-
-
 def _add_reliability_columns(
     dataframe: pd.DataFrame,
     logic: Literal['lower', 'greater'],
@@ -438,24 +424,6 @@ class SequentialForwardSelection:
             len(self.extending_features),
         )
 
-    def _calculate_reliability_score(
-        self,
-        train_score: float,
-        cv_score: float,
-        test_score: float,
-    ) -> dict[str, float]:
-        scores = calculate_reliability_components(
-            train_score=train_score,
-            cv_score=cv_score,
-            test_score=test_score,
-            logic=self.logic,
-        )
-        return {
-            'performance_score': scores['performance_score'],
-            'instability_score': scores['instability_score'],
-            'reliability_score': scores['reliability_score'],
-        }
-
     def find_best(self, which: Optional[int] = None) -> dict:
         """
         Find the best feature subset based on reliability.
@@ -515,7 +483,12 @@ class SequentialForwardSelection:
         if which is None:
 
             scores = [
-                self._calculate_reliability_score(train_score, cv_score, test_score)
+                calculate_reliability_components(
+                    train_score=train_score,
+                    cv_score=cv_score,
+                    test_score=test_score,
+                    logic=self.logic,
+                )
                 for train_score, cv_score, test_score in zip(
                     self.train_scores,
                     self.cv_scores,
