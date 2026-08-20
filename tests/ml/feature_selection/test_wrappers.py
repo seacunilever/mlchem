@@ -102,15 +102,84 @@ def test_sequential_forward_selection_task_type_annotation_uses_classification()
 def test_sequential_forward_selection_find_best(fitted_sfs):
     best_features = fitted_sfs.find_best()
     assert 'best_score' in best_features
+    assert 'performance_score' in best_features
+    assert 'instability_score' in best_features
+    assert 'reliability_score' in best_features
+    assert best_features['best_score'] == best_features['reliability_score']
     assert 'features' in best_features
     assert len(best_features['features']) > 0
+
+
+def test_sequential_forward_selection_find_best_uses_reliability_score():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+    )
+    sfs.extending_features = ['a', 'b', 'c']
+    sfs.train_scores = [0.9, 0.8, 0.95]
+    sfs.cv_scores = [0.9, 0.75, 0.6]
+    sfs.unseen_scores = [0.9, 0.78, 0.55]
+
+    best_features = sfs.find_best()
+
+    assert best_features['best_index'] == 1
+    assert best_features['features'] == ['a']
+    assert best_features['performance_score'] == pytest.approx(0.9)
+    assert best_features['instability_score'] == pytest.approx(0.0)
+    assert best_features['reliability_score'] == pytest.approx(0.9)
+
+
+def test_sequential_forward_selection_find_best_lower_logic_inverts_performance():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='lower',
+    )
+    sfs.extending_features = ['a', 'b', 'c']
+    sfs.train_scores = [1.0, 0.5, 0.4]
+    sfs.cv_scores = [1.0, 0.6, 1.5]
+    sfs.unseen_scores = [1.0, 0.55, 1.6]
+
+    best_features = sfs.find_best()
+
+    expected_performance = 1 / ((0.5 * 0.6 * 0.55) ** (1/3))
+    expected_instability = abs(0.5 - 0.6) + abs(0.5 - 0.55) + abs(0.6 - 0.55)
+    expected_reliability = expected_performance / (1 + expected_instability)
+    assert best_features['best_index'] == 2
+    assert best_features['features'] == ['a', 'b']
+    assert best_features['performance_score'] == pytest.approx(expected_performance)
+    assert best_features['instability_score'] == pytest.approx(expected_instability)
+    assert best_features['reliability_score'] == pytest.approx(expected_reliability)
+
+
+def test_sequential_forward_selection_find_best_integer_selection_unchanged():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+    )
+    sfs.extending_features = ['a', 'b', 'c']
+
+    best_features = sfs.find_best(which=2)
+
+    assert best_features == {'best_index': 2, 'features': ['a', 'b']}
 
 def test_sequential_forward_selection_plot(fitted_sfs, tmp_path, monkeypatch):
     plt.close('all')
     plt.switch_backend('Agg')  # Use the Agg backend for testing
     monkeypatch.chdir(tmp_path)
     with patch('matplotlib.pyplot.show') as mock_show:
-        fitted_sfs.plot(best_feature=None,save=True)
+        fitted_sfs.plot(save=True)
         mock_show.assert_called_once()  # Ensure plt.show() is called
     assert True  # If no exceptions are raised, the test passes
 

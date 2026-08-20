@@ -127,6 +127,15 @@ class SequentialForwardSelection:
       Logging level threshold. Use 'DEBUG' for detailed diagnostics,
       'INFO' for standard output, 'WARNING' to suppress most output.
       Default is logging.INFO.
+  
+    Notes
+    -----
+    Automatic best-subset selection uses a reliability score. For each
+    selected prefix, ``performance_score = (train * cv * test) ** (1/3)``,
+    ``instability_score = |train-cv| + |train-test| + |cv-test|``, and for
+    higher-is-better metrics ``reliability_score = performance_score /
+    (1 + instability_score)``. For lower-is-better metrics, the geometric
+    mean is inverted first so the same reliability score can be maximised.
 
   Examples
   --------
@@ -386,104 +395,105 @@ class SequentialForwardSelection:
             len(self.extending_features),
         )
 
+    def _calculate_reliability_score(
+        self,
+        train_score: float,
+        cv_score: float,
+        test_score: float,
+    ) -> dict[str, float]:
+        performance_score = (train_score * cv_score * test_score) ** (1/3)
+        if self.logic == 'lower':
+            performance_score = np.inf if performance_score == 0 else 1 / performance_score
+
+        instability_score = (
+            abs(train_score - cv_score) +
+            abs(train_score - test_score) +
+            abs(cv_score - test_score)
+        )
+        reliability_score = performance_score / (1 + instability_score)
+
+        return {
+            'performance_score': performance_score,
+            'instability_score': instability_score,
+            'reliability_score': reliability_score,
+        }
+
     def find_best(self, which: Optional[int] = None) -> dict:
         """
-        Find the best feature subset based on evaluation criteria.
+        Find the best feature subset based on reliability.
 
         Parameters
         ----------
         which : int, optional
             If specified, returns the feature subset at the given index.
-            If None, the best subset is determined automatically using a 
-            scoring algorithm.
+            If None, the best subset is determined automatically using the
+            reliability score.
 
         Returns
         -------
         dict
             A dictionary containing:
-            - 'best_score': float
-            - 'variability_contribution': float
-            - 'geometric_contribution': float
-            - 'train_test_difference': float
             - 'best_index': int
             - 'features': list
+            - 'performance_score': float
+            - 'instability_score': float
+            - 'reliability_score': float
+            - 'best_score': float, retained as an alias of
+              'reliability_score' for backwards compatibility
 
         Notes
         -----
-        The automatic algorithm works as follows:
+        For each feature subset, the automatic algorithm computes:
 
-        1. Calculate the standard deviation of the training,
-           cross-validation, and unseen test scores for each feature subset.
-        2. Initialise the best score and best index to zero.
-        3. Define coefficients for variability contribution, percentile,
-           and contributions from training, cross-validation, and unseen test scores.
-        4. Iterate through each feature subset up to the maximum number
-           of features:
+        ``reliability_score = performance_score / (1 + instability_score)``
 
-           - Add a variability contribution if the standard deviation is
-             below a certain percentile.
-           - Add a geometric contribution based on the product of the
-             training, cross-validation, and unseen test scores.
-           - Add the absolute difference between the training and unseen
-             test scores.
-           - Update the best score and best index if the current total
-             score is higher than the best score.
+        where:
+
+        ``instability_score = |train-cv| + |train-test| + |cv-test|``
+
+        and, for higher-is-better metrics:
+
+        ``performance_score = (train_score * cv_score * test_score) ** (1/3)``
+
+        For lower-is-better metrics, such as RMSE, lower performance scores
+        are better, so the geometric mean is inverted before the same
+        reliability calculation is applied:
+
+        ``performance_score = 1 / ((train_score * cv_score * test_score) ** (1/3))``
+
+        ``reliability_score = performance_score / (1 + instability_score)``
+
+        The subset with the highest reliability score is selected. The test
+        score is intentionally included in the calculation.
         """
 
         if which is None:
 
-            # Apply algorithm to select the best feature subset.
-            index = 0
-            deviations = [np.std([tr, v, t]) for tr, v, t in
-                          zip(self.train_scores,
-                              self.cv_scores,
-                              self.unseen_scores)
-                          ]
+            scores = [
+                self._calculate_reliability_score(train_score, cv_score, test_score)
+                for train_score, cv_score, test_score in zip(
+                    self.train_scores,
+                    self.cv_scores,
+                    self.unseen_scores,
+                )
+            ]
 
-            best_score = 0
-            best_index = 0
+            if len(scores) == 0:
+                raise ValueError("No feature subsets have been evaluated. Run fit() before find_best().")
 
-            variability_contribution = 1.5
-            percentile = 20
-            train_coef = 1.5
-            cv_coef = 1.5
-            unseen_coef = 2
-
-            while index < self.max_features:
-                total_score = 0
-
-                # Variability contribution
-                if deviations[index] < np.percentile(deviations, percentile):
-                    total_score += variability_contribution
-
-                # Global contribution
-                geometric_contribution = 10*(
-                    train_coef *     # train score importance
-                    self.train_scores[index] *     # train score
-                    cv_coef *     # cv score importance
-                    self.cv_scores[index] *     # cv score
-                    unseen_coef *     # test score importance
-                    self.unseen_scores[index]     # test score
-                    )**(1/3)
-
-                total_score += geometric_contribution
-
-                train_test_difference = abs(self.train_scores[index] -
-                                            self.unseen_scores[index]
-                                            )
-                total_score += train_test_difference
-                index += 1     # evaluate next feature subset
-                if total_score > best_score:
-                    best_score = total_score
-                    best_index = index
-            best_index = best_index
-            dictionary = {'best_score': best_score,
-                          'variability_contribution': variability_contribution,
-                          'geometric_contribution': geometric_contribution,
-                          'train_test_difference': train_test_difference,
-                          'best_index': best_index,
-                          'features': self.extending_features[:best_index]
-                          }
+            best_index_zero_based = int(np.argmax([
+                score['reliability_score'] for score in scores
+            ]))
+            best_index = best_index_zero_based + 1
+            winning_scores = scores[best_index_zero_based]
+            dictionary = {
+                'best_index': best_index,
+                'features': self.extending_features[:best_index],
+                'performance_score': winning_scores['performance_score'],
+                'instability_score': winning_scores['instability_score'],
+                'reliability_score': winning_scores['reliability_score'],
+                'best_score': winning_scores['reliability_score'],
+            }
         else:     # if which == int
             best_index = which
             dictionary = {'best_index': best_index,
@@ -493,7 +503,7 @@ class SequentialForwardSelection:
 
     def plot(
         self,
-        best_feature: Optional[int] = None,
+        best_feature: int | Literal['auto'] | None = 'auto',
         figsize: tuple[int, int] = (10, 6),
         colours: list[str] = ['steelblue', 'orange', 'green'],
         title: str | None = None,
@@ -509,9 +519,10 @@ class SequentialForwardSelection:
 
         Parameters
         ----------
-        best_feature : int, optional
-            Index of the best feature subset to highlight. If None, it 
-            is determined automatically.
+        best_feature : int, 'auto', or None, optional
+            Index of the best feature subset to highlight. If 'auto' or
+            None, it is determined automatically using reliability-score
+            selection. Default is 'auto'.
         figsize : tuple of int, optional
             Size of the plot. Default is (10, 6).
         colours : list of str, optional
@@ -538,12 +549,18 @@ class SequentialForwardSelection:
 
         Notes
         -----
-        The automatic algorithm for determining the best feature subset 
-        is the same as described in `find_best`.
+        The automatic algorithm for determining the best feature subset
+        is the same as described in `find_best`: ``performance_score =
+        (train * cv * test) ** (1/3)``, ``instability_score = |train-cv| +
+        |train-test| + |cv-test|``, and for higher-is-better metrics
+        ``reliability_score = performance_score / (1 + instability_score)``.
+        For lower-is-better metrics, the geometric mean is inverted before
+        applying the same reliability formula. The subset with the highest
+        reliability score is highlighted.
         """
 
-        assert best_feature is None or isinstance(best_feature, int), \
-            "'best_feature_ must be either an integer or None'."
+        assert best_feature in ('auto', None) or isinstance(best_feature, int), \
+            "'best_feature' must be an integer, 'auto', or None."
 
         # Capture estimator name
         if not self.estimator_string:
@@ -587,7 +604,8 @@ class SequentialForwardSelection:
 
         plt.legend(fontsize=legendsize, loc='best')
 
-        ind = self.find_best(which=best_feature)['best_index']
+        which = None if best_feature in ('auto', None) else best_feature
+        ind = self.find_best(which=which)['best_index']
         colours = [
             'steelblue',
             'orange',
