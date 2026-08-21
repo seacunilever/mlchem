@@ -62,13 +62,13 @@ The `mlchem.chem.manipulation` module offers a variety of tools for creating, co
 
 ## Installation
 
-To install **mlchem**, open your command prompt and use the following command:
+To install **mlchem**, open your command prompt and use either:
 
 ```bash
 pip install git+https://github.com/seacunilever/mlchem.git
 ```
 
-When a release is published to PyPI, install with:
+or, from PyPI:
 
 ```bash
 pip install mlchem-ul
@@ -109,8 +109,6 @@ pip install -r requirements.txt
 ## Logging
 
 **mlchem** emits diagnostic logs during pipeline execution (feature selection, model evaluation, data preprocessing) to help users track progress and debug issues. Logs are emitted at the `INFO` level by default and appear on the console.
-
-### Basic Usage
 
 Logs appear automatically when running mlchem functions:
 
@@ -160,7 +158,7 @@ Use this for non-interactive scripts and production environments.
 
 ## Compatibility checks (Python 3.12, 3.13, 3.14)
 
-This repository now includes a local matrix runner and CI workflow scaffold to
+This repository includes a local matrix runner and CI workflow scaffold to
 keep cross-version support visible on every push.
 
 For most local development, running `python -m pytest -vv tests` from repo root is enough. The commands in
@@ -274,6 +272,19 @@ mol2 = create_molecule('CCCCCN')
 desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ```
 
+### calculate fingerprints
+```python
+from mlchem.chem.calculator import descriptors
+
+smiles_list = ['CCO', 'CCN', 'CCC']
+
+# Morgan bit-vectors (default configuration is radius=2 and nBits=2048)
+fp_df = descriptors.get_fingerprint_df(smiles_list, fp_type='m', radius=2, nBits=2048)
+
+# Include bit info for interpretability on a single molecule
+fp, bit_info = descriptors.get_fingerprint('CCO', fp_type='m', radius=2, nBits=2048, include_bit_info=True)
+```
+
 ### calculate chemotypes faster on larger datasets
 ```python
 from mlchem.chem.calculator import descriptors
@@ -286,7 +297,7 @@ smiles_list = ['CCO', 'CCN', 'COCC', 'c1ccccc1O']
 chemotypes = descriptors.get_chemotypes(smiles_list, n_jobs=4)
 ```
 
-Performance note: chemotype execution now reuses per-molecule rule results
+Performance note: since v1.1.0, chemotype execution reuses per-molecule rule results
 and avoids repeated molecule preparation. This is especially important for
 large rule dictionaries and medium-to-large training sets.
 
@@ -329,7 +340,7 @@ train_balanced, test_updated = undersample(
   train_set=train_df,
   test_set=test_df,
   class_column='class',
-  desired_proportion_majority=0.6,
+  desired_proportion_majority=0.5,
   log_level='INFO',
 )
 
@@ -344,19 +355,6 @@ y_scrambling(
   plot=False,
   log_level='INFO',
 )
-```
-
-### calculate fingerprints
-```python
-from mlchem.chem.calculator import descriptors
-
-smiles_list = ['CCO', 'CCN', 'CCC']
-
-# Morgan bit-vectors (2048 bits by default)
-fp_df = descriptors.get_fingerprint_df(smiles_list, fp_type='m', nBits=2048)
-
-# Include bit info for interpretability on a single molecule
-fp, bit_info = descriptors.get_fingerprint('CCO', fp_type='m', include_bit_info=True)
 ```
 
 ### pattern recognition
