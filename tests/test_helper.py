@@ -130,14 +130,14 @@ def test_suppress_warnings():
         warnings.warn("another warning", RuntimeWarning)
 
     assert len(record) == 1
-    
-    # Suppress warnings
 
+    # Suppress warnings
     suppress_warnings()
 
-    # Ensure no warnings are raised after suppressing
-
-    assert not warnings.warn("new warning")
+    # Ensure warning emission is suppressed after calling helper
+    with warnings.catch_warnings(record=True) as suppressed:
+        warnings.warn("new warning", RuntimeWarning)
+        assert len(suppressed) == 0
 
 def test_standardise_path():
     assert standardise_path("C:\\Users\\User\\Documents") == "C:/Users/User/Documents"
