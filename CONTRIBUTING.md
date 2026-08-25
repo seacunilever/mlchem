@@ -137,6 +137,7 @@ Include this in your PR description:
 - Test evidence (commands and results)
 - Docs impact and updated files
 - Risk/regression notes
+- Changelog impact (`CHANGELOG_PR.md` created, or explicit `N/A` with reason)
 
 Before requesting review, confirm:
 
@@ -144,6 +145,18 @@ Before requesting review, confirm:
 - No generated test artifacts outside tests/
 - README/docs updated for user-facing changes
 - No sensitive data or local machine paths are included
+
+## Changelog policy
+
+- Keep `CHANGELOG_PR.md` user-facing: summarize behavior changes, fixes, and migration notes.
+- For non-user-facing internal refactors, `CHANGELOG_PR.md` can be left unchanged with explicit `N/A` in the PR.
+
+## Minimal API stability policy
+
+- Public imports and function signatures are expected to remain stable within a minor series.
+- Backward-incompatible changes should be avoided in patch releases.
+- When a breaking change is necessary, document migration guidance in `CHANGELOG.md` and coordinate it with a major version bump.
+- Prefer additive changes (new optional parameters, new functions) over behavior-changing rewrites of existing APIs.
 
 ## Security and sensitive information
 
