@@ -53,6 +53,27 @@ jobs:
             pytest -vv tests
           fi
 
+      - name: Guard against generated test artifacts
+        if: matrix.python-version == '3.12'
+        run: |
+          set -euo pipefail
+          forbidden_status=$(git status --porcelain -- \
+            'tests/**/test_plot.html' \
+            'tests/**/y_scrambling_test_plot.png' \
+            'tests/**/SFS_*.png' \
+            'tests/**/LogisticRegression()' \
+            'tests/**/LogisticRegression()_allcols' \
+            'tests/**/LogisticRegression()_best' \
+            'tests/**/CLASS_A/' \
+            'tests/**/CLASS_B/' \
+            'tests/**/.coverage' \
+            'tests/**/run.out')
+          if [ -n "$forbidden_status" ]; then
+            echo "Forbidden generated test artifacts detected:"
+            echo "$forbidden_status"
+            exit 1
+          fi
+
       - name: Generate coverage badges (py312 only)
         if: matrix.python-version == '3.12'
         run: |
