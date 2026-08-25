@@ -137,7 +137,7 @@ Include this in your PR description:
 - Test evidence (commands and results)
 - Docs impact and updated files
 - Risk/regression notes
-- Changelog impact (`CHANGELOG_PR.md` created, or explicit `N/A` with reason)
+- Changelog impact (`CHANGELOG.md` updated when user-facing behavior changes, or explicit `N/A` with reason)
 
 Before requesting review, confirm:
 
@@ -148,8 +148,8 @@ Before requesting review, confirm:
 
 ## Changelog policy
 
-- Keep `CHANGELOG_PR.md` user-facing: summarize behavior changes, fixes, and migration notes.
-- For non-user-facing internal refactors, `CHANGELOG_PR.md` can be left unchanged with explicit `N/A` in the PR.
+- Keep `CHANGELOG.md` user-facing: summarize behavior changes, fixes, and migration notes.
+- For non-user-facing internal refactors, `CHANGELOG.md` can be left unchanged with explicit `N/A` in the PR.
 
 ## Minimal API stability policy
 
