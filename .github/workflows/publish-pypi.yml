@@ -4,128 +4,9 @@ on:
   push:
     tags:
       - "v*"
-  workflow_run:
-    workflows:
-      - Compatibility Matrix
-    types:
-      - completed
 
 jobs:
-  prepare-release:
-    name: Prepare release
-    runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'push' ||
-      (
-        github.event.workflow_run.conclusion == 'success' &&
-        contains(fromJSON('["main", "master"]'), github.event.workflow_run.head_branch)
-      )
-    permissions:
-      contents: write
-    outputs:
-      should_publish: ${{ steps.release.outputs.should_publish }}
-      version: ${{ steps.release.outputs.version }}
-      tag: ${{ steps.release.outputs.tag }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
-          fetch-depth: 0
-
-      - name: Detect release version
-        id: release
-        shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          python - <<'PY'
-          import os
-          import re
-          import subprocess
-          from pathlib import Path
-
-
-          def write_output(key, value):
-              with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
-                  fh.write(f'{key}={value}\n')
-
-
-          def extract_version(text):
-              match = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", text)
-              if not match:
-                  raise SystemExit('Could not find version in setup.py')
-              return match.group(1)
-
-
-          current_version = extract_version(Path('setup.py').read_text(encoding='utf-8'))
-          release_tag = f'v{current_version}'
-          event_name = os.environ['EVENT_NAME']
-
-          write_output('version', current_version)
-          write_output('tag', release_tag)
-
-          if event_name == 'push':
-              pushed_tag = os.environ['REF_NAME']
-              if not pushed_tag.startswith('v'):
-                  raise SystemExit(f'Expected a v* tag, got {pushed_tag}')
-              tag_version = pushed_tag[1:]
-              print(f'Tag version: {tag_version}')
-              print(f'Package version: {current_version}')
-              if tag_version != current_version:
-                  raise SystemExit('Tag version and setup.py version do not match.')
-              write_output('should_publish', 'true')
-              raise SystemExit(0)
-
-          try:
-              previous_setup = subprocess.check_output(
-                  ['git', 'show', 'HEAD^:setup.py'],
-                  text=True,
-                  stderr=subprocess.DEVNULL,
-              )
-          except subprocess.CalledProcessError:
-              print('No parent setup.py available; skipping automatic release.')
-              write_output('should_publish', 'false')
-              raise SystemExit(0)
-
-          previous_version = extract_version(previous_setup)
-          print(f'Previous package version: {previous_version}')
-          print(f'Current package version: {current_version}')
-
-          if previous_version == current_version:
-              print('setup.py version did not change; skipping automatic release.')
-              write_output('should_publish', 'false')
-              raise SystemExit(0)
-
-          existing_tag = subprocess.run(
-              ['git', 'ls-remote', '--exit-code', '--tags', 'origin', f'refs/tags/{release_tag}'],
-              stdout=subprocess.PIPE,
-              stderr=subprocess.PIPE,
-              text=True,
-          )
-          if existing_tag.returncode == 0:
-              raise SystemExit(f'Tag {release_tag} already exists.')
-          if existing_tag.returncode not in (0, 2):
-              raise SystemExit(existing_tag.stderr or f'Could not check whether {release_tag} exists.')
-
-          write_output('should_publish', 'true')
-          PY
-
-      - name: Create release tag
-        if: steps.release.outputs.should_publish == 'true' && github.event_name == 'workflow_run'
-        env:
-          RELEASE_TAG: ${{ steps.release.outputs.tag }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
-          git push origin "refs/tags/${RELEASE_TAG}"
-
   publish:
-    needs: prepare-release
-    if: needs.prepare-release.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -138,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-release.outputs.tag }}
+          ref: ${{ github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -148,7 +29,7 @@ jobs:
       - name: Verify tag matches setup.py version
         shell: bash
         env:
-          RELEASE_TAG: ${{ needs.prepare-release.outputs.tag }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           TAG_VERSION="${RELEASE_TAG#v}"
           PACKAGE_VERSION=$(python - <<'PY'
