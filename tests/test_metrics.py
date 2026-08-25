@@ -81,6 +81,10 @@ def test_get_geometric_S(sample_classification_data):
     geometric_S = get_geometric_S(y_true, y_pred)
     assert geometric_S == pytest.approx(0.8, 0.01)
 
+def test_get_geometric_S_degenerate(y_true=[0,0,0], y_pred=[0,0,0]):
+    geometric_S = get_geometric_S(y_true, y_pred)
+    assert geometric_S == 1
+
 def test_sensitivity_all_negative():
     y_true = [0, 0, 0, 0]
     y_pred = [0, 0, 0, 0]
