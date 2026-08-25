@@ -147,10 +147,18 @@ def get_geometric_S(
         The geometric mean of sensitivity and specificity.
 """
 
+    import numpy as np
+
+    unique_true = np.unique(y_true)
+
+    # Degenerate cases: only one class present in y_true
+    if len(unique_true) == 1:
+        return float(np.array_equal(y_true, y_pred))
+
     sensitivity = get_sensitivity(y_true, y_pred, labels=labels)
     specificity = get_specificity(y_true, y_pred, labels=labels)
-    return (sensitivity * specificity) ** 0.5
 
+    return (sensitivity * specificity) ** 0.5
 
 def get_mcc(
     y_true: Iterable[int | str],
