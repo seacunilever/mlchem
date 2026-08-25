@@ -1,0 +1,55 @@
+name: Sync Version Metadata
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  sync-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from setup.py
+        id: version
+        run: |
+          VERSION=$(grep "version=" setup.py | sed "s/.*version='\([^']*\)'.*/\1/")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Update __init__.py version
+        run: |
+          sed -i 's/__version__ = "[^"]*"/__version__ = "${{ steps.version.outputs.version }}"/g' __init__.py
+
+      - name: Update Sphinx release in conf.py
+        run: |
+          sed -i "s/release = '[^']*'/release = '${{ steps.version.outputs.version }}'/g" docs/source/conf.py
+
+      - name: Update docs HTML titles and nav
+        run: |
+          find docs -name "*.html" -type f -exec sed -i "s/mlchem [0-9.]\+ documentation/mlchem ${{ steps.version.outputs.version }} documentation/g" {} +
+
+      - name: Update documentation_options.js VERSION
+        run: |
+          sed -i "s/VERSION: '[^']*'/VERSION: '${{ steps.version.outputs.version }}'/g" docs/_static/documentation_options.js docs/build/html/_static/documentation_options.js
+
+      - name: Update bizstyle.js version text
+        run: |
+          sed -i "s/mlchem [0-9.]\+ documentation/mlchem ${{ steps.version.outputs.version }} documentation/g" docs/_static/bizstyle.js docs/build/html/_static/bizstyle.js
+
+      - name: Commit and push version updates
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: sync version metadata to ${{ steps.version.outputs.version }}"
+            git push
+          else
+            echo "No version changes needed"
+          fi
