@@ -33,15 +33,17 @@
 
 from typing import Iterable, Literal
 from rdkit.Chem import DataStructs
+import numpy as np
+import warnings
 
 
 def get_sensitivity(
     y_true: Iterable[int | str],
     y_pred: Iterable[int | str],
-    labels: Iterable[int | str] | None = None,
 ) -> float:
     """
     Compute the sensitivity (recall) of a prediction.
+    The `labels` argument has been removed in v1.1.3 as ininfluent.
 
     Parameters
     ----------
@@ -50,42 +52,31 @@ def get_sensitivity(
 
     y_pred : Iterable[int or str]
         Predicted labels.
-
-    labels : Iterable[int or str], optional
-        Label names to include in the calculation. If None, all labels
-        are used.
 
     Returns
     -------
     float
         The sensitivity (recall) of the prediction.
     """
-    from sklearn.metrics import confusion_matrix
 
-    if labels is None:
-        labels = sorted(set(y_true) | set(y_pred))
-    if len(labels) < 2:
-        labels = list(labels) + ['__dummy__']
-
-    confmat = confusion_matrix(y_true=y_true, y_pred=y_pred, labels=labels)
-
-    if confmat.shape[0] < 2 or confmat.shape[1] < 2:
-        return 0.0
-
-    tp = confmat[1][1]
-    fn = confmat[1][0]
-    denom = tp + fn
-    return tp / denom if denom != 0 else 0.0
+    y_true = np.asarray(y_true).astype(int)
+    y_pred = np.asarray(y_pred).astype(int)
+    tp = np.sum((y_true == 1) & (y_pred == 1))
+    fn = np.sum((y_true == 1) & (y_pred == 0))
+    denominator = tp + fn
+    if denominator == 0:
+        warnings.warn("Denominator is zero, sensitivity is undefined but it will be coerced to 0.", UserWarning)
+    return tp / denominator if denominator > 0 else 0
 
 
 
 def get_specificity(
     y_true: Iterable[int | str],
     y_pred: Iterable[int | str],
-    labels: Iterable[int | str] | None = None,
 ) -> float:
     """
     Compute the specificity of a prediction.
+    The `labels` argument has been removed in v1.1.3 as ininfluent.
 
     Parameters
     ----------
@@ -95,40 +86,31 @@ def get_specificity(
     y_pred : Iterable[int or str]
         Predicted labels.
 
-    labels : Iterable[int or str], optional
-        Label names to include in the calculation. If None, all labels are used.
 
     Returns
     -------
     float
         The specificity of the prediction.
     """
-    from sklearn.metrics import confusion_matrix
 
-    if labels is None:
-        labels = sorted(set(y_true) | set(y_pred))
-    if len(labels) < 2:
-        labels = list(labels) + ['__dummy__']
-
-    confmat = confusion_matrix(y_true=y_true, y_pred=y_pred, labels=labels)
-
-    if confmat.shape[0] < 2 or confmat.shape[1] < 2:
-        return 0.0
-
-    tn = confmat[0][0]
-    fp = confmat[0][1]
-    denom = tn + fp
-    return tn / denom if denom != 0 else 0.0
+    y_true = np.asarray(y_true).astype(int)
+    y_pred = np.asarray(y_pred).astype(int)
+    tn = np.sum((y_true == 0) & (y_pred == 0))
+    fp = np.sum((y_true == 0) & (y_pred == 1))
+    denominator = tn + fp
+    if denominator == 0:
+        warnings.warn("Denominator is zero, specificity is undefined but it will be coerced to 0.", UserWarning)
+    return tn / denominator if denominator > 0 else 0
 
 
 
 def get_geometric_S(
     y_true: Iterable[int | str],
     y_pred: Iterable[int | str],
-    labels: Iterable[int | str] | None = None,
 ) -> float:
     """
     Compute the geometric mean of sensitivity and specificity.
+    The `labels` argument has been removed in v1.1.3 as ininfluent.
 
     Parameters
     ----------
@@ -137,9 +119,6 @@ def get_geometric_S(
 
     y_pred : Iterable[int or str]
         Predicted labels.
-
-    labels : Iterable[int or str], optional
-        Label names to include in the calculation. If None, all labels are used.
 
     Returns
     -------
@@ -147,16 +126,16 @@ def get_geometric_S(
         The geometric mean of sensitivity and specificity.
 """
 
-    import numpy as np
 
     unique_true = np.unique(y_true)
 
     # Degenerate cases: only one class present in y_true
     if len(unique_true) == 1:
+        warnings.warn("Only one class is present in y_true", UserWarning)
         return float(np.array_equal(y_true, y_pred))
 
-    sensitivity = get_sensitivity(y_true, y_pred, labels=labels)
-    specificity = get_specificity(y_true, y_pred, labels=labels)
+    sensitivity = get_sensitivity(y_true, y_pred)
+    specificity = get_specificity(y_true, y_pred)
 
     return (sensitivity * specificity) ** 0.5
 
@@ -240,7 +219,6 @@ def calculate_reliability_components(
         Dictionary containing ``geometric_mean``, ``performance_score``,
         ``instability_score``, and ``reliability_score``.
     """
-    import numpy as np
 
     if logic not in ('lower', 'greater'):
         raise ValueError("'logic' must be either 'lower' or 'greater'.")
@@ -286,7 +264,6 @@ def rmse_to_std_ratio(
         The ratio of standard deviation to RMSE.
 """
 
-    import numpy as np
 
     rmse = get_rmse(y_true, y_pred)
     if rmse == 0:
@@ -316,7 +293,6 @@ def get_r2(
         The R-squared value.
     """
 
-    import numpy as np
     from scipy.stats import pearsonr
 
     y_true_arr = np.asarray(y_true)
