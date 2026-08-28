@@ -85,37 +85,6 @@ ValueError
     raise ValueError(f'{mol_input}: Molecule not recognised as '
                      'a valid SMILES or InCHI sequence.')
 
-
-def smiles_to_inchi(smiles: str) -> str:
-    """
-    Convert a SMILES string to an InChI string.
-
-    **Deprecated:** Use `convert_molecule_string(smiles, to_format='InChI')` instead.
-
-    Parameters
-    ----------
-    smiles : str
-        A string representing a molecule in SMILES format.
-
-    Returns
-    -------
-    str
-        An InChI string corresponding to the input SMILES.
-
-    Raises
-    ------
-    ValueError
-        If the SMILES string is invalid.
-    """
-    warnings.warn(
-        "smiles_to_inchi() is deprecated and will be removed in a future version. "
-        "Use convert_molecule_string(smiles, to_format='InChI') instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return convert_molecule_string(smiles, to_format='InChI')
-
-
 def create_molecule(mol_input: str | np.str_ | Chem.rdchem.Mol,
                     add_hydrogens: bool = False,
                     show: bool = False,
@@ -257,77 +226,6 @@ str
     The canonical SMILES string.
 """
     return Chem.MolToSmiles(Chem.MolFromSmiles(smiles), kekuleSmiles=False)
-
-
-def smarts_from_string(string: str) -> str:
-    """
-Convert a SMILES or InChI string into a SMARTS string.
-
-**Deprecated:** Use `convert_molecule_string(string, to_format='SMARTS')` instead.
-
-Parameters
-----------
-string : str
-    A string representing a molecule in SMILES or InChI format.
-
-Returns
--------
-str
-    A SMARTS string representing the molecular pattern.
-"""
-    warnings.warn(
-        "smarts_from_string() is deprecated and will be removed in a future version. "
-        "Use convert_molecule_string(string, to_format='SMARTS') instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return convert_molecule_string(string, to_format='SMARTS')
-
-
-def smiles_from_smarts(smarts_string: str,
-                       canonical: bool = True,
-                       kekuleSmiles: bool = False,
-                       isomericSmiles: bool = False) -> str:
-    """
-Convert a SMARTS pattern to a SMILES string.
-
-**Deprecated:** Use `convert_molecule_string(smarts_string, to_format='SMILES', ...)` instead.
-
-This function parses a SMARTS pattern and generates a canonical SMILES
-representation of the generic chemical structure it describes.
-
-Parameters
-----------
-smarts_string : str
-    A SMARTS pattern string defining the chemical structure.
-canonical : bool, optional
-    Whether to generate canonical SMILES. Default is True.
-kekuleSmiles : bool, optional
-    Whether to generate Kekulé form. Default is False.
-isomericSmiles : bool, optional
-    Whether to include stereochemistry information. Default is False.
-
-Returns
--------
-str
-    A SMILES string representing the SMARTS pattern.
-
-Raises
-------
-ValueError
-    If the SMARTS pattern is invalid.
-"""
-    warnings.warn(
-        "smiles_from_smarts() is deprecated and will be removed in a future version. "
-        "Use convert_molecule_string(smarts_string, to_format='SMILES', ...) instead.",
-        DeprecationWarning,
-        stacklevel=2
-    )
-    return convert_molecule_string(smarts_string,
-                                   to_format='SMILES',
-                                   canonical=canonical,
-                                   kekuleSmiles=kekuleSmiles,
-                                   isomericSmiles=isomericSmiles)
 
 
 def convert_molecule_string(mol_input: str,
@@ -3714,7 +3612,10 @@ None
                   else:
                       # Use SMILES directly; convert to SMARTS for pattern matching
                       template_smiles_for_encoding = self.template_string
-                      self.template_smarts = smarts_from_string(self.template_string)
+                      self.template_smarts = convert_molecule_string(
+                          self.template_string,
+                          to_format='SMARTS'
+                      )
                   
                   self.template_selfies = sf.encoder(template_smiles_for_encoding)
 
@@ -3864,7 +3765,10 @@ tuple of (bool, list of int)
 
             atoms = flatten(
                 target_mol.GetSubstructMatches(
-                    Chem.MolFromSmarts(smarts_from_string(smiles_pattern)),
+                    Chem.MolFromSmarts(convert_molecule_string(
+                        smiles_pattern,
+                        to_format='SMARTS'
+                    )),
                     maxMatches=target_mol.GetNumAtoms()
                     ))
 
