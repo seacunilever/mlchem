@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 
 <html lang="en" data-content_root="./">
@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=fc837d61"></script>
+    <script src="_static/documentation_options.js?v=cb7bf70b"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -53,25 +53,25 @@
           <div class="body" role="main">
             
   <section id="mlchem-chem-calculator-package">
-<h1>mlchem.chem.calculator package<a class="headerlink" href="#mlchem-chem-calculator-package" title="Link to this heading">Â¶</a></h1>
+<h1>mlchem.chem.calculator package<a class="headerlink" href="#mlchem-chem-calculator-package" title="Link to this heading">¶</a></h1>
 <section id="submodules">
-<h2><em>Submodules</em><a class="headerlink" href="#submodules" title="Link to this heading">Â¶</a></h2>
+<h2><em>Submodules</em><a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
 <section id="module-mlchem.chem.calculator.descriptors">
-<span id="mlchem-chem-calculator-descriptors-module"></span><h3>mlchem.chem.calculator.descriptors module<a class="headerlink" href="#module-mlchem.chem.calculator.descriptors" title="Link to this heading">Â¶</a></h3>
+<span id="mlchem-chem-calculator-descriptors-module"></span><h3>mlchem.chem.calculator.descriptors module<a class="headerlink" href="#module-mlchem.chem.calculator.descriptors" title="Link to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_EHT_descriptors">
-<span class="sig-name descname"><span class="pre">get_EHT_descriptors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_EHT_descriptors" title="Link to this definition">Â¶</a></dt>
-<dd><p>Calculate quantum chemistry descriptors using Extended HÃ¼ckel Theory (EHT).</p>
+<span class="sig-name descname"><span class="pre">get_EHT_descriptors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_EHT_descriptors" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate quantum chemistry descriptors using Extended Hückel Theory (EHT).</p>
 <p>This function computes various quantum chemistry properties for a
-3D-embedded molecule using RDKitâ€™s EHT implementation. It includes
+3D-embedded molecule using RDKit’s EHT implementation. It includes
 orbital energies, overlap matrices, and Mulliken charges.</p>
 <p>More information:
 <a class="reference external" href="https://dasher.wustl.edu/chem478/reading/extended-huckel-lowe.pdf">https://dasher.wustl.edu/chem478/reading/extended-huckel-lowe.pdf</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input</strong> (<em>rdkit.Chem.rdchem.Mol</em>) â€“ RDKit Mol object with at least one conformer.</p></li>
-<li><p><strong>conf_id</strong> (<em>int</em><em>, </em><em>optional</em>) â€“ Conformer ID to use. Default is -1 (use the first conformer).</p></li>
+<li><p><strong>mol_input</strong> (<em>rdkit.Chem.rdchem.Mol</em>) – RDKit Mol object with at least one conformer.</p></li>
+<li><p><strong>conf_id</strong> (<em>int</em><em>, </em><em>optional</em>) – Conformer ID to use. Default is -1 (use the first conformer).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -91,7 +91,7 @@ orbital energies, overlap matrices, and Mulliken charges.</p>
 <dd class="field-odd"><p>dict</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> â€“ If the molecule has no conformers.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If the molecule has no conformers.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -102,7 +102,7 @@ orbital energies, overlap matrices, and Mulliken charges.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_allDesc">
-<span class="sig-name descname"><span class="pre">get_allDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_3D</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_allDesc" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_allDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_3D</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_allDesc" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate both Mordred and RDKit descriptors for a list of molecules.</p>
 <p>This function computes both Mordred and RDKit descriptors for each molecule
 in the input list. If <cite>include_3D</cite> is True, 3D descriptors are included
@@ -110,8 +110,8 @@ in both sets.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) â€“ List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
-<li><p><strong>include_3D</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to include 3D descriptors. Default is False.</p></li>
+<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
+<li><p><strong>include_3D</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include 3D descriptors. Default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -129,41 +129,51 @@ in both sets.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_atomicDesc">
-<span class="sig-name descname"><span class="pre">get_atomicDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_atomicDesc" title="Link to this definition">Â¶</a></dt>
-<dd><p>Calculate atomic descriptors for a specific atom in a molecule.</p>
+<span class="sig-name descname"><span class="pre">get_atomicDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_hydrogens</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_3d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_atomicDesc" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate descriptors for all atoms in a molecule.</p>
 <p>This function computes a comprehensive set of atomic-level descriptors
-for a given atom in a molecule. These include properties related to
+for all atoms in a molecule. These include properties related to
 bond types, hybridisation, charges, ring membership, and statistics
 on neighbouring atoms up to the third order.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) â€“ Molecule in SMILES format or as an RDKit Mol object.</p></li>
-<li><p><strong>atom_index</strong> (<em>int</em>) â€“ Index of the atom for which descriptors are calculated.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A DataFrame containing the descriptors for the specified atom.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>RuntimeError</strong> â€“ If the molecule cannot be created from the input.</p></li>
-<li><p><strong>IndexError</strong> â€“ If the atom index is out of bounds.</p></li>
+<li><p><strong>mol_input</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – Molecule in SMILES format or as an RDKit Mol object.</p></li>
+<li><p><strong>max_atoms</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of atoms to consider. If None, all atoms are considered.</p></li>
+<li><p><strong>pad_value</strong> (<em>float</em><em>, </em><em>optional</em>) – Value used for padding when the number of atoms is less than <cite>max_atoms</cite>.
+Default is 0.0.</p></li>
+<li><p><strong>add_hydrogens</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to add hydrogen atoms to the molecule before calculating descriptors.
+Default is True.</p></li>
+<li><p><strong>is_3d</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to consider the molecule as three-dimensional during calculations.
+Default is True.</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>In v1.1.4, get_atomicDesc changed arguments and output style: it now
+calculates descriptors for all atoms in a molecule and returns one row per
+atom. Use max_atoms and pad_value to cap or pad the output matrix; atom_index
+is no longer part of the supported calling style.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A DataFrame containing the descriptors for all atoms in the molecule.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pd.DataFrame</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – If the molecule cannot be created from the input.</p>
+</dd>
+</dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_atomicDesc</span><span class="p">(</span><span class="s2">&quot;CC(=O)O&quot;</span><span class="p">,</span> <span class="n">atom_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_atomicDesc</span><span class="p">(</span><span class="n">mol_input</span><span class="o">=</span><span class="s2">&quot;CC(=O)O&quot;</span><span class="p">,</span> <span class="n">max_atoms</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_chemotypes">
-<span class="sig-name descname"><span class="pre">get_chemotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chemotype_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_chemotypes" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_chemotypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chemotype_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_chemotypes" title="Link to this definition">¶</a></dt>
 <dd><p>Identify chemotypes for a list of molecules.</p>
 <p>This function applies a dictionary of chemotype definitions to each
 molecule in the input list. Each chemotype is defined by a function
@@ -171,11 +181,11 @@ and its arguments. If no dictionary is provided, a default one is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) â€“ List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
-<li><p><strong>chemotype_dict</strong> (<em>dict</em><em>, </em><em>optional</em>) â€“ Dictionary of chemotype definitions. Each entry should be a key
+<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
+<li><p><strong>chemotype_dict</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary of chemotype definitions. Each entry should be a key
 with a tuple of (function, argument_dict). If None, a default
 dictionary is used.</p></li>
-<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) â€“ Number of worker threads used to process molecules. Use values
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of worker threads used to process molecules. Use values
 greater than 1 to enable parallel execution. Use -1 to consume
 all available CPU cores. Default is 1.</p></li>
 </ul>
@@ -188,12 +198,12 @@ all available CPU cores. Default is 1.</p></li>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>ValueError</strong> â€“ If <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> is 0 or less than -1.</p></li>
-<li><p><strong>ValueError</strong> â€“ If a chemotype rule does not contain exactly two items
+<li><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> is 0 or less than -1.</p></li>
+<li><p><strong>ValueError</strong> – If a chemotype rule does not contain exactly two items
     (function, arguments).</p></li>
-<li><p><strong>TypeError</strong> â€“ If a chemotype rule function is not callable or its argument payload is
+<li><p><strong>TypeError</strong> – If a chemotype rule function is not callable or its argument payload is
     not a dictionary.</p></li>
-<li><p><strong>Exception</strong> â€“ Propagates molecule parsing/evaluation exceptions from underlying rule
+<li><p><strong>Exception</strong> – Propagates molecule parsing/evaluation exceptions from underlying rule
     functions and RDKit utilities.</p></li>
 </ul>
 </dd>
@@ -215,7 +225,7 @@ when <code class="docutils literal notranslate"><span class="pre">n_jobs</span> 
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_fingerprint">
-<span class="sig-name descname"><span class="pre">get_fingerprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'m'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ap'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'rk'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tt'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'mac'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_chirality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bit_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_fingerprint" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fingerprint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mol</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'m'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ap'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'rk'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tt'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'mac'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_chirality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bit_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_fingerprint" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a molecular fingerprint using RDKit.</p>
 <p>This function generates a fingerprint for a molecule using one of
 several RDKit-supported types. Optionally, bit information can be
@@ -223,18 +233,18 @@ returned for interpretability.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) â€“ Molecule in SMILES format or as an RDKit Mol object.</p></li>
-<li><p><strong>fp_type</strong> (<em>{'m'</em><em>, </em><em>'ap'</em><em>, </em><em>'rk'</em><em>, </em><em>'tt'</em><em>, </em><em>'mac'}</em><em>, </em><em>optional</em>) â€“ Type of fingerprint to generate:
-- â€˜mâ€™: Morgan
-- â€˜apâ€™: Atom Pair
-- â€˜rkâ€™: RDKit
-- â€˜ttâ€™: Topological Torsion
-- â€˜macâ€™: MACCS keys
-Default is â€˜mâ€™.</p></li>
-<li><p><strong>radius</strong> (<em>int</em><em>, </em><em>optional</em>) â€“ Radius or path length depending on fingerprint type. Default is 2.</p></li>
-<li><p><strong>nBits</strong> (<em>int</em><em>, </em><em>optional</em>) â€“ Size of the fingerprint. Default is 2048.</p></li>
-<li><p><strong>include_chirality</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to include chirality. Default is False.</p></li>
-<li><p><strong>include_bit_info</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to return bit information. Default is False.</p></li>
+<li><p><strong>mol_input</strong> (<em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – Molecule in SMILES format or as an RDKit Mol object.</p></li>
+<li><p><strong>fp_type</strong> (<em>{'m'</em><em>, </em><em>'ap'</em><em>, </em><em>'rk'</em><em>, </em><em>'tt'</em><em>, </em><em>'mac'}</em><em>, </em><em>optional</em>) – Type of fingerprint to generate:
+- ‘m’: Morgan
+- ‘ap’: Atom Pair
+- ‘rk’: RDKit
+- ‘tt’: Topological Torsion
+- ‘mac’: MACCS keys
+Default is ‘m’.</p></li>
+<li><p><strong>radius</strong> (<em>int</em><em>, </em><em>optional</em>) – Radius or path length depending on fingerprint type. Default is 2.</p></li>
+<li><p><strong>nBits</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the fingerprint. Default is 2048.</p></li>
+<li><p><strong>include_chirality</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include chirality. Default is False.</p></li>
+<li><p><strong>include_bit_info</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return bit information. Default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -253,7 +263,7 @@ returns a tuple (fingerprint, bit_info_dict).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_fingerprint_df">
-<span class="sig-name descname"><span class="pre">get_fingerprint_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'m'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ap'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'rk'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tt'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'mac'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_chirality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bit_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_fingerprint_df" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fingerprint_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'m'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ap'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'rk'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tt'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'mac'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'m'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nBits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_chirality</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_bit_info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_fingerprint_df" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a DataFrame of fingerprints for a list of molecules.</p>
 <p>This function computes fingerprints for each molecule in the input list
 and returns them as a DataFrame. Optionally, bit information can also
@@ -261,12 +271,12 @@ be returned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) â€“ List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
-<li><p><strong>fp_type</strong> (<em>{'m'</em><em>, </em><em>'ap'</em><em>, </em><em>'rk'</em><em>, </em><em>'tt'</em><em>, </em><em>'mac'}</em><em>, </em><em>optional</em>) â€“ Type of fingerprint to generate. Default is â€˜mâ€™.</p></li>
-<li><p><strong>radius</strong> (<em>int</em><em>, </em><em>optional</em>) â€“ Radius or path length depending on fingerprint type. Default is 2.</p></li>
-<li><p><strong>nBits</strong> (<em>int</em><em>, </em><em>optional</em>) â€“ Size of the fingerprint. Default is 2048.</p></li>
-<li><p><strong>include_chirality</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to include chirality. Default is False.</p></li>
-<li><p><strong>include_bit_info</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to return bit information. Default is False.</p></li>
+<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
+<li><p><strong>fp_type</strong> (<em>{'m'</em><em>, </em><em>'ap'</em><em>, </em><em>'rk'</em><em>, </em><em>'tt'</em><em>, </em><em>'mac'}</em><em>, </em><em>optional</em>) – Type of fingerprint to generate. Default is ‘m’.</p></li>
+<li><p><strong>radius</strong> (<em>int</em><em>, </em><em>optional</em>) – Radius or path length depending on fingerprint type. Default is 2.</p></li>
+<li><p><strong>nBits</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the fingerprint. Default is 2048.</p></li>
+<li><p><strong>include_chirality</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include chirality. Default is False.</p></li>
+<li><p><strong>include_bit_info</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return bit information. Default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -285,15 +295,15 @@ also returns a dictionary of bit information.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_mordredDesc">
-<span class="sig-name descname"><span class="pre">get_mordredDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_3D</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_mordredDesc" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_mordredDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_3D</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_mordredDesc" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate Mordred descriptors for a list of molecules.</p>
 <p>This function computes Mordred descriptors for each molecule in the input list.
 If <cite>include_3D</cite> is True, 3D descriptors are included.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) â€“ List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
-<li><p><strong>include_3D</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to include 3D descriptors. Default is False.</p></li>
+<li><p><strong>mol_input_list</strong> (<em>list</em><em> or </em><em>np.ndarray</em><em> of </em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em>) – List or array of molecules in SMILES format or as RDKit Mol objects.</p></li>
+<li><p><strong>include_3D</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include 3D descriptors. Default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -311,7 +321,7 @@ If <cite>include_3D</cite> is True, 3D descriptors are included.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.descriptors.get_rdkitDesc">
-<span class="sig-name descname"><span class="pre">get_rdkitDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_3D</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_rdkitDesc" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_rdkitDesc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol_input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_3D</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.descriptors.get_rdkitDesc" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate RDKit descriptors for a list of molecules.</p>
 <p>This function computes 2D descriptors for each molecule in the input list.
 If <cite>include_3D</cite> is True, it also calculates 3D descriptors and merges them
@@ -319,8 +329,8 @@ with the 2D descriptors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mol_input_list</strong> (<em>Iterable</em><em>[</em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em><em>]</em>) â€“ List of molecules in SMILES format or as RDKit Mol objects.</p></li>
-<li><p><strong>include_3D</strong> (<em>bool</em><em>, </em><em>optional</em>) â€“ Whether to include 3D descriptors. Default is False.</p></li>
+<li><p><strong>mol_input_list</strong> (<em>Iterable</em><em>[</em><em>str</em><em> or </em><em>rdkit.Chem.rdchem.Mol</em><em>]</em>) – List of molecules in SMILES format or as RDKit Mol objects.</p></li>
+<li><p><strong>include_3D</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to include 3D descriptors. Default is False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -338,18 +348,18 @@ with the 2D descriptors.</p>
 
 </section>
 <section id="module-mlchem.chem.calculator.tools">
-<span id="mlchem-chem-calculator-tools-module"></span><h3>mlchem.chem.calculator.tools module<a class="headerlink" href="#module-mlchem.chem.calculator.tools" title="Link to this heading">Â¶</a></h3>
+<span id="mlchem-chem-calculator-tools-module"></span><h3>mlchem.chem.calculator.tools module<a class="headerlink" href="#module-mlchem.chem.calculator.tools" title="Link to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.bernoulli">
-<span class="sig-name descname"><span class="pre">bernoulli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.bernoulli" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">bernoulli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.bernoulli" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the Bernoulli probability of k successes in n trials.</p>
 <p>This uses the binomial distribution formula.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) â€“ Number of trials.</p></li>
-<li><p><strong>k</strong> (<em>int</em>) â€“ Number of successes.</p></li>
-<li><p><strong>p</strong> (<em>float</em>) â€“ Probability of success on a single trial.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of trials.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – Number of successes.</p></li>
+<li><p><strong>p</strong> (<em>float</em>) – Probability of success on a single trial.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -367,16 +377,16 @@ with the 2D descriptors.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.boltzmann_probability">
-<span class="sig-name descname"><span class="pre">boltzmann_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'eV'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'J'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kJ'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kcal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kJ/mol'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kcal/mol'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'kcal/mol'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.boltzmann_probability" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">boltzmann_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">energy_levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'eV'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'J'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kJ'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kcal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kJ/mol'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'kcal/mol'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'kcal/mol'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.boltzmann_probability" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the Boltzmann probability for a set of energy levels
 at a given temperature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>energy_levels</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) â€“ A list or array of energy levels.</p></li>
-<li><p><strong>temperature</strong> (<em>float</em><em> or </em><em>int</em>) â€“ Temperature in Kelvin.</p></li>
-<li><p><strong>energy_unit</strong> (<em>str</em><em>, </em><em>optional</em>) â€“ Unit of energy levels. Default is â€˜kcal/molâ€™.
-Supported units: â€˜eVâ€™, â€˜Jâ€™, â€˜calâ€™, â€˜kJâ€™, â€˜kcalâ€™, â€˜kJ/molâ€™, â€˜kcal/molâ€™.</p></li>
+<li><p><strong>energy_levels</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – A list or array of energy levels.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em><em> or </em><em>int</em>) – Temperature in Kelvin.</p></li>
+<li><p><strong>energy_unit</strong> (<em>str</em><em>, </em><em>optional</em>) – Unit of energy levels. Default is ‘kcal/mol’.
+Supported units: ‘eV’, ‘J’, ‘cal’, ‘kJ’, ‘kcal’, ‘kJ/mol’, ‘kcal/mol’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -394,13 +404,13 @@ Supported units: â€˜eVâ€™, â€˜Jâ€™, â€˜calâ€™, â€�
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.calc_centroid">
-<span class="sig-name descname"><span class="pre">calc_centroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_centroid" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">calc_centroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_centroid" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the centroid of a set of points, optionally weighted by masses.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coordinates</strong> (<em>np.ndarray</em>) â€“ A 2D array of shape (N, D) where N is the number of points.</p></li>
-<li><p><strong>masses</strong> (<em>Iterable</em><em>, </em><em>optional</em>) â€“ An iterable of length N representing the masses of each point.</p></li>
+<li><p><strong>coordinates</strong> (<em>np.ndarray</em>) – A 2D array of shape (N, D) where N is the number of points.</p></li>
+<li><p><strong>masses</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – An iterable of length N representing the masses of each point.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -410,7 +420,7 @@ Supported units: â€˜eVâ€™, â€˜Jâ€™, â€˜calâ€™, â€�
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> â€“ If masses are provided and their sum is zero.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If masses are provided and their sum is zero.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -421,13 +431,13 @@ Supported units: â€˜eVâ€™, â€˜Jâ€™, â€˜calâ€™, â€�
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.calc_gyration_tensor">
-<span class="sig-name descname"><span class="pre">calc_gyration_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_gyration_tensor" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">calc_gyration_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_gyration_tensor" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the gyration tensor of a set of coordinates.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coordinates</strong> (<em>np.ndarray</em>) â€“ A 2D array of shape (N, 3) representing spatial coordinates.</p></li>
-<li><p><strong>masses</strong> (<em>Iterable</em><em>, </em><em>optional</em>) â€“ An iterable of length N representing the masses of each point.</p></li>
+<li><p><strong>coordinates</strong> (<em>np.ndarray</em>) – A 2D array of shape (N, 3) representing spatial coordinates.</p></li>
+<li><p><strong>masses</strong> (<em>Iterable</em><em>, </em><em>optional</em>) – An iterable of length N representing the masses of each point.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -445,16 +455,16 @@ Supported units: â€˜eVâ€™, â€˜Jâ€™, â€˜calâ€™, â€�
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.calc_logD_HH">
-<span class="sig-name descname"><span class="pre">calc_logD_HH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pH</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pKa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behaviour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'acid'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'base'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_logD_HH" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">calc_logD_HH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pH</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logP</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pKa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behaviour</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'acid'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'base'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_logD_HH" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the distribution coefficient (logD) at a given pH using
 the Henderson-Hasselbalch equation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pH</strong> (<em>float</em>) â€“ The pH at which to calculate the distribution coefficient.</p></li>
-<li><p><strong>logP</strong> (<em>float</em>) â€“ The logarithm of the partition coefficient.</p></li>
-<li><p><strong>pKa</strong> (<em>float</em>) â€“ The acid dissociation constant.</p></li>
-<li><p><strong>behaviour</strong> (<em>{'acid'</em><em>, </em><em>'base'}</em>) â€“ The behaviour of the molecule.</p></li>
+<li><p><strong>pH</strong> (<em>float</em>) – The pH at which to calculate the distribution coefficient.</p></li>
+<li><p><strong>logP</strong> (<em>float</em>) – The logarithm of the partition coefficient.</p></li>
+<li><p><strong>pKa</strong> (<em>float</em>) – The acid dissociation constant.</p></li>
+<li><p><strong>behaviour</strong> (<em>{'acid'</em><em>, </em><em>'base'}</em>) – The behaviour of the molecule.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -475,11 +485,11 @@ the Henderson-Hasselbalch equation.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.calc_shape_descriptors_from_gyration_tensor">
-<span class="sig-name descname"><span class="pre">calc_shape_descriptors_from_gyration_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gyration_tensor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_shape_descriptors_from_gyration_tensor" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">calc_shape_descriptors_from_gyration_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gyration_tensor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.calc_shape_descriptors_from_gyration_tensor" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate shape descriptors from a 3x3 gyration tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>gyration_tensor</strong> (<em>np.ndarray</em>) â€“ A 3x3 gyration tensor.</p>
+<dd class="field-odd"><p><strong>gyration_tensor</strong> (<em>np.ndarray</em>) – A 3x3 gyration tensor.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>Dictionary containing the calculated shape descriptors.</p>
@@ -510,12 +520,12 @@ the Henderson-Hasselbalch equation.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.logit_to_proba">
-<span class="sig-name descname"><span class="pre">logit_to_proba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.logit_to_proba" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">logit_to_proba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.logit_to_proba" title="Link to this definition">¶</a></dt>
 <dd><p>Convert a logit value to probability.</p>
 <p>This applies the logistic (sigmoid) function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>logit</strong> (<em>float</em>) â€“ Logit value to be converted.</p>
+<dd class="field-odd"><p><strong>logit</strong> (<em>float</em>) – Logit value to be converted.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Corresponding probability.</p>
@@ -533,12 +543,12 @@ the Henderson-Hasselbalch equation.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.pairwise_euclidean_distance">
-<span class="sig-name descname"><span class="pre">pairwise_euclidean_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.pairwise_euclidean_distance" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">pairwise_euclidean_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.pairwise_euclidean_distance" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate the pairwise Euclidean distances between rows of a matrix.</p>
-<p>Uses SciPyâ€™s <cite>pdist</cite> and <cite>squareform</cite> functions.</p>
+<p>Uses SciPy’s <cite>pdist</cite> and <cite>squareform</cite> functions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>matrix</strong> (<em>np.ndarray</em>) â€“ Input 2D array of shape (N, D) where N is the number of points.</p>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>np.ndarray</em>) – Input 2D array of shape (N, D) where N is the number of points.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>2D array of pairwise Euclidean distances.</p>
@@ -555,13 +565,13 @@ the Henderson-Hasselbalch equation.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mlchem.chem.calculator.tools.shannon_entropy">
-<span class="sig-name descname"><span class="pre">shannon_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.shannon_entropy" title="Link to this definition">Â¶</a></dt>
+<span class="sig-name descname"><span class="pre">shannon_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#mlchem.chem.calculator.tools.shannon_entropy" title="Link to this definition">¶</a></dt>
 <dd><p>Calculate Shannon entropy of a vector.</p>
 <p>This function computes the entropy based on the frequency of unique
 elements in the input array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>vector</strong> (<em>np.ndarray</em>) â€“ Input array for which Shannon entropy is calculated.</p>
+<dd class="field-odd"><p><strong>vector</strong> (<em>np.ndarray</em>) – Input array for which Shannon entropy is calculated.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Shannon entropy of the input vector.</p>
