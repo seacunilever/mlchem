@@ -167,34 +167,38 @@ def test_get_allDesc_invalid_input():
 
 
 def test_get_atomicDesc_valid_input():
-    # Test with valid input
-    smiles = 'CCO'
-    atom_index = 1  # Index of the carbon atom in ethanol
-    result = get_atomicDesc(smiles, atom_index)
+    with pytest.warns(UserWarning, match=r"In v1\.1\.4, get_atomicDesc changed arguments"):
+        result = get_atomicDesc('CCO', add_hydrogens=False, is_3d=False)
 
     assert isinstance(result, pd.DataFrame)
-    assert not result.empty
-    assert 'SMILES' in result.columns  # Example check for a specific descriptor
-    assert result.at[smiles, 'SYMBOL'] == 'C'  # Check if the symbol is correct
+    assert result.shape[0] == 3
+    assert 'total_degree' in result.columns
+    assert 'avg_mass_neighbours' in result.columns
+    assert result.loc[0, 'total_degree'] == 4
+    assert result.loc[1, 'total_degree'] == 4
+    assert result.loc[2, 'total_degree'] == 2
+
+
+def test_get_atomicDesc_pads_to_max_atoms():
+    with pytest.warns(UserWarning, match=r"In v1\.1\.4, get_atomicDesc changed arguments"):
+        result = get_atomicDesc('CCO', max_atoms=5, pad_value=-1, add_hydrogens=False, is_3d=False)
+
+    assert result.shape[0] == 5
+    assert (result.iloc[3:] == -1).all().all()
+
+
+@pytest.mark.parametrize('max_atoms', [0, -1])
+def test_get_atomicDesc_rejects_non_positive_max_atoms(max_atoms):
+    with pytest.warns(UserWarning, match=r"In v1\.1\.4, get_atomicDesc changed arguments"):
+        with pytest.raises(ValueError, match="'max_atoms' must be None or a positive integer"):
+            get_atomicDesc('CCO', max_atoms=max_atoms, add_hydrogens=False, is_3d=False)
 
 
 def test_get_atomicDesc_invalid_smiles():
     # Test with invalid SMILES input
-    with pytest.raises(RuntimeError):
-        get_atomicDesc('invalid_smiles', 0)
-
-
-def test_get_atomicDesc_invalid_atom_index():
-    # Test with invalid atom index
-    smiles = 'CCO'
-    invalid_atom_index = 10  # Index out of range
-    with pytest.raises(IndexError):
-        get_atomicDesc(smiles, invalid_atom_index)
-
-
-def test_get_atomicDesc_negative_atom_index():
-    with pytest.raises(IndexError):
-        get_atomicDesc('CCO', -1)
+    with pytest.warns(UserWarning, match=r"In v1\.1\.4, get_atomicDesc changed arguments"):
+        with pytest.raises(RuntimeError):
+            get_atomicDesc('invalid_smiles')
 
 
 def test_get_chemotypes_default_dict():

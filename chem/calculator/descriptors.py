@@ -505,12 +505,15 @@ Examples
 
 
 def get_atomicDesc(mol_input: str | Chem.rdchem.Mol,
-                   atom_index: int) -> pd.DataFrame:
+                  max_atoms: int | None = None,
+                  pad_value: float = 0.0,
+                  add_hydrogens: bool = True,
+                  is_3d: bool = True) -> pd.DataFrame:
     """
-Calculate atomic descriptors for a specific atom in a molecule.
+Calculate descriptors for all atoms in a molecule.
 
 This function computes a comprehensive set of atomic-level descriptors
-for a given atom in a molecule. These include properties related to
+for all atoms in a molecule. These include properties related to
 bond types, hybridisation, charges, ring membership, and statistics
 on neighbouring atoms up to the third order.
 
@@ -518,292 +521,380 @@ Parameters
 ----------
 mol_input : str or rdkit.Chem.rdchem.Mol
     Molecule in SMILES format or as an RDKit Mol object.
-atom_index : int
-    Index of the atom for which descriptors are calculated.
+max_atoms: int, optional
+    Maximum number of atoms to consider. If None, all atoms are considered.
+pad_value : float, optional
+    Value used for padding when the number of atoms is less than `max_atoms`.
+    Default is 0.0.
+add_hydrogens : bool, optional
+    Whether to add hydrogen atoms to the molecule before calculating descriptors.
+    Default is True.
+is_3d : bool, optional
+    Whether to consider the molecule as three-dimensional during calculations.
+    Default is True.
+
+Notes
+-----
+In v1.1.4, get_atomicDesc changed arguments and output style: it now
+calculates descriptors for all atoms in a molecule and returns one row per
+atom. Use max_atoms and pad_value to cap or pad the output matrix; atom_index
+is no longer part of the supported calling style.
 
 Returns
 -------
 pd.DataFrame
-    A DataFrame containing the descriptors for the specified atom.
+    A DataFrame containing the descriptors for all atoms in the molecule.
 
 Raises
 ------
 RuntimeError
     If the molecule cannot be created from the input.
-IndexError
-    If the atom index is out of bounds.
+
 
 Examples
 --------
->>> get_atomicDesc("CC(=O)O", atom_index=1)
+>>> get_atomicDesc(mol_input="CC(=O)O", max_atoms=30)
 """
+    message = (
+        "In v1.1.4, get_atomicDesc changed arguments and output style: it now "
+        "calculates descriptors for all atoms in a molecule and returns one row per "
+        "atom. Use max_atoms and pad_value to cap or pad the output matrix; atom_index "
+        "is no longer part of the supported calling style."
+    )
+    warnings.warn(message, UserWarning, stacklevel=2)
 
-    from mlchem.chem.manipulation import create_molecule
-    from mlchem.chem.manipulation import PatternRecognition as pr
-    from mlchem.chem.manipulation import PropManager as pm
+    if max_atoms is not None:
+        if not isinstance(max_atoms, int) or isinstance(max_atoms, bool) or max_atoms <= 0:
+            raise ValueError("'max_atoms' must be None or a positive integer.")
 
+    from mlchem.chem.manipulation import (create_molecule,
+                                          PatternRecognition as pr,
+                                          PropManager as pm)
     prA = pr.Atoms
     prBn = pr.Bonds
 
-    if isinstance(mol_input, str):
+    def _preprocess_molecule(mol_input):
         try:
-            mol = create_molecule(mol_input)
-            smiles = mol_input
+            mol = create_molecule(
+                mol_input,
+                is_3d=is_3d,
+                add_hydrogens=add_hydrogens
+            )
         except Exception as e:
             raise RuntimeError(
                 f"Error creating molecule from input: {mol_input}. Error: {e}"
-                )
-    else:
-        mol = mol_input
-        smiles = Chem.MolToSmiles(mol)
+            ) from e
 
-    mol_h = create_molecule(mol_input, is_3d=True, add_hydrogens=True)
-    smiles_h = Chem.MolToSmiles(mol_h)
+        mol.ComputeGasteigerCharges()
 
-    mol.ComputeGasteigerCharges()
+        atoms = list(mol.GetAtoms())
 
-    distmat = pm.Mol.get_distance_matrix(mol_h)
+        cache = {
+            "mol": mol,
+            "atoms": atoms,
+            "distmat": pm.Mol.get_distance_matrix(mol, is_3d=is_3d),
+            "degrees": np.array(
+                [a.GetTotalDegree() for a in atoms],
+                dtype=np.float32
+            ),
+            "valences": np.array(
+                [a.GetTotalValence() for a in atoms],
+                dtype=np.float32
+            ),
+            "formal_charges": np.array(
+                [a.GetFormalCharge() for a in atoms],
+                dtype=np.float32
+            ),
+            "masses": np.array(
+                [a.GetMass() for a in atoms],
+                dtype=np.float32
+            ),
+            "aromatic": np.array(
+                [a.GetIsAromatic() for a in atoms],
+                dtype=np.float32
+            ),
+            "hydrogens": np.array(
+                [
+                    a.GetTotalNumHs(includeNeighbors=True)
+                    for a in atoms
+                ],
+                dtype=np.float32
+            ),
+            "gasteiger": np.array(
+                [
+                    a.GetDoubleProp("_GasteigerCharge")
+                    for a in atoms
+                ],
+                dtype=np.float32
+            ),
+            "ring_sizes": np.array(
+                [prA.get_ring_size(a) for a in atoms],
+                dtype=np.float32
+            ),
+        }
 
-    tot_atoms = mol.GetNumAtoms()
-    if atom_index < 0 or atom_index >= tot_atoms:
-        raise IndexError(
-            f"Atom index ({atom_index}) outside valid range [0, {tot_atoms - 1}]"
+        return cache
+
+    
+    def _mean_sum(values):
+        if len(values) == 0:
+            return 0.0, 0.0
+        arr = np.asarray(values, dtype=np.float32)
+        return arr.mean(), arr.sum()
+    
+    def _mean_sum_max_min(values):
+        if len(values) == 0:
+            return 0.0, 0.0, 0.0, 0.0
+        arr = np.asarray(values, dtype=np.float32)
+        return (arr.mean(),
+                arr.sum(),
+                arr.max(),
+                arr.min())
+
+    def _build_neighbour_cache(mol):
+
+        cache = {}
+
+        for atom in mol.GetAtoms():
+
+            idx = atom.GetIdx()
+
+            cache[idx] = {
+                1: np.array(
+                    [
+                        x.GetIdx()
+                        for x in pm.Atom.get_neighbours(atom, 1)
+                    ],
+                    dtype=np.int32
+                ),
+                2: np.array(
+                    [
+                        x.GetIdx()
+                        for x in pm.Atom.get_neighbours(atom, 2)
+                    ],
+                    dtype=np.int32
+                ),
+                3: np.array(
+                    [
+                        x.GetIdx()
+                        for x in pm.Atom.get_neighbours(atom, 3)
+                    ],
+                    dtype=np.int32
+                ),
+            }
+
+        return cache
+
+
+    def _calc_desc(cache,atom_index,neighbour_cache):
+
+        mol = cache["mol"]
+        atoms = cache["atoms"]
+
+        a = atoms[atom_index]
+
+        neigh1 = neighbour_cache[atom_index][1]
+        neigh2 = neighbour_cache[atom_index][2]
+        neigh3 = neighbour_cache[atom_index][3]
+
+        bonds = list(a.GetBonds())
+
+        desc = {
+
+            # ---------------------------
+            # atom-level descriptors
+            # ---------------------------
+
+            "total_degree": a.GetTotalDegree(),
+            "total_valence": a.GetTotalValence(),
+            "formal_charge": a.GetFormalCharge(),
+
+            "is_SP": prA.is_SP(a),
+            "is_SP2": prA.is_SP2(a),
+            "is_SP3": prA.is_SP3(a),
+
+            "is_aromatic": int(a.GetIsAromatic()),
+            "H_bonded": a.GetTotalNumHs(includeNeighbors=True),
+
+            "is_in_ring": int(a.IsInRing()),
+            "ring_size": prA.get_ring_size(a),
+
+            "gasteiger_charge":
+                cache["gasteiger"][atom_index],
+
+            "average_eucl_dist_in_mol":
+                cache["distmat"][atom_index].mean(),
+        }
+
+        # ---------------------------
+        # bond descriptors
+        # ---------------------------
+
+        desc["tot_single_b"] = sum(
+            prBn.is_single_bond(b)
+            for b in bonds
         )
 
-    a = mol.GetAtomWithIdx(atom_index)
+        desc["avg_single_b"] = np.mean([
+            prBn.is_single_bond(b)
+            for b in bonds
+        ])
 
-    bonds = list(a.GetBonds())
-    symbol = a.GetSymbol()
-    neighbours = pm.Atom.get_neighbours(a, 1)
-    neighbours_2nd_order = pm.Atom.get_neighbours(a, 2)
-    neighbours_3rd_order = pm.Atom.get_neighbours(a, 3)
+        desc["tot_double_b"] = sum(
+            prBn.is_double_bond(b)
+            for b in bonds
+        )
 
-    dict_properties = {'SMILES': smiles,
-                       'SMILES_H': smiles_h,
-                       'SYMBOL': symbol,
-                       'total_degree': a.GetTotalDegree(),
-                       'total_valence': a.GetTotalValence(),
-                       'formal_charge': a.GetFormalCharge(),
-                       'is_SP': prA.is_SP(a),
-                       'is_SP2': prA.is_SP2(a),
-                       'is_SP3': prA.is_SP3(a),
-                       'tot_single_b': np.sum(
-                           [prBn.is_single_bond(b) for b in bonds]),
-                       'avg_single_b': np.mean(
-                           [prBn.is_single_bond(b) for b in bonds]),
-                       'tot_double_b': np.sum(
-                           [prBn.is_double_bond(b) for b in bonds]),
-                       'avg_double_b': np.mean(
-                           [prBn.is_double_bond(b) for b in bonds]),
-                       'tot_triple_b': np.sum(
-                           [prBn.is_triple_bond(b) for b in bonds]),
-                       'avg_triple_b': np.mean(
-                           [prBn.is_triple_bond(b) for b in bonds]),
-                       'tot_dative_b': np.sum(
-                           [prBn.is_dative_bond(b) for b in bonds]),
-                       'avg_dative_b': np.mean(
-                           [prBn.is_dative_bond(b) for b in bonds]),
-                       'is_aromatic': int(a.GetIsAromatic()),
-                       'H_bonded': a.GetTotalNumHs(includeNeighbors=True),
-                       'is_in_ring': int(a.IsInRing()),
-                       'ring_size': prA.get_ring_size(a),
-                       'gasteiger_charge': a.GetDoubleProp("_GasteigerCharge"),
-                       'avg_deg_neighbours': np.mean(
-                           [atom.GetTotalDegree() for atom in neighbours]),
-                       'tot_deg_neighbours': np.sum(
-                           [atom.GetTotalDegree() for atom in neighbours]),
-                       'avg_deg_neighbours2': np.mean(
-                           [atom.GetTotalDegree() for atom in
-                            neighbours_2nd_order]),
-                       'tot_deg_neighbours2': np.sum(
-                           [atom.GetTotalDegree() for atom in
-                            neighbours_2nd_order]),
-                       'avg_degree_neighbours3': np.mean(
-                           [atom.GetTotalDegree() for atom in
-                            neighbours_3rd_order]),
-                       'tot_deg_neighbours3': np.sum(
-                           [atom.GetTotalDegree() for atom in
-                            neighbours_3rd_order]),
-                       'avg_val_neighbours': np.mean(
-                           [atom.GetTotalValence() for atom in neighbours]),
-                       'tot_val_neighbours': np.sum(
-                           [atom.GetTotalValence() for atom in neighbours]),
-                       'avg_val_neighbours2': np.mean(
-                           [atom.GetTotalValence() for atom in
-                            neighbours_2nd_order]),
-                       'tot_val_neighbours2': np.sum(
-                           [atom.GetTotalValence() for atom in
-                            neighbours_2nd_order]),
-                       'avg_val_neighbours3': np.mean(
-                           [atom.GetTotalValence() for atom in
-                            neighbours_3rd_order]),
-                       'tot_val_neighbours3': np.sum(
-                           [atom.GetTotalValence() for atom in
-                            neighbours_3rd_order]),
-                       'avg_formal_charge_neighbours': np.mean(
-                           [atom.GetFormalCharge() for atom in neighbours]),
-                       'tot_formal_charge_neighbours': np.sum(
-                           [atom.GetFormalCharge() for atom in neighbours]),
-                       'avg formal_charge_neighbours2': np.mean(
-                           [atom.GetFormalCharge() for atom in
-                            neighbours_2nd_order]),
-                       'tot_formal_charge_neighbours2': np.sum(
-                           [atom.GetFormalCharge() for atom in
-                            neighbours_2nd_order]),
-                       'avg_formal_charge_neighbours3': np.mean(
-                           [atom.GetFormalCharge() for atom in
-                            neighbours_3rd_order]),
-                       'tot_formal_charge_neighbours3': np.sum(
-                           [atom.GetFormalCharge() for atom in
-                            neighbours_3rd_order]),
-                       'avg SP1 degree of neighbours': np.mean(
-                           [prA.is_SP(atom) for atom in neighbours]),
-                       'tot_SP1_deg_neighbours': np.sum(
-                           [prA.is_SP(atom) for atom in neighbours]),
-                       'avg_SP1_deg_neighbours2': np.mean(
-                           [prA.is_SP(atom) for atom in neighbours_2nd_order]),
-                       'tot_SP1_deg_neighbours2': np.sum(
-                           [prA.is_SP(atom) for atom in neighbours_2nd_order]),
-                       'avg_SP1_deg_neighbours3': np.mean(
-                           [prA.is_SP(atom) for atom in neighbours_3rd_order]),
-                       'tot_SP1_deg_neighbours3': np.sum(
-                           [prA.is_SP(atom) for atom in neighbours_3rd_order]),
-                       'avg_SP2_deg_neighbours': np.mean(
-                           [prA.is_SP2(atom) for atom in neighbours]),
-                       'tot_SP2_deg_neighbours': np.sum(
-                           [prA.is_SP2(atom) for atom in neighbours]),
-                       'avg_SP2_deg_neighbours2': np.mean(
-                           [prA.is_SP2(atom) for atom in
-                            neighbours_2nd_order]),
-                       'tot_SP2_deg_neighbours2': np.sum(
-                           [prA.is_SP2(atom) for atom in
-                            neighbours_2nd_order]),
-                       'avg_SP2_deg_neighbours3': np.mean(
-                           [prA.is_SP2(atom) for atom in
-                            neighbours_3rd_order]),
-                       'tot_SP2_deg_neighbours3': np.sum(
-                           [prA.is_SP2(atom) for atom in
-                            neighbours_3rd_order]),
-                       'avg_SP3_deg_neighbours': np.mean(
-                           [prA.is_SP3(atom) for atom in
-                            neighbours]),
-                       'tot_SP3_deg_neighbours': np.sum(
-                           [prA.is_SP3(atom) for atom in
-                            neighbours]),
-                       'avg_SP3_deg_neighbours2': np.mean(
-                           [prA.is_SP3(atom) for atom in
-                            neighbours_2nd_order]),
-                       'tot_SP3_deg_neighbours2': np.sum(
-                           [prA.is_SP3(atom) for atom in
-                            neighbours_2nd_order]),
-                       'avg_SP3_deg_neighbours3': np.mean(
-                           [prA.is_SP3(atom) for atom in
-                            neighbours_3rd_order]),
-                       'tot_SP3_deg_neighbours3': np.sum(
-                           [prA.is_SP3(atom) for atom in
-                            neighbours_3rd_order]),
-                       'avg_arom_neighbours': np.mean(
-                           [atom.GetIsAromatic() for atom in neighbours]),
-                       'tot_arom_neighbours': np.sum(
-                           [atom.GetIsAromatic() for atom in neighbours]),
-                       'avg_arom_neighbours2': np.mean(
-                           [atom.GetIsAromatic() for atom in
-                            neighbours_2nd_order]),
-                       'tot_arom_neighbours2': np.sum(
-                           [atom.GetIsAromatic() for atom in
-                            neighbours_2nd_order]),
-                       'avg_arom_neighbours3': np.mean(
-                           [atom.GetIsAromatic() for atom in
-                            neighbours_3rd_order]),
-                       'tot_arom_neighbours3': np.sum(
-                           [atom.GetIsAromatic() for atom in
-                            neighbours_3rd_order]),
-                       'avgmass_neighbours': np.mean(
-                           [atom.GetMass() for atom in neighbours]),
-                       'tot_mass_neighbours': np.sum(
-                           [atom.GetMass() for atom in neighbours]),
-                       'avg_mass_neighbours2': np.mean(
-                           [atom.GetMass() for atom in neighbours_2nd_order]),
-                       'tot_mass_neighbours2': np.sum(
-                           [atom.GetMass() for atom in neighbours_2nd_order]),
-                       'avg_mass_neighbours3': np.mean(
-                           [atom.GetMass() for atom in neighbours_3rd_order]),
-                       'tot_mass_neighbours3': np.sum(
-                           [atom.GetMass() for atom in neighbours_3rd_order]),
-                       'avg_H_bonded_neighbours': np.mean(
-                           [atom.GetTotalNumHs(includeNeighbors=True) for
-                            atom in neighbours]),
-                       'tot_H_bonded_neighbours': np.sum(
-                           [atom.GetTotalNumHs(includeNeighbors=True) for
-                            atom in neighbours]),
-                       'avg_H_bonded_neighbours2': np.mean(
-                           [atom.GetTotalNumHs(includeNeighbors=True) for
-                            atom in neighbours_2nd_order]),
-                       'total_H_bonded_neighbours2': np.sum(
-                           [atom.GetTotalNumHs(includeNeighbors=True) for
-                            atom in neighbours_2nd_order]),
-                       'avg_H_bonded_neighbours3': np.mean(
-                           [atom.GetTotalNumHs(includeNeighbors=True) for
-                            atom in neighbours_3rd_order]),
-                       'total_H_bonded_neighbours3': np.sum(
-                           [atom.GetTotalNumHs(includeNeighbors=True) for
-                            atom in neighbours_3rd_order]),
-                       'avg_ring_size_neighbours': np.mean(
-                        [prA.get_ring_size(atom) for atom in neighbours]),
-                       'tot_ring_size_neighbours': np.sum(
-                        [prA.get_ring_size(atom) for atom in neighbours]),
-                       'avg_ring_size_neighbours2': np.mean(
-                        [prA.get_ring_size(atom) for atom in
-                         neighbours_2nd_order]),
-                       'tot_ring_size_neighbours2': np.sum(
-                        [prA.get_ring_size(atom) for atom in
-                         neighbours_2nd_order]),
-                       'avg_ring_size_neighbours3': np.mean(
-                        [prA.get_ring_size(atom) for atom in
-                         neighbours_3rd_order]),
-                       'tot_ring_size_neighbours3': np.sum(
-                        [prA.get_ring_size(atom) for atom in
-                         neighbours_3rd_order]),
-                       'avg_gasteiger_charge_neighbours': np.mean(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours]),
-                       'tot_gasteiger_charge_neighbours': np.sum(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours]),
-                       'max_gasteiger_charge_neighbours': np.max(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours]),
-                       'min_gasteiger_charge_neighbours': np.min(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours]),
-                       'avg_gasteiger_charge_neighbours2': np.mean(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_2nd_order]),
-                       'tot_gasteiger_charge_neighbours2': np.sum(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_2nd_order]),
-                       'max_gasteiger_charge_neighbours2': np.max(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_2nd_order]),
-                       'min_gasteiger_charge_neighbours2': np.min(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_2nd_order]),
-                       'avg_gasteiger_charge_neighbours3': np.mean(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_3rd_order]),
-                       'total_gasteiger_charge_neighbours3': np.sum(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_3rd_order]),
-                       'max_gasteiger_charge_neighbours3': np.max(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_3rd_order]),
-                       'min_gasteiger_charge_neighbours3': np.min(
-                        [atom.GetDoubleProp('_GasteigerCharge') for
-                         atom in neighbours_3rd_order]),
-                       'average_eucl_dist_in_mol': distmat[atom_index].mean(),
-                       }
+        desc["avg_double_b"] = np.mean([
+            prBn.is_double_bond(b)
+            for b in bonds
+        ])
 
-    return pd.DataFrame(dict_properties, index=[smiles])
+        desc["tot_triple_b"] = sum(
+            prBn.is_triple_bond(b)
+            for b in bonds
+        )
+
+        desc["avg_triple_b"] = np.mean([
+            prBn.is_triple_bond(b)
+            for b in bonds
+        ])
+
+        desc["tot_dative_b"] = sum(
+            prBn.is_dative_bond(b)
+            for b in bonds
+        )
+
+        desc["avg_dative_b"] = np.mean([
+            prBn.is_dative_bond(b)
+            for b in bonds
+        ])
+
+        # =======================
+        # neighbour stats helper
+        # =======================
+
+        def _add_stats(name, values1, values2, values3):
+
+            m, s = _mean_sum(values1)
+            desc[f"avg_{name}_neighbours"] = m
+            desc[f"tot_{name}_neighbours"] = s
+
+            m, s = _mean_sum(values2)
+            desc[f"avg_{name}_neighbours2"] = m
+            desc[f"tot_{name}_neighbours2"] = s
+
+            m, s = _mean_sum(values3)
+            desc[f"avg_{name}_neighbours3"] = m
+            desc[f"tot_{name}_neighbours3"] = s
+
+        # ---------------------------
+        # cached numeric properties
+        # ---------------------------
+
+        _add_stats(
+            "deg",
+            cache["degrees"][neigh1],
+            cache["degrees"][neigh2],
+            cache["degrees"][neigh3]
+        )
+
+        _add_stats(
+            "val",
+            cache["valences"][neigh1],
+            cache["valences"][neigh2],
+            cache["valences"][neigh3]
+        )
+
+        _add_stats(
+            "formal_charge",
+            cache["formal_charges"][neigh1],
+            cache["formal_charges"][neigh2],
+            cache["formal_charges"][neigh3]
+        )
+
+        _add_stats(
+            "arom",
+            cache["aromatic"][neigh1],
+            cache["aromatic"][neigh2],
+            cache["aromatic"][neigh3]
+        )
+
+        _add_stats(
+            "mass",
+            cache["masses"][neigh1],
+            cache["masses"][neigh2],
+            cache["masses"][neigh3]
+        )
+
+        _add_stats(
+            "H_bonded",
+            cache["hydrogens"][neigh1],
+            cache["hydrogens"][neigh2],
+            cache["hydrogens"][neigh3]
+        )
+
+        _add_stats(
+            "ring_size",
+            cache["ring_sizes"][neigh1],
+            cache["ring_sizes"][neigh2],
+            cache["ring_sizes"][neigh3]
+        )
+
+        # ---------------------------
+        # Gasteiger charge stats
+        # ---------------------------
+
+        for shell, idxs in zip(
+            ["", "2", "3"],
+            [neigh1, neigh2, neigh3]
+        ):
+
+            mean_, sum_, max_, min_ = _mean_sum_max_min(
+                cache["gasteiger"][idxs]
+            )
+
+            desc[
+                f"avg_gasteiger_charge_neighbours{shell}"
+            ] = mean_
+
+            desc[
+                f"tot_gasteiger_charge_neighbours{shell}"
+            ] = sum_
+
+            desc[
+                f"max_gasteiger_charge_neighbours{shell}"
+            ] = max_
+
+            desc[
+                f"min_gasteiger_charge_neighbours{shell}"
+            ] = min_
+
+        return desc
+
+    cache = _preprocess_molecule(mol_input)
+    neighbour_cache = _build_neighbour_cache(cache["mol"])
+    atom_count = cache["mol"].GetNumAtoms()
+
+
+    atom_indices = range(atom_count if max_atoms is None else min(atom_count, max_atoms))
+
+    rows = [
+        _calc_desc(
+            cache, atom_idx, neighbour_cache
+        )
+        for atom_idx in atom_indices
+    ]
+
+    if max_atoms is not None and atom_count < max_atoms:
+        columns = rows[0].keys() if rows else []
+        rows.extend(
+            {column: pad_value for column in columns}
+            for _ in range(max_atoms - atom_count)
+        )
+
+    matrix = pd.DataFrame(rows)
+    return matrix
 
 
 def get_chemotypes(mol_input_list: list | np.ndarray[str | Chem.rdchem.Mol],
