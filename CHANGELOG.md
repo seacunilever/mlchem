@@ -2,6 +2,18 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.1.4] - 2026-08-28
+
+### Changed
+
+- Update `get_atomicDesc` to calculate descriptors for all atoms in a molecule and return one row per atom.
+- Add `max_atoms` and `pad_value` support to cap or pad the atomic descriptor matrix.
+- Emit a user-facing warning describing the `get_atomicDesc` v1.1.4 argument and output-style change.
+
+### Fixed
+
+- Enforced deprecation of `smarts_from_string()`, `smiles_from_smarts()`, `smiles_to_inchi()` in favour of `convert_molecule_string()`
+
 ## [1.1.3] - 2026-08-25
 
 ### Fixed

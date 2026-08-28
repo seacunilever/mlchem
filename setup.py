@@ -57,7 +57,7 @@ _subpkgs = find_packages(exclude=['tests', 'tests.*', 'docs', 'docs.*'])
 
 setup(
     name='mlchem-ul',
-    version='1.1.3',
+    version='1.1.4',
     description='A Python cheminformatics toolkit for molecular analysis and machine learning.',
     long_description=long_description,
     long_description_content_type='text/markdown',
