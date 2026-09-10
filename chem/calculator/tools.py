@@ -368,12 +368,22 @@ list[float]
 Examples
 --------
 >>> boltzmann_probability([0, 1, 2], 298, 'kcal/mol')
+
+Notes
+-----
+Exponents are shifted by their maximum (log-sum-exp trick) before calling
+`math.exp`, so large absolute energy values cannot overflow/underflow the
+computation - only the relative energy gaps affect the result.
 """
 
     import math
 
     if temperature <= 0:
         raise ValueError("Temperature must be greater than zero.")
+
+    energy_levels = list(energy_levels)
+    if not energy_levels:
+        raise ValueError("'energy_levels' must contain at least one value.")
 
     # Boltzmann constant in different units
     k_B_values = {
@@ -394,22 +404,17 @@ Examples
 
     k_B = k_B_values[energy_unit]
 
-    # Calculate the partition function
-    partition_function = sum(
-        math.exp(-E / (k_B * temperature))
-        for E in energy_levels
-        )
+    # Shift exponents by their maximum before exponentiating (log-sum-exp
+    # trick) so neither very large nor very negative energies can overflow
+    # or underflow math.exp().
+    exponents = [-E / (k_B * temperature) for E in energy_levels]
+    max_exponent = max(exponents)
+    weights = [math.exp(e - max_exponent) for e in exponents]
+    partition_function = sum(weights)
 
     if partition_function == 0:
         raise ValueError(
             "Partition function is zero, check the energy levels and temperature."
         )
 
-    # Calculate the probabilities
-    probabilities = [
-        math.exp(
-            -E / (k_B * temperature)) / partition_function
-        for E in energy_levels
-        ]
-
-    return probabilities
+    return [w / partition_function for w in weights]
