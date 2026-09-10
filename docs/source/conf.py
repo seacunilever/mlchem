@@ -7,13 +7,23 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os
+import re
 import sys
+from pathlib import Path
+
 sys.path.insert(0, os.path.abspath('../../..'))  # parent of the package dir
 
 project = 'mlchem'
 copyright = '2025, Leonardo Contreas'
 author = 'Leonardo Contreas'
-release = '1.1.3'
+
+# Read the version straight from setup.py so `release` never drifts out of
+# sync with the package's actual version between manual doc edits.
+_setup_text = (Path(__file__).resolve().parents[2] / 'setup.py').read_text(encoding='utf-8')
+_version_match = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", _setup_text)
+if not _version_match:
+    raise RuntimeError("Could not find version in setup.py")
+release = _version_match.group(1)
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
