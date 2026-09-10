@@ -33,6 +33,7 @@
 
 import pytest
 import numpy as np
+import math
 from mlchem.chem.calculator.tools import (
     shannon_entropy,
     bernoulli,
@@ -175,10 +176,19 @@ def test_boltzmann_probability_negative_temperature():
         boltzmann_probability(energy_levels, -1)
 
 
-def test_boltzmann_probability_zero_partition_function_raises():
+def test_boltzmann_probability_extreme_energy_gap_stays_finite():
+    # Previously, a large absolute energy offset (not just a large gap)
+    # underflowed math.exp() and spuriously raised 'partition function is
+    # zero'. The log-sum-exp stabilisation keeps this well-behaved.
     energy_levels = [1e6, 1e6 + 1]
-    with pytest.raises(ValueError, match="Partition function is zero"):
-        boltzmann_probability(energy_levels, 1)
+    result = boltzmann_probability(energy_levels, 1)
+    assert all(math.isfinite(p) for p in result)
+    assert np.isclose(sum(result), 1)
+
+
+def test_boltzmann_probability_empty_energy_levels_raises():
+    with pytest.raises(ValueError):
+        boltzmann_probability([], 300)
 
 
 if __name__ == "__main__":
