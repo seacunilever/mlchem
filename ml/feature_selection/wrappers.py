@@ -323,7 +323,10 @@ class SequentialForwardSelection:
             self.n_jobs,
         )
 
-        from joblib import Parallel, delayed
+        # sklearn's wrapper propagates the caller's sklearn config to worker
+        # threads, avoiding an upstream UserWarning that plain joblib.delayed
+        # does not.
+        from sklearn.utils.parallel import Parallel, delayed
 
         def evaluate_feature(feat):
             features_to_test = self.extending_features + [feat]
