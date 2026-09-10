@@ -2,6 +2,25 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.1.5] - 2026-09-10
+
+### Changed
+
+- Loosen the `rdkit` requirement from a pinned `==2026.3.3` to `>2026.3.3` to allow newer RDKit patch releases.
+
+### Fixed
+
+- Stabilise `boltzmann_probability` with the log-sum-exp trick so large absolute energy values (not just large gaps) can no longer underflow `math.exp` into a spurious "partition function is zero" error; empty `energy_levels` now raises a clear `ValueError` instead.
+- Use `sklearn.utils.parallel.Parallel`/`delayed` instead of `joblib`'s directly in the sequential feature selector, removing an upstream `UserWarning` about scikit-learn thread-config propagation during parallel feature evaluation.
+
+### Docs
+
+- Align the README's documented coverage command with the CI workflow's actual `-q` flag (was shown as `-vv`).
+
+### Verified
+
+- Re-confirmed 7 previously-`xfail`-tracked hardening tests (3D descriptor failure contract, `logit_to_proba` extreme-value stability, `calc_centroid` zero-mass guard, `ChemicalSpace.prepare` index validation, and `undersample` ratio bounds) already pass on current `main`; TODO.md checkboxes updated accordingly.
+
 ## [1.1.4] - 2026-08-28
 
 ### Changed
