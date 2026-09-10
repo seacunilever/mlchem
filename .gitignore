@@ -11,6 +11,8 @@ dist/
 **/.pytest_tmp/**
 
 # Test/runtime-generated artifacts
+A/
+B/
 LogisticRegression()
 LogisticRegression()_allcols
 LogisticRegression()_best
@@ -39,3 +41,8 @@ docs/*warnings*.txt
 
 # Local planning notes (keep private and untracked)
 TODO.md
+
+# Local dependency-upgrade check script and its generated snapshots/logs
+# (keep private and untracked - not part of the published package)
+scripts/dependency_upgrade_check.py
+scripts/.dependency_upgrade_check/
