@@ -179,10 +179,10 @@ Warning policy note:
 python -m pytest -vv tests -W default
 ```
 
-Coverage baseline (canonical: Python 3.12):
+Coverage baseline (canonical: Python 3.12, matches the CI py312 job):
 
 ```bash
-python -m pytest -vv tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
+python -m pytest -q tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
 python - <<'PY'
 import xml.etree.ElementTree as ET
 root = ET.parse('coverage.xml').getroot()
