@@ -48,7 +48,7 @@ from mlchem.helper import (
     validate_task_type,
 )
 from mlchem.metrics import calculate_reliability_components
-from mlchem.ml.modelling.model_evaluation import crossval
+from mlchem.ml.modelling.model_evaluation import crossval, generate_cv_indices
 
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,38 @@ def _clone_for_search(estimator, outer_n_jobs: int):
     return estimator_copy
 
 
+def _resolve_wrapper_cv_indices(
+    X,
+    y,
+    cv_iter: int,
+    cv_splitter,
+    cv_indices,
+    groups,
+    task_type: str,
+):
+    """
+    Materialise explicit (train_idx, valid_idx) folds for a wrapper.
+
+    Returns None when neither `cv_splitter` nor `cv_indices` is supplied,
+    signalling that legacy `cv_iter`-only behaviour should be used
+    unchanged. Otherwise, folds are resolved once (via
+    `generate_cv_indices`) so every candidate feature/subset is evaluated
+    against exactly the same folds.
+    """
+    if cv_splitter is None and cv_indices is None:
+        return None
+
+    return generate_cv_indices(
+        X,
+        y=y,
+        cv_iter=cv_iter,
+        cv_splitter=cv_splitter,
+        cv_indices=cv_indices,
+        groups=groups,
+        task_type=task_type,
+    )
+
+
 def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> float:
     if len(x) == 0 or len(y) == 0:
         return 0.0
@@ -104,6 +136,7 @@ def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> flo
 def _add_reliability_columns(
     dataframe: pd.DataFrame,
     logic: Literal['lower', 'greater'],
+    selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
 ) -> pd.DataFrame:
     score_columns = [
         'geometric_mean',
@@ -120,7 +153,7 @@ def _add_reliability_columns(
         lambda row: calculate_reliability_components(
             train_score=row.training_score,
             cv_score=row.cv_score,
-            test_score=row.test_score,
+            test_score=None if selection_strategy == 'cv_only' else row.test_score,
             logic=logic,
         ),
         axis=1,
@@ -147,11 +180,33 @@ class SequentialForwardSelection:
   max_features : int, optional
       Maximum number of features to select. Default is 25.
   cv_iter : int, optional
-      Number of cross-validation iterations. Default is 5.
+      Number of cross-validation iterations. Default is 5. Ignored when
+      ``cv_splitter`` or ``cv_indices`` is provided.
+  cv_splitter : object, optional
+      A scikit-learn compatible cross-validation splitter (e.g.
+      ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
+      ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
+      splitters. Takes precedence over ``cv_iter``.
+  cv_indices : iterable of (array-like, array-like), optional
+      Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
+      scaffold-based or UMAP-cluster-based fold manifest generated
+      outside mlchem. Takes precedence over both ``cv_splitter`` and
+      ``cv_iter``. This is the most generic API.
+  groups : array-like, optional
+      Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
+      Ignored when ``cv_indices`` is provided.
   logic : {'lower', 'greater'}, optional
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
+  selection_strategy : {'legacy', 'cv_only'}, optional
+      Strategy used by :meth:`find_best` to select the winning feature
+      subset. ``'legacy'`` (default, kept for backward compatibility)
+      uses train/CV/test scores, exactly as in previous releases.
+      ``'cv_only'`` is a leakage-free mode that selects using only
+      train/CV information; test scores are still computed and stored
+      for reporting, but never influence selection. ``'cv_only'`` is the
+      recommended choice for new projects.
   log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
       Logging level threshold. Use 'DEBUG' for detailed diagnostics,
       'INFO' for standard output, 'WARNING' to suppress most output.
@@ -159,12 +214,15 @@ class SequentialForwardSelection:
 
     Notes
     -----
-    Automatic best-subset selection uses a reliability score. For each
-    selected prefix, ``performance_score = (train * cv * test) ** (1/3)``,
+    Automatic best-subset selection uses a reliability score. With
+    ``selection_strategy='legacy'``, for each selected prefix,
+    ``performance_score = (train * cv * test) ** (1/3)``,
     ``instability_score = |train-cv| + |train-test| + |cv-test|``, and for
     higher-is-better metrics ``reliability_score = performance_score /
     (1 + instability_score)``. For lower-is-better metrics, the geometric
     mean is inverted first so the same reliability score can be maximised.
+    With ``selection_strategy='cv_only'``, the same formulas are used but
+    with only ``train`` and ``cv`` scores (no test score involved).
 
   Examples
   --------
@@ -174,11 +232,27 @@ class SequentialForwardSelection:
   >>> from sklearn.datasets import make_classification
   >>> from mlchem.metrics import get_geometric_S
 
+  Standard cross-validation (existing behaviour):
+
   >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
   ...                                  metric=get_geometric_S,
   ...                                  max_features=5,
   ...                                  cv_iter=3,
   ...                                  logic='greater')
+
+  GroupKFold with scaffold groups:
+
+  >>> from sklearn.model_selection import GroupKFold
+  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+  ...                                  metric=get_geometric_S,
+  ...                                  cv_splitter=GroupKFold(5),
+  ...                                  groups=scaffold_ids)  # doctest: +SKIP
+
+  Precomputed scaffold or UMAP-cluster folds:
+
+  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+  ...                                  metric=get_geometric_S,
+  ...                                  cv_indices=scaffold_fold_manifest)  # doctest: +SKIP
 
   >>> X, y = make_classification(300, 10, n_informative=5)
   >>> train_size = 0.8
@@ -204,6 +278,10 @@ class SequentialForwardSelection:
                  task_type: Literal[
                      'classification', 'regression'] = 'classification',
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 cv_splitter=None,
+                 cv_indices: Iterable | None = None,
+                 groups=None,
+                 selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
                  ) -> None:
         """
   Initialise the SequentialForwardSelection object.
@@ -219,7 +297,8 @@ class SequentialForwardSelection:
   max_features : int, optional
       Maximum number of features to select. Default is 25.
   cv_iter : int, optional
-      Number of cross-validation iterations. Default is 5.
+      Number of cross-validation iterations. Default is 5. Ignored when
+      ``cv_splitter`` or ``cv_indices`` is provided.
   logic : {'lower', 'greater'}, optional
       Whether to minimise or maximise the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
@@ -228,6 +307,20 @@ class SequentialForwardSelection:
       Logging level threshold. Use 'DEBUG' for detailed diagnostics,
       'INFO' for standard output, 'WARNING' to suppress most output.
       Default is logging.INFO.
+  cv_splitter : object, optional
+      A scikit-learn compatible cross-validation splitter, e.g.
+      ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``, or
+      ``PredefinedSplit(...)``. Takes precedence over ``cv_iter``.
+  cv_indices : iterable of (array-like, array-like), optional
+      Explicit ``(train_idx, valid_idx)`` fold pairs. Takes precedence
+      over both ``cv_splitter`` and ``cv_iter``.
+  groups : array-like, optional
+      Group labels forwarded to ``cv_splitter`` (e.g. scaffold IDs for
+      ``GroupKFold``). Ignored when ``cv_indices`` is provided.
+  selection_strategy : {'legacy', 'cv_only'}, optional
+      Strategy used by :meth:`find_best`. Default is ``'legacy'`` for
+      backward compatibility; ``'cv_only'`` is the recommended,
+      leakage-free alternative. See class docstring notes.
   """
 
         self.estimator = estimator
@@ -237,6 +330,12 @@ class SequentialForwardSelection:
         self.metric = metric
         self.max_features = max_features
         self.cv_iter = cv_iter
+        self.cv_splitter = cv_splitter
+        self.cv_indices = cv_indices
+        self.groups = groups
+        if selection_strategy not in ('legacy', 'cv_only'):
+            raise ValueError("'selection_strategy' must be either 'legacy' or 'cv_only'.")
+        self.selection_strategy = selection_strategy
         self.logic = logic
         self.task_type = validate_task_type(task_type)
         self.log_level = coerce_log_level(log_level)
@@ -313,6 +412,19 @@ class SequentialForwardSelection:
         self.feature_labels = self.train_set.columns
         self.n_jobs = resolve_n_jobs(n_jobs)
 
+        # Resolve fold definitions once so every candidate feature is
+        # evaluated against exactly the same folds. Returns None (legacy
+        # behaviour) unless cv_splitter/cv_indices was supplied.
+        self._resolved_cv_indices = _resolve_wrapper_cv_indices(
+            self.train_set,
+            self.y_train,
+            self.cv_iter,
+            self.cv_splitter,
+            self.cv_indices,
+            self.groups,
+            self.task_type,
+        )
+
         self._log(
             logging.INFO,
             "SFS start: samples=%d, features=%d, max_features=%d, cv_iter=%d, n_jobs=%d",
@@ -333,6 +445,10 @@ class SequentialForwardSelection:
             train_set_temp = self.train_set[features_to_test]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(train_set_temp, self.y_train)
+            cv_kwargs = (
+                {'cv_indices': self._resolved_cv_indices}
+                if self._resolved_cv_indices is not None else {}
+            )
             cvscores = crossval(
                 estimator_copy,
                 train_set_temp.values,
@@ -340,6 +456,7 @@ class SequentialForwardSelection:
                 self.metric,
                 self.cv_iter,
                 self.task_type,
+                **cv_kwargs,
             )
             self._log(
                 logging.DEBUG,
@@ -463,7 +580,8 @@ class SequentialForwardSelection:
 
         ``reliability_score = performance_score / (1 + instability_score)``
 
-        where:
+        With ``selection_strategy='legacy'`` (default, for backward
+        compatibility):
 
         ``instability_score = |train-cv| + |train-test| + |cv-test|``
 
@@ -477,10 +595,13 @@ class SequentialForwardSelection:
 
         ``performance_score = 1 / ((train_score * cv_score * test_score) ** (1/3))``
 
-        ``reliability_score = performance_score / (1 + instability_score)``
+        The test score is intentionally included in the calculation.
 
-        The subset with the highest reliability score is selected. The test
-        score is intentionally included in the calculation.
+        With ``selection_strategy='cv_only'`` (leakage-free, recommended for
+        new projects), the same formulas are used but with only
+        ``train_score`` and ``cv_score`` (no test score involved), so the
+        test score can never influence which subset is selected. Test scores
+        are still stored in ``self.unseen_scores`` for reporting/plotting.
         """
 
         if which is None:
@@ -489,7 +610,7 @@ class SequentialForwardSelection:
                 calculate_reliability_components(
                     train_score=train_score,
                     cv_score=cv_score,
-                    test_score=test_score,
+                    test_score=None if self.selection_strategy == 'cv_only' else test_score,
                     logic=self.logic,
                 )
                 for train_score, cv_score, test_score in zip(
@@ -691,6 +812,27 @@ class CombinatorialSelection:
         Determines whether a higher or lower score is considered better.
     task_type : {'classification', 'regression'}
         Specifies the type of task.
+    cv_splitter : object, optional
+        A scikit-learn compatible cross-validation splitter (e.g.
+        ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
+        ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
+        splitters. Takes precedence over the ``cv_iter`` passed to
+        ``fit_stage_1``/``fit_stage_2``.
+    cv_indices : iterable of (array-like, array-like), optional
+        Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
+        scaffold-based or UMAP-cluster-based fold manifest generated
+        outside mlchem. Takes precedence over both ``cv_splitter`` and
+        ``cv_iter``.
+    groups : array-like, optional
+        Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
+        Ignored when ``cv_indices`` is provided.
+    selection_strategy : {'legacy', 'cv_only'}, optional
+        Whether ``reliability_score`` (used for ranking subsets) includes
+        the test score (``'legacy'``, default, kept for backward
+        compatibility) or only train/CV information (``'cv_only'``,
+        leakage-free, recommended for new projects). Test scores are
+        always computed and stored for reporting regardless of this
+        setting.
 
     Examples
     --------
@@ -698,9 +840,25 @@ class CombinatorialSelection:
     >>> from sklearn.datasets import make_classification
     >>> from mlchem.metrics import get_geometric_S
 
+    Standard cross-validation (existing behaviour):
+
     >>> cs = CombinatorialSelection(estimator=LogisticRegression(),
     ...                              metric=get_geometric_S,
     ...                              logic='greater')
+
+    GroupKFold with scaffold groups:
+
+    >>> from sklearn.model_selection import GroupKFold
+    >>> cs = CombinatorialSelection(estimator=LogisticRegression(),
+    ...                              metric=get_geometric_S,
+    ...                              cv_splitter=GroupKFold(5),
+    ...                              groups=scaffold_ids)  # doctest: +SKIP
+
+    Precomputed scaffold or UMAP-cluster folds:
+
+    >>> cs = CombinatorialSelection(estimator=LogisticRegression(),
+    ...                              metric=get_geometric_S,
+    ...                              cv_indices=scaffold_fold_manifest)  # doctest: +SKIP
 
     >>> X, y = make_classification(500, 10, n_informative=4)
     >>> X_train, y_train = X[:350], y[:350]
@@ -721,7 +879,11 @@ class CombinatorialSelection:
                  task_type: Literal[
                      'classification', 'regression'
                      ] = 'classification',
-                                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 cv_splitter=None,
+                 cv_indices: Iterable | None = None,
+                 groups=None,
+                 selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
                  ) -> None:
         """
         Initialise the CombinatorialSelection object.
@@ -741,6 +903,21 @@ class CombinatorialSelection:
             Logging level threshold. Use 'DEBUG' for detailed diagnostics,
             'INFO' for standard output, 'WARNING' to suppress most output.
             Default is logging.INFO.
+        cv_splitter : object, optional
+            A scikit-learn compatible cross-validation splitter. Takes
+            precedence over the ``cv_iter`` passed to
+            ``fit_stage_1``/``fit_stage_2``.
+        cv_indices : iterable of (array-like, array-like), optional
+            Explicit ``(train_idx, valid_idx)`` fold pairs. Takes
+            precedence over both ``cv_splitter`` and ``cv_iter``.
+        groups : array-like, optional
+            Group labels forwarded to ``cv_splitter``. Ignored when
+            ``cv_indices`` is provided.
+        selection_strategy : {'legacy', 'cv_only'}, optional
+            Whether the ``reliability_score`` used for ranking includes
+            the test score (``'legacy'``, default) or not (``'cv_only'``,
+            leakage-free). Default is ``'legacy'`` for backward
+            compatibility.
         """
 
         self.estimator = estimator
@@ -748,6 +925,12 @@ class CombinatorialSelection:
         self.logic = logic
         self.task_type = validate_task_type(task_type)
         self.log_level = coerce_log_level(log_level)
+        self.cv_splitter = cv_splitter
+        self.cv_indices = cv_indices
+        self.groups = groups
+        if selection_strategy not in ('legacy', 'cv_only'):
+            raise ValueError("'selection_strategy' must be either 'legacy' or 'cv_only'.")
+        self.selection_strategy = selection_strategy
         _configure_wrapper_logging(self.log_level)
 
     def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
@@ -1000,6 +1183,19 @@ class CombinatorialSelection:
         self.max_subsets = max_subsets
         self.n_jobs = resolve_n_jobs(n_jobs)
 
+        # Resolve fold definitions once so every candidate subset is
+        # evaluated against exactly the same folds. Returns None (legacy
+        # behaviour) unless cv_splitter/cv_indices was supplied.
+        self._resolved_cv_indices = _resolve_wrapper_cv_indices(
+            self.train_set,
+            self.y_train,
+            self.cv_iter,
+            self.cv_splitter,
+            self.cv_indices,
+            self.groups,
+            self.task_type,
+        )
+
         self._log(
             logging.INFO,
             "Combinatorial stage 1 start: samples=%d, features=%d, k=%d, n_jobs=%d",
@@ -1082,6 +1278,7 @@ class CombinatorialSelection:
                 self.metric,
                 self.cv_iter,
                 self.task_type,
+                **({'cv_indices': self._resolved_cv_indices} if self._resolved_cv_indices is not None else {}),
             ).mean()
             if not is_better(cv_score, self.cv_threshold):
                 self._log(
@@ -1134,6 +1331,7 @@ class CombinatorialSelection:
         self.df_results_stage1 = _add_reliability_columns(
             self.df_results_stage1,
             self.logic,
+            self.selection_strategy,
         )
         self.df_results_stage1.sort_values(
             by='reliability_score',
@@ -1189,6 +1387,20 @@ class CombinatorialSelection:
 
         self.cv_iter = cv_iter
         self.n_jobs = resolve_n_jobs(n_jobs)
+
+        # Resolve fold definitions once so every candidate subset is
+        # evaluated against exactly the same folds. Returns None (legacy
+        # behaviour) unless cv_splitter/cv_indices was supplied.
+        self._resolved_cv_indices = _resolve_wrapper_cv_indices(
+            self.train_set,
+            self.y_train,
+            self.cv_iter,
+            self.cv_splitter,
+            self.cv_indices,
+            self.groups,
+            self.task_type,
+        )
+
         self.best_recurrent = np.unique(
             np.hstack(
                 self.df_results_stage1.head(top_n_subsets).
@@ -1254,6 +1466,7 @@ class CombinatorialSelection:
                 self.metric,
                 self.cv_iter,
                 self.task_type,
+                **({'cv_indices': self._resolved_cv_indices} if self._resolved_cv_indices is not None else {}),
             ).mean()
             if not is_better(cv_score, self.cv_threshold_2):
                 self._log(
@@ -1305,6 +1518,7 @@ class CombinatorialSelection:
         self.df_results_stage2 = _add_reliability_columns(
             self.df_results_stage2,
             self.logic,
+            self.selection_strategy,
         )
         self.df_results_stage2.sort_values(
             by='reliability_score',
@@ -1355,7 +1569,8 @@ class CombinatorialSelection:
             self.y_train,
             self.metric,
             5,
-            self.task_type
+            self.task_type,
+            **({'cv_indices': self._resolved_cv_indices} if getattr(self, '_resolved_cv_indices', None) is not None else {}),
         )
 
         # Display results through logger

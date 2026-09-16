@@ -694,5 +694,257 @@ def test_combinatorial_outer_parallel_forces_inner_estimator_n_jobs_to_one():
     assert len(seen_n_jobs) > 0
     assert all(value == 1 for value in seen_n_jobs)
 
+
+# ---------------------------------------------------------------------------
+# Index-driven cross-validation support (cv_splitter / cv_indices / groups)
+# ---------------------------------------------------------------------------
+
+def _make_sfs_dataset(n_samples=100, n_features=8, random_state=5):
+    X, y = make_classification(n_samples, n_features, n_informative=4, random_state=random_state)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    return train_set, y[:train_samples], test_set, y[train_samples:]
+
+
+def test_sfs_accepts_explicit_cv_indices_manifest():
+    train_set, y_train, test_set, y_test = _make_sfs_dataset()
+    n = len(train_set)
+    manifest = [
+        (np.arange(n // 2, n), np.arange(0, n // 2)),
+        (np.arange(0, n // 2), np.arange(n // 2, n)),
+    ]
+
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=2,
+        cv_indices=manifest,
+        logic='greater',
+    )
+    sfs.fit(train_set, y_train, test_set, y_test)
+
+    assert len(sfs.cv_scores) == 2
+    assert len(sfs.extending_features) == 2
+
+
+def test_sfs_accepts_group_kfold_with_groups():
+    from sklearn.model_selection import GroupKFold
+
+    train_set, y_train, test_set, y_test = _make_sfs_dataset()
+    groups = np.arange(len(train_set)) % 4
+
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=2,
+        cv_splitter=GroupKFold(n_splits=4),
+        groups=groups,
+        logic='greater',
+    )
+    sfs.fit(train_set, y_train, test_set, y_test)
+
+    assert len(sfs.cv_scores) == 2
+
+
+def test_sfs_accepts_stratified_group_kfold_with_groups():
+    from sklearn.model_selection import StratifiedGroupKFold
+
+    train_set, y_train, test_set, y_test = _make_sfs_dataset()
+    groups = np.arange(len(train_set)) % 5
+
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=2,
+        cv_splitter=StratifiedGroupKFold(n_splits=5),
+        groups=groups,
+        logic='greater',
+    )
+    sfs.fit(train_set, y_train, test_set, y_test)
+
+    assert len(sfs.cv_scores) == 2
+
+
+def test_sfs_cv_iter_cv_splitter_and_cv_indices_yield_identical_scores():
+    from sklearn.model_selection import StratifiedKFold
+    from mlchem.ml.modelling.model_evaluation import generate_cv_indices
+
+    train_set, y_train, test_set, y_test = _make_sfs_dataset(random_state=9)
+
+    def build_sfs(**cv_kwargs):
+        sfs = SequentialForwardSelection(
+            estimator=LogisticRegression(),
+            estimator_string=None,
+            metric=get_geometric_S,
+            max_features=2,
+            logic='greater',
+            **cv_kwargs,
+        )
+        sfs.fit(train_set, y_train, test_set, y_test)
+        return sfs
+
+    sfs_legacy = build_sfs(cv_iter=5)
+    sfs_splitter = build_sfs(cv_splitter=StratifiedKFold(n_splits=5))
+    manifest = generate_cv_indices(
+        train_set.values, y=y_train, cv_iter=5, task_type='classification',
+    )
+    sfs_indices = build_sfs(cv_indices=manifest)
+
+    np.testing.assert_allclose(sfs_legacy.cv_scores, sfs_splitter.cv_scores)
+    np.testing.assert_allclose(sfs_legacy.cv_scores, sfs_indices.cv_scores)
+
+
+def test_sfs_selection_strategy_legacy_is_default():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+    )
+    assert sfs.selection_strategy == 'legacy'
+
+
+def test_sfs_selection_strategy_rejects_invalid_value():
+    with pytest.raises(ValueError, match="'selection_strategy'"):
+        SequentialForwardSelection(
+            estimator=LogisticRegression(),
+            estimator_string=None,
+            metric=get_geometric_S,
+            selection_strategy='bogus',
+        )
+
+
+def test_sfs_cv_only_selection_ignores_test_score():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+        selection_strategy='cv_only',
+    )
+    sfs.extending_features = ['a', 'b', 'c']
+    sfs.train_scores = [0.9, 0.8, 0.95]
+    sfs.cv_scores = [0.7, 0.75, 0.6]
+    # Test scores are intentionally adversarial: they would change the
+    # winner under 'legacy' but must be ignored under 'cv_only'.
+    sfs.unseen_scores = [0.99, 0.01, 0.01]
+
+    best_cv_only = sfs.find_best()
+
+    sfs.selection_strategy = 'legacy'
+    best_legacy = sfs.find_best()
+
+    assert best_cv_only['best_index'] != best_legacy['best_index']
+    # cv_only must select purely from train/cv: index 2 ('b') has the best
+    # train/cv combination among the three prefixes.
+    assert best_cv_only['features'] == ['a', 'b']
+
+
+def test_combinatorial_selection_accepts_cv_indices_manifest():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+
+    X, y = make_classification(50, 6, n_informative=3, random_state=41)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+
+    n = len(train_set)
+    manifest = [
+        (np.arange(n // 2, n), np.arange(0, n // 2)),
+        (np.arange(0, n // 2), np.arange(n // 2, n)),
+    ]
+
+    cs = CombinatorialSelection(
+        estimator=estimator, metric=metric, logic='greater',
+        cv_indices=manifest,
+    )
+    results = cs.fit_stage_1(
+        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+        features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
+    )
+
+    assert not results.empty
+
+
+def test_combinatorial_selection_accepts_group_kfold_with_groups():
+    from sklearn.model_selection import GroupKFold
+
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+
+    X, y = make_classification(60, 6, n_informative=3, random_state=43)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+    groups = np.arange(len(train_set)) % 4
+
+    cs = CombinatorialSelection(
+        estimator=estimator, metric=metric, logic='greater',
+        cv_splitter=GroupKFold(n_splits=4), groups=groups,
+    )
+    results = cs.fit_stage_1(
+        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+        features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
+    )
+
+    assert not results.empty
+
+
+def test_combinatorial_selection_cv_only_matches_train_cv_only_ranking():
+    estimator = LogisticRegression()
+    metric = get_geometric_S
+
+    X, y = make_classification(60, 6, n_informative=3, random_state=45)
+    train_samples = int(0.8 * len(X))
+    train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
+    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
+    y_train = y[:train_samples]
+    y_test = y[train_samples:]
+
+    cs_legacy = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
+    results_legacy = cs_legacy.fit_stage_1(
+        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+        features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
+    )
+
+    cs_cv_only = CombinatorialSelection(
+        estimator=estimator, metric=metric, logic='greater',
+        selection_strategy='cv_only',
+    )
+    results_cv_only = cs_cv_only.fit_stage_1(
+        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+        features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
+    )
+
+    # Align rows by feature subset (both frames get re-sorted by their own
+    # reliability_score, which differs between strategies).
+    key_legacy = results_legacy['feature_subsets'].apply(tuple)
+    key_cv_only = results_cv_only['feature_subsets'].apply(tuple)
+    test_scores_legacy = results_legacy.set_index(key_legacy)['test_score'].sort_index()
+    test_scores_cv_only = results_cv_only.set_index(key_cv_only)['test_score'].sort_index()
+
+    # Identical train/cv/test scores, but different reliability_score
+    # formulas: cv_only must not depend on test_score at all.
+    pd.testing.assert_series_equal(
+        test_scores_legacy,
+        test_scores_cv_only,
+        check_names=False,
+    )
+    assert not results_legacy['reliability_score'].equals(results_cv_only['reliability_score'])
+
+
 if __name__ == '__main__':
     pytest.main()
