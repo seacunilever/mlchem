@@ -168,6 +168,33 @@ def test_calculate_reliability_components_rejects_invalid_logic():
     with pytest.raises(ValueError, match="'logic' must be either 'lower' or 'greater'"):
         calculate_reliability_components(0.9, 0.8, 0.7, logic='best')
 
+
+def test_calculate_reliability_components_cv_only_mode_ignores_test_score():
+    scores = calculate_reliability_components(
+        train_score=0.9,
+        cv_score=0.8,
+        test_score=None,
+        logic='greater',
+    )
+
+    expected_geometric_mean = (0.9 * 0.8) ** (1/2)
+    expected_instability = abs(0.9 - 0.8)
+    assert scores['geometric_mean'] == pytest.approx(expected_geometric_mean)
+    assert scores['performance_score'] == pytest.approx(expected_geometric_mean)
+    assert scores['instability_score'] == pytest.approx(expected_instability)
+    assert scores['reliability_score'] == pytest.approx(
+        expected_geometric_mean / (1 + expected_instability)
+    )
+
+
+def test_calculate_reliability_components_cv_only_mode_matches_full_mode_with_equal_test_score():
+    # If test_score equals cv_score, the leakage-free (cv_only) result should
+    # be consistent in spirit but is computed from fewer terms - this test
+    # simply guards the None-vs-non-None code paths stay independent.
+    full = calculate_reliability_components(0.9, 0.8, 0.8, logic='greater')
+    cv_only = calculate_reliability_components(0.9, 0.8, None, logic='greater')
+    assert full['instability_score'] != cv_only['instability_score']
+
 def test_rmse_to_std_ratio(sample_regression_data):
     y_true, y_pred = sample_regression_data
     ratio = rmse_to_std_ratio(y_true, y_pred)

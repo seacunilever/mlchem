@@ -196,11 +196,11 @@ def get_rmse(
 def calculate_reliability_components(
     train_score: float,
     cv_score: float,
-    test_score: float,
+    test_score: float | None,
     logic: Literal['lower', 'greater'],
 ) -> dict[str, float]:
     """
-    Calculate reliability-score components from train, CV, and test scores.
+    Calculate reliability-score components from train, CV, and (optionally) test scores.
 
     Parameters
     ----------
@@ -208,8 +208,12 @@ def calculate_reliability_components(
         Score obtained on the training set.
     cv_score : float
         Cross-validation score.
-    test_score : float
-        Score obtained on the test set.
+    test_score : float or None
+        Score obtained on the test set. If ``None``, the reliability
+        components are computed from ``train_score`` and ``cv_score``
+        only, i.e. a leakage-free ("cv_only") mode where the test score
+        cannot influence the result. Default behaviour (test_score
+        provided) is unchanged for backward compatibility.
     logic : {'lower', 'greater'}
         Whether lower or greater metric values are better.
 
@@ -223,16 +227,21 @@ def calculate_reliability_components(
     if logic not in ('lower', 'greater'):
         raise ValueError("'logic' must be either 'lower' or 'greater'.")
 
-    geometric_mean = (train_score * cv_score * test_score) ** (1/3)
+    if test_score is None:
+        geometric_mean = (train_score * cv_score) ** (1/2)
+        instability_score = abs(train_score - cv_score)
+    else:
+        geometric_mean = (train_score * cv_score * test_score) ** (1/3)
+        instability_score = (
+            abs(train_score - cv_score) +
+            abs(train_score - test_score) +
+            abs(cv_score - test_score)
+        )
+
     performance_score = geometric_mean
     if logic == 'lower':
         performance_score = np.inf if geometric_mean == 0 else 1 / geometric_mean
 
-    instability_score = (
-        abs(train_score - cv_score) +
-        abs(train_score - test_score) +
-        abs(cv_score - test_score)
-    )
     reliability_score = performance_score / (1 + instability_score)
 
     return {
