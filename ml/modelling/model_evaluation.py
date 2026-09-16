@@ -51,6 +51,216 @@ def _configure_module_logging(level: int) -> None:
     logger.setLevel(level)
 
 
+def _n_samples(X: np.ndarray | pd.DataFrame) -> int:
+    return len(X)
+
+
+def validate_cv_indices(
+    cv_indices: Iterable,
+    n_samples: int,
+    strict_coverage: bool = False,
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """
+    Validate an explicit list of (train_idx, valid_idx) cross-validation folds.
+
+    Parameters
+    ----------
+    cv_indices : iterable of (array-like, array-like)
+        Explicit train/validation index pairs, one per fold.
+
+    n_samples : int
+        Number of samples the indices are expected to reference.
+
+    strict_coverage : bool, optional (default=False)
+        If True, raise a ``ValueError`` when some samples are never used
+        as validation data in any fold. If False (default), only emit a
+        ``RuntimeWarning`` in that case, since some valid fold manifests
+        (e.g. a ``PredefinedSplit`` excluding held-out samples) may
+        legitimately not cover every sample.
+
+    Returns
+    -------
+    list of (numpy.ndarray, numpy.ndarray)
+        Normalised, validated (train_idx, valid_idx) pairs.
+
+    Raises
+    ------
+    ValueError
+        If folds overlap, contain out-of-range/duplicate indices, are
+        empty, or are otherwise inconsistently defined.
+    """
+
+    if cv_indices is None:
+        raise ValueError("'cv_indices' must not be None.")
+
+    try:
+        fold_list = list(cv_indices)
+    except TypeError as exc:
+        raise ValueError(
+            "'cv_indices' must be an iterable of (train_idx, valid_idx) pairs."
+        ) from exc
+
+    if len(fold_list) == 0:
+        raise ValueError("'cv_indices' must contain at least one (train_idx, valid_idx) fold.")
+
+    normalised = []
+    covered_as_valid = set()
+    for fold_number, fold in enumerate(fold_list, start=1):
+        try:
+            train_idx, valid_idx = fold
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Fold {fold_number} in 'cv_indices' must be a (train_idx, valid_idx) pair."
+            ) from exc
+
+        train_idx = np.asarray(train_idx)
+        valid_idx = np.asarray(valid_idx)
+
+        if train_idx.ndim != 1 or valid_idx.ndim != 1:
+            raise ValueError(f"Fold {fold_number}: train/valid indices must be 1-D arrays.")
+
+        if train_idx.size == 0:
+            raise ValueError(f"Fold {fold_number}: training indices are empty.")
+        if valid_idx.size == 0:
+            raise ValueError(f"Fold {fold_number}: validation indices are empty.")
+
+        combined = np.concatenate([train_idx, valid_idx])
+        if combined.min() < 0 or combined.max() >= n_samples:
+            raise ValueError(
+                f"Fold {fold_number}: indices out of range for {n_samples} samples "
+                f"(expected values in [0, {n_samples - 1}])."
+            )
+
+        if len(np.unique(train_idx)) != len(train_idx):
+            raise ValueError(f"Fold {fold_number}: training indices contain duplicates.")
+        if len(np.unique(valid_idx)) != len(valid_idx):
+            raise ValueError(f"Fold {fold_number}: validation indices contain duplicates.")
+
+        overlap = np.intersect1d(train_idx, valid_idx)
+        if overlap.size > 0:
+            raise ValueError(
+                f"Fold {fold_number}: train and validation indices overlap "
+                f"({overlap.size} shared sample(s))."
+            )
+
+        covered_as_valid.update(valid_idx.tolist())
+        normalised.append((train_idx, valid_idx))
+
+    missing = set(range(n_samples)) - covered_as_valid
+    if missing:
+        message = (
+            f"'cv_indices' folds never use {len(missing)} of {n_samples} sample(s) "
+            f"as validation data (e.g. indices {sorted(missing)[:5]}...)."
+        )
+        if strict_coverage:
+            raise ValueError(message)
+        warnings.warn(message, RuntimeWarning)
+
+    return normalised
+
+
+def generate_cv_indices(
+    X: np.ndarray | pd.DataFrame,
+    y: np.ndarray | pd.DataFrame | None = None,
+    cv_iter: int = 5,
+    cv_splitter=None,
+    cv_indices: Iterable | None = None,
+    groups: np.ndarray | pd.Series | None = None,
+    task_type: Literal['classification', 'regression'] = 'classification',
+    shuffle: bool = False,
+    random_state: int | None = None,
+    strict_coverage: bool = False,
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """
+    Resolve any supported cross-validation input into explicit fold indices.
+
+    This is the single entry point that converts ``cv_iter`` (existing
+    behaviour), a scikit-learn ``cv_splitter`` (optionally combined with
+    ``groups``), or a user-supplied ``cv_indices`` manifest into the same
+    canonical representation: a validated list of ``(train_idx, valid_idx)``
+    index pairs. Fold-generation logic external to mlchem (scaffold splits,
+    UMAP-cluster splits, etc.) only needs to produce ``cv_indices`` in this
+    format.
+
+    Parameters
+    ----------
+    X : numpy.ndarray or pandas.DataFrame
+        Feature matrix of shape (n_samples, n_features). Only its length
+        is used unless a ``cv_splitter`` requires ``X`` for splitting.
+
+    y : numpy.ndarray, pandas.DataFrame, or None, optional
+        Target vector, forwarded to ``cv_splitter.split`` when needed
+        (e.g. for stratified splitters).
+
+    cv_iter : int, optional (default=5)
+        Number of folds to generate when neither ``cv_splitter`` nor
+        ``cv_indices`` is supplied. Mirrors the legacy behaviour.
+
+    cv_splitter : object, optional
+        A scikit-learn compatible cross-validation splitter (e.g.
+        ``GroupKFold``, ``StratifiedGroupKFold``, ``PredefinedSplit``)
+        exposing a ``split(X, y, groups)`` method.
+
+    cv_indices : iterable of (array-like, array-like), optional
+        Explicit, pre-computed ``(train_idx, valid_idx)`` pairs. Takes
+        precedence over ``cv_splitter`` and ``cv_iter`` when provided.
+        This is the most generic API and is suitable for externally
+        generated fold manifests (scaffold-based folds, UMAP-cluster
+        folds, etc.).
+
+    groups : array-like, optional
+        Group labels used by group-aware splitters such as
+        ``GroupKFold`` or ``StratifiedGroupKFold``. Ignored unless
+        ``cv_splitter`` is provided and supports grouping.
+
+    task_type : {'classification', 'regression'}, optional (default='classification')
+        Used only to pick the default splitter (``StratifiedKFold`` or
+        ``KFold``) when neither ``cv_splitter`` nor ``cv_indices`` is given.
+
+    shuffle : bool, optional (default=False)
+        Whether to shuffle samples before splitting, for the default
+        ``cv_iter``-based splitter.
+
+    random_state : int or None, optional (default=None)
+        Random seed for the default ``cv_iter``-based splitter when
+        ``shuffle=True``.
+
+    strict_coverage : bool, optional (default=False)
+        Forwarded to :func:`validate_cv_indices`.
+
+    Returns
+    -------
+    list of (numpy.ndarray, numpy.ndarray)
+        Validated ``(train_idx, valid_idx)`` pairs.
+    """
+
+    n_samples = _n_samples(X)
+
+    if cv_indices is not None:
+        return validate_cv_indices(cv_indices, n_samples, strict_coverage=strict_coverage)
+
+    if cv_splitter is not None:
+        splitter = cv_splitter
+    else:
+        validate_task_type(task_type)
+        cv_kwargs = {
+            'n_splits': cv_iter,
+            'shuffle': shuffle,
+        }
+        if shuffle:
+            cv_kwargs['random_state'] = random_state
+
+        if task_type == 'classification':
+            from sklearn.model_selection import StratifiedKFold
+            splitter = StratifiedKFold(**cv_kwargs)
+        else:
+            from sklearn.model_selection import KFold
+            splitter = KFold(**cv_kwargs)
+
+    pairs = list(splitter.split(X, y, groups))
+    return validate_cv_indices(pairs, n_samples, strict_coverage=strict_coverage)
+
+
 def crossval(estimator,
              X: np.ndarray | pd.DataFrame,
              y: np.ndarray | pd.DataFrame,
@@ -59,7 +269,10 @@ def crossval(estimator,
              task_type: Literal['classification',
                                 'regression'] = 'classification',
              random_state: int | None = None,
-             shuffle: bool = False
+             shuffle: bool = False,
+             cv_splitter=None,
+             cv_indices: Iterable | None = None,
+             groups: np.ndarray | pd.Series | None = None,
              ) -> np.ndarray:
     """
 Evaluate an estimator using cross-validation.
@@ -67,6 +280,16 @@ Evaluate an estimator using cross-validation.
 This function performs K-fold cross-validation on the given dataset using
 the specified estimator and metric function. It supports both classification
 and regression tasks.
+
+By default (``cv_splitter=None`` and ``cv_indices=None``), behaviour is
+unchanged from previous releases: ``n_fold`` folds are generated internally
+using ``StratifiedKFold``/``KFold``. For fully index-driven, realistic
+validation strategies (``GroupKFold``, ``StratifiedGroupKFold``,
+``PredefinedSplit``, scaffold-based folds, UMAP-cluster folds, or any
+externally generated fold manifest), pass ``cv_splitter`` and/or
+``cv_indices`` instead. Internally, all cross-validation execution operates
+on explicit, validated train/validation index pairs regardless of which
+input mode is used (see :func:`generate_cv_indices`).
 
 Parameters
 ----------
@@ -84,7 +307,8 @@ metric_function : callable
 
 n_fold : int, optional (default=5)
     Number of folds for cross-validation. If equal to n_samples, performs
-    leave-one-out cross-validation.
+    leave-one-out cross-validation. Ignored when ``cv_splitter`` or
+    ``cv_indices`` is provided.
 
 task_type : {'classification', 'regression'}, optional (default='classification')
     Type of task to determine the cross-validation strategy.
@@ -95,6 +319,23 @@ random_state : int or None, optional (default=None)
 shuffle : bool, optional (default=False)
     Whether to shuffle samples before splitting into batches.
 
+cv_splitter : object, optional
+    A scikit-learn compatible cross-validation splitter (e.g.
+    ``GroupKFold(n_splits=5)``, ``StratifiedGroupKFold(...)``, or
+    ``PredefinedSplit(...)``). When provided, it takes precedence over
+    ``n_fold``/``task_type``-based fold generation. Combine with
+    ``groups`` for group-aware splitters.
+
+cv_indices : iterable of (array-like, array-like), optional
+    Explicit, pre-computed ``(train_idx, valid_idx)`` pairs (e.g. a
+    scaffold-based or UMAP-cluster-based fold manifest generated outside
+    mlchem). Takes precedence over both ``cv_splitter`` and ``n_fold``
+    when provided. This is the most generic API.
+
+groups : array-like, optional
+    Group labels propagated to ``cv_splitter.split`` (e.g. scaffold IDs
+    for ``GroupKFold``). Ignored when ``cv_indices`` is provided.
+
 Returns
 -------
 numpy.ndarray
@@ -104,6 +345,25 @@ numpy.ndarray
     from sklearn.model_selection import cross_val_score
     from sklearn.metrics import make_scorer
 
+    if cv_indices is not None or cv_splitter is not None or groups is not None:
+        resolved_pairs = generate_cv_indices(
+            X,
+            y=y,
+            cv_iter=n_fold,
+            cv_splitter=cv_splitter,
+            cv_indices=cv_indices,
+            groups=groups,
+            task_type=task_type,
+            shuffle=shuffle,
+            random_state=random_state,
+        )
+        return cross_val_score(estimator,
+                                X,
+                                y,
+                                cv=resolved_pairs,
+                                scoring=make_scorer(metric_function))
+
+    # ---- Legacy path: unchanged behaviour for cv_iter=n_fold. ----
     validate_task_type(task_type)
 
     cv_kwargs = {

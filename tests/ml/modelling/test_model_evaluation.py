@@ -44,7 +44,9 @@ from sklearn.datasets import make_classification
 from mlchem.ml.modelling.model_evaluation import (crossval,
                                                   y_scrambling,
                                                   ApplicabilityDomain,
-                                                  MajorityVote)
+                                                  MajorityVote,
+                                                  validate_cv_indices,
+                                                  generate_cv_indices)
 from mlchem.metrics import get_geometric_S
 
 
@@ -164,6 +166,171 @@ def test_crossval_shuffle_true_propagates_random_state(sample_data, task_type, e
     cv_splitter = mock_cross_val_score.call_args.kwargs['cv']
     assert cv_splitter.shuffle is True
     assert cv_splitter.random_state == 77
+
+
+# ---------------------------------------------------------------------------
+# Index-driven cross-validation: validate_cv_indices / generate_cv_indices
+# ---------------------------------------------------------------------------
+
+def test_validate_cv_indices_accepts_well_formed_folds():
+    folds = [
+        (np.array([0, 1, 2, 3]), np.array([4, 5])),
+        (np.array([4, 5, 2, 3]), np.array([0, 1])),
+    ]
+    normalised = validate_cv_indices(folds, n_samples=6)
+    assert len(normalised) == 2
+    for train_idx, valid_idx in normalised:
+        assert isinstance(train_idx, np.ndarray)
+        assert isinstance(valid_idx, np.ndarray)
+
+
+def test_validate_cv_indices_rejects_overlap():
+    folds = [(np.array([0, 1, 2]), np.array([2, 3]))]
+    with pytest.raises(ValueError, match='overlap'):
+        validate_cv_indices(folds, n_samples=4)
+
+
+def test_validate_cv_indices_rejects_out_of_range():
+    folds = [(np.array([0, 1]), np.array([10]))]
+    with pytest.raises(ValueError, match='out of range'):
+        validate_cv_indices(folds, n_samples=4)
+
+
+def test_validate_cv_indices_rejects_empty_fold():
+    folds = [(np.array([], dtype=int), np.array([0, 1]))]
+    with pytest.raises(ValueError, match='empty'):
+        validate_cv_indices(folds, n_samples=4)
+
+
+def test_validate_cv_indices_rejects_empty_manifest():
+    with pytest.raises(ValueError, match='at least one'):
+        validate_cv_indices([], n_samples=4)
+
+
+def test_validate_cv_indices_warns_on_missing_coverage():
+    folds = [(np.array([0, 1]), np.array([2]))]
+    with pytest.warns(RuntimeWarning, match='never use'):
+        validate_cv_indices(folds, n_samples=4)
+
+
+def test_validate_cv_indices_strict_coverage_raises():
+    folds = [(np.array([0, 1]), np.array([2]))]
+    with pytest.raises(ValueError, match='never use'):
+        validate_cv_indices(folds, n_samples=4, strict_coverage=True)
+
+
+def test_generate_cv_indices_legacy_cv_iter(sample_data):
+    train_set, y_train, _, _ = sample_data
+    pairs = generate_cv_indices(
+        train_set.values, y=y_train, cv_iter=5, task_type='classification',
+    )
+    assert len(pairs) == 5
+    for train_idx, valid_idx in pairs:
+        assert set(train_idx.tolist()).isdisjoint(valid_idx.tolist())
+
+
+def test_generate_cv_indices_with_group_kfold(sample_data):
+    from sklearn.model_selection import GroupKFold
+
+    train_set, y_train, _, _ = sample_data
+    groups = np.arange(len(train_set)) % 4  # 4 distinct groups
+
+    pairs = generate_cv_indices(
+        train_set.values,
+        y=y_train,
+        cv_splitter=GroupKFold(n_splits=4),
+        groups=groups,
+    )
+    assert len(pairs) == 4
+    for train_idx, valid_idx in pairs:
+        train_groups = set(groups[train_idx].tolist())
+        valid_groups = set(groups[valid_idx].tolist())
+        assert train_groups.isdisjoint(valid_groups)
+
+
+def test_generate_cv_indices_with_explicit_manifest(sample_data):
+    train_set, y_train, _, _ = sample_data
+    n = len(train_set)
+    manifest = [
+        (np.arange(n // 2, n), np.arange(0, n // 2)),
+        (np.arange(0, n // 2), np.arange(n // 2, n)),
+    ]
+    pairs = generate_cv_indices(train_set.values, cv_indices=manifest)
+    assert len(pairs) == 2
+
+
+def test_crossval_cv_splitter_matches_cv_indices_manifest(sample_data):
+    train_set, y_train, _, _ = sample_data
+    estimator = LogisticRegression()
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+
+    pairs = generate_cv_indices(
+        train_set.values, y=y_train, cv_iter=5, task_type='classification',
+    )
+
+    scores_from_indices = crossval(
+        estimator, train_set.values, y_train, metric_function,
+        cv_indices=pairs,
+    )
+
+    from sklearn.model_selection import StratifiedKFold
+    scores_from_splitter = crossval(
+        estimator, train_set.values, y_train, metric_function,
+        cv_splitter=StratifiedKFold(n_splits=5),
+    )
+
+    np.testing.assert_allclose(scores_from_indices, scores_from_splitter)
+
+
+def test_crossval_cv_iter_and_cv_indices_produce_identical_scores(sample_data):
+    train_set, y_train, _, _ = sample_data
+    estimator = LogisticRegression()
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+
+    legacy_scores = crossval(
+        estimator, train_set.values, y_train, metric_function,
+        n_fold=5, task_type='classification',
+    )
+
+    pairs = generate_cv_indices(
+        train_set.values, y=y_train, cv_iter=5, task_type='classification',
+    )
+    explicit_scores = crossval(
+        estimator, train_set.values, y_train, metric_function,
+        cv_indices=pairs,
+    )
+
+    np.testing.assert_allclose(legacy_scores, explicit_scores)
+
+
+def test_crossval_with_group_kfold_and_groups(sample_data):
+    train_set, y_train, _, _ = sample_data
+    estimator = LogisticRegression()
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+    groups = np.arange(len(train_set)) % 4
+
+    from sklearn.model_selection import GroupKFold
+    scores = crossval(
+        estimator, train_set.values, y_train, metric_function,
+        cv_splitter=GroupKFold(n_splits=4), groups=groups,
+    )
+    assert isinstance(scores, np.ndarray)
+    assert len(scores) == 4
+
+
+def test_crossval_with_predefined_split(sample_data):
+    train_set, y_train, _, _ = sample_data
+    estimator = LogisticRegression()
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+
+    from sklearn.model_selection import PredefinedSplit
+    test_fold = np.resize([0, 1], len(train_set))
+    scores = crossval(
+        estimator, train_set.values, y_train, metric_function,
+        cv_splitter=PredefinedSplit(test_fold),
+    )
+    assert isinstance(scores, np.ndarray)
+    assert len(scores) == 2
 
 def test_y_scrambling(sample_data, tmp_path, monkeypatch):
     train_set, y_train, test_set, y_test = sample_data
