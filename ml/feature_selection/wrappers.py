@@ -36,6 +36,8 @@ import numpy as np
 from typing import Literal, Iterable, Callable, Optional
 from math import comb
 import logging
+import warnings
+import contextlib
 from sklearn.base import clone
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -59,6 +61,39 @@ def _configure_wrapper_logging(level: int) -> None:
     if not logging.getLogger().handlers:
         logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger.setLevel(level)
+
+
+@contextlib.contextmanager
+def _suppress_parallel_delayed_warning():
+    """
+    Silence the benign "sklearn.utils.parallel.delayed should be used with
+    sklearn.utils.parallel.Parallel..." UserWarning while candidate subsets
+    are evaluated concurrently across raw worker threads.
+
+    ``warnings.filters`` is a single, process-wide list. sklearn's own
+    nested ``cross_val_score`` internally enters/exits ``warnings.catch_warnings()``
+    for every fold, and when many threads do this at the same time (as
+    happens here via ``ThreadPoolExecutor``), those enter/exit cycles race
+    on the shared filters list. As a result ``warnings.filterwarnings('ignore', ...)``
+    does not reliably suppress the warning under real concurrent load.
+
+    Overriding ``warnings.showwarning`` instead is safe here: it is only
+    ever replaced by this function, so concurrent ``catch_warnings``
+    save/restore cycles from other threads just save and restore the same
+    override rather than racing to replace it with something else.
+    """
+    previous_showwarning = warnings.showwarning
+
+    def _filtered_showwarning(message, category, filename, lineno, file=None, line=None):
+        if category is UserWarning and 'sklearn.utils.parallel.delayed' in str(message):
+            return
+        previous_showwarning(message, category, filename, lineno, file=file, line=line)
+
+    warnings.showwarning = _filtered_showwarning
+    try:
+        yield
+    finally:
+        warnings.showwarning = previous_showwarning
 
 
 def _clone_for_search(estimator, outer_n_jobs: int):
@@ -1313,17 +1348,20 @@ class CombinatorialSelection:
                 self.dict_results['test_score'].append(test_score)
         else:
             max_workers = self.n_jobs if self.n_jobs > 0 else None
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
-                for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 1", disable=False):
-                    result = future.result()
-                    if result is None:
-                        continue
-                    subset, train_score, cv_score, test_score = result
-                    self.dict_results['feature_subsets'].append(subset)
-                    self.dict_results['training_score'].append(train_score)
-                    self.dict_results['cv_score'].append(cv_score)
-                    self.dict_results['test_score'].append(test_score)
+            # Benign: sklearn's own nested cross_val_score Parallel/delayed
+            # can misreport propagation when dispatched from raw threads.
+            with _suppress_parallel_delayed_warning():
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
+                    for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 1", disable=False):
+                        result = future.result()
+                        if result is None:
+                            continue
+                        subset, train_score, cv_score, test_score = result
+                        self.dict_results['feature_subsets'].append(subset)
+                        self.dict_results['training_score'].append(train_score)
+                        self.dict_results['cv_score'].append(cv_score)
+                        self.dict_results['test_score'].append(test_score)
         self.df_results_stage1 = pd.DataFrame(
             self.dict_results,
             columns=self.dict_results.keys()
@@ -1501,17 +1539,20 @@ class CombinatorialSelection:
                 self.dict_results_2['test_score'].append(test_score)
         else:
             max_workers = self.n_jobs if self.n_jobs > 0 else None
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
-                for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 2", disable=False):
-                    result = future.result()
-                    if result is None:
-                        continue
-                    subset, train_score, cv_score, test_score = result
-                    self.dict_results_2['feature_subsets'].append(subset)
-                    self.dict_results_2['training_score'].append(train_score)
-                    self.dict_results_2['cv_score'].append(cv_score)
-                    self.dict_results_2['test_score'].append(test_score)
+            # Benign: sklearn's own nested cross_val_score Parallel/delayed
+            # can misreport propagation when dispatched from raw threads.
+            with _suppress_parallel_delayed_warning():
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
+                    for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 2", disable=False):
+                        result = future.result()
+                        if result is None:
+                            continue
+                        subset, train_score, cv_score, test_score = result
+                        self.dict_results_2['feature_subsets'].append(subset)
+                        self.dict_results_2['training_score'].append(train_score)
+                        self.dict_results_2['cv_score'].append(cv_score)
+                        self.dict_results_2['test_score'].append(test_score)
         self.df_results_stage2 = pd.DataFrame(
             self.dict_results_2, columns=self.dict_results_2.keys()
             )
