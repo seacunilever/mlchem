@@ -193,21 +193,30 @@ def get_rmse(
     return rmse
 
 
-def calculate_reliability_components(
+def get_reliability_score_components(
     train_score: float,
     cv_score: float,
     test_score: float | None,
     logic: Literal['lower', 'greater'],
+    desired_performance_score: Literal['train','cv','train_cv_average']
 ) -> dict[str, float]:
     """
-    Calculate reliability-score components from train, CV, and (optionally) test scores.
+    Calculate the reliability score components from train, CV, and (optionally) test scores.
+    Reliability score is calculated as the performance score divided by
+    one plus the instability score. The `desired_performance_score` argument
+    will decide which score is used as a proxy for overall performance,
+    i.e., 'train' will use the training score, 'cv' will use the
+    cross-validation score, and 'train_cv_average' will use the average
+    of the training and cross-validation scores. Meanwhile, the
+    instability score captures the variability between train, CV,
+    and (optionally) test scores.
 
     Parameters
     ----------
     train_score : float
         Score obtained on the training set.
     cv_score : float
-        Cross-validation score.
+        Score obtained on the cross-validation set.
     test_score : float or None
         Score obtained on the test set. If ``None``, the reliability
         components are computed from ``train_score`` and ``cv_score``
@@ -216,36 +225,44 @@ def calculate_reliability_components(
         provided) is unchanged for backward compatibility.
     logic : {'lower', 'greater'}
         Whether lower or greater metric values are better.
+    desired_performance_score : {'train','cv','train_cv_average'}
+        Which score to use as the performance score. Options are:
+        'train' for the training score, 'cv' for the cross-validation score,
+        'test' for the test score, and 'train_cv_average' for the average
+        of the training and cross-validation scores.
 
     Returns
     -------
     dict
-        Dictionary containing ``geometric_mean``, ``performance_score``,
+        Dictionary containing ``performance_score``,
         ``instability_score``, and ``reliability_score``.
     """
 
     if logic not in ('lower', 'greater'):
         raise ValueError("'logic' must be either 'lower' or 'greater'.")
 
+    if desired_performance_score == 'train':
+        performance_score = train_score
+    elif desired_performance_score == 'cv':
+        performance_score = cv_score
+    else:  # 'train_cv_average'
+        performance_score = np.mean([train_score, cv_score])
     if test_score is None:
-        geometric_mean = (train_score * cv_score) ** (1/2)
         instability_score = abs(train_score - cv_score)
     else:
-        geometric_mean = (train_score * cv_score * test_score) ** (1/3)
+        performance_score = np.mean([train_score, cv_score, test_score])
         instability_score = (
             abs(train_score - cv_score) +
             abs(train_score - test_score) +
             abs(cv_score - test_score)
         )
 
-    performance_score = geometric_mean
     if logic == 'lower':
-        performance_score = np.inf if geometric_mean == 0 else 1 / geometric_mean
+        performance_score = -performance_score   # transform score internally to maintain "higher is better" behaviour
 
     reliability_score = performance_score / (1 + instability_score)
 
     return {
-        'geometric_mean': geometric_mean,
         'performance_score': performance_score,
         'instability_score': instability_score,
         'reliability_score': reliability_score,
