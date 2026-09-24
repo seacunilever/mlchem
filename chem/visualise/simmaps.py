@@ -390,6 +390,17 @@ Examples
 		except RuntimeError:
 			cm = None
 
+		# Warn if using legacy legend parameter
+		if legend != '':
+			import warnings
+			warnings.warn(
+				"The 'legend' parameter is deprecated and kept for backward compatibility only. "
+				"It has no effect. Legends should be added by the caller using mlchem's draw_mol() "
+				"after rendering contours. This parameter will be removed in a future version.",
+				FutureWarning,
+				stacklevel=2,
+			)
+
 		if isinstance(contour_colour, str):
 			# Convert string color to a tuple (e.g., 'black' to (0, 0, 0))
 			import matplotlib.colors as mcolors
