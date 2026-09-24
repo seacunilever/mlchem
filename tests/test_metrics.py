@@ -36,7 +36,7 @@ import numpy as np
 from rdkit.DataStructs import ExplicitBitVect
 from mlchem.metrics import (
     get_sensitivity, get_specificity, get_geometric_S, get_mcc, get_rmse,
-    calculate_reliability_components,
+    get_reliability_score_components,
     rmse_to_std_ratio, get_r2, DiceSimilarity, OnBitSimilarity,
     SokalSimilarity, AllBitSimilarity, CosineSimilarity, RusselSimilarity,
     TverskySimilarity, TanimotoSimilarity, AsymmetricSimilarity,
@@ -127,57 +127,56 @@ def test_get_rmse(sample_regression_data):
     assert rmse == pytest.approx(0.264, 0.01)
 
 
-def test_calculate_reliability_components_greater_logic():
-    scores = calculate_reliability_components(
+def test_get_reliability_score_components_greater_logic():
+    scores = get_reliability_score_components(
         train_score=0.9,
         cv_score=0.8,
         test_score=0.7,
         logic='greater',
+        desired_performance_score='train_cv_average'
     )
 
-    expected_geometric_mean = (0.9 * 0.8 * 0.7) ** (1/3)
-    expected_instability = abs(0.9 - 0.8) + abs(0.9 - 0.7) + abs(0.8 - 0.7)
-    assert scores['geometric_mean'] == pytest.approx(expected_geometric_mean)
-    assert scores['performance_score'] == pytest.approx(expected_geometric_mean)
+    expected_performance = (0.9 + 0.8) / 2
+    expected_instability = abs(0.9 - 0.8) + abs(0.9-0.7) + abs(0.8-0.7)
+    assert scores['performance_score'] == pytest.approx(expected_performance)
     assert scores['instability_score'] == pytest.approx(expected_instability)
-    assert scores['reliability_score'] == pytest.approx(
-        expected_geometric_mean / (1 + expected_instability)
-    )
+    assert scores['reliability_score'] == pytest.approx(expected_performance / 
+                                                        (1 + expected_instability))
 
 
-def test_calculate_reliability_components_lower_logic_inverts_performance():
-    scores = calculate_reliability_components(
+def test_get_reliability_score_components_lower_logic_inverts_performance():
+    scores = get_reliability_score_components(
         train_score=0.5,
         cv_score=0.6,
         test_score=0.55,
         logic='lower',
+        desired_performance_score='train_cv_average'
     )
 
-    expected_geometric_mean = (0.5 * 0.6 * 0.55) ** (1/3)
-    expected_performance = 1 / expected_geometric_mean
+    expected_average = (0.5 + 0.6) / 2
+    expected_performance = - expected_average
     expected_instability = abs(0.5 - 0.6) + abs(0.5 - 0.55) + abs(0.6 - 0.55)
-    assert scores['geometric_mean'] == pytest.approx(expected_geometric_mean)
     assert scores['performance_score'] == pytest.approx(expected_performance)
     assert scores['instability_score'] == pytest.approx(expected_instability)
-    assert scores['reliability_score'] == pytest.approx(
-        expected_performance / (1 + expected_instability)
-    )
+    assert scores['reliability_score'] == pytest.approx(expected_performance / 
+                                                        (1 + expected_instability))
 
 
-def test_calculate_reliability_components_rejects_invalid_logic():
+def test_get_reliability_components_rejects_invalid_logic():
     with pytest.raises(ValueError, match="'logic' must be either 'lower' or 'greater'"):
-        calculate_reliability_components(0.9, 0.8, 0.7, logic='best')
+        get_reliability_score_components(0.9, 0.8, 0.7, logic='best')
 
 
 def test_calculate_reliability_components_cv_only_mode_ignores_test_score():
-    scores = calculate_reliability_components(
+    scores = get_reliability_score_components(
         train_score=0.9,
         cv_score=0.8,
         test_score=None,
         logic='greater',
+        desired_performance_score='train_cv_average',
     )
 
-    expected_geometric_mean = (0.9 * 0.8) ** (1/2)
+    expected_geometric_mean = (0.9 + 0.8) / 2
     expected_instability = abs(0.9 - 0.8)
     assert scores['geometric_mean'] == pytest.approx(expected_geometric_mean)
     assert scores['performance_score'] == pytest.approx(expected_geometric_mean)
@@ -187,12 +186,12 @@ def test_calculate_reliability_components_cv_only_mode_ignores_test_score():
     )
 
 
-def test_calculate_reliability_components_cv_only_mode_matches_full_mode_with_equal_test_score():
+def test_get_reliability_components_cv_only_mode_matches_full_mode_with_equal_test_score():
     # If test_score equals cv_score, the leakage-free (cv_only) result should
     # be consistent in spirit but is computed from fewer terms - this test
     # simply guards the None-vs-non-None code paths stay independent.
-    full = calculate_reliability_components(0.9, 0.8, 0.8, logic='greater')
-    cv_only = calculate_reliability_components(0.9, 0.8, None, logic='greater')
+    full = get_reliability_score_components(0.9, 0.8, 0.8, logic='greater', desired_performance_score='train_cv_average')
+    cv_only = get_reliability_score_components(0.9, 0.8, None, logic='greater', desired_performance_score='train_cv_average')
     assert full['instability_score'] != cv_only['instability_score']
 
 def test_rmse_to_std_ratio(sample_regression_data):
