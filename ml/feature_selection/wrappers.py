@@ -117,6 +117,173 @@ def _clone_for_search(estimator, outer_n_jobs: int):
     return estimator_copy
 
 
+def _orient_scores_to_utility(
+    scores: np.ndarray,
+    logic: Literal['lower', 'greater'],
+) -> np.ndarray:
+    """
+    Orient metric scores so that higher utility is always better.
+
+    For 'greater' metrics (e.g., ROC-AUC, MCC, accuracy), utility = score.
+    For 'lower' metrics (e.g., RMSE, loss), utility = -score to flip orientation.
+
+    Parameters
+    ----------
+    scores : numpy.ndarray
+        Array of metric scores (shape: (n_subsets,) or (n_subsets, n_folds)).
+    logic : {'lower', 'greater'}
+        Whether the metric is minimized or maximized.
+
+    Returns
+    -------
+    numpy.ndarray
+        Oriented scores where higher is always better.
+    """
+    if logic == 'greater':
+        return scores
+    else:  # logic == 'lower'
+        return -scores
+
+
+def _compute_fold_degradation(
+    cv_folds_kstar: np.ndarray,
+    cv_folds_k: np.ndarray,
+) -> dict[str, float]:
+    """
+    Compute paired fold-level degradation d from subset k* to subset k.
+
+    For each fold r, computes d[r] = u[k*,r] - u[k,r], where u represents
+    utility (oriented scores). Then computes mean and standard error.
+
+    Parameters
+    ----------
+    cv_folds_kstar : numpy.ndarray
+        Fold-level utility scores for reference subset k* (shape: (n_folds,)).
+    cv_folds_k : numpy.ndarray
+        Fold-level utility scores for subset k (shape: (n_folds,)).
+
+    Returns
+    -------
+    dict
+        Dictionary with keys:
+        - 'degradation': numpy array of fold-level degradation scores
+        - 'mean_degradation': float, mean degradation across folds
+        - 'se_degradation': float, standard error of degradation
+    """
+    if len(cv_folds_kstar) != len(cv_folds_k):
+        raise ValueError("cv_folds_kstar and cv_folds_k must have the same length.")
+
+    degradation = cv_folds_kstar - cv_folds_k
+    mean_degradation = float(np.mean(degradation))
+    se_degradation = float(np.std(degradation, ddof=1) / np.sqrt(len(degradation)))
+
+    return {
+        'degradation': degradation,
+        'mean_degradation': mean_degradation,
+        'se_degradation': se_degradation,
+    }
+
+
+def _select_parsimonious_subset(
+    cv_folds_kstar: np.ndarray,
+    cv_folds_kstar_index: int,
+    all_cv_folds: list[np.ndarray],
+    parsimony_mode: Literal['best', 'tolerance', 'standard_error', 'uncertainty'],
+    tolerance: float = 0.0,
+    se_multiplier: float = 1.0,
+) -> dict:
+    """
+    Select a parsimonious subset based on fold-level degradation criteria.
+
+    This function compares all subsets k < k* against the reference k* using
+    paired fold-level CV scores, selecting the smallest subset meeting the
+    parsimony criterion.
+
+    Parameters
+    ----------
+    cv_folds_kstar : numpy.ndarray
+        Fold-level utility scores for the reference subset k*.
+    cv_folds_kstar_index : int
+        Index (1-based) of the reference subset k*.
+    all_cv_folds : list[numpy.ndarray]
+        List of fold-level utility arrays for all subsets, indexed 0 to max.
+    parsimony_mode : {'best', 'tolerance', 'standard_error', 'uncertainty'}
+        Selection mode:
+        - 'best': return k* (existing behavior)
+        - 'tolerance': select smallest k where mean(d[k]) <= tolerance
+        - 'standard_error': select smallest k where mean(d[k]) <= se_multiplier * SE(d[k])
+        - 'uncertainty': select smallest k where mean(d[k]) <= tolerance + se_multiplier * SE(d[k])
+    tolerance : float, optional
+        Tolerance threshold for 'tolerance' and 'uncertainty' modes. Default 0.0.
+    se_multiplier : float, optional
+        Multiplier for standard error in 'standard_error' and 'uncertainty' modes. Default 1.0.
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        - 'selected_index': int, 1-based index of selected subset
+        - 'parsimony_mode': str
+        - 'degradation_info': dict with degradation stats for each subset
+        - 'acceptable_subsets': list of 1-based indices meeting criteria
+        - 'reference_index': int, the k* reference index
+    """
+    if parsimony_mode == 'best':
+        return {
+            'selected_index': cv_folds_kstar_index,
+            'parsimony_mode': 'best',
+            'degradation_info': {},
+            'acceptable_subsets': [cv_folds_kstar_index],
+            'reference_index': cv_folds_kstar_index,
+        }
+
+    degradation_info = {}
+    acceptable_subsets = []
+
+    # Evaluate subsets k from 1 to k*-1
+    for k_idx in range(1, cv_folds_kstar_index):
+        if k_idx >= len(all_cv_folds):
+            break  # Safety check
+
+        cv_folds_k = all_cv_folds[k_idx]
+        deg_result = _compute_fold_degradation(cv_folds_kstar, cv_folds_k)
+        mean_deg = deg_result['mean_degradation']
+        se_deg = deg_result['se_degradation']
+
+        degradation_info[k_idx] = {
+            'mean_degradation': mean_deg,
+            'se_degradation': se_deg,
+        }
+
+        # Determine if this subset meets the criterion
+        criterion_met = False
+        if parsimony_mode == 'tolerance':
+            criterion_met = mean_deg <= tolerance
+        elif parsimony_mode == 'standard_error':
+            criterion_met = mean_deg <= se_multiplier * se_deg
+        elif parsimony_mode == 'uncertainty':
+            criterion_met = mean_deg <= (tolerance + se_multiplier * se_deg)
+
+        if criterion_met:
+            acceptable_subsets.append(k_idx)
+
+    # Select the smallest acceptable subset, or fall back to k* if none qualify
+    if acceptable_subsets:
+        selected_index = acceptable_subsets[0]  # Smallest
+    else:
+        selected_index = cv_folds_kstar_index  # Fallback to k*
+
+    return {
+        'selected_index': selected_index,
+        'parsimony_mode': parsimony_mode,
+        'degradation_info': degradation_info,
+        'acceptable_subsets': acceptable_subsets,
+        'reference_index': cv_folds_kstar_index,
+        'tolerance': tolerance,
+        'se_multiplier': se_multiplier,
+    }
+
+
 def _resolve_wrapper_cv_indices(
     X,
     y,
@@ -203,8 +370,29 @@ class SequentialForwardSelection:
 
   This class performs Sequential Forward Feature Selection by iteratively
   adding features that yield the highest gain in cross-validation score.
+  Best feature set can be selected:
+  - calculating a helper metric that takes train/cv(/test) score instability
+  into account
+  - through the application of the parsimony principle (read further for its
+  scientific rationale)
+  - via a combination of both approaches.
+  
 
-  Attributes
+  Public Methods
+  ----------
+  `__init__()`: Initialises the SequentialForwardSelection class.
+
+  `set_log_level()`: Set the logging level for wrapper diagnostics.
+
+  `fit()`: Fit the Sequential Forward Selection model.
+
+  `find_best()`: Find the best feature subset based on reliability score,
+  optionally applying a parsimony rule. Read the method's docstring for
+  more details
+
+  `plot()`: Plot the performance of the Sequential Forward Selection process.
+
+Attributes
   ----------
   estimator : object
       The scikit-learn estimator used for feature selection.
@@ -222,14 +410,209 @@ class SequentialForwardSelection:
       ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
       ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
       splitters. Takes precedence over ``cv_iter``.
+  groups : array-like, optional
+      Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
+      Ignored when ``cv_indices`` is provided.
   cv_indices : iterable of (array-like, array-like), optional
       Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
       scaffold-based or UMAP-cluster-based fold manifest generated
       outside mlchem. Takes precedence over both ``cv_splitter`` and
       ``cv_iter``. This is the most generic API.
+  logic : {'lower', 'greater'}, optional
+      Whether to minimize or maximize the cross-validation score. Default is 'greater'.
+  task_type : {'classification', 'regression'}, optional
+      Type of task. Default is 'classification'.
+  selection_strategy : {'legacy', 'cv_only'}, optional
+      Strategy used by :meth:`find_best` to select the winning feature
+      subset. ``'legacy'`` (default, kept for backward compatibility)
+      uses train/CV/test scores, exactly as in previous releases.
+      ``'cv_only'`` is a leakage-free mode that selects using only
+      train/CV information; test scores are still computed and stored
+      for reporting, but never influence selection. ``'cv_only'`` is the
+      recommended choice for new projects.
+  parsimony_mode : {'none', 'best', 'tolerance', 'standard_error', 'uncertainty'}, optional
+      Parsimony selection mode for downstream feature reduction (default: 'none').
+      - 'none': Parsimony disabled (existing behavior).
+      - 'best': Alias for 'none'; select k* (highest CV performance).
+      - 'tolerance': Select smallest k where mean(degradation[k]) <= parsimony_tolerance.
+      - 'standard_error': Select smallest k where mean(degradation[k]) <= parsimony_se_multiplier * SE(degradation[k]).
+      - 'uncertainty': Select smallest k where mean(degradation[k]) <= parsimony_tolerance + parsimony_se_multiplier * SE(degradation[k]).
+  parsimony_tolerance : float, optional
+      Tolerance threshold (in utility units) for 'tolerance' and 'uncertainty' modes.
+      Default is 0.0.
+  parsimony_se_multiplier : float, optional
+      Multiplier for standard error in 'standard_error' and 'uncertainty' modes.
+      Default is 1.0.
+  log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
+      Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+      'INFO' for standard output, 'WARNING' to suppress most output.
+      Default is logging.INFO.
+
+    Notes
+    -----
+    Automatic best-subset selection uses a reliability score. With
+    ``selection_strategy='legacy'``, for each selected prefix,
+    ``performance_score = (train * cv * test) ** (1/3)``,
+    ``instability_score = |train-cv| + |train-test| + |cv-test|``, and for
+    higher-is-better metrics ``reliability_score = performance_score /
+    (1 + instability_score)``. For lower-is-better metrics, the geometric
+    mean is inverted first so the same reliability score can be maximised.
+    With ``selection_strategy='cv_only'``, the same formulas are used but
+    with only ``train`` and ``cv`` scores (no test score involved).
+  
+  Examples
+  --------
+
+  >>> import pandas as pd
+  >>> import numpy as np
+  >>> from sklearn.linear_model import LogisticRegression
+  >>> from sklearn.datasets import make_classification
+  >>> from mlchem.metrics import get_geometric_S
+
+  Standard cross-validation (existing behaviour):
+
+  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+  ...                                  metric=get_geometric_S,
+  ...                                  max_features=5,
+  ...                                  cv_iter=3,
+  ...                                  logic='greater')
+
+  GroupKFold with scaffold groups:
+
+  >>> from sklearn.model_selection import GroupKFold
+  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+  ...                                  metric=get_geometric_S,
+  ...                                  cv_splitter=GroupKFold(5),
+  ...                                  groups=scaffold_ids)
+
+  Precomputed scaffold or cluster folds:
+
+  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+  ...                                  metric=get_geometric_S,
+  ...                                  cv_indices=scaffold_fold_manifest)
+
+  >>> X, y = make_classification(300, 10, n_informative=5)
+  >>> train_size = 0.8
+  >>> train_samples = int(train_size * len(X))
+
+  >>> X_train, y_train = X[:train_samples], y[:train_samples]
+  >>> X_test, y_test = X[train_samples:], y[train_samples:]
+
+  >>> train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
+  >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
+
+  >>> sfs.fit(train_set, y_train, test_set, y_test)
+  >>> sfs.plot(best_feature='None')
+
+
+Scientific Rationale
+-------------------
+Parsimony selects the smallest previously visited feature subset whose
+paired cross-validation degradation relative to the selected reference
+subset is no greater than a configurable empirical uncertainty margin.
+The margin is inspired by the one-standard-error rule but is computed
+from matched fold-wise differences. Because cross-validation folds are
+dependent, the criterion is intended for model selection and should not
+be interpreted as a formal equivalence test.
+
+### Tolerance
+
+An optional absolute tolerance may be used to regard predictive
+improvements or degradations smaller than a user-defined amount as
+practically negligible. This is analogous to minimum-improvement
+stopping rules used in sequential feature selection, such as the `tol`
+parameter of scikit-learn's SequentialFeatureSelector [1].
+
+### Paired uncertainty margin
+
+The reference and candidate subsets are evaluated using identical
+cross-validation splits. After orienting the scoring metric so that
+larger values are better, the degradation on resample r is
+
+    d_r = score_reference,r - score_candidate,r.
+
+The reported uncertainty is the descriptive standard error of the mean
+paired degradation,
+
+    SE_d = SD(d_r) / sqrt(R),
+
+where R is the number of matched resamples and SD uses the sample
+standard deviation. A candidate is acceptable when its mean degradation
+does not exceed `se_multiplier * SE_d`, optionally combined with an
+absolute tolerance.
+
+### Relationship to the one-standard-error rule
+
+This criterion is inspired by the one-standard-error principle, which
+prefers a simpler model when its cross-validated performance lies within
+an uncertainty margin of the best-performing model [2,3]. Unlike the
+classical rule, this implementation estimates uncertainty from paired
+reference-minus-candidate differences rather than from the reference
+model's cross-validation error alone.
+
+### Statistical interpretation
+
+The criterion is an uncertainty-aware model-selection heuristic, not a
+hypothesis test or an equivalence/non-inferiority procedure. Cross-
+validation results are dependent because training sets overlap; therefore
+SD(d_r) / sqrt(R) can understate or otherwise misrepresent the sampling
+uncertainty [4-6]. Acceptance means only that the observed mean degradation
+falls within the configured empirical margin on the supplied resamples.
+
+### References:
+
+[1] scikit-learn developers, SequentialFeatureSelector documentation.
+[2] Breiman et al. (1984), Classification and Regression Trees.
+[3] Hastie, Tibshirani & Friedman (2009), Elements of Statistical Learning.
+[4] Dietterich (1998), doi:10.1162/089976698300017197
+[5] Nadeau & Bengio (2003), doi:10.1023/A:1024068626366
+[6] Bengio & Grandvalet (2004), JMLR 5:1089-1105
+  """
+
+    def __init__(self,
+                 estimator,
+                 estimator_string: Optional[str],
+                 metric: Callable,
+                 max_features: int = 25,
+                 cv_iter: int = 5,
+                 cv_splitter=None,
+                 cv_indices: Iterable | None = None,
+                 groups=None,
+                 logic: Literal['lower', 'greater'] = 'greater',
+                 task_type: Literal[
+                     'classification', 'regression'] = 'classification',
+                 selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
+                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 ) -> None:
+        """
+  Initialise the SequentialForwardSelection object.
+
+Attributes
+  ----------
+  estimator : object
+      The scikit-learn estimator used for feature selection.
+  estimator_string : str, optional
+      A string representation of the estimator. If None, it is inferred from the estimator.
+  metric : callable
+      A function to evaluate model performance.
+  max_features : int, optional
+      Maximum number of features to select. Default is 25.
+  cv_iter : int, optional
+      Number of cross-validation iterations. Default is 5. Ignored when
+      ``cv_splitter`` or ``cv_indices`` is provided.
+  cv_splitter : object, optional
+      A scikit-learn compatible cross-validation splitter (e.g.
+      ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
+      ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
+      splitters. Takes precedence over ``cv_iter``.
   groups : array-like, optional
       Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
       Ignored when ``cv_indices`` is provided.
+  cv_indices : iterable of (array-like, array-like), optional
+      Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
+      scaffold-based or UMAP-cluster-based fold manifest generated
+      outside mlchem. Takes precedence over both ``cv_splitter`` and
+      ``cv_iter``. This is the most generic API.
   logic : {'lower', 'greater'}, optional
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
@@ -258,104 +641,6 @@ class SequentialForwardSelection:
     mean is inverted first so the same reliability score can be maximised.
     With ``selection_strategy='cv_only'``, the same formulas are used but
     with only ``train`` and ``cv`` scores (no test score involved).
-
-  Examples
-  --------
-  >>> import pandas as pd
-  >>> import numpy as np
-  >>> from sklearn.linear_model import LogisticRegression
-  >>> from sklearn.datasets import make_classification
-  >>> from mlchem.metrics import get_geometric_S
-
-  Standard cross-validation (existing behaviour):
-
-  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-  ...                                  metric=get_geometric_S,
-  ...                                  max_features=5,
-  ...                                  cv_iter=3,
-  ...                                  logic='greater')
-
-  GroupKFold with scaffold groups:
-
-  >>> from sklearn.model_selection import GroupKFold
-  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-  ...                                  metric=get_geometric_S,
-  ...                                  cv_splitter=GroupKFold(5),
-  ...                                  groups=scaffold_ids)  # doctest: +SKIP
-
-  Precomputed scaffold or UMAP-cluster folds:
-
-  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-  ...                                  metric=get_geometric_S,
-  ...                                  cv_indices=scaffold_fold_manifest)  # doctest: +SKIP
-
-  >>> X, y = make_classification(300, 10, n_informative=5)
-  >>> train_size = 0.8
-  >>> train_samples = int(train_size * len(X))
-
-  >>> X_train, y_train = X[:train_samples], y[:train_samples]
-  >>> X_test, y_test = X[train_samples:], y[train_samples:]
-
-  >>> train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
-  >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
-
-  >>> sfs.fit(train_set, y_train, test_set, y_test)
-  >>> sfs.plot(best_feature='None')
-  """
-
-    def __init__(self,
-                 estimator,
-                 estimator_string: Optional[str],
-                 metric: Callable,
-                 max_features: int = 25,
-                 cv_iter: int = 5,
-                 logic: Literal['lower', 'greater'] = 'greater',
-                 task_type: Literal[
-                     'classification', 'regression'] = 'classification',
-                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
-                 cv_splitter=None,
-                 cv_indices: Iterable | None = None,
-                 groups=None,
-                 selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
-                 ) -> None:
-        """
-  Initialise the SequentialForwardSelection object.
-
-  Parameters
-  ----------
-  estimator : object
-      The scikit-learn estimator used for feature selection.
-  estimator_string : str, optional
-      A string representation of the estimator. If None, it is inferred from the estimator.
-  metric : callable
-      A function to evaluate model performance.
-  max_features : int, optional
-      Maximum number of features to select. Default is 25.
-  cv_iter : int, optional
-      Number of cross-validation iterations. Default is 5. Ignored when
-      ``cv_splitter`` or ``cv_indices`` is provided.
-  logic : {'lower', 'greater'}, optional
-      Whether to minimise or maximise the cross-validation score. Default is 'greater'.
-  task_type : {'classification', 'regression'}, optional
-      Type of task. Default is 'classification'.
-  log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
-      Logging level threshold. Use 'DEBUG' for detailed diagnostics,
-      'INFO' for standard output, 'WARNING' to suppress most output.
-      Default is logging.INFO.
-  cv_splitter : object, optional
-      A scikit-learn compatible cross-validation splitter, e.g.
-      ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``, or
-      ``PredefinedSplit(...)``. Takes precedence over ``cv_iter``.
-  cv_indices : iterable of (array-like, array-like), optional
-      Explicit ``(train_idx, valid_idx)`` fold pairs. Takes precedence
-      over both ``cv_splitter`` and ``cv_iter``.
-  groups : array-like, optional
-      Group labels forwarded to ``cv_splitter`` (e.g. scaffold IDs for
-      ``GroupKFold``). Ignored when ``cv_indices`` is provided.
-  selection_strategy : {'legacy', 'cv_only'}, optional
-      Strategy used by :meth:`find_best`. Default is ``'legacy'`` for
-      backward compatibility; ``'cv_only'`` is the recommended,
-      leakage-free alternative. See class docstring notes.
   """
 
         self.estimator = estimator
@@ -371,6 +656,18 @@ class SequentialForwardSelection:
         if selection_strategy not in ('legacy', 'cv_only'):
             raise ValueError("'selection_strategy' must be either 'legacy' or 'cv_only'.")
         self.selection_strategy = selection_strategy
+        
+        # Warn if using legacy selection_strategy (backward-compatible default)
+        if selection_strategy == 'legacy':
+            warnings.warn(
+                "selection_strategy='legacy' is deprecated and will be removed in a future version. "
+                "The test score leak it entails is problematic. "
+                "Please explicitly set selection_strategy='cv_only' (recommended) or 'legacy' (if needed). "
+                "See docstring for details.",
+                FutureWarning,
+                stacklevel=2,
+            )
+
         self.logic = logic
         self.task_type = validate_task_type(task_type)
         self.log_level = coerce_log_level(log_level)
@@ -387,11 +684,19 @@ class SequentialForwardSelection:
         # model using the accepted features
         self.cv_scores = []
 
-        # Where to store the standard deviations of the cv scores
-        self.cv_stds = []
+        # Where to store the standard error of the cv scores
+        self.cv_se = []
 
         # Where to store test scores
         self.unseen_scores = []
+
+        # NEW: Storage for fold-level CV scores (for parsimony)
+        # Structure: list of numpy arrays, one per subset
+        # (indexed by subset size: 0-based index = subset size - 1)
+        self.cv_folds = []
+
+        # NEW: Storage for parsimony diagnostics
+        self.parsimony_diagnostics = {}
 
     def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
         """Set the logging level for wrapper diagnostics.
@@ -495,20 +800,21 @@ class SequentialForwardSelection:
             )
             self._log(
                 logging.DEBUG,
-                "SFS candidate=%s | subset_size=%d | cv_mean=%.4f | cv_std=%.4f",
+                "SFS candidate=%s | subset_size=%d | cv_mean=%.4f | cv_se=%.4f",
                 feat,
                 len(features_to_test),
                 float(np.mean(cvscores)),
-                float(np.std(cvscores)),
+                float(np.std(cvscores)) / np.sqrt(len(cvscores)),
             )
-            return np.mean(cvscores), np.std(cvscores)
+            return np.mean(cvscores), np.std(cvscores) / np.sqrt(len(cvscores)), cvscores
 
         for cycle in tqdm(range(self.max_features), desc="SFS", disable=False):
 
-            # Temporary lists where to store cross-validation scores
-            # and standard deviations.
+            # Temporary lists where to store cross-validation scores,
+            # standard errors, and fold-level scores.
             cv_scores_storage = []
-            cv_stds_storage = []
+            cv_se_storage = []
+            cv_folds_storage = []
 
             # List of features to be assessed
             self.list_available_features = [feat for feat in
@@ -526,16 +832,18 @@ class SequentialForwardSelection:
             # Do it for all unexplored features.
             if self.n_jobs == 1:
                 for feat in self.list_available_features:
-                    cv_mean, cv_std = evaluate_feature(feat)
+                    cv_mean, cv_se, cv_folds = evaluate_feature(feat)
                     cv_scores_storage.append(cv_mean)
-                    cv_stds_storage.append(cv_std)
+                    cv_se_storage.append(cv_se)
+                    cv_folds_storage.append(cv_folds)
             else:
                 scored = Parallel(n_jobs=self.n_jobs, prefer='threads')(
                     delayed(evaluate_feature)(feat)
                     for feat in self.list_available_features
                 )
-                cv_scores_storage = [score for score, _ in scored]
-                cv_stds_storage = [std for _, std in scored]
+                cv_scores_storage = [score for score, _, _ in scored]
+                cv_se_storage = [se for _, se, _ in scored]
+                cv_folds_storage = [folds for _, _, folds in scored]
 
             # Include in the model the feature with best CV gains.
             if self.logic == 'greater':
@@ -544,7 +852,13 @@ class SequentialForwardSelection:
                 index = np.argmin(cv_scores_storage)
 
             self.cv_scores.append(cv_scores_storage[index])
-            self.cv_stds.append(cv_stds_storage[index])
+            self.cv_se.append(cv_se_storage[index])
+            # Store fold-level scores (oriented to utility: higher is better)
+            fold_level_utility = _orient_scores_to_utility(
+                cv_folds_storage[index],
+                self.logic,
+            )
+            self.cv_folds.append(fold_level_utility)
             feature_to_add = self.list_available_features[index]
             self.extending_features.append(feature_to_add)
 
@@ -554,7 +868,7 @@ class SequentialForwardSelection:
                 cycle + 1,
                 feature_to_add,
                 self.cv_scores[-1],
-                self.cv_stds[-1],
+                self.cv_se[-1],
             )
 
             # Get score on unseen test data
@@ -579,9 +893,77 @@ class SequentialForwardSelection:
             len(self.extending_features),
         )
 
-    def find_best(self, which: Optional[int] = None) -> dict:
+    def _apply_parsimony_selection(
+        self,
+        parsimony_mode: Literal['best', 'tolerance', 'standard_error', 'uncertainty'],
+        tolerance: float = 0.0,
+        se_multiplier: float = 1.0,
+    ) -> dict:
         """
-        Find the best feature subset based on reliability.
+        Apply parsimony-based subset selection using fold-level degradation.
+
+        This helper is called by :meth:`find_best` when parsimony selection is
+        requested. It computes fold-level degradation d[k,r] for each subset k
+        compared to the reference k* (best reliability score), then applies
+        the requested parsimony criterion to select a final subset.
+
+        Stores results in self.parsimony_diagnostics for inspection.
+        """
+        # Find the reference subset k* using the same reliability baseline as
+        # the non-parsimony path so the reference is stable across selection
+        # modes and independent from the parsimony rule itself.
+        scores = [
+            calculate_reliability_components(
+                train_score=train_score,
+                cv_score=cv_score,
+                test_score=None if self.selection_strategy == 'cv_only' else test_score,
+                logic=self.logic,
+            )
+            for train_score, cv_score, test_score in zip(
+                self.train_scores,
+                self.cv_scores,
+                self.unseen_scores,
+            )
+        ]
+        kstar_index_zero = int(np.argmax([
+            score['reliability_score'] for score in scores
+        ]))
+
+        kstar_index = kstar_index_zero + 1  # Convert to 1-based
+        cv_folds_kstar = self.cv_folds[kstar_index_zero]
+
+        # Apply parsimony selection rule
+        parsimony_result = _select_parsimonious_subset(
+            cv_folds_kstar=cv_folds_kstar,
+            cv_folds_kstar_index=kstar_index,
+            all_cv_folds=self.cv_folds,
+            parsimony_mode=parsimony_mode,
+            tolerance=tolerance,
+            se_multiplier=se_multiplier,
+        )
+
+        self.parsimony_diagnostics = parsimony_result
+
+        self._log(
+            logging.INFO,
+            "SFS parsimony: mode=%s | reference_k*=%d | selected_k=%d",
+            parsimony_mode,
+            kstar_index,
+            parsimony_result['selected_index'],
+        )
+
+        return parsimony_result
+
+    def find_best(
+        self,
+        which: Optional[int] = None,
+        parsimony_mode: Literal['none', 'best', 'tolerance', 'standard_error', 'uncertainty'] = 'none',
+        parsimony_tolerance: float = 0.0,
+        parsimony_se_multiplier: float = 1.0,
+    ) -> dict:
+        """
+        Find the best feature subset based on reliability score and,
+        optionally, on parsimony.
 
         Parameters
         ----------
@@ -589,6 +971,19 @@ class SequentialForwardSelection:
             If specified, returns the feature subset at the given index.
             If None, the best subset is determined automatically using the
             reliability score.
+        parsimony_mode : {'none', 'best', 'tolerance', 'standard_error', 'uncertainty'}, optional
+            Parsimony selection mode used when ``which`` is ``None``.
+            ``'none'`` keeps the original reliability-score selection.
+            ``'best'`` returns the reference subset ``k*``.
+            ``'tolerance'``, ``'standard_error'``, and ``'uncertainty'``
+            select a smaller subset when the fold-level degradation meets
+            the corresponding criterion.
+        parsimony_tolerance : float, optional
+            Absolute tolerance used by ``'tolerance'`` and ``'uncertainty'``.
+            Default is 0.0.
+        parsimony_se_multiplier : float, optional
+            Standard-error multiplier used by ``'standard_error'`` and
+            ``'uncertainty'``. Default is 1.0.
 
         Returns
         -------
@@ -600,7 +995,7 @@ class SequentialForwardSelection:
             ``features`` : list
                 Selected feature names.
             ``performance_score`` : float
-                Geometric performance contribution for the winning prefix.
+                Performance contribution for the winning prefix.
             ``instability_score`` : float
                 Sum of train/CV/test score gaps for the winning prefix.
             ``reliability_score`` : float
@@ -622,55 +1017,83 @@ class SequentialForwardSelection:
 
         and, for higher-is-better metrics:
 
-        ``performance_score = (train_score * cv_score * test_score) ** (1/3)``
+        ``performance_score = (train_score + cv_score + test_score) / 3``
 
         For lower-is-better metrics, such as RMSE, lower performance scores
-        are better, so the geometric mean is inverted before the same
+        are better, so the performance score has its sign flipped before
         reliability calculation is applied:
 
-        ``performance_score = 1 / ((train_score * cv_score * test_score) ** (1/3))``
+        ``performance_score = -(train_score + cv_score + test_score) / 3``
 
-        The test score is intentionally included in the calculation.
+        For this selection strategy ('legacy'), the test score is
+        intentionally included in the calculation.
 
         With ``selection_strategy='cv_only'`` (leakage-free, recommended for
         new projects), the same formulas are used but with only
         ``train_score`` and ``cv_score`` (no test score involved), so the
         test score can never influence which subset is selected. Test scores
         are still stored in ``self.unseen_scores`` for reporting/plotting.
+
+        With parsimony selection enabled (via ``parsimony_mode``), the best
+        subset is selected based on fold-level degradation criteria rather
+        than the reliability score. The reference subset is the one with the
+        highest reliability score, and it is compared against all smaller
+        subsets.
         """
 
         if which is None:
-
-            scores = [
-                calculate_reliability_components(
-                    train_score=train_score,
-                    cv_score=cv_score,
-                    test_score=None if self.selection_strategy == 'cv_only' else test_score,
-                    logic=self.logic,
-                )
-                for train_score, cv_score, test_score in zip(
-                    self.train_scores,
-                    self.cv_scores,
-                    self.unseen_scores,
-                )
-            ]
-
-            if len(scores) == 0:
+            if len(self.cv_scores) == 0:
                 raise ValueError("No feature subsets have been evaluated. Run fit() before find_best().")
 
-            best_index_zero_based = int(np.argmax([
-                score['reliability_score'] for score in scores
-            ]))
-            best_index = best_index_zero_based + 1
-            winning_scores = scores[best_index_zero_based]
-            dictionary = {
-                'best_index': best_index,
-                'features': self.extending_features[:best_index],
-                'performance_score': winning_scores['performance_score'],
-                'instability_score': winning_scores['instability_score'],
-                'reliability_score': winning_scores['reliability_score'],
-                'best_score': winning_scores['reliability_score'],
-            }
+            if parsimony_mode not in ('none', 'best', 'tolerance', 'standard_error', 'uncertainty'):
+                raise ValueError(
+                    "'parsimony_mode' must be one of ('none', 'best', 'tolerance', 'standard_error', 'uncertainty'), "
+                    f"got '{parsimony_mode}'."
+                )
+
+            if parsimony_mode != 'none':
+                parsimony_result = self._apply_parsimony_selection(
+                    parsimony_mode='best' if parsimony_mode == 'best' else parsimony_mode,
+                    tolerance=parsimony_tolerance,
+                    se_multiplier=parsimony_se_multiplier,
+                )
+                best_index = parsimony_result['selected_index']
+                dictionary = {
+                    'best_index': best_index,
+                    'features': self.extending_features[:best_index],
+                    'parsimony_mode': parsimony_mode,
+                    'parsimony_diagnostics': parsimony_result,
+                }
+            else:
+                self.parsimony_diagnostics = {}
+                # Original behaviour: use reliability score
+                scores = [
+                    calculate_reliability_components(
+                        train_score=train_score,
+                        cv_score=cv_score,
+                        test_score=None if self.selection_strategy == 'cv_only' else test_score,
+                        logic=self.logic,
+                    )
+                    for train_score, cv_score, test_score in zip(
+                        self.train_scores,
+                        self.cv_scores,
+                        self.unseen_scores,
+                    )
+                ]
+
+                best_index_zero_based = int(np.argmax([
+                    score['reliability_score'] for score in scores
+                ]))
+                best_index = best_index_zero_based + 1
+                winning_scores = scores[best_index_zero_based]
+                dictionary = {
+                    'best_index': best_index,
+                    'features': self.extending_features[:best_index],
+                    'performance_score': winning_scores['performance_score'],
+                    'instability_score': winning_scores['instability_score'],
+                    'reliability_score': winning_scores['reliability_score'],
+                    'best_score': winning_scores['reliability_score'],
+                }
         else:     # if which == int
             best_index = which
             dictionary = {'best_index': best_index,
@@ -693,6 +1116,8 @@ class SequentialForwardSelection:
          ) -> None:
         """
         Plot the performance of the Sequential Forward Selection process.
+        The interval of 1 standard error is shown as a shaded region
+        around the cv_score curve. 
 
         Parameters
         ----------
@@ -728,12 +1153,11 @@ class SequentialForwardSelection:
         -----
         The automatic algorithm for determining the best feature subset
         is the same as described in `find_best`: ``performance_score =
-        (train * cv * test) ** (1/3)``, ``instability_score = |train-cv| +
+        (train + cv + test) / 3``, ``instability_score = |train-cv| +
         |train-test| + |cv-test|``, and for higher-is-better metrics
         ``reliability_score = performance_score / (1 + instability_score)``.
-        For lower-is-better metrics, the geometric mean is inverted before
-        applying the same reliability formula. The subset with the highest
-        reliability score is highlighted.
+        For lower-is-better metrics, the performance score has its sign flipped.
+        The subset with the highest reliability score is highlighted.
         """
 
         assert best_feature in ('auto', None) or isinstance(best_feature, int), \
@@ -770,8 +1194,8 @@ class SequentialForwardSelection:
                  color=colours[1])
         # Show standard deviation of cross-validation performance
         plt.fill_between(range(1, len(self.train_scores)+1),
-                         np.array(self.cv_scores) - np.array(self.cv_stds),
-                         np.array(self.cv_scores) + np.array(self.cv_stds),
+                         np.array(self.cv_scores) - 0.5 * np.array(self.cv_se),
+                         np.array(self.cv_scores) + 0.5 * np.array(self.cv_se),
                          alpha=0.2, color=colours[1])
         # Plot test scores
         plt.plot(range(1, len(self.train_scores)+1),
@@ -783,12 +1207,6 @@ class SequentialForwardSelection:
 
         which = None if best_feature in ('auto', None) else best_feature
         ind = self.find_best(which=which)['best_index']
-        colours = [
-            'steelblue',
-            'orange',
-            'green',
-            'black',
-                   ]
 
         # Draw a vertical line corresponding to the best iteration
         # returning the optimal scores.
@@ -819,22 +1237,40 @@ class SequentialForwardSelection:
             logging.INFO,
             'SFS summary: cv_score=%.3f +- %.3f',
             self.cv_scores[ind - 1],
-            self.cv_stds[ind - 1],
+            self.cv_se[ind - 1],
         )
         self._log(logging.INFO, 'SFS summary: test_score=%.3f', self.unseen_scores[ind - 1])
 
 
 class CombinatorialSelection:
     """
-    Combinatorial feature selection using a given estimator and metric.
+    Combinatorial feature selection wrapper.
 
-    This class performs a two-stage combinatorial feature selection process
-    to identify optimal feature subsets based on reliability score. For each
-    retained subset, ``performance_score`` is the geometric mean of training,
-    cross-validation, and test scores for higher-is-better metrics. For
-    lower-is-better metrics, the geometric mean is inverted. The final
-    ``reliability_score`` is ``performance_score / (1 + instability_score)``,
-    where ``instability_score = |train-cv| + |train-test| + |cv-test|``.
+    This class performs a two-stage combinatorial search over feature
+    subsets and ranks the surviving subsets with the same reliability
+    score logic used by :class:`SequentialForwardSelection`: the
+    performance term is the arithmetic mean of the available train/CV/
+    test scores, and lower-is-better metrics are sign-flipped before the
+    reliability score is computed. Results are then ranked by
+    ``reliability_score = performance_score / (1 + instability_score)``,
+    where ``instability_score`` is the sum of pairwise gaps between the
+    available scores.
+
+    Public Methods
+    --------------
+    ``__init__()``: Initialise the combinatorial selector.
+
+    ``set_log_level()``: Set the logging level for diagnostics.
+
+    ``rank_features_by_relevance_redundancy()``: Optional pre-ranking of
+    features before subset generation.
+
+    ``fit_stage_1()``: Evaluate and filter candidate subsets in stage 1.
+
+    ``fit_stage_2()``: Refine the stage 1 winners in a second combinatorial
+    pass.
+
+    ``display_best()``: Fit and report the best subset from stage 2.
 
     Attributes
     ----------
@@ -842,32 +1278,22 @@ class CombinatorialSelection:
         The machine learning estimator used to fit the data.
     metric : callable
         A metric function to evaluate estimator performance. Must accept
-        (y_true, y_pred).
+        ``(y_true, y_pred)``.
     logic : {'greater', 'lower'}
         Determines whether a higher or lower score is considered better.
     task_type : {'classification', 'regression'}
         Specifies the type of task.
     cv_splitter : object, optional
-        A scikit-learn compatible cross-validation splitter (e.g.
-        ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
-        ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
-        splitters. Takes precedence over the ``cv_iter`` passed to
-        ``fit_stage_1``/``fit_stage_2``.
+        A scikit-learn compatible cross-validation splitter.
     cv_indices : iterable of (array-like, array-like), optional
-        Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
-        scaffold-based or UMAP-cluster-based fold manifest generated
-        outside mlchem. Takes precedence over both ``cv_splitter`` and
-        ``cv_iter``.
+        Explicit, pre-computed ``(train_idx, valid_idx)`` pairs.
     groups : array-like, optional
-        Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
-        Ignored when ``cv_indices`` is provided.
-    selection_strategy : {'legacy', 'cv_only'}, optional
-        Whether ``reliability_score`` (used for ranking subsets) includes
-        the test score (``'legacy'``, default, kept for backward
-        compatibility) or only train/CV information (``'cv_only'``,
-        leakage-free, recommended for new projects). Test scores are
-        always computed and stored for reporting regardless of this
-        setting.
+        Group labels propagated to ``cv_splitter``.
+    selection_strategy : {'legacy', 'cv_only'}
+        Controls whether the test score participates in reliability
+        scoring.
+    log_level : int or str
+        Logging threshold used by the wrapper logger.
 
     Examples
     --------
@@ -894,17 +1320,6 @@ class CombinatorialSelection:
     >>> cs = CombinatorialSelection(estimator=LogisticRegression(),
     ...                              metric=get_geometric_S,
     ...                              cv_indices=scaffold_fold_manifest)  # doctest: +SKIP
-
-    >>> X, y = make_classification(500, 10, n_informative=4)
-    >>> X_train, y_train = X[:350], y[:350]
-    >>> X_test, y_test = X[350:], y[350:]
-
-    >>> train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
-    >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
-
-    >>> results_stage_1 = cs.fit_stage_1(train_set, y_train, test_set, y_test,
-    ...                                  train_set.columns, training_threshold=0.7)
-    >>> results_stage_2 = cs.fit_stage_2(top_n_subsets=10, cv_iter=5)
     """
 
     def __init__(self,
@@ -914,11 +1329,11 @@ class CombinatorialSelection:
                  task_type: Literal[
                      'classification', 'regression'
                      ] = 'classification',
-                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  cv_splitter=None,
                  cv_indices: Iterable | None = None,
                  groups=None,
                  selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
+                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> None:
         """
         Initialise the CombinatorialSelection object.
@@ -934,10 +1349,6 @@ class CombinatorialSelection:
             Default is 'greater'.
         task_type : {'classification', 'regression'}, optional
             Specifies the type of task. Default is 'classification'.
-        log_level : {{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}} or int, optional
-            Logging level threshold. Use 'DEBUG' for detailed diagnostics,
-            'INFO' for standard output, 'WARNING' to suppress most output.
-            Default is logging.INFO.
         cv_splitter : object, optional
             A scikit-learn compatible cross-validation splitter. Takes
             precedence over the ``cv_iter`` passed to
@@ -953,6 +1364,10 @@ class CombinatorialSelection:
             the test score (``'legacy'``, default) or not (``'cv_only'``,
             leakage-free). Default is ``'legacy'`` for backward
             compatibility.
+        log_level : {{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}} or int, optional
+            Logging level threshold. Use 'DEBUG' for detailed diagnostics,
+            'INFO' for standard output, 'WARNING' to suppress most output.
+            Default is logging.INFO.
         """
 
         self.estimator = estimator
@@ -966,6 +1381,18 @@ class CombinatorialSelection:
         if selection_strategy not in ('legacy', 'cv_only'):
             raise ValueError("'selection_strategy' must be either 'legacy' or 'cv_only'.")
         self.selection_strategy = selection_strategy
+        
+        # Warn if using legacy selection_strategy (backward-compatible default)
+        if selection_strategy == 'legacy':
+            warnings.warn(
+                "selection_strategy='legacy' is deprecated and will be removed in a future version. "
+                "The test score leak it entails is problematic. "
+                "Please explicitly set selection_strategy='cv_only' (recommended) or 'legacy' (if needed). "
+                "See docstring for details.",
+                FutureWarning,
+                stacklevel=2,
+            )
+        
         _configure_wrapper_logging(self.log_level)
 
     def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
@@ -1194,11 +1621,12 @@ class CombinatorialSelection:
 
         Notes
         -----
-                Generates all possible feature subsets of size ``k`` and evaluates
-                each subset using training, cross-validation, and test scores. Results
-                are filtered using training/CV thresholds and ranked by
-                ``reliability_score``. The legacy ``geometric_mean`` column is retained
-                for compatibility, but will be removed in a future version.
+        Generates all possible feature subsets of size ``k`` and evaluates
+        each subset using training, cross-validation, and test scores.
+        Results are filtered using training/CV thresholds and ranked by
+        ``reliability_score``. The score uses the same arithmetic-mean
+        performance term and lower-is-better orientation as SFS. The legacy
+        ``geometric_mean`` formulation is no longer used.
         """
 
 
@@ -1410,14 +1838,6 @@ class CombinatorialSelection:
         pandas.DataFrame
             A DataFrame containing the results of the second stage of
             feature selection.
-
-        Notes
-        -----
-                Identifies the most recurrent features from the top stage-1 subsets,
-                generates new combinations, and evaluates them. Results are filtered
-                using training/CV thresholds and ranked by ``reliability_score``. The
-                legacy ``geometric_mean`` column is retained for compatibility, but
-                will be removed in a future version.
         """
 
         def is_better(a: float | int, b: float | int) -> bool:
