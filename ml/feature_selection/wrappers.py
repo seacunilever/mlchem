@@ -717,7 +717,7 @@ Attributes
         self,
         train_set: pd.DataFrame,
         y_train: Iterable,
-        test_set: pd.DataFrame,
+        test_set: Optional[pd.DataFrame],
         y_test: Iterable,
         n_jobs: int = 1,
     ) -> None:
@@ -730,8 +730,8 @@ Attributes
             Training dataset.
         y_train : iterable
             Target values for the training set.
-        test_set : pandas.DataFrame
-            Test dataset.
+        test_set : pandas.DataFrame, optional
+            Test dataset. Default is None.
         y_test : iterable
             Target values for the test set.
         n_jobs : int, optional
@@ -933,19 +933,20 @@ Attributes
                 f"cv={self.cv_scores[-1]:.3f} +- {self.cv_se[-1]:.3f}",
             )
 
-            # Get score on unseen test data
-            train_set_temp = self.train_set[self.extending_features]
-            test_set_temp = self.test_set[self.extending_features]
-            self.estimator.fit(train_set_temp, y_train)
-            #y_train_pred = self.estimator.predict(train_set_temp)
-            y_test_pred = self.estimator.predict(test_set_temp)
-            self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
-            self._log(
-                logging.DEBUG,
-                f"SFS cycle={cycle + 1} scores | "
-                f"train={self.train_scores[-1]:.3f} | "
-                f"test={self.unseen_scores[-1]:.3f}",
-            )
+            if self.test_set:
+                # Get score on unseen test data if test set is present
+                train_set_temp = self.train_set[self.extending_features]
+                test_set_temp = self.test_set[self.extending_features]
+                self.estimator.fit(train_set_temp, y_train)
+                #y_train_pred = self.estimator.predict(train_set_temp)
+                y_test_pred = self.estimator.predict(test_set_temp)
+                self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
+                self._log(
+                    logging.DEBUG,
+                    f"SFS cycle={cycle + 1} scores | "
+                    f"train={self.train_scores[-1]:.3f} | "
+                    f"test={self.unseen_scores[-1]:.3f}",
+                )
 
         self._log(
             logging.INFO,
@@ -1593,8 +1594,6 @@ class CombinatorialSelection:
         self,
         train_set: pd.DataFrame,
         y_train: Iterable,
-        test_set: pd.DataFrame,
-        y_test: Iterable,
         features: list[str] | None = None,
         k: int = 2,
         training_threshold: float = 0.25,
@@ -1619,10 +1618,6 @@ class CombinatorialSelection:
             The training dataset.
         y_train : iterable
             Target values for the training dataset.
-        test_set : pandas.DataFrame
-            The testing dataset.
-        y_test : iterable
-            Target values for the testing dataset.
         features : list of str, optional
             List of features to consider. Default is an empty list.
         k : int, optional
@@ -1683,8 +1678,6 @@ class CombinatorialSelection:
 
         self.train_set = train_set
         self.y_train = y_train
-        self.test_set = test_set
-        self.y_test = y_test
 
         self.features = [] if features is None else list(features)
         self.k = k
