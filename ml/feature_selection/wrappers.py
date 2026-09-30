@@ -766,12 +766,10 @@ Attributes
 
         self._log(
             logging.INFO,
-            "SFS start: samples=%d, features=%d, max_features=%d, cv_iter=%d, n_jobs=%d",
-            len(self.train_set),
-            len(self.feature_labels),
-            self.max_features,
-            self.cv_iter,
-            self.n_jobs,
+            f"SFS start: samples={len(self.train_set)},"
+            f" features={len(self.feature_labels)}, "
+            f"max_features={self.max_features}, "
+            f"cv_iter={self.cv_iter}, n_jobs={self.n_jobs}",
         )
 
         # sklearn's wrapper propagates the caller's sklearn config to worker
@@ -798,8 +796,10 @@ Attributes
                 cv_indices=self._resolved_cv_indices,
             )
 
-            train_scores_folds = cv_result['train_score']
-            cv_scores_folds = cv_result['test_score']
+            train_scores_folds = cv_result['train_scores']
+            cv_scores_folds = cv_result['cv_scores']
+            cv_mean = cv_result['cv_mean']
+            cv_se = cv_result['cv_se']
             reliabilities_folds = []
             for fold_train_score, fold_cv_score in zip(train_scores_folds, cv_scores_folds):
                 comp = get_reliability_score_components(
@@ -817,11 +817,8 @@ Attributes
 
             self._log(
                 logging.DEBUG,
-                "SFS candidate=%s | subset_size=%d | cv_mean=%.4f | cv_se=%.4f",
-                feat,
-                len(features_to_test),
-                float(np.mean(dict_to_return['cv_scores_folds'])),
-                float(np.std(dict_to_return['cv_scores_folds'])/np.sqrt(len(dict_to_return['cv_scores_folds']))),
+                f"SFS candidate={feat} | subset_size={len(features_to_test)}"
+                f" | cv_mean={cv_mean:.3f} | cv_se={cv_se:.3f}",
             )
             return dict_to_return
 
@@ -835,9 +832,8 @@ Attributes
                                             ]
             self._log(
                 logging.DEBUG,
-                "SFS cycle=%d | available_features=%d",
-                cycle + 1,
-                len(self.list_available_features),
+                f"SFS cycle={cycle + 1} | "
+                f"available_features={len(self.list_available_features)}",
             )
 
             # Hypothetically assess model if an extra feature is added.
@@ -932,11 +928,9 @@ Attributes
 
             self._log(
                 logging.INFO,
-                "SFS accepted cycle=%d | feature=%s | cv=%.4f +- %.4f",
-                cycle + 1,
-                feature_to_add,
-                self.cv_scores[-1],
-                self.cv_se[-1],
+                f"SFS accepted cycle={cycle + 1} | "
+                f"feature={feature_to_add} | "
+                f"cv={self.cv_scores[-1]:.3f} +- {self.cv_se[-1]:.3f}",
             )
 
             # Get score on unseen test data
@@ -948,16 +942,14 @@ Attributes
             self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
             self._log(
                 logging.DEBUG,
-                "SFS cycle=%d scores | train=%.4f | test=%.4f",
-                cycle + 1,
-                self.train_scores[-1],
-                self.unseen_scores[-1],
+                f"SFS cycle={cycle + 1} scores | "
+                f"train={self.train_scores[-1]:.3f} | "
+                f"test={self.unseen_scores[-1]:.3f}",
             )
 
         self._log(
             logging.INFO,
-            "SFS completed: selected_features=%d",
-            len(self.extending_features),
+            f"SFS completed: selected_features={len(self.extending_features)}",
         )
 
     def _apply_parsimony_selection(
@@ -1017,10 +1009,9 @@ Attributes
 
         self._log(
             logging.INFO,
-            "SFS parsimony: mode=%s | reference_k*=%d | selected_k=%d",
-            parsimony_mode,
-            kstar_index,
-            parsimony_result['selected_index'],
+            f"SFS parsimony: mode={parsimony_mode} | "
+            f"reference_k*={kstar_index} | "
+            f"selected_k={parsimony_result['selected_index']}",
         )
 
         return parsimony_result
@@ -1283,7 +1274,7 @@ Attributes
 
             import joblib
 
-            plt.savefig('SFS_%s.png' % (self.estimator_string),
+            plt.savefig(f'SFS_{self.estimator_string}.png',
                         dpi=500)
             joblib.dump(self.estimator,
                         self.estimator_string)
@@ -1294,19 +1285,22 @@ Attributes
 
         plt.show()
 
-        self._log(logging.INFO, 'SFS summary: number_of_features=%d', ind)
-        self._log(logging.INFO, 'SFS summary: winner_subset=%s', self.extending_features[:ind])
+        self._log(logging.INFO, f'SFS summary: number_of_features={ind}')
+        self._log(logging.INFO, f'SFS summary: winner_subset={self.extending_features[:ind]}')
         self._log(
             logging.INFO,
-            f'SFS summary: train_score={self.train_scores[ind - 1]:.3f} ± {self.train_se[ind - 1]:.3f}',
+            f"SFS summary: train_score={self.train_scores[ind - 1]:.3f} "
+            f"± {self.train_se[ind - 1]:.3f}",
         )
         self._log(
             logging.INFO,
-            f'SFS summary: cv_score={self.cv_scores[ind - 1]:.3f} ± {self.cv_se[ind - 1]:.3f}',
+            f"SFS summary: cv_score={self.cv_scores[ind - 1]:.3f} "
+            f"± {self.cv_se[ind - 1]:.3f}",
         )
         self._log(
             logging.INFO,
-            f'SFS summary: reliability_score={self.reliability_scores[ind - 1]:.3f} ± {self.reliability_se[ind - 1]:.3f}',
+            f"SFS summary: reliability_score={self.reliability_scores[ind - 1]:.3f} "
+            f"± {self.reliability_se[ind - 1]:.3f}",
         )
 
 
@@ -1715,11 +1709,8 @@ class CombinatorialSelection:
 
         self._log(
             logging.INFO,
-            "Combinatorial stage 1 start: samples=%d, features=%d, k=%d, n_jobs=%d",
-            len(self.train_set),
-            len(self.features),
-            self.k,
-            self.n_jobs,
+            f"Combinatorial stage 1 start: samples={len(self.train_set)}, "
+            f"features={len(self.features)}, k={self.k}, n_jobs={self.n_jobs}",
         )
 
         if not 0 <= self.cv_train_ratio <= 1:
@@ -1785,9 +1776,7 @@ class CombinatorialSelection:
             if not is_better(train_score, self.training_threshold):
                 self._log(
                     logging.DEBUG,
-                    "Stage 1 rejected subset=%s by train threshold: %.4f",
-                    subset,
-                    train_score,
+                    f"Stage 1 rejected subset={subset} by train threshold: {train_score:.3f}",
                 )
                 return None
 
@@ -1811,10 +1800,15 @@ class CombinatorialSelection:
                 cv_indices=self._resolved_cv_indices,
             )
 
-            train_scores_folds = cv_result['train_score']
-            cv_scores_folds = cv_result['test_score']
+
+            subset_train_scores_folds = cv_result['train_scores']
+            subset_train_mean = cv_result['train_mean']
+            subset_train_se = cv_result['train_se']
+            subset_cv_scores_folds = cv_result['cv_scores']
+            subset_cv_mean = cv_result['cv_mean']
+            subset_cv_se = cv_result['cv_se']
             reliabilities_folds = []
-            for fold_train_score, fold_cv_score in zip(train_scores_folds, cv_scores_folds):
+            for fold_train_score, fold_cv_score in zip(subset_train_scores_folds, subset_cv_scores_folds):
                 comp = get_reliability_score_components(
                     train_score=fold_train_score,
                     cv_score=fold_cv_score,
@@ -1823,41 +1817,31 @@ class CombinatorialSelection:
                 reliabilities_folds.append(comp['reliability_score'])
 
             dict_to_return = {
-                'train_scores_folds': train_scores_folds,
-                'cv_scores_folds': cv_scores_folds,
+                'train_scores_folds': subset_train_scores_folds,
+                'cv_scores_folds': subset_cv_scores_folds,
                 'reliability_scores_folds': reliabilities_folds,}
 
-            subset_train_score = np.mean(dict_to_return['train_scores_folds'])
-            subset_train_se = np.std(dict_to_return['train_scores_folds']) / (
-                len(dict_to_return['train_scores_folds']) ** 0.5
-                )
-            subset_cv_score = np.mean(dict_to_return['cv_scores_folds'])
-            subset_cv_se = np.std(dict_to_return['cv_scores_folds']) / (
-                len(dict_to_return['cv_scores_folds']) ** 0.5
-                )
-            subset_reliability_score = np.mean(dict_to_return['reliability_scores_folds'])
+            subset_reliability_mean = np.mean(dict_to_return['reliability_scores_folds'])
             subset_reliability_se = np.std(dict_to_return['reliability_scores_folds']) / (
                 len(dict_to_return['reliability_scores_folds']) ** 0.5
                 )
  
 
-            if not is_better(subset_cv_score, self.cv_threshold):
+            if not is_better(subset_cv_mean, self.cv_threshold):
                 self._log(
                     logging.DEBUG,
-                    "Stage 1 rejected subset=%s by cv threshold: %.4f",
-                    subset,
-                    subset_cv_score,
+                    f"Stage 1 rejected subset={subset} by cv threshold: {subset_cv_mean:.3f}",
                 )
                 return None
 
             self._log(
                 logging.DEBUG,
                 f"Stage 1 accepted subset={subset} |"
-                f"train={subset_train_score:.3f} ± {subset_train_se:.3f} | "
-                f"cv={subset_cv_score:.3f} ± {subset_cv_se:.3f} | "
-                f"reliability={subset_reliability_score:.3f} ± {subset_reliability_se:.3f}",)
-            return (subset, subset_train_score, subset_cv_score,
-                    subset_reliability_score, subset_train_se,
+                f"train={subset_train_mean:.3f} ± {subset_train_se:.3f} | "
+                f"cv={subset_cv_mean:.3f} ± {subset_cv_se:.3f} | "
+                f"reliability={subset_reliability_mean:.3f} ± {subset_reliability_se:.3f}",)
+            return (subset, subset_train_mean, subset_cv_mean,
+                    subset_reliability_mean, subset_train_se,
                     subset_cv_se, subset_reliability_se)
 
         if self.n_jobs == 1:
@@ -1896,20 +1880,17 @@ class CombinatorialSelection:
             self.dict_results,
             columns=self.dict_results.keys()
             )
-        #self.df_results_stage1 = _add_reliability_columns(
-        #    self.df_results_stage1,
-        #    self.logic,
-        #    self.selection_strategy,
-        #    desired_performance_score=self.desired_performance_score,
-        #)
+        
+        self.df_results_stage1['Reliability_lower_bound'] = self.df_results_stage1.reliability_score\
+            -self.df_results_stage1.reliability_se
         self.df_results_stage1.sort_values(
-            by='reliability_score',
+            by='Reliability_lower_bound',
             ascending=False,
             inplace=True)
+
         self._log(
             logging.INFO,
-            "Combinatorial stage 1 completed: kept_subsets=%d",
-            len(self.df_results_stage1),
+            f"Combinatorial stage 1 completed: kept_subsets={len(self.df_results_stage1)}",
         )
         return self.df_results_stage1
 
@@ -1980,10 +1961,8 @@ class CombinatorialSelection:
             )
         self._log(
             logging.INFO,
-            "Combinatorial stage 2 start: recurrent_features=%d, subset_size=%d, n_jobs=%d",
-            len(self.best_recurrent),
-            top_n_subsets,
-            self.n_jobs,
+            f"Combinatorial stage 2 start: recurrent_features={self.best_recurrent},"
+            f" subset_size={top_n_subsets}, n_jobs={self.n_jobs}",
         )
 
         # Set cv threshold based on the desirede cv/train ratio
@@ -2017,9 +1996,7 @@ class CombinatorialSelection:
             if not is_better(train_score, self.training_threshold_2):
                 self._log(
                     logging.DEBUG,
-                    "Stage 2 rejected subset=%s by train threshold: %.4f",
-                    subset,
-                    train_score,
+                    f"Stage 2 rejected subset={subset} by train threshold: {train_score:.3f}",
                 )
                 return None
 
@@ -2032,10 +2009,14 @@ class CombinatorialSelection:
                 self.task_type,
                 cv_indices=self._resolved_cv_indices,
             )
-            train_scores_folds = cv_result['train_score']
-            cv_scores_folds = cv_result['test_score']
+            subset_train_scores_folds = cv_result['train_scores']
+            subset_train_mean = cv_result['train_mean']
+            subset_train_se = cv_result['train_se']
+            subset_cv_scores_folds = cv_result['cv_scores']
+            subset_cv_mean = cv_result['cv_mean']
+            subset_cv_se = cv_result['cv_se']
             reliabilities_folds = []
-            for fold_train_score, fold_cv_score in zip(train_scores_folds, cv_scores_folds):
+            for fold_train_score, fold_cv_score in zip(subset_train_scores_folds, subset_cv_scores_folds):
                 comp = get_reliability_score_components(
                     train_score=fold_train_score,
                     cv_score=fold_cv_score,
@@ -2044,45 +2025,35 @@ class CombinatorialSelection:
                 reliabilities_folds.append(comp['reliability_score'])
 
             dict_to_return = {
-                'train_scores_folds': train_scores_folds,
-                'cv_scores_folds': cv_scores_folds,
+                'train_scores_folds': subset_train_scores_folds,
+                'cv_scores_folds': subset_cv_scores_folds,
                 'reliability_scores_folds': reliabilities_folds,}
 
-            subset_train_score = np.mean(dict_to_return['train_scores_folds'])
-            subset_train_se = np.std(dict_to_return['train_scores_folds']) / (
-                len(dict_to_return['train_scores_folds']) ** 0.5
-                )
-            subset_cv_score = np.mean(dict_to_return['cv_scores_folds'])
-            subset_cv_se = np.std(dict_to_return['cv_scores_folds']) / (
-                len(dict_to_return['cv_scores_folds']) ** 0.5
-                )
-            subset_reliability_score = np.mean(dict_to_return['reliability_scores_folds'])
+            subset_reliability_mean = np.mean(dict_to_return['reliability_scores_folds'])
             subset_reliability_se = np.std(dict_to_return['reliability_scores_folds']) / (
                 len(dict_to_return['reliability_scores_folds']) ** 0.5
                 )
  
 
-            if not is_better(subset_cv_score, self.cv_threshold_2):
+            if not is_better(subset_cv_mean, self.cv_threshold_2):
                 self._log(
                     logging.DEBUG,
-                    "Stage 2 rejected subset=%s by cv threshold: %.4f",
-                    subset,
-                    subset_cv_score,
+                    f"Stage 2 rejected subset={subset} by cv threshold: {subset_cv_mean:.3f}",
                 )
                 return None
 
             self._log(
                 logging.DEBUG,
                 f"Stage 2 accepted subset={subset} |"
-                f"train={subset_train_score:.3f} ± {subset_train_se:.3f} | "
-                f"cv={subset_cv_score:.3f} ± {subset_cv_se:.3f} | "
-                f"reliability={subset_reliability_score:.3f} ± {subset_reliability_se:.3f}",)
-            return (subset, subset_train_score, subset_cv_score,
-                    subset_reliability_score, subset_train_se,
+                f"train={subset_train_mean:.3f} ± {subset_train_se:.3f} | "
+                f"cv={subset_cv_mean:.3f} ± {subset_cv_se:.3f} | "
+                f"reliability={subset_reliability_mean:.3f} ± {subset_reliability_se:.3f}",)
+            return (subset, subset_train_mean, subset_cv_mean,
+                    subset_reliability_mean, subset_train_se,
                     subset_cv_se, subset_reliability_se)
 
         if self.n_jobs == 1:
-            for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 1", disable=False)):
+            for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 2", disable=False)):
                 result = evaluate_subset(subset)
                 if result is None:
                     continue
@@ -2101,7 +2072,7 @@ class CombinatorialSelection:
             with _suppress_parallel_delayed_warning():
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
-                    for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 1", disable=False):
+                    for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 2", disable=False):
                         result = future.result()
                         if result is None:
                             continue

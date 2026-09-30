@@ -380,7 +380,7 @@ numpy.ndarray
             shuffle=shuffle,
             random_state=random_state,
         )
-        return cross_validate(estimator,
+        result = cross_validate(estimator,
                                 X,
                                 y,
                                 cv=resolved_pairs,
@@ -401,7 +401,7 @@ numpy.ndarray
     if task_type == 'classification':
 
         from sklearn.model_selection import StratifiedKFold
-        return cross_validate(estimator,
+        result = cross_validate(estimator,
                                 X,
                                 y,
                                 cv=StratifiedKFold(**cv_kwargs),
@@ -409,12 +409,23 @@ numpy.ndarray
                                 return_train_score=True,)
     else:
         from sklearn.model_selection import KFold
-    return cross_validate(estimator,
+    result = cross_validate(estimator,
                             X,
                             y,
                             cv=KFold(**cv_kwargs),
                             scoring=make_scorer(metric_function),
                             return_train_score=True)
+    
+    train_summary = summarise_fold_scores(result['train_score'])
+    cv_summary = summarise_fold_scores(result['test_score'])
+    return {
+        'train_scores': train_summary['scores'],
+        'train_mean': train_summary['mean'],
+        'train_se': train_summary['se'],
+        'cv_scores': cv_summary['scores'],
+        'cv_mean': cv_summary['mean'],
+        'cv_se': cv_summary['se'],
+    }
 
 
 def y_scrambling(estimator,
