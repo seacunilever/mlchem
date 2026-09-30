@@ -339,11 +339,14 @@ groups : array-like, optional
 Returns
 -------
 numpy.ndarray
-    An array of cross-validation scores.
+    An array of train and cross-validation scores.
 """
 
-    from sklearn.model_selection import cross_val_score
+    from sklearn.model_selection import cross_validate
     from sklearn.metrics import make_scorer
+
+    # Resolve cross-validation indices if any of cv_indices,
+    # cv_splitter, or groups are provided.
 
     if cv_indices is not None or cv_splitter is not None or groups is not None:
         resolved_pairs = generate_cv_indices(
@@ -357,11 +360,13 @@ numpy.ndarray
             shuffle=shuffle,
             random_state=random_state,
         )
-        return cross_val_score(estimator,
+        return cross_validate(estimator,
                                 X,
                                 y,
                                 cv=resolved_pairs,
-                                scoring=make_scorer(metric_function))
+                                scoring=make_scorer(metric_function),
+                                groups=resolved_pairs,
+                                return_train_score=True,)
 
     # ---- Legacy path: unchanged behaviour for cv_iter=n_fold. ----
     validate_task_type(task_type)
@@ -376,18 +381,20 @@ numpy.ndarray
     if task_type == 'classification':
 
         from sklearn.model_selection import StratifiedKFold
-        return cross_val_score(estimator,
+        return cross_validate(estimator,
                                 X,
                                 y,
                                 cv=StratifiedKFold(**cv_kwargs),
-                                scoring=make_scorer(metric_function))
+                                scoring=make_scorer(metric_function),
+                                return_train_score=True,)
     else:
         from sklearn.model_selection import KFold
-    return cross_val_score(estimator,
+    return cross_validate(estimator,
                             X,
                             y,
                             cv=KFold(**cv_kwargs),
-                            scoring=make_scorer(metric_function))
+                            scoring=make_scorer(metric_function),
+                            return_train_score=True)
 
 
 def y_scrambling(estimator,

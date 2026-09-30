@@ -196,7 +196,6 @@ def get_rmse(
 def get_reliability_score_components(
     train_score: float,
     cv_score: float,
-    test_score: float | None,
     logic: Literal['lower', 'greater'],
     desired_performance_score: Literal['train','cv','train_cv_average']
 ) -> dict[str, float]:
@@ -217,19 +216,12 @@ def get_reliability_score_components(
         Score obtained on the training set.
     cv_score : float
         Score obtained on the cross-validation set.
-    test_score : float or None
-        Score obtained on the test set. If ``None``, the reliability
-        components are computed from ``train_score`` and ``cv_score``
-        only, i.e. a leakage-free ("cv_only") mode where the test score
-        cannot influence the result. Default behaviour (test_score
-        provided) is unchanged for backward compatibility.
     logic : {'lower', 'greater'}
         Whether lower or greater metric values are better.
     desired_performance_score : {'train','cv','train_cv_average'}
         Which score to use as the performance score. Options are:
         'train' for the training score, 'cv' for the cross-validation score,
-        'test' for the test score, and 'train_cv_average' for the average
-        of the training and cross-validation scores.
+        'train_cv_average' for the average of the training and cross-validation scores.
 
     Returns
     -------
@@ -240,6 +232,8 @@ def get_reliability_score_components(
 
     if logic not in ('lower', 'greater'):
         raise ValueError("'logic' must be either 'lower' or 'greater'.")
+    if desired_performance_score not in ( 'train', 'cv', 'train_cv_average' ):
+        raise ValueError("'desired_performance_score' must be one of 'train', 'cv', or 'train_cv_average'.")
 
     if desired_performance_score == 'train':
         performance_score = train_score
@@ -247,15 +241,7 @@ def get_reliability_score_components(
         performance_score = cv_score
     else:  # 'train_cv_average'
         performance_score = np.mean([train_score, cv_score])
-    if test_score is None:
-        instability_score = abs(train_score - cv_score)
-    else:
-        performance_score = np.mean([train_score, cv_score, test_score])
-        instability_score = (
-            abs(train_score - cv_score) +
-            abs(train_score - test_score) +
-            abs(cv_score - test_score)
-        )
+    instability_score = abs(train_score - cv_score)
 
     if logic == 'lower':
         performance_score = -performance_score   # transform score internally to maintain "higher is better" behaviour

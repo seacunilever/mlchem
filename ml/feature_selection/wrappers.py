@@ -49,7 +49,7 @@ from mlchem.helper import (
     resolve_n_jobs,
     validate_task_type,
 )
-from mlchem.metrics import calculate_reliability_components
+from mlchem.metrics import get_reliability_score_components
 from mlchem.ml.modelling.model_evaluation import crossval, generate_cv_indices
 
 
@@ -175,7 +175,7 @@ def _compute_fold_degradation(
 
     degradation = cv_folds_kstar - cv_folds_k
     mean_degradation = float(np.mean(degradation))
-    se_degradation = float(np.std(degradation, ddof=1) / np.sqrt(len(degradation)))
+    se_degradation = float(np.std(degradation) / np.sqrt(len(degradation)))
 
     return {
         'degradation': degradation,
@@ -241,7 +241,7 @@ def _select_parsimonious_subset(
     acceptable_subsets = []
 
     # Evaluate subsets k from 1 to k*-1
-    for k_idx in range(1, cv_folds_kstar_index):
+    for k_idx in range(cv_folds_kstar_index-1):
         if k_idx >= len(all_cv_folds):
             break  # Safety check
 
@@ -265,7 +265,7 @@ def _select_parsimonious_subset(
             criterion_met = mean_deg <= (tolerance + se_multiplier * se_deg)
 
         if criterion_met:
-            acceptable_subsets.append(k_idx)
+            acceptable_subsets.append(k_idx+1)
 
     # Select the smallest acceptable subset, or fall back to k* if none qualify
     if acceptable_subsets:
@@ -335,33 +335,35 @@ def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> flo
     return float(abs(corr))
 
 
-def _add_reliability_columns(
-    dataframe: pd.DataFrame,
-    logic: Literal['lower', 'greater'],
-    selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
-) -> pd.DataFrame:
-    score_columns = [
-        'geometric_mean',
-        'performance_score',
-        'instability_score',
-        'reliability_score',
-    ]
-    if dataframe.empty:
-        for column in score_columns:
-            dataframe[column] = pd.Series(dtype=float)
-        return dataframe
+#def _add_reliability_columns(
+#    dataframe: pd.DataFrame,
+#    logic: Literal['lower', 'greater'],
+#    selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
+#    desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
+#) -> pd.DataFrame:
+#    score_columns = [
+#        'geometric_mean',
+#        'performance_score',
+#        'instability_score',
+#        'reliability_score',
+#    ]
+#    if dataframe.empty:
+#        for column in score_columns:
+#            dataframe[column] = pd.Series(dtype=float)
+#        return dataframe
 
-    reliability_scores = dataframe.apply(
-        lambda row: calculate_reliability_components(
-            train_score=row.training_score,
-            cv_score=row.cv_score,
-            test_score=None if selection_strategy == 'cv_only' else row.test_score,
-            logic=logic,
-        ),
-        axis=1,
-        result_type='expand',
-    )
-    return pd.concat([dataframe, reliability_scores], axis=1)
+#    reliability_scores = dataframe.apply(
+#        lambda row: get_reliability_score_components(
+#            train_score=row.training_score,
+#            cv_score=row.cv_score,
+#            test_score=None if selection_strategy == 'cv_only' else row.test_score,
+#            logic=logic,
+#            desired_performance_score=desired_performance_score,
+#        ),
+#        axis=1,
+#        result_type='expand',
+#    )
+#    return pd.concat([dataframe, reliability_scores], axis=1)
 
 
 class SequentialForwardSelection:
@@ -422,14 +424,11 @@ Attributes
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
-  selection_strategy : {'legacy', 'cv_only'}, optional
-      Strategy used by :meth:`find_best` to select the winning feature
-      subset. ``'legacy'`` (default, kept for backward compatibility)
-      uses train/CV/test scores, exactly as in previous releases.
-      ``'cv_only'`` is a leakage-free mode that selects using only
-      train/CV information; test scores are still computed and stored
-      for reporting, but never influence selection. ``'cv_only'`` is the
-      recommended choice for new projects.
+  desired_performance_score : {'train','cv','train_cv_average'}, optional
+      Which score to use as the performance score when calculating reliability.
+      Options are: 'train' for the training score, 'cv' for the cross-validation score,
+      and 'train_cv_average' for the average of the training and cross-validation scores.
+      Default is 'train_cv_average'.
   parsimony_mode : {'none', 'best', 'tolerance', 'standard_error', 'uncertainty'}, optional
       Parsimony selection mode for downstream feature reduction (default: 'none').
       - 'none': Parsimony disabled (existing behavior).
@@ -450,15 +449,18 @@ Attributes
 
     Notes
     -----
-    Automatic best-subset selection uses a reliability score. With
-    ``selection_strategy='legacy'``, for each selected prefix,
-    ``performance_score = (train * cv * test) ** (1/3)``,
-    ``instability_score = |train-cv| + |train-test| + |cv-test|``, and for
+    Automatic best-subset selection uses a reliability score.
+    With ``desired_performance_score='train'``, for each selected prefix,
+    ``performance_score = train``.
+    With ``desired_performance_score='cv'``, for each selected prefix,
+    ``performance_score = cv``.
+    With ``desired_performance_score='train_cv_average'``, for each selected prefix,
+    ``performance_score = (train + cv) / 2``.
+    ``instability_score = |train-cv|``, and for
     higher-is-better metrics ``reliability_score = performance_score /
-    (1 + instability_score)``. For lower-is-better metrics, the geometric
-    mean is inverted first so the same reliability score can be maximised.
-    With ``selection_strategy='cv_only'``, the same formulas are used but
-    with only ``train`` and ``cv`` scores (no test score involved).
+    (1 + instability_score)``. For lower-is-better metrics, the performance
+    score gets its sign inverted so that the aim is still to maximise the
+    reliability score.
   
   Examples
   --------
@@ -576,12 +578,12 @@ falls within the configured empirical margin on the supplied resamples.
                  max_features: int = 25,
                  cv_iter: int = 5,
                  cv_splitter=None,
-                 cv_indices: Iterable | None = None,
                  groups=None,
+                 cv_indices: Iterable | None = None,
                  logic: Literal['lower', 'greater'] = 'greater',
                  task_type: Literal[
                      'classification', 'regression'] = 'classification',
-                 selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
+                 desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> None:
         """
@@ -617,14 +619,11 @@ Attributes
       Whether to minimize or maximize the cross-validation score. Default is 'greater'.
   task_type : {'classification', 'regression'}, optional
       Type of task. Default is 'classification'.
-  selection_strategy : {'legacy', 'cv_only'}, optional
-      Strategy used by :meth:`find_best` to select the winning feature
-      subset. ``'legacy'`` (default, kept for backward compatibility)
-      uses train/CV/test scores, exactly as in previous releases.
-      ``'cv_only'`` is a leakage-free mode that selects using only
-      train/CV information; test scores are still computed and stored
-      for reporting, but never influence selection. ``'cv_only'`` is the
-      recommended choice for new projects.
+  desired_performance_score : {'train','cv','train_cv_average'}, optional
+      Which score to use as the performance score when calculating reliability.
+      Options are: 'train' for the training score, 'cv' for the cross-validation score,
+      and 'train_cv_average' for the average of the training and cross-validation scores.
+      Default is 'train_cv_average'.
   log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
       Logging level threshold. Use 'DEBUG' for detailed diagnostics,
       'INFO' for standard output, 'WARNING' to suppress most output.
@@ -632,15 +631,18 @@ Attributes
 
     Notes
     -----
-    Automatic best-subset selection uses a reliability score. With
-    ``selection_strategy='legacy'``, for each selected prefix,
-    ``performance_score = (train * cv * test) ** (1/3)``,
-    ``instability_score = |train-cv| + |train-test| + |cv-test|``, and for
+    Automatic best-subset selection uses a reliability score.
+    With ``desired_performance_score='train'``, for each selected prefix,
+    ``performance_score = train``.
+    With ``desired_performance_score='cv'``, for each selected prefix,
+    ``performance_score = cv``.
+    With ``desired_performance_score='train_cv_average'``, for each selected prefix,
+    ``performance_score = (train + cv) / 2``.
+    ``instability_score = |train-cv|``, and for
     higher-is-better metrics ``reliability_score = performance_score /
-    (1 + instability_score)``. For lower-is-better metrics, the geometric
-    mean is inverted first so the same reliability score can be maximised.
-    With ``selection_strategy='cv_only'``, the same formulas are used but
-    with only ``train`` and ``cv`` scores (no test score involved).
+    (1 + instability_score)``. For lower-is-better metrics, the performance
+    score gets its sign inverted so that the aim is still to maximise the
+    reliability score.
   """
 
         self.estimator = estimator
@@ -653,20 +655,8 @@ Attributes
         self.cv_splitter = cv_splitter
         self.cv_indices = cv_indices
         self.groups = groups
-        if selection_strategy not in ('legacy', 'cv_only'):
-            raise ValueError("'selection_strategy' must be either 'legacy' or 'cv_only'.")
-        self.selection_strategy = selection_strategy
-        
-        # Warn if using legacy selection_strategy (backward-compatible default)
-        if selection_strategy == 'legacy':
-            warnings.warn(
-                "selection_strategy='legacy' is deprecated and will be removed in a future version. "
-                "The test score leak it entails is problematic. "
-                "Please explicitly set selection_strategy='cv_only' (recommended) or 'legacy' (if needed). "
-                "See docstring for details.",
-                FutureWarning,
-                stacklevel=2,
-            )
+        self.desired_performance_score = desired_performance_score
+    
 
         self.logic = logic
         self.task_type = validate_task_type(task_type)
@@ -680,6 +670,9 @@ Attributes
         # using the accepted features
         self.train_scores = []
 
+        # Where to store the standard error of the training scores
+        self.train_se = []
+
         # Where to store all cross-validation scores obtained from the
         # model using the accepted features
         self.cv_scores = []
@@ -690,10 +683,16 @@ Attributes
         # Where to store test scores
         self.unseen_scores = []
 
-        # NEW: Storage for fold-level CV scores (for parsimony)
+        # Where to store all reliability scores and their standard errors
+        self.reliability_scores = []
+        self.reliability_se = []
+
+        # NEW: Storage for fold-level train, CV and reliability scores
         # Structure: list of numpy arrays, one per subset
         # (indexed by subset size: 0-based index = subset size - 1)
+        self.train_folds = []
         self.cv_folds = []
+        self.reliability_folds = []
 
         # NEW: Storage for parsimony diagnostics
         self.parsimony_diagnostics = {}
@@ -785,36 +784,49 @@ Attributes
             train_set_temp = self.train_set[features_to_test]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(train_set_temp, self.y_train)
-            cv_kwargs = (
-                {'cv_indices': self._resolved_cv_indices}
-                if self._resolved_cv_indices is not None else {}
-            )
-            cvscores = crossval(
+            #cv_kwargs = (
+            #    {'cv_indices': self._resolved_cv_indices}
+            #    if self._resolved_cv_indices is not None else {}
+            #)
+            cv_result = crossval(
                 estimator_copy,
                 train_set_temp.values,
-                y_train,
+                self.y_train,
                 self.metric,
                 self.cv_iter,
                 self.task_type,
-                **cv_kwargs,
+                cv_indices=self._resolved_cv_indices,
             )
+
+            train_scores_folds = cv_result['train_score']
+            cv_scores_folds = cv_result['test_score']
+            reliabilities_folds = []
+            for fold_train_score, fold_cv_score in zip(train_scores_folds, cv_scores_folds):
+                comp = get_reliability_score_components(
+                    train_score=fold_train_score,
+                    cv_score=fold_cv_score,
+                    logic=self.logic,
+                    desired_performance_score=self.desired_performance_score)
+                reliabilities_folds.append(comp['reliability_score'])
+
+            dict_to_return = {
+                'train_scores_folds': train_scores_folds,
+                'cv_scores_folds': cv_scores_folds,
+                'reliability_scores_folds': reliabilities_folds,}
+
+
             self._log(
                 logging.DEBUG,
                 "SFS candidate=%s | subset_size=%d | cv_mean=%.4f | cv_se=%.4f",
                 feat,
                 len(features_to_test),
-                float(np.mean(cvscores)),
-                float(np.std(cvscores)) / np.sqrt(len(cvscores)),
+                float(np.mean(dict_to_return['cv_scores_folds'])),
+                float(np.std(dict_to_return['cv_scores_folds'])/np.sqrt(len(dict_to_return['cv_scores_folds']))),
             )
-            return np.mean(cvscores), np.std(cvscores) / np.sqrt(len(cvscores)), cvscores
+            return dict_to_return
 
         for cycle in tqdm(range(self.max_features), desc="SFS", disable=False):
 
-            # Temporary lists where to store cross-validation scores,
-            # standard errors, and fold-level scores.
-            cv_scores_storage = []
-            cv_se_storage = []
-            cv_folds_storage = []
 
             # List of features to be assessed
             self.list_available_features = [feat for feat in
@@ -830,35 +842,91 @@ Attributes
 
             # Hypothetically assess model if an extra feature is added.
             # Do it for all unexplored features.
-            if self.n_jobs == 1:
+            if self.n_jobs == 1: # if parallelisation is not used
+
+                # Temporary lists where to store scores,
+                # standard errors, and fold-level scores
+            
+                train_scores_storage = []
+                train_se_storage = []
+                train_folds_storage = []
+
+                cv_scores_storage = []
+                cv_se_storage = []
+                cv_folds_storage = []
+
+                reliability_scores_storage = []
+                reliability_se_storage = []
+                reliability_folds_storage = []
+
                 for feat in self.list_available_features:
-                    cv_mean, cv_se, cv_folds = evaluate_feature(feat)
+                    dict_feature_metrics = evaluate_feature(feat)
+                    train_scores_folds = dict_feature_metrics['train_scores_folds']
+                    cv_scores_folds = dict_feature_metrics['cv_scores_folds']
+                    reliabilities_folds = dict_feature_metrics['reliability_scores_folds']
+
+                    train_mean = np.mean(train_scores_folds)
+                    train_se = np.std(train_scores_folds)/np.sqrt(len(train_scores_folds))
+                    cv_mean = np.mean(cv_scores_folds)
+                    cv_se = np.std(cv_scores_folds)/np.sqrt(len(cv_scores_folds))
+                    reliability_mean = np.mean(reliabilities_folds)
+                    reliability_se = np.std(reliabilities_folds)/np.sqrt(len(reliabilities_folds))
+
+                    # Store performance metrics for the unexplored feature
+                    train_scores_storage.append(train_mean)
+                    train_se_storage.append(train_se)
+                    train_folds_storage.append(train_scores_folds)
+
                     cv_scores_storage.append(cv_mean)
                     cv_se_storage.append(cv_se)
-                    cv_folds_storage.append(cv_folds)
-            else:
-                scored = Parallel(n_jobs=self.n_jobs, prefer='threads')(
+                    cv_folds_storage.append(cv_scores_folds)
+
+                    reliability_scores_storage.append(reliability_mean)
+                    reliability_se_storage.append(reliability_se)
+                    reliability_folds_storage.append(reliabilities_folds)
+
+            else: # if parallelisation is used
+                dict_feature_metrics = Parallel(n_jobs=self.n_jobs, prefer='threads')(
                     delayed(evaluate_feature)(feat)
                     for feat in self.list_available_features
                 )
-                cv_scores_storage = [score for score, _, _ in scored]
-                cv_se_storage = [se for _, se, _ in scored]
-                cv_folds_storage = [folds for _, _, folds in scored]
+                train_scores_storage = [np.mean(d['train_scores_folds']) for d in dict_feature_metrics]
+                train_se_storage = [np.std(d['train_scores_folds'])/np.sqrt(len(d['train_scores_folds'])) for d in dict_feature_metrics]
+                train_folds_storage = [d['train_scores_folds'] for d in dict_feature_metrics]
 
+                cv_scores_storage = [np.mean(d['cv_scores_folds']) for d in dict_feature_metrics]
+                cv_se_storage = [np.std(d['cv_scores_folds'])/np.sqrt(len(d['cv_scores_folds'])) for d in dict_feature_metrics]
+                cv_folds_storage = [d['cv_scores_folds'] for d in dict_feature_metrics]
+
+                reliability_scores_storage = [np.mean(d['reliability_scores_folds']) for d in dict_feature_metrics]
+                reliability_se_storage = [np.std(d['reliability_scores_folds'])/np.sqrt(len(d['reliability_scores_folds'])) for d in dict_feature_metrics]
+                reliability_folds_storage = [d['reliability_scores_folds'] for d in dict_feature_metrics]
             # Include in the model the feature with best CV gains.
             if self.logic == 'greater':
                 index = np.argmax(cv_scores_storage)
             else:
                 index = np.argmin(cv_scores_storage)
 
-            self.cv_scores.append(cv_scores_storage[index])
-            self.cv_se.append(cv_se_storage[index])
-            # Store fold-level scores (oriented to utility: higher is better)
+            
+             # Store fold-level scores (oriented to utility: higher is better)
             fold_level_utility = _orient_scores_to_utility(
                 cv_folds_storage[index],
-                self.logic,
-            )
+                self.logic,)           
+            
+            # record metrics for the candidate feature to incorporate
+            self.train_folds.append(train_folds_storage[index])
+            self.train_scores.append(train_scores_storage[index])
+            self.train_se.append(train_se_storage[index])
+
             self.cv_folds.append(fold_level_utility)
+            self.cv_scores.append(cv_scores_storage[index])
+            self.cv_se.append(cv_se_storage[index])
+            
+            self.reliability_folds.append(reliability_folds_storage[index])
+            self.reliability_scores.append(reliability_scores_storage[index])
+            self.reliability_se.append(reliability_se_storage[index])
+
+
             feature_to_add = self.list_available_features[index]
             self.extending_features.append(feature_to_add)
 
@@ -875,9 +943,8 @@ Attributes
             train_set_temp = self.train_set[self.extending_features]
             test_set_temp = self.test_set[self.extending_features]
             self.estimator.fit(train_set_temp, y_train)
-            y_train_pred = self.estimator.predict(train_set_temp)
+            #y_train_pred = self.estimator.predict(train_set_temp)
             y_test_pred = self.estimator.predict(test_set_temp)
-            self.train_scores.append(self.metric(self.y_train, y_train_pred))
             self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
             self._log(
                 logging.DEBUG,
@@ -912,22 +979,26 @@ Attributes
         # Find the reference subset k* using the same reliability baseline as
         # the non-parsimony path so the reference is stable across selection
         # modes and independent from the parsimony rule itself.
-        scores = [
-            calculate_reliability_components(
-                train_score=train_score,
-                cv_score=cv_score,
-                test_score=None if self.selection_strategy == 'cv_only' else test_score,
-                logic=self.logic,
-            )
-            for train_score, cv_score, test_score in zip(
-                self.train_scores,
-                self.cv_scores,
-                self.unseen_scores,
-            )
-        ]
-        kstar_index_zero = int(np.argmax([
-            score['reliability_score'] for score in scores
-        ]))
+        
+        #scores = [
+        #    get_reliability_score_components(
+        #        train_score=train_score,
+        #        cv_score=cv_score,
+        #        test_score=None if self.selection_strategy == 'cv_only' else test_score,
+        #        logic=self.logic,
+        #        desired_performance_score=self.desired_performance_score,
+        #    )
+        #    for train_score, cv_score, test_score in zip(
+        #        self.train_scores,
+        #        self.cv_scores,
+        #        self.unseen_scores,
+        #    )
+        #]
+        #kstar_index_zero = int(np.argmax([
+        #    score['reliability_score'] for score in scores
+        #]))
+
+        kstar_index_zero = int(np.argmax(self.reliability_scores))
 
         kstar_index = kstar_index_zero + 1  # Convert to 1-based
         cv_folds_kstar = self.cv_folds[kstar_index_zero]
@@ -1006,33 +1077,6 @@ Attributes
 
         Notes
         -----
-        For each feature subset, the automatic algorithm computes:
-
-        ``reliability_score = performance_score / (1 + instability_score)``
-
-        With ``selection_strategy='legacy'`` (default, for backward
-        compatibility):
-
-        ``instability_score = |train-cv| + |train-test| + |cv-test|``
-
-        and, for higher-is-better metrics:
-
-        ``performance_score = (train_score + cv_score + test_score) / 3``
-
-        For lower-is-better metrics, such as RMSE, lower performance scores
-        are better, so the performance score has its sign flipped before
-        reliability calculation is applied:
-
-        ``performance_score = -(train_score + cv_score + test_score) / 3``
-
-        For this selection strategy ('legacy'), the test score is
-        intentionally included in the calculation.
-
-        With ``selection_strategy='cv_only'`` (leakage-free, recommended for
-        new projects), the same formulas are used but with only
-        ``train_score`` and ``cv_score`` (no test score involved), so the
-        test score can never influence which subset is selected. Test scores
-        are still stored in ``self.unseen_scores`` for reporting/plotting.
 
         With parsimony selection enabled (via ``parsimony_mode``), the best
         subset is selected based on fold-level degradation criteria rather
@@ -1066,33 +1110,33 @@ Attributes
                 }
             else:
                 self.parsimony_diagnostics = {}
-                # Original behaviour: use reliability score
-                scores = [
-                    calculate_reliability_components(
-                        train_score=train_score,
-                        cv_score=cv_score,
-                        test_score=None if self.selection_strategy == 'cv_only' else test_score,
-                        logic=self.logic,
-                    )
-                    for train_score, cv_score, test_score in zip(
-                        self.train_scores,
-                        self.cv_scores,
-                        self.unseen_scores,
-                    )
-                ]
+                
+                #scores = [
+                #    get_reliability_score_components(
+                #        train_score=train_score,
+                #        cv_score=cv_score,
+                #        test_score=None if self.selection_strategy == 'cv_only' else test_score,
+                #        logic=self.logic,
+                #        desired_performance_score=self.desired_performance_score,
+                #    )
+                #    for train_score, cv_score, test_score in zip(
+                #        self.train_scores,
+                #        self.cv_scores,
+                #        self.unseen_scores,
+                #    )
+                #]
 
-                best_index_zero_based = int(np.argmax([
-                    score['reliability_score'] for score in scores
-                ]))
+                best_index_zero_based = int(np.argmax(self.reliability_scores))
                 best_index = best_index_zero_based + 1
-                winning_scores = scores[best_index_zero_based]
+                #winning_scores = scores[best_index_zero_based]
                 dictionary = {
                     'best_index': best_index,
                     'features': self.extending_features[:best_index],
-                    'performance_score': winning_scores['performance_score'],
-                    'instability_score': winning_scores['instability_score'],
-                    'reliability_score': winning_scores['reliability_score'],
-                    'best_score': winning_scores['reliability_score'],
+                    #'performance_score': None,
+                    #'instability_score': None,
+                    'reliability_score': self.reliability_scores[best_index_zero_based],
+                    'best_score': self.reliability_scores[best_index_zero_based],
+
                 }
         else:     # if which == int
             best_index = which
@@ -1106,6 +1150,7 @@ Attributes
         best_feature: int | Literal['auto'] | None = 'auto',
         figsize: tuple[int, int] = (10, 6),
         colours: list[str] = ['steelblue', 'orange', 'green'],
+        alphas: list[float] = [0.2, 0.2, 0.2],
         title: str | None = None,
         title_size: int = 20,
         xlabel: str = '# of features',
@@ -1128,8 +1173,12 @@ Attributes
         figsize : tuple of int, optional
             Size of the plot. Default is (10, 6).
         colours : list of str, optional
-            Colours for training, validation, and test scores. Default is
+            Colours for training, validation, and reliability scores. Default is
             ['steelblue', 'orange', 'green'].
+        alphas : list of float, optional
+            Alpha values, with shape (3,), for the shaded regions
+            representing the ±1 standard error. Setting any of these
+            values to zero will make the corresponding shaded region fully transparent.
         title : str, optional
             Title of the plot.
         title_size : int, optional
@@ -1192,16 +1241,31 @@ Attributes
                  self.cv_scores,
                  label='validation score',
                  color=colours[1])
-        # Show standard deviation of cross-validation performance
-        plt.fill_between(range(1, len(self.train_scores)+1),
-                         np.array(self.cv_scores) - 0.5 * np.array(self.cv_se),
-                         np.array(self.cv_scores) + 0.5 * np.array(self.cv_se),
-                         alpha=0.2, color=colours[1])
-        # Plot test scores
+
+        # Plot reliability scores
         plt.plot(range(1, len(self.train_scores)+1),
-                 self.unseen_scores,
-                 label='test score',
+                 self.reliability_scores,
+                 label='reliability score',
                  color=colours[2])
+
+        # Show the ±1 SE interval of training performance
+        plt.fill_between(range(1, len(self.train_scores)+1),
+                    np.array(self.train_scores) - 1 * np.array(self.train_se),
+                    np.array(self.train_scores) + 1 * np.array(self.train_se),
+                    alpha=alphas[0], color=colours[0])
+
+        # Show the ±1 SE interval of cross-validation performance
+        plt.fill_between(range(1, len(self.train_scores)+1),
+                         np.array(self.cv_scores) - 1 * np.array(self.cv_se),
+                         np.array(self.cv_scores) + 1 * np.array(self.cv_se),
+                         alpha=alphas[1], color=colours[1])
+
+        # Show the ±1 SE interval of reliability score
+        plt.fill_between(range(1, len(self.train_scores)+1),
+                         np.array(self.reliability_scores) - 1 * np.array(self.reliability_se),
+                         np.array(self.reliability_scores) + 1 * np.array(self.reliability_se),
+                         alpha=alphas[2], color=colours[2])
+
 
         plt.legend(fontsize=legendsize, loc='best')
 
@@ -1232,14 +1296,18 @@ Attributes
 
         self._log(logging.INFO, 'SFS summary: number_of_features=%d', ind)
         self._log(logging.INFO, 'SFS summary: winner_subset=%s', self.extending_features[:ind])
-        self._log(logging.INFO, 'SFS summary: train_score=%.3f', self.train_scores[ind - 1])
         self._log(
             logging.INFO,
-            'SFS summary: cv_score=%.3f +- %.3f',
-            self.cv_scores[ind - 1],
-            self.cv_se[ind - 1],
+            f'SFS summary: train_score={self.train_scores[ind - 1]:.3f} ± {self.train_se[ind - 1]:.3f}',
         )
-        self._log(logging.INFO, 'SFS summary: test_score=%.3f', self.unseen_scores[ind - 1])
+        self._log(
+            logging.INFO,
+            f'SFS summary: cv_score={self.cv_scores[ind - 1]:.3f} ± {self.cv_se[ind - 1]:.3f}',
+        )
+        self._log(
+            logging.INFO,
+            f'SFS summary: reliability_score={self.reliability_scores[ind - 1]:.3f} ± {self.reliability_se[ind - 1]:.3f}',
+        )
 
 
 class CombinatorialSelection:
@@ -1249,8 +1317,9 @@ class CombinatorialSelection:
     This class performs a two-stage combinatorial search over feature
     subsets and ranks the surviving subsets with the same reliability
     score logic used by :class:`SequentialForwardSelection`: the
-    performance term is the arithmetic mean of the available train/CV/
-    test scores, and lower-is-better metrics are sign-flipped before the
+    performance term is controlled by `desired_performance_score`,
+    and can correspond to cv_score, train_score or their average.
+    Lower-is-better metrics are sign-flipped before the
     reliability score is computed. Results are then ranked by
     ``reliability_score = performance_score / (1 + instability_score)``,
     where ``instability_score`` is the sum of pairwise gaps between the
@@ -1270,7 +1339,7 @@ class CombinatorialSelection:
     ``fit_stage_2()``: Refine the stage 1 winners in a second combinatorial
     pass.
 
-    ``display_best()``: Fit and report the best subset from stage 2.
+    ``display_best()``: **DEPRECATED** Fit and report the best subset from stage 2.
 
     Attributes
     ----------
@@ -1289,9 +1358,6 @@ class CombinatorialSelection:
         Explicit, pre-computed ``(train_idx, valid_idx)`` pairs.
     groups : array-like, optional
         Group labels propagated to ``cv_splitter``.
-    selection_strategy : {'legacy', 'cv_only'}
-        Controls whether the test score participates in reliability
-        scoring.
     log_level : int or str
         Logging threshold used by the wrapper logger.
 
@@ -1332,7 +1398,7 @@ class CombinatorialSelection:
                  cv_splitter=None,
                  cv_indices: Iterable | None = None,
                  groups=None,
-                 selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
+                 desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> None:
         """
@@ -1359,11 +1425,11 @@ class CombinatorialSelection:
         groups : array-like, optional
             Group labels forwarded to ``cv_splitter``. Ignored when
             ``cv_indices`` is provided.
-        selection_strategy : {'legacy', 'cv_only'}, optional
-            Whether the ``reliability_score`` used for ranking includes
-            the test score (``'legacy'``, default) or not (``'cv_only'``,
-            leakage-free). Default is ``'legacy'`` for backward
-            compatibility.
+        desired_performance_score : {'train','cv','train_cv_average'}, optional
+            Which score to use as the performance score when calculating reliability.
+            Options are: 'train' for the training score, 'cv' for the cross-validation score,
+            and 'train_cv_average' for the average of the training and cross-validation scores.
+            Default is 'train_cv_average'.
         log_level : {{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}} or int, optional
             Logging level threshold. Use 'DEBUG' for detailed diagnostics,
             'INFO' for standard output, 'WARNING' to suppress most output.
@@ -1378,21 +1444,9 @@ class CombinatorialSelection:
         self.cv_splitter = cv_splitter
         self.cv_indices = cv_indices
         self.groups = groups
-        if selection_strategy not in ('legacy', 'cv_only'):
-            raise ValueError("'selection_strategy' must be either 'legacy' or 'cv_only'.")
-        self.selection_strategy = selection_strategy
+        self.desired_performance_score = desired_performance_score  # default value
         
-        # Warn if using legacy selection_strategy (backward-compatible default)
-        if selection_strategy == 'legacy':
-            warnings.warn(
-                "selection_strategy='legacy' is deprecated and will be removed in a future version. "
-                "The test score leak it entails is problematic. "
-                "Please explicitly set selection_strategy='cv_only' (recommended) or 'legacy' (if needed). "
-                "See docstring for details.",
-                FutureWarning,
-                stacklevel=2,
-            )
-        
+
         _configure_wrapper_logging(self.log_level)
 
     def set_log_level(self, log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']) -> None:
@@ -1716,7 +1770,10 @@ class CombinatorialSelection:
             'feature_subsets': [],
             'training_score': [],
             'cv_score': [],
-            'test_score': []
+            'reliability_score': [],
+            'training_se': [],
+            'cv_se': [],
+            'reliability_se': [],
             }
 
         def evaluate_subset(subset):
@@ -1734,46 +1791,88 @@ class CombinatorialSelection:
                 )
                 return None
 
-            cv_score = crossval(
+            #cv_score = crossval(
+            #    estimator_copy,
+            #    x,
+            #    y_train,
+            #    self.metric,
+            #    self.cv_iter,
+            #    self.task_type,
+            #    **({'cv_indices': self._resolved_cv_indices} if self._resolved_cv_indices is not None else {}),
+            #).mean()
+
+            cv_result = crossval(
                 estimator_copy,
                 x,
-                y_train,
+                self.y_train,
                 self.metric,
                 self.cv_iter,
                 self.task_type,
-                **({'cv_indices': self._resolved_cv_indices} if self._resolved_cv_indices is not None else {}),
-            ).mean()
-            if not is_better(cv_score, self.cv_threshold):
+                cv_indices=self._resolved_cv_indices,
+            )
+
+            train_scores_folds = cv_result['train_score']
+            cv_scores_folds = cv_result['test_score']
+            reliabilities_folds = []
+            for fold_train_score, fold_cv_score in zip(train_scores_folds, cv_scores_folds):
+                comp = get_reliability_score_components(
+                    train_score=fold_train_score,
+                    cv_score=fold_cv_score,
+                    logic=self.logic,
+                    desired_performance_score=self.desired_performance_score)
+                reliabilities_folds.append(comp['reliability_score'])
+
+            dict_to_return = {
+                'train_scores_folds': train_scores_folds,
+                'cv_scores_folds': cv_scores_folds,
+                'reliability_scores_folds': reliabilities_folds,}
+
+            subset_train_score = np.mean(dict_to_return['train_scores_folds'])
+            subset_train_se = np.std(dict_to_return['train_scores_folds']) / (
+                len(dict_to_return['train_scores_folds']) ** 0.5
+                )
+            subset_cv_score = np.mean(dict_to_return['cv_scores_folds'])
+            subset_cv_se = np.std(dict_to_return['cv_scores_folds']) / (
+                len(dict_to_return['cv_scores_folds']) ** 0.5
+                )
+            subset_reliability_score = np.mean(dict_to_return['reliability_scores_folds'])
+            subset_reliability_se = np.std(dict_to_return['reliability_scores_folds']) / (
+                len(dict_to_return['reliability_scores_folds']) ** 0.5
+                )
+ 
+
+            if not is_better(subset_cv_score, self.cv_threshold):
                 self._log(
                     logging.DEBUG,
                     "Stage 1 rejected subset=%s by cv threshold: %.4f",
                     subset,
-                    cv_score,
+                    subset_cv_score,
                 )
                 return None
 
-            y_test_pred = estimator_copy.predict(self.test_set[subset].values)
-            test_score = self.metric(self.y_test, y_test_pred)
             self._log(
                 logging.DEBUG,
-                "Stage 1 accepted subset=%s | train=%.4f | cv=%.4f | test=%.4f",
-                subset,
-                train_score,
-                cv_score,
-                test_score,
-            )
-            return subset, train_score, cv_score, test_score
+                f"Stage 1 accepted subset={subset} |"
+                f"train={subset_train_score:.3f} ± {subset_train_se:.3f} | "
+                f"cv={subset_cv_score:.3f} ± {subset_cv_se:.3f} | "
+                f"reliability={subset_reliability_score:.3f} ± {subset_reliability_se:.3f}",)
+            return (subset, subset_train_score, subset_cv_score,
+                    subset_reliability_score, subset_train_se,
+                    subset_cv_se, subset_reliability_se)
 
         if self.n_jobs == 1:
             for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 1", disable=False)):
                 result = evaluate_subset(subset)
                 if result is None:
                     continue
-                subset, train_score, cv_score, test_score = result
+                subset, train_score, cv_score, reliability_score, train_se, cv_se, reliability_se = result
                 self.dict_results['feature_subsets'].append(subset)
                 self.dict_results['training_score'].append(train_score)
+                self.dict_results['training_se'].append(train_se)
                 self.dict_results['cv_score'].append(cv_score)
-                self.dict_results['test_score'].append(test_score)
+                self.dict_results['cv_se'].append(cv_se)
+                self.dict_results['reliability_score'].append(reliability_score)
+                self.dict_results['reliability_se'].append(reliability_se)
         else:
             max_workers = self.n_jobs if self.n_jobs > 0 else None
             # Benign: sklearn's own nested cross_val_score Parallel/delayed
@@ -1785,20 +1884,24 @@ class CombinatorialSelection:
                         result = future.result()
                         if result is None:
                             continue
-                        subset, train_score, cv_score, test_score = result
+                        subset, train_score, cv_score, reliability_score, train_se, cv_se, reliability_se = result
                         self.dict_results['feature_subsets'].append(subset)
                         self.dict_results['training_score'].append(train_score)
+                        self.dict_results['training_se'].append(train_se)
                         self.dict_results['cv_score'].append(cv_score)
-                        self.dict_results['test_score'].append(test_score)
+                        self.dict_results['cv_se'].append(cv_se)
+                        self.dict_results['reliability_score'].append(reliability_score)
+                        self.dict_results['reliability_se'].append(reliability_se)
         self.df_results_stage1 = pd.DataFrame(
             self.dict_results,
             columns=self.dict_results.keys()
             )
-        self.df_results_stage1 = _add_reliability_columns(
-            self.df_results_stage1,
-            self.logic,
-            self.selection_strategy,
-        )
+        #self.df_results_stage1 = _add_reliability_columns(
+        #    self.df_results_stage1,
+        #    self.logic,
+        #    self.selection_strategy,
+        #    desired_performance_score=self.desired_performance_score,
+        #)
         self.df_results_stage1.sort_values(
             by='reliability_score',
             ascending=False,
@@ -1899,7 +2002,10 @@ class CombinatorialSelection:
             'feature_subsets': [],
             'training_score': [],
             'cv_score': [],
-            'test_score': [],
+            'reliability_score': [],
+            'training_se': [],
+            'cv_se': [],
+            'reliability_se': [],
             }
 
         def evaluate_subset(subset):
@@ -1917,46 +2023,77 @@ class CombinatorialSelection:
                 )
                 return None
 
-            cv_score = crossval(
+            cv_result = crossval(
                 estimator_copy,
                 x,
                 self.y_train,
                 self.metric,
                 self.cv_iter,
                 self.task_type,
-                **({'cv_indices': self._resolved_cv_indices} if self._resolved_cv_indices is not None else {}),
-            ).mean()
-            if not is_better(cv_score, self.cv_threshold_2):
+                cv_indices=self._resolved_cv_indices,
+            )
+            train_scores_folds = cv_result['train_score']
+            cv_scores_folds = cv_result['test_score']
+            reliabilities_folds = []
+            for fold_train_score, fold_cv_score in zip(train_scores_folds, cv_scores_folds):
+                comp = get_reliability_score_components(
+                    train_score=fold_train_score,
+                    cv_score=fold_cv_score,
+                    logic=self.logic,
+                    desired_performance_score=self.desired_performance_score)
+                reliabilities_folds.append(comp['reliability_score'])
+
+            dict_to_return = {
+                'train_scores_folds': train_scores_folds,
+                'cv_scores_folds': cv_scores_folds,
+                'reliability_scores_folds': reliabilities_folds,}
+
+            subset_train_score = np.mean(dict_to_return['train_scores_folds'])
+            subset_train_se = np.std(dict_to_return['train_scores_folds']) / (
+                len(dict_to_return['train_scores_folds']) ** 0.5
+                )
+            subset_cv_score = np.mean(dict_to_return['cv_scores_folds'])
+            subset_cv_se = np.std(dict_to_return['cv_scores_folds']) / (
+                len(dict_to_return['cv_scores_folds']) ** 0.5
+                )
+            subset_reliability_score = np.mean(dict_to_return['reliability_scores_folds'])
+            subset_reliability_se = np.std(dict_to_return['reliability_scores_folds']) / (
+                len(dict_to_return['reliability_scores_folds']) ** 0.5
+                )
+ 
+
+            if not is_better(subset_cv_score, self.cv_threshold_2):
                 self._log(
                     logging.DEBUG,
                     "Stage 2 rejected subset=%s by cv threshold: %.4f",
                     subset,
-                    cv_score,
+                    subset_cv_score,
                 )
                 return None
 
-            y_test_pred = estimator_copy.predict(self.test_set[subset].values)
-            test_score = self.metric(self.y_test, y_test_pred)
             self._log(
                 logging.DEBUG,
-                "Stage 2 accepted subset=%s | train=%.4f | cv=%.4f | test=%.4f",
-                subset,
-                train_score,
-                cv_score,
-                test_score,
-            )
-            return subset, train_score, cv_score, test_score
+                f"Stage 2 accepted subset={subset} |"
+                f"train={subset_train_score:.3f} ± {subset_train_se:.3f} | "
+                f"cv={subset_cv_score:.3f} ± {subset_cv_se:.3f} | "
+                f"reliability={subset_reliability_score:.3f} ± {subset_reliability_se:.3f}",)
+            return (subset, subset_train_score, subset_cv_score,
+                    subset_reliability_score, subset_train_se,
+                    subset_cv_se, subset_reliability_se)
 
         if self.n_jobs == 1:
-            for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 2", disable=False)):
+            for i, subset in enumerate(tqdm(self.feature_subsets, desc="Stage 1", disable=False)):
                 result = evaluate_subset(subset)
                 if result is None:
                     continue
-                subset, train_score, cv_score, test_score = result
+                subset, train_score, cv_score, reliability_score, train_se, cv_se, reliability_se = result
                 self.dict_results_2['feature_subsets'].append(subset)
                 self.dict_results_2['training_score'].append(train_score)
+                self.dict_results_2['training_se'].append(train_se)
                 self.dict_results_2['cv_score'].append(cv_score)
-                self.dict_results_2['test_score'].append(test_score)
+                self.dict_results_2['cv_se'].append(cv_se)
+                self.dict_results_2['reliability_score'].append(reliability_score)
+                self.dict_results_2['reliability_se'].append(reliability_se)
         else:
             max_workers = self.n_jobs if self.n_jobs > 0 else None
             # Benign: sklearn's own nested cross_val_score Parallel/delayed
@@ -1964,32 +2101,54 @@ class CombinatorialSelection:
             with _suppress_parallel_delayed_warning():
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     futures = {executor.submit(evaluate_subset, subset): subset for subset in self.feature_subsets}
-                    for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 2", disable=False):
+                    for future in tqdm(as_completed(futures), total=len(futures), desc="Stage 1", disable=False):
                         result = future.result()
                         if result is None:
                             continue
-                        subset, train_score, cv_score, test_score = result
+                        subset, train_score, cv_score, reliability_score, train_se, cv_se, reliability_se = result
                         self.dict_results_2['feature_subsets'].append(subset)
                         self.dict_results_2['training_score'].append(train_score)
+                        self.dict_results_2['training_se'].append(train_se)
                         self.dict_results_2['cv_score'].append(cv_score)
-                        self.dict_results_2['test_score'].append(test_score)
+                        self.dict_results_2['cv_se'].append(cv_se)
+                        self.dict_results_2['reliability_score'].append(reliability_score)
+                        self.dict_results_2['reliability_se'].append(reliability_se)
         self.df_results_stage2 = pd.DataFrame(
-            self.dict_results_2, columns=self.dict_results_2.keys()
+            self.dict_results_2,
+            columns=self.dict_results_2.keys()
             )
-        self.df_results_stage2 = _add_reliability_columns(
-            self.df_results_stage2,
-            self.logic,
-            self.selection_strategy,
-        )
+
+        self.df_results_stage2['Reliability_lower_bound'] = self.df_results_stage2.reliability_score\
+            -self.df_results_stage2.reliability_se
         self.df_results_stage2.sort_values(
-            by='reliability_score',
+            by='reliability_lower_bound',
             ascending=False,
             inplace=True)
+
+        self.best_record = self.df_results_stage2.iloc[0]
+        self.best_cols = self.best_record['feature_subsets']
         self._log(
             logging.INFO,
-            "Combinatorial stage 2 completed: kept_subsets=%d",
-            len(self.df_results_stage2),
+            f"Combinatorial stage 2 completed: kept_subsets={self.df_results_stage2}",
         )
+
+
+        # Display results through logger
+        self._log(logging.INFO, f'# of Features: {len(self.best_cols)}')
+        self._log(logging.INFO, f'Best Features: {self.best_cols}')
+        self._log(
+            logging.INFO,
+            f'Train Score: {self.best_record['training_score']:.3f}'
+            f'± {self.best_record['training_se']:.3f}',)
+        self._log(
+            logging.INFO,
+            f'CV Score: {self.best_record['cv_score']:.3f}'
+            f'± {self.best_record['cv_se']:.3f}',)
+        self._log(
+            logging.INFO,
+            f'Reliability Score: {self.best_record['reliability_score']:.3f}'
+            f'± {self.best_record['reliability_se']:.3f}',)
+
         return self.df_results_stage2
 
     def display_best(self, row: int = 1) -> None:
@@ -2010,6 +2169,8 @@ class CombinatorialSelection:
         - Fits the estimator on the selected subset.
         - Displays training, cross-validation, and test scores.
         """
+        raise DeprecationWarning("display_best() is deprecated and will be removed in a future version."
+                                 " Please use the results DataFrame directly.")
 
         self.record = self.df_results_stage2.iloc[row - 1]
         self.best_cols = self.record['feature_subsets']
