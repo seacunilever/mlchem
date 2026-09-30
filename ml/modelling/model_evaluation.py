@@ -260,6 +260,26 @@ def generate_cv_indices(
     pairs = list(splitter.split(X, y, groups))
     return validate_cv_indices(pairs, n_samples, strict_coverage=strict_coverage)
 
+def summarise_fold_scores(scores: Iterable[float]) -> dict:
+    """
+    Compute mean and standard error from fold scores.
+    
+    Parameters
+    ----------
+    scores : Iterable[float]
+        Iterable of fold scores.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the fold scores, the mean and
+        standard error of the fold scores.
+    """
+    return {
+        'scores': scores,
+        'mean': np.mean(scores),
+        'stderr': np.std(scores) / np.sqrt(len(scores))
+    }
 
 def crossval(estimator,
              X: np.ndarray | pd.DataFrame,
