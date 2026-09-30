@@ -433,14 +433,13 @@ def y_scrambling(estimator,
                  y_train: Iterable,
                  metric: Callable,
                  n_scrambles: int = 100,
-                 cv_iter: int = 5,
+                 n_fold: int = 5,
                  cv_splitter=None,
                  groups=None,
                  cv_indices: Iterable | None = None,
                  logic: Literal['lower', 'greater'] = 'greater',
                  task_type: Literal[
                      'classification', 'regression'] = 'classification',
-                 desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
                  plot: bool = True,
                  n_jobs: int = 1,
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
@@ -467,27 +466,24 @@ y_train : iterable
 metric : callable
     A scoring function that accepts (y_true, y_pred) as arguments.
 
-cv_iter : int, optional
-    Number of cross-validation iterations. Default is 5. Ignored when
+n_fold : int, optional
+    Number of cross-validation folds. Default is 5. Ignored when
     ``cv_splitter`` or ``cv_indices`` is provided.
 
 cv_splitter : object, optional
-    Cross-validation splitter. If provided, it overrides ``cv_iter``.
+    Cross-validation splitter. If provided, it overrides ``n_fold``.
 
 groups : array-like, optional
     Group labels for the samples used while splitting the dataset into train/test set.
 
 cv_indices : iterable or None, optional
-    Predefined cross-validation indices. If provided, it overrides ``cv_iter`` and ``cv_splitter``.
+    Predefined cross-validation indices. If provided, it overrides ``n_fold`` and ``cv_splitter``.
 
 logic : {'lower', 'greater'}, optional
     Logic to determine if a score is better. 'greater' means higher is better, 'lower' means lower is better.
 
 task_type : {'classification', 'regression'}, optional
     Type of task. Determines the default behavior of certain metrics.
-
-desired_performance_score : {'train','cv','train_cv_average'}, optional
-    Which performance score to prioritize when evaluating reliability.
 
 plot : bool, optional (default=True)
     Whether to display a histogram of the scrambled scores.
@@ -522,7 +518,9 @@ None
         X_train,
         y_train_copy,
         metric,
-        cv_iter,
+        n_fold=n_fold,
+        task_type=task_type,
+        cv_splitter=cv_splitter,
         cv_indices=cv_indices,
         groups=groups,
     )
@@ -540,7 +538,9 @@ None
             X_train,
             y_shuffled,
             metric,
-            cv_iter,
+            n_fold=n_fold,
+            task_type=task_type,
+            cv_splitter=cv_splitter,
             cv_indices=cv_indices,
             groups=groups,
         )
