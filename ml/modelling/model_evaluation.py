@@ -431,18 +431,25 @@ numpy.ndarray
 def y_scrambling(estimator,
                  train_set: np.ndarray | pd.DataFrame,
                  y_train: Iterable,
-                 test_set: np.ndarray | pd.DataFrame,
-                 y_test: Iterable,
-                 metric_function: Callable,
-                 n_iter: int,
+                 metric: Callable,
+                 n_scrambles: int = 100,
+                 cv_iter: int = 5,
+                 cv_splitter=None,
+                 groups=None,
+                 cv_indices: Iterable | None = None,
+                 logic: Literal['lower', 'greater'] = 'greater',
+                 task_type: Literal[
+                     'classification', 'regression'] = 'classification',
+                 desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
                  plot: bool = True,
                  n_jobs: int = 1,
-                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO) -> None:
+                 log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 ) -> None:
     """
 Perform y-scrambling to assess model performance due to chance.
 
 This function evaluates the robustness of a model by randomly shuffling
-the target variable multiple times and measuring performance on the test set.
+the target variable multiple times and measuring performance on the validation set.
 It compares the distribution of scores from scrambled targets to the actual
 model performance. More explained at https://doi.org/10.1021/ci700157b.
 
@@ -457,17 +464,30 @@ train_set : numpy.ndarray or pandas.DataFrame
 y_train : iterable
     Target values for training.
 
-test_set : numpy.ndarray or pandas.DataFrame
-    Testing feature matrix.
-
-y_test : iterable
-    Target values for testing.
-
-metric_function : callable
+metric : callable
     A scoring function that accepts (y_true, y_pred) as arguments.
 
-n_iter : int
-    Number of shuffling iterations.
+cv_iter : int, optional
+    Number of cross-validation iterations. Default is 5. Ignored when
+    ``cv_splitter`` or ``cv_indices`` is provided.
+
+cv_splitter : object, optional
+    Cross-validation splitter. If provided, it overrides ``cv_iter``.
+
+groups : array-like, optional
+    Group labels for the samples used while splitting the dataset into train/test set.
+
+cv_indices : iterable or None, optional
+    Predefined cross-validation indices. If provided, it overrides ``cv_iter`` and ``cv_splitter``.
+
+logic : {'lower', 'greater'}, optional
+    Logic to determine if a score is better. 'greater' means higher is better, 'lower' means lower is better.
+
+task_type : {'classification', 'regression'}, optional
+    Type of task. Determines the default behavior of certain metrics.
+
+desired_performance_score : {'train','cv','train_cv_average'}, optional
+    Which performance score to prioritize when evaluating reliability.
 
 plot : bool, optional (default=True)
     Whether to display a histogram of the scrambled scores.
@@ -496,14 +516,17 @@ None
         X_train = train_set.values
     else:
         X_train = train_set
-    if isinstance(test_set, pd.DataFrame):
-        X_test = test_set.values
-    else:
-        X_test = test_set
 
-    estimator_copy.fit(X_train, y_train_copy)
-    ref_score = metric_function(y_test,
-                                estimator_copy.predict(X_test))
+    reference = crossval(
+        estimator_copy,
+        X_train,
+        y_train_copy,
+        metric,
+        cv_iter,
+        cv_indices=cv_indices,
+        groups=groups,
+    )
+    ref_score = reference['cv_mean']
 
     def evaluate_scramble(seed_val):
         """Evaluate model performance on a single scrambled iteration."""
@@ -512,47 +535,51 @@ None
         rng.shuffle(y_shuffled)
         est = clone(estimator)
         disable_estimator_parallelization(est)  # Prevent nested parallelization warnings
-        est.fit(X_train, y_shuffled)
-        y_pred = est.predict(X_test)
-        return metric_function(y_true=y_test, y_pred=y_pred)
+        cv_result = crossval(
+            estimator_copy,
+            X_train,
+            y_shuffled,
+            metric,
+            cv_iter,
+            cv_indices=cv_indices,
+            groups=groups,
+        )
+        return cv_result['cv_mean']
 
     # Run scrambling iterations in parallel
     scores = []
     if n_jobs == 1:
         # Sequential execution
-        for i in tqdm(range(n_iter), desc="Y-scrambling", disable=False):
+        for i in tqdm(range(n_scrambles), desc="Y-scrambling", disable=False):
             scores.append(evaluate_scramble(i))
     else:
         # Parallel execution with ThreadPoolExecutor
         max_workers = n_jobs if n_jobs > 0 else None
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {executor.submit(evaluate_scramble, i): i for i in range(n_iter)}
-            for future in tqdm(as_completed(futures), total=n_iter, desc="Y-scrambling", disable=False):
+            futures = {executor.submit(evaluate_scramble, i): i for i in range(n_scrambles)}
+            for future in tqdm(as_completed(futures), total=n_scrambles, desc="Y-scrambling", disable=False):
                 scores.append(future.result())
 
     scores = np.array(scores)
     ys_max = max(scores)
     ys_std = np.std(scores)
 
-    value = len(
-       scores[scores >= (ref_score)]
-       )/len(scores)
-
-    obtained_margin = ref_score-ys_max
+    if logic == 'greater':
+        value = len(scores[scores >= (ref_score)])/len(scores)
+        obtained_margin = max(ref_score-ys_max, 0)
+    else: # logic == 'lower'
+        value = len(scores[scores <= (ref_score)])/len(scores)
+        obtained_margin = max(ys_max-ref_score, 0)
 
     # Rucker et al, https://doi.org/10.1021/ci700157b
     safety_margin = 2.3 * ys_std
 
     logger.log(
         resolved_log_level,
-        'Probability to obtain a better model by chance: %.3f',
-        value,
-    )
+        f'Probability to obtain a better model by chance: {value:.3f}')
     logger.log(
         resolved_log_level,
-        'Safety margin: %.2f',
-        (obtained_margin / (2.3 * ys_std)),
-    )
+        f'Safety margin: {obtained_margin / (2.3 * ys_std):.2f}')
 
     if plot:
         import seaborn as sns
@@ -567,6 +594,12 @@ None
                     alpha=0.1)
         plt.show()
 
+    return {'reference_score': ref_score,
+            'scrambled_scores': scores,
+            'probability_better': value,
+            'obtained_margin': obtained_margin,
+            'safety_margin': safety_margin
+            }
 
 class MajorityVote:
     """
