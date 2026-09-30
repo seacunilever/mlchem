@@ -284,7 +284,7 @@ def summarise_fold_scores(scores: Iterable[float]) -> dict:
 def crossval(estimator,
              X: np.ndarray | pd.DataFrame,
              y: np.ndarray | pd.DataFrame,
-             metric_function: Callable,
+             metric: Callable,
              n_fold: int = 5,
              task_type: Literal['classification',
                                 'regression'] = 'classification',
@@ -384,7 +384,7 @@ numpy.ndarray
                                 X,
                                 y,
                                 cv=resolved_pairs,
-                                scoring=make_scorer(metric_function),
+                                scoring=make_scorer(metric),
                                 groups=resolved_pairs,
                                 return_train_score=True,)
 
@@ -405,7 +405,7 @@ numpy.ndarray
                                 X,
                                 y,
                                 cv=StratifiedKFold(**cv_kwargs),
-                                scoring=make_scorer(metric_function),
+                                scoring=make_scorer(metric),
                                 return_train_score=True,)
     else:
         from sklearn.model_selection import KFold
@@ -413,7 +413,7 @@ numpy.ndarray
                             X,
                             y,
                             cv=KFold(**cv_kwargs),
-                            scoring=make_scorer(metric_function),
+                            scoring=make_scorer(metric),
                             return_train_score=True)
     
     train_summary = summarise_fold_scores(result['train_score'])
@@ -648,9 +648,7 @@ log_level : int or str, optional (default=logging.INFO)
     def __init__(
         self,
         train_set: pd.DataFrame,
-        test_set: pd.DataFrame,
         y_train: Iterable,
-        y_test: Iterable,
         task_type: Literal['classification', 'regression'],
         estimator_list: list,
         column_list: list[str],
