@@ -602,6 +602,65 @@ def test_majority_vote_predict(majority_vote_classification):
         assert 'accuracy_test' in mv.final_results.columns
 
 
+def test_majority_vote_evaluate_cv_classification_outputs_fold_metrics(
+    majority_vote_classification,
+):
+    mv = majority_vote_classification
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+
+    results = mv.evaluate_cv(
+        metric=metric_function,
+        metric_name='accuracy',
+        cv_iter=4,
+        logic='greater',
+    )
+
+    assert not results.empty
+    expected_cols = {
+        'combination',
+        'train_mean',
+        'train_se',
+        'validation_mean',
+        'validation_se',
+        'reliability_mean',
+        'reliability_se',
+        'train_folds',
+        'validation_folds',
+        'reliability_folds',
+    }
+    assert expected_cols.issubset(results.columns)
+    assert results['reliability_mean'].is_monotonic_decreasing
+    assert all(len(fold_scores) == 4 for fold_scores in results['train_folds'])
+    assert all(len(fold_scores) == 4 for fold_scores in results['validation_folds'])
+    assert all(len(fold_scores) == 4 for fold_scores in results['reliability_folds'])
+
+
+def test_majority_vote_evaluate_cv_uses_explicit_cv_indices(
+    majority_vote_classification,
+):
+    mv = majority_vote_classification
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+    manifest = generate_cv_indices(
+        mv.train_set.values,
+        y=mv.y_train,
+        cv_iter=3,
+        task_type='classification',
+        shuffle=True,
+        random_state=7,
+    )
+
+    results = mv.evaluate_cv(
+        metric=metric_function,
+        metric_name='accuracy',
+        cv_iter=10,
+        cv_indices=manifest,
+    )
+
+    assert not results.empty
+    assert all(len(fold_scores) == len(manifest) for fold_scores in results['train_folds'])
+    assert all(len(fold_scores) == len(manifest) for fold_scores in results['validation_folds'])
+
+
 @pytest.fixture
 def majority_vote_regression(sample_data):
     train_set, y_train, test_set, y_test = sample_data
@@ -638,6 +697,26 @@ def test_majority_vote_regression_fit_and_predict(majority_vote_regression):
     assert not mv.final_results.empty
     assert 'mae_train' in mv.final_results.columns
     assert 'mae_test' in mv.final_results.columns
+
+
+def test_majority_vote_evaluate_cv_regression_outputs_fold_metrics(
+    majority_vote_regression,
+):
+    mv = majority_vote_regression
+    metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
+
+    results = mv.evaluate_cv(
+        metric=metric_function,
+        metric_name='mae',
+        cv_iter=3,
+        logic='lower',
+    )
+
+    assert not results.empty
+    assert results['reliability_mean'].is_monotonic_decreasing
+    assert all(len(fold_scores) == 3 for fold_scores in results['train_folds'])
+    assert all(len(fold_scores) == 3 for fold_scores in results['validation_folds'])
+    assert all(len(fold_scores) == 3 for fold_scores in results['reliability_folds'])
 
 
 def test_majority_vote_fit_skips_failed_regression_estimator(sample_data):
