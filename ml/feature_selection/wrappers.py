@@ -152,7 +152,7 @@ def _compute_fold_degradation(
     """
     Compute paired fold-level degradation d from subset k* to subset k.
 
-    For each fold r, computes d[r] = u[k*,r] - u[k,r], where u represents
+    For each fold r, computes d[r] = μ[k*,r] - μ[k,r], where u represents
     utility (oriented scores). Then computes mean and standard error.
 
     Parameters
@@ -429,19 +429,6 @@ Attributes
       Options are: 'train' for the training score, 'cv' for the cross-validation score,
       and 'train_cv_average' for the average of the training and cross-validation scores.
       Default is 'train_cv_average'.
-  parsimony_mode : {'none', 'best', 'tolerance', 'standard_error', 'uncertainty'}, optional
-      Parsimony selection mode for downstream feature reduction (default: 'none').
-      - 'none': Parsimony disabled (existing behavior).
-      - 'best': Alias for 'none'; select k* (highest CV performance).
-      - 'tolerance': Select smallest k where mean(degradation[k]) <= parsimony_tolerance.
-      - 'standard_error': Select smallest k where mean(degradation[k]) <= parsimony_se_multiplier * SE(degradation[k]).
-      - 'uncertainty': Select smallest k where mean(degradation[k]) <= parsimony_tolerance + parsimony_se_multiplier * SE(degradation[k]).
-  parsimony_tolerance : float, optional
-      Tolerance threshold (in utility units) for 'tolerance' and 'uncertainty' modes.
-      Default is 0.0.
-  parsimony_se_multiplier : float, optional
-      Multiplier for standard error in 'standard_error' and 'uncertainty' modes.
-      Default is 1.0.
   log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
       Logging level threshold. Use 'DEBUG' for detailed diagnostics,
       'INFO' for standard output, 'WARNING' to suppress most output.
@@ -473,25 +460,28 @@ Attributes
 
   Standard cross-validation (existing behaviour):
 
-  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-  ...                                  metric=get_geometric_S,
-  ...                                  max_features=5,
-  ...                                  cv_iter=3,
-  ...                                  logic='greater')
+    >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+    ...                                  estimator_string=None,
+    ...                                  metric=get_geometric_S,
+    ...                                  max_features=5,
+    ...                                  cv_iter=3,
+    ...                                  logic='greater')
 
   GroupKFold with scaffold groups:
 
   >>> from sklearn.model_selection import GroupKFold
-  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-  ...                                  metric=get_geometric_S,
+    >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+    ...                                  estimator_string=None,
+    ...                                  metric=get_geometric_S,
   ...                                  cv_splitter=GroupKFold(5),
-  ...                                  groups=scaffold_ids)
+    ...                                  groups=scaffold_ids)
 
   Precomputed scaffold or cluster folds:
 
-  >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-  ...                                  metric=get_geometric_S,
-  ...                                  cv_indices=scaffold_fold_manifest)
+    >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
+    ...                                  estimator_string=None,
+    ...                                  metric=get_geometric_S,
+    ...                                  cv_indices=scaffold_fold_manifest)
 
   >>> X, y = make_classification(300, 10, n_informative=5)
   >>> train_size = 0.8
@@ -504,7 +494,11 @@ Attributes
   >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
 
   >>> sfs.fit(train_set, y_train, test_set, y_test)
-  >>> sfs.plot(best_feature='None')
+    >>> sfs.find_best(parsimony_mode=None)['best_index']
+    >>> sfs.find_best(parsimony_mode='uncertainty',
+    ...               parsimony_tolerance=0.01,
+    ...               parsimony_se_multiplier=1.0)['best_index']
+    >>> sfs.plot(best_feature=None)
 
 
 Scientific Rationale
@@ -933,7 +927,7 @@ Attributes
                 f"cv={self.cv_scores[-1]:.3f} +- {self.cv_se[-1]:.3f}",
             )
 
-            if self.test_set:
+            if self.test_set is not None:
                 # Get score on unseen test data if test set is present
                 train_set_temp = self.train_set[self.extending_features]
                 test_set_temp = self.test_set[self.extending_features]
@@ -969,27 +963,6 @@ Attributes
 
         Stores results in self.parsimony_diagnostics for inspection.
         """
-        # Find the reference subset k* using the same reliability baseline as
-        # the non-parsimony path so the reference is stable across selection
-        # modes and independent from the parsimony rule itself.
-        
-        #scores = [
-        #    get_reliability_score_components(
-        #        train_score=train_score,
-        #        cv_score=cv_score,
-        #        test_score=None if self.selection_strategy == 'cv_only' else test_score,
-        #        logic=self.logic,
-        #        desired_performance_score=self.desired_performance_score,
-        #    )
-        #    for train_score, cv_score, test_score in zip(
-        #        self.train_scores,
-        #        self.cv_scores,
-        #        self.unseen_scores,
-        #    )
-        #]
-        #kstar_index_zero = int(np.argmax([
-        #    score['reliability_score'] for score in scores
-        #]))
 
         kstar_index_zero = int(np.argmax(self.reliability_scores))
 
@@ -1020,7 +993,7 @@ Attributes
     def find_best(
         self,
         which: Optional[int] = None,
-        parsimony_mode: Literal['none', 'best', 'tolerance', 'standard_error', 'uncertainty'] = 'none',
+        parsimony_mode: Optional[Literal['none', 'best', 'tolerance', 'standard_error', 'uncertainty']] = None,
         parsimony_tolerance: float = 0.0,
         parsimony_se_multiplier: float = 1.0,
     ) -> dict:
@@ -1034,13 +1007,27 @@ Attributes
             If specified, returns the feature subset at the given index.
             If None, the best subset is determined automatically using the
             reliability score.
-        parsimony_mode : {'none', 'best', 'tolerance', 'standard_error', 'uncertainty'}, optional
+                parsimony_mode : {None, 'best', 'tolerance', 'standard_error', 'uncertainty', 'none'}, optional
             Parsimony selection mode used when ``which`` is ``None``.
-            ``'none'`` keeps the original reliability-score selection.
-            ``'best'`` returns the reference subset ``k*``.
-            ``'tolerance'``, ``'standard_error'``, and ``'uncertainty'``
-            select a smaller subset when the fold-level degradation meets
-            the corresponding criterion.
+                        ``None`` disables parsimony (preferred) and returns the
+                        reference subset ``k*`` (highest reliability score).
+                        ``'none'`` is accepted as a legacy alias for ``None``.
+                        ``'best'`` is an alias for returning ``k*``.
+                        For ``'tolerance'``, ``'standard_error'``, and ``'uncertainty'``:
+                        1. identify reference subset ``k*`` as the prefix with highest
+                             reliability score;
+                        2. orient fold-level CV scores so larger means better utility;
+                        3. for each smaller subset ``k < k*`` compute paired fold
+                             degradation ``d_r = μ[k*, r] - μ[k, r]``;
+                        4. compute ``mean(d)`` and ``SE(d) = SD(d) / sqrt(R)``;
+                        5. accept subset ``k`` when:
+                             - ``'tolerance'``: ``mean(d) <= parsimony_tolerance``
+                             - ``'standard_error'``:
+                                 ``mean(d) <= parsimony_se_multiplier * SE(d)``
+                             - ``'uncertainty'``:
+                                 ``mean(d) <= parsimony_tolerance + parsimony_se_multiplier * SE(d)``
+                        6. return the smallest accepted ``k``; if none are accepted,
+                             fall back to ``k*``.
         parsimony_tolerance : float, optional
             Absolute tolerance used by ``'tolerance'`` and ``'uncertainty'``.
             Default is 0.0.
@@ -1051,43 +1038,40 @@ Attributes
         Returns
         -------
         dict
-            Dictionary containing the selected subset and reliability scores.
+            Dictionary containing the selected subset.
 
             ``best_index`` : int
                 Number of selected features in the winning prefix.
             ``features`` : list
                 Selected feature names.
-            ``performance_score`` : float
-                Performance contribution for the winning prefix.
-            ``instability_score`` : float
-                Sum of train/CV/test score gaps for the winning prefix.
-            ``reliability_score`` : float
-                Reliability score used for automatic selection.
-            ``best_score`` : float
-                Alias of ``reliability_score`` retained for backwards
-                compatibility.
+            When ``parsimony_mode`` is ``None`` or ``'none'``, additional
+            keys are:
+            ``reliability_score`` and ``best_score`` (alias).
+
+            When parsimony is enabled, additional keys are:
+            ``parsimony_mode`` and ``parsimony_diagnostics``.
 
         Notes
         -----
 
-        With parsimony selection enabled (via ``parsimony_mode``), the best
-        subset is selected based on fold-level degradation criteria rather
-        than the reliability score. The reference subset is the one with the
-        highest reliability score, and it is compared against all smaller
-        subsets.
+        With parsimony selection enabled (via ``parsimony_mode``), reliability
+        score is used only to define reference subset ``k*``. Final subset
+        selection then follows the fold-level paired degradation criterion
+        described above.
         """
 
         if which is None:
             if len(self.cv_scores) == 0:
                 raise ValueError("No feature subsets have been evaluated. Run fit() before find_best().")
 
-            if parsimony_mode not in ('none', 'best', 'tolerance', 'standard_error', 'uncertainty'):
+            if parsimony_mode not in (None, 'none', 'best', 'tolerance', 'standard_error', 'uncertainty'):
                 raise ValueError(
-                    "'parsimony_mode' must be one of ('none', 'best', 'tolerance', 'standard_error', 'uncertainty'), "
+                    "'parsimony_mode' must be one of (None, 'best', 'tolerance', 'standard_error', 'uncertainty'); "
+                    "legacy alias 'none' is also accepted, "
                     f"got '{parsimony_mode}'."
                 )
 
-            if parsimony_mode != 'none':
+            if parsimony_mode not in (None, 'none'):
                 parsimony_result = self._apply_parsimony_selection(
                     parsimony_mode='best' if parsimony_mode == 'best' else parsimony_mode,
                     tolerance=parsimony_tolerance,
@@ -1192,13 +1176,12 @@ Attributes
 
         Notes
         -----
-        The automatic algorithm for determining the best feature subset
-        is the same as described in `find_best`: ``performance_score =
-        (train + cv + test) / 3``, ``instability_score = |train-cv| +
-        |train-test| + |cv-test|``, and for higher-is-better metrics
-        ``reliability_score = performance_score / (1 + instability_score)``.
-        For lower-is-better metrics, the performance score has its sign flipped.
-        The subset with the highest reliability score is highlighted.
+        The automatic algorithm for determining the best feature subset is
+        the same as described in :meth:`find_best` and uses the reliability
+        scores already computed during :meth:`fit`. Reliability is derived
+        from train/CV scores (according to ``desired_performance_score``) and
+        train-vs-CV instability; test scores are not used in this selector.
+        The highlighted subset is the one returned by ``find_best()``.
         """
 
         assert best_feature in ('auto', None) or isinstance(best_feature, int), \
@@ -1360,6 +1343,8 @@ class CombinatorialSelection:
     --------
     >>> from sklearn.linear_model import LogisticRegression
     >>> from sklearn.datasets import make_classification
+    >>> import pandas as pd
+    >>> import numpy as np
     >>> from mlchem.metrics import get_geometric_S
 
     Standard cross-validation (existing behaviour):
@@ -1367,6 +1352,15 @@ class CombinatorialSelection:
     >>> cs = CombinatorialSelection(estimator=LogisticRegression(),
     ...                              metric=get_geometric_S,
     ...                              logic='greater')
+    >>> X, y = make_classification(200, 12, n_informative=6, random_state=1)
+    >>> train_set = pd.DataFrame(X, columns=np.arange(X.shape[1]))
+    >>> features = train_set.columns.tolist()
+    >>> stage1 = cs.fit_stage_1(train_set, y,
+    ...                         features=features,
+    ...                         k=2,
+    ...                         cv_iter=3,
+    ...                         n_jobs=1)
+    >>> stage2 = cs.fit_stage_2(top_n_subsets=5, cv_iter=3, n_jobs=1)
 
     GroupKFold with scaffold groups:
 
@@ -2085,7 +2079,7 @@ class CombinatorialSelection:
         self.df_results_stage2['Reliability_lower_bound'] = self.df_results_stage2.reliability_score\
             -self.df_results_stage2.reliability_se
         self.df_results_stage2.sort_values(
-            by='reliability_lower_bound',
+            by='Reliability_lower_bound',
             ascending=False,
             inplace=True)
 
@@ -2093,7 +2087,7 @@ class CombinatorialSelection:
         self.best_cols = self.best_record['feature_subsets']
         self._log(
             logging.INFO,
-            f"Combinatorial stage 2 completed: kept_subsets={self.df_results_stage2}",
+            f"Combinatorial stage 2 completed: kept_subsets={len(self.df_results_stage2)}",
         )
 
 
