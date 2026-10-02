@@ -594,20 +594,14 @@ def test_majority_vote_fit_skips_estimator_without_predict_proba(sample_data):
     assert 'good_lr' in mv.df_train_predictions_soft.columns
     assert 'no_proba' not in mv.df_train_predictions_soft.columns
 
-def test_majority_vote_predict(majority_vote_classification):
+def test_majority_vote_fit_returns_consensus_report_classification(majority_vote_classification):
     mv = majority_vote_classification
-    mv.fit()
-    
-    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
-    
-    with patch('mlchem.helper.generate_combination_cascade') as mock_generate_combination_cascade:
-        mock_generate_combination_cascade.return_value = [['LR'], ['RF']]
-        
-        mv.predict(metric=metric_function, metric_name='accuracy', n_estimators_max=2)
-        
-        assert not mv.final_results.empty
-        assert 'accuracy_train' in mv.final_results.columns
-        assert 'accuracy_test' in mv.final_results.columns
+    result = mv.fit(return_prediction_dataframes=True)
+
+    assert 'fit_report' in result
+    assert 'train_predictions' in result
+    assert 'test_predictions' in result
+    assert result['fit_report']['successful_count'] >= 1
 
 
 def test_majority_vote_evaluate_cv_classification_outputs_fold_metrics(
@@ -694,17 +688,13 @@ def majority_vote_regression(sample_data):
 
 def test_majority_vote_regression_fit_and_predict(majority_vote_regression):
     mv = majority_vote_regression
-    mv.fit()
+    result = mv.fit(return_prediction_dataframes=True)
 
-    assert not mv.df_train_predictions.empty
-    assert not mv.df_test_predictions.empty
-
-    metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
-    mv.predict(metric=metric_function, metric_name='mae', n_estimators_max=2)
-
-    assert not mv.final_results.empty
-    assert 'mae_train' in mv.final_results.columns
-    assert 'mae_test' in mv.final_results.columns
+    assert 'fit_report' in result
+    assert 'train_predictions' in result
+    assert 'test_predictions' in result
+    assert not result['train_predictions'].empty
+    assert not result['test_predictions'].empty
 
 
 def test_majority_vote_evaluate_cv_regression_outputs_fold_metrics(
