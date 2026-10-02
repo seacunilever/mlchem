@@ -164,8 +164,6 @@
 </li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PropManager.Conformation.calculate_conformer_energy_from_mol">calculate_conformer_energy_from_mol() (PropManager.Conformation static method)</a>
 </li>
-      <li><a href="mlchem.html#mlchem.metrics.calculate_reliability_components">calculate_reliability_components() (in module mlchem.metrics)</a>
-</li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PropManager.Conformation.canonicalise_conformer">canonicalise_conformer() (PropManager.Conformation static method)</a>
 </li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PropManager.Conformation.canonicalise_mol_conformers">canonicalise_mol_conformers() (PropManager.Conformation static method)</a>
@@ -362,10 +360,10 @@
 </li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PatternRecognition.Rings.check_macrocycle">check_macrocycle() (PatternRecognition.Rings static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PatternRecognition.Rings.check_meta_substituted_aromatic_r6">check_meta_substituted_aromatic_r6() (PatternRecognition.Rings static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PatternRecognition.MolPatterns.check_methionine">check_methionine() (PatternRecognition.MolPatterns static method)</a>
 </li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PatternRecognition.MolPatterns.check_n_oxide">check_n_oxide() (PatternRecognition.MolPatterns static method)</a>
@@ -572,7 +570,9 @@
 </li>
       <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.crossval">crossval() (in module mlchem.ml.modelling.model_evaluation)</a>
 </li>
-      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter">cv_iter (SequentialForwardSelection attribute)</a>
+      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_indices">cv_indices (CombinatorialSelection attribute)</a>
+</li>
+      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_splitter">cv_splitter (CombinatorialSelection attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -641,14 +641,12 @@
       <ul>
         <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.estimator">(DescriptorExplainer attribute)</a>
 </li>
-        <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator">(SequentialForwardSelection attribute)</a>
-</li>
         <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.estimator">(ShapExplainer attribute)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string">estimator_string (SequentialForwardSelection attribute)</a>
+      <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv">evaluate_cv() (MajorityVote method)</a>
 </li>
       <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain">explain() (ShapExplainer method)</a>
 </li>
@@ -705,6 +703,8 @@
       <li><a href="mlchem.html#mlchem.helper.generate_combination_cascade">generate_combination_cascade() (in module mlchem.helper)</a>
 </li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PropManager.Conformation.generate_conformers">generate_conformers() (PropManager.Conformation static method)</a>
+</li>
+      <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.generate_cv_indices">generate_cv_indices() (in module mlchem.ml.modelling.model_evaluation)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.generate_random_rgb">generate_random_rgb() (in module mlchem.helper)</a>
 </li>
@@ -776,10 +776,10 @@
 </li>
       <li><a href="mlchem.html#mlchem.metrics.get_geometric_S">get_geometric_S() (in module mlchem.metrics)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PropManager.Atom.get_hybridisation">get_hybridisation() (PropManager.Atom static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PropManager.Atom.get_idx">get_idx() (PropManager.Atom static method)</a>
 
       <ul>
@@ -824,6 +824,8 @@
 </li>
       <li><a href="mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_rdkitDesc">get_rdkitDesc() (in module mlchem.chem.calculator.descriptors)</a>
 </li>
+      <li><a href="mlchem.html#mlchem.metrics.get_reliability_score_components">get_reliability_score_components() (in module mlchem.metrics)</a>
+</li>
       <li><a href="mlchem.chem.html#mlchem.chem.manipulation.PatternRecognition.Atoms.get_ring_size">get_ring_size() (PatternRecognition.Atoms static method)</a>
 </li>
       <li><a href="mlchem.html#mlchem.metrics.get_rmse">get_rmse() (in module mlchem.metrics)</a>
@@ -853,6 +855,8 @@
       <li><a href="mlchem.chem.visualise.html#mlchem.chem.visualise.simmaps.SimMaps.get_weights_from_fingerprint">get_weights_from_fingerprint() (SimMaps static method)</a>
 </li>
       <li><a href="mlchem.chem.visualise.html#mlchem.chem.visualise.simmaps.SimMaps.get_weights_from_model">get_weights_from_model() (SimMaps static method)</a>
+</li>
+      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.groups">groups (CombinatorialSelection attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -974,7 +978,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.html#mlchem.helper.loadingbar">loadingbar() (in module mlchem.helper)</a>
 </li>
-      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level">log_level (SequentialForwardSelection attribute)</a>
+      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.log_level">log_level (CombinatorialSelection attribute)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.LogCapture">LogCapture (class in mlchem.helper)</a>
 </li>
@@ -982,8 +986,6 @@
 
       <ul>
         <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.logic">(DescriptorExplainer attribute)</a>
-</li>
-        <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic">(SequentialForwardSelection attribute)</a>
 </li>
       </ul></li>
       <li><a href="mlchem.chem.calculator.html#mlchem.chem.calculator.tools.logit_to_proba">logit_to_proba() (in module mlchem.chem.calculator.tools)</a>
@@ -998,8 +1000,6 @@
 </li>
       <li><a href="mlchem.html#mlchem.helper.make_rgb_transparent">make_rgb_transparent() (in module mlchem.helper)</a>
 </li>
-      <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features">max_features (SequentialForwardSelection attribute)</a>
-</li>
       <li><a href="mlchem.html#mlchem.metrics.McConnaugheySimilarity">McConnaugheySimilarity() (in module mlchem.metrics)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.merge_dicts_with_duplicates">merge_dicts_with_duplicates() (in module mlchem.helper)</a>
@@ -1008,8 +1008,6 @@
 
       <ul>
         <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.metric">(DescriptorExplainer attribute)</a>
-</li>
-        <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric">(SequentialForwardSelection attribute)</a>
 </li>
       </ul></li>
       <li>
@@ -1103,8 +1101,6 @@
         <li><a href="mlchem.ml.modelling.html#module-mlchem.ml.modelling.model_interpretation">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     mlchem.ml.preprocessing.dimensional_reduction
 
@@ -1112,6 +1108,8 @@
         <li><a href="mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.dimensional_reduction">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     mlchem.ml.preprocessing.feature_transformation
 
@@ -1258,8 +1256,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.feature_transformation.polynomial_expansion">polynomial_expansion() (in module mlchem.ml.preprocessing.feature_transformation)</a>
 </li>
-      <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.predict">predict() (MajorityVote method)</a>
-</li>
       <li><a href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.prepare">prepare() (ChemicalSpace method)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.prepare_dataframe">prepare_dataframe() (in module mlchem.helper)</a>
@@ -1372,10 +1368,10 @@
 </li>
       <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer">ShapExplainer (class in mlchem.ml.modelling.model_interpretation)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.show_images_grid">show_images_grid() (MolDrawer method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.show_palette">show_palette() (MolDrawer method)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.show_png">show_png() (in module mlchem.helper)</a>
@@ -1404,6 +1400,8 @@
 </li>
       <li><a href="mlchem.html#mlchem.helper.LogCapture.stream">stream (LogCapture attribute)</a>
 </li>
+      <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.summarise_fold_scores">summarise_fold_scores() (in module mlchem.ml.modelling.model_evaluation)</a>
+</li>
       <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot">summary_plot() (ShapExplainer method)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.suppress_warnings">suppress_warnings() (in module mlchem.helper)</a>
@@ -1422,16 +1420,14 @@
 </li>
       <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.target_train">target_train (DescriptorExplainer attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.task_type">task_type (CombinatorialSelection attribute)</a>
 
       <ul>
         <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.task_type">(DescriptorExplainer attribute)</a>
 </li>
-        <li><a href="mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type">(SequentialForwardSelection attribute)</a>
-</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.scaling.transform_df">transform_df() (in module mlchem.ml.preprocessing.scaling)</a>
 </li>
       <li><a href="mlchem.html#mlchem.helper.try_except">try_except() (in module mlchem.helper)</a>
@@ -1460,6 +1456,8 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.validate_cv_indices">validate_cv_indices() (in module mlchem.ml.modelling.model_evaluation)</a>
+</li>
       <li><a href="mlchem.html#mlchem.helper.validate_task_type">validate_task_type() (in module mlchem.helper)</a>
 </li>
   </ul></td>

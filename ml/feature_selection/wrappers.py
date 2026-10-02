@@ -337,197 +337,68 @@ def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> flo
 
 class SequentialForwardSelection:
     """
-  Sequential Forward Feature Selection wrapper.
+    Sequential Forward Feature Selection wrapper.
 
-  This class performs Sequential Forward Feature Selection by iteratively
-  adding features that yield the highest gain in cross-validation score.
-  Best feature set can be selected:
-  - calculating a helper metric that takes train/cv(/test) score instability
-  into account
-  - through the application of the parsimony principle (read further for its
-  scientific rationale)
-  - via a combination of both approaches.
-  
+    This class iteratively builds a feature subset by selecting the next
+    feature that maximizes cross-validation performance. It tracks train/CV
+    fold metrics and a reliability score, and can apply a parsimony rule in
+    :meth:`find_best`.
 
-  Public Methods
-  ----------
-  `__init__()`: Initialises the SequentialForwardSelection class.
-
-  `set_log_level()`: Set the logging level for wrapper diagnostics.
-
-  `fit()`: Fit the Sequential Forward Selection model.
-
-  `find_best()`: Find the best feature subset based on reliability score,
-  optionally applying a parsimony rule. Read the method's docstring for
-  more details
-
-  `plot()`: Plot the performance of the Sequential Forward Selection process.
-
-Parameters
-  ----------
-  estimator : object
-      The scikit-learn estimator used for feature selection.
-  estimator_string : str, optional
-      A string representation of the estimator. If None, it is inferred from the estimator.
-  metric : callable
-      A function to evaluate model performance.
-  max_features : int, optional
-      Maximum number of features to select. Default is 25.
-  cv_iter : int, optional
-      Number of cross-validation iterations. Default is 5. Ignored when
-      ``cv_splitter`` or ``cv_indices`` is provided.
-  cv_splitter : object, optional
-      A scikit-learn compatible cross-validation splitter (e.g.
-      ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
-      ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
-      splitters. Takes precedence over ``cv_iter``.
-  groups : array-like, optional
-      Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
-      Ignored when ``cv_indices`` is provided.
-  cv_indices : iterable of (array-like, array-like), optional
-      Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
-      scaffold-based or UMAP-cluster-based fold manifest generated
-      outside mlchem. Takes precedence over both ``cv_splitter`` and
-      ``cv_iter``. This is the most generic API.
-  logic : {'lower', 'greater'}, optional
-      Whether to minimize or maximize the cross-validation score. Default is 'greater'.
-  task_type : {'classification', 'regression'}, optional
-      Type of task. Default is 'classification'.
-  desired_performance_score : {'train','cv','train_cv_average'}, optional
-      Which score to use as the performance score when calculating reliability.
-      Options are: 'train' for the training score, 'cv' for the cross-validation score,
-      and 'train_cv_average' for the average of the training and cross-validation scores.
-      Default is 'train_cv_average'.
-  log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
-      Logging level threshold. Use 'DEBUG' for detailed diagnostics,
-      'INFO' for standard output, 'WARNING' to suppress most output.
-      Default is logging.INFO.
+    Parameters
+    ----------
+    estimator : object
+        Scikit-learn compatible estimator used for feature selection.
+    estimator_string : str, optional
+        Display name for the estimator. If None, inferred from the estimator.
+    metric : callable
+        Scoring function with signature ``metric(y_true, y_pred)``.
+    max_features : int, optional
+        Maximum number of features to select. Default is 25.
+    cv_iter : int, optional
+        Number of CV folds when ``cv_splitter``/``cv_indices`` are not provided.
+    cv_splitter : object, optional
+        Scikit-learn compatible CV splitter. Takes precedence over ``cv_iter``.
+    groups : array-like, optional
+        Group labels passed to group-aware splitters.
+    cv_indices : iterable of (array-like, array-like), optional
+        Precomputed ``(train_idx, valid_idx)`` fold manifest. Takes precedence
+        over ``cv_splitter`` and ``cv_iter``.
+    logic : {'lower', 'greater'}, optional
+        Metric optimization direction. Default is ``'greater'``.
+    task_type : {'classification', 'regression'}, optional
+        Task type. Default is ``'classification'``.
+    desired_performance_score : {'train', 'cv', 'train_cv_average'}, optional
+        Performance component used by the reliability score.
+    log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
+        Logging threshold. Default is ``logging.INFO``.
 
     Notes
     -----
-    Automatic best-subset selection uses a reliability score.
-    With ``desired_performance_score='train'``, for each selected prefix,
-    ``performance_score = train``.
-    With ``desired_performance_score='cv'``, for each selected prefix,
-    ``performance_score = cv``.
-    With ``desired_performance_score='train_cv_average'``, for each selected prefix,
-    ``performance_score = (train + cv) / 2``.
-    ``instability_score = |train-cv|``, and for
-    higher-is-better metrics ``reliability_score = performance_score /
-    (1 + instability_score)``. For lower-is-better metrics, the performance
-    score gets its sign inverted so that the aim is still to maximise the
-    reliability score.
-  
-    Examples
-    --------
-    >>> import numpy as np
-    >>> import pandas as pd
-    >>> from sklearn.datasets import make_classification
-    >>> from sklearn.linear_model import LogisticRegression
-    >>> from mlchem.metrics import get_geometric_S
-    >>> X, y = make_classification(300, 10, n_informative=5, random_state=1)
-    >>> split = int(0.8 * len(X))
-    >>> train_set = pd.DataFrame(X[:split], columns=np.arange(X.shape[1]))
-    >>> test_set = pd.DataFrame(X[split:], columns=np.arange(X.shape[1]))
-    >>> y_train, y_test = y[:split], y[split:]
-    >>> sfs = SequentialForwardSelection(
-    ...     estimator=LogisticRegression(),
-    ...     estimator_string='LogReg',
-    ...     metric=get_geometric_S,
-    ...     max_features=5,
-    ...     cv_iter=3,
-    ...     logic='greater',
-    ... )
-    >>> sfs.fit(train_set, y_train, test_set, y_test)
-    >>> sfs.find_best(parsimony_mode=None)['best_index']
-    >>> sfs.find_best(
-    ...     parsimony_mode='uncertainty',
-    ...     parsimony_tolerance=0.01,
-    ...     parsimony_se_multiplier=1.0,
-    ... )['best_index']
+    Reliability combines performance and instability. For each subset:
 
-    Group-aware folds:
-    >>> from sklearn.model_selection import GroupKFold
-    >>> sfs_grouped = SequentialForwardSelection(
-    ...     estimator=LogisticRegression(),
-    ...     estimator_string='LogReg_grouped',
-    ...     metric=get_geometric_S,
-    ...     cv_splitter=GroupKFold(5),
-    ...     groups=scaffold_ids,
-    ... )  # doctest: +SKIP
+    - ``instability_score = |train - cv|``
+    - For ``desired_performance_score='train'``, ``performance_score = train``
+    - For ``desired_performance_score='cv'``, ``performance_score = cv``
+    - For ``desired_performance_score='train_cv_average'``,
+      ``performance_score = (train + cv) / 2``
+    - For higher-is-better metrics,
+      ``reliability_score = performance_score / (1 + instability_score)``
 
-    Precomputed folds:
-    >>> sfs_manifest = SequentialForwardSelection(
-    ...     estimator=LogisticRegression(),
-    ...     estimator_string='LogReg_manifest',
-    ...     metric=get_geometric_S,
-    ...     cv_indices=scaffold_fold_manifest,
-    ... )  # doctest: +SKIP
+    For lower-is-better metrics, performance is sign-oriented internally so the
+    same maximization rule can be used.
 
+    Scientific Rationale
+    --------------------
+    The optional parsimony selector prefers the smallest subset whose paired
+    fold-level degradation relative to the reference subset ``k*`` remains
+    within a configurable empirical uncertainty margin.
 
-Scientific Rationale
--------------------
-Parsimony selects the smallest previously visited feature subset whose
-paired cross-validation degradation relative to the selected reference
-subset is no greater than a configurable empirical uncertainty margin.
-The margin is inspired by the one-standard-error rule but is computed
-from matched fold-wise differences. Because cross-validation folds are
-dependent, the criterion is intended for model selection and should not
-be interpreted as a formal equivalence test.
-
-### Tolerance
-
-An optional absolute tolerance may be used to regard predictive
-improvements or degradations smaller than a user-defined amount as
-practically negligible. This is analogous to minimum-improvement
-stopping rules used in sequential feature selection, such as the `tol`
-parameter of scikit-learn's SequentialFeatureSelector [1].
-
-### Paired uncertainty margin
-
-The reference and candidate subsets are evaluated using identical
-cross-validation splits. After orienting the scoring metric so that
-larger values are better, the degradation on resample r is
-
-    d_r = score_reference,r - score_candidate,r.
-
-The reported uncertainty is the descriptive standard error of the mean
-paired degradation,
-
-    SE_d = SD(d_r) / sqrt(R),
-
-where R is the number of matched resamples and SD uses the sample
-standard deviation. A candidate is acceptable when its mean degradation
-does not exceed `se_multiplier * SE_d`, optionally combined with an
-absolute tolerance.
-
-### Relationship to the one-standard-error rule
-
-This criterion is inspired by the one-standard-error principle, which
-prefers a simpler model when its cross-validated performance lies within
-an uncertainty margin of the best-performing model [2,3]. Unlike the
-classical rule, this implementation estimates uncertainty from paired
-reference-minus-candidate differences rather than from the reference
-model's cross-validation error alone.
-
-### Statistical interpretation
-
-The criterion is an uncertainty-aware model-selection heuristic, not a
-hypothesis test or an equivalence/non-inferiority procedure. Cross-
-validation results are dependent because training sets overlap; therefore
-SD(d_r) / sqrt(R) can understate or otherwise misrepresent the sampling
-uncertainty [4-6]. Acceptance means only that the observed mean degradation
-falls within the configured empirical margin on the supplied resamples.
-
-### References:
-
-[1] scikit-learn developers, SequentialFeatureSelector documentation.
-[2] Breiman et al. (1984), Classification and Regression Trees.
-[3] Hastie, Tibshirani & Friedman (2009), Elements of Statistical Learning.
-[4] Dietterich (1998), doi:10.1162/089976698300017197
-[5] Nadeau & Bengio (2003), doi:10.1023/A:1024068626366
-[6] Bengio & Grandvalet (2004), JMLR 5:1089-1105
-  """
+    References
+    ----------
+    [1] Dietterich (1998), doi:10.1162/089976698300017197
+    [2] Nadeau & Bengio (2003), doi:10.1023/A:1024068626366
+    [3] Bengio & Grandvalet (2004), JMLR 5:1089-1105
+    """
 
     def __init__(self,
                  estimator,
@@ -545,63 +416,35 @@ falls within the configured empirical margin on the supplied resamples.
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> None:
         """
-  Initialise the SequentialForwardSelection object.
+        Initialise a SequentialForwardSelection wrapper.
 
-Parameters
-  ----------
-  estimator : object
-      The scikit-learn estimator used for feature selection.
-  estimator_string : str, optional
-      A string representation of the estimator. If None, it is inferred from the estimator.
-  metric : callable
-      A function to evaluate model performance.
-  max_features : int, optional
-      Maximum number of features to select. Default is 25.
-  cv_iter : int, optional
-      Number of cross-validation iterations. Default is 5. Ignored when
-      ``cv_splitter`` or ``cv_indices`` is provided.
-  cv_splitter : object, optional
-      A scikit-learn compatible cross-validation splitter (e.g.
-      ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,
-      ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware
-      splitters. Takes precedence over ``cv_iter``.
-  groups : array-like, optional
-      Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
-      Ignored when ``cv_indices`` is provided.
-  cv_indices : iterable of (array-like, array-like), optional
-      Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a
-      scaffold-based or UMAP-cluster-based fold manifest generated
-      outside mlchem. Takes precedence over both ``cv_splitter`` and
-      ``cv_iter``. This is the most generic API.
-  logic : {'lower', 'greater'}, optional
-      Whether to minimize or maximize the cross-validation score. Default is 'greater'.
-  task_type : {'classification', 'regression'}, optional
-      Type of task. Default is 'classification'.
-  desired_performance_score : {'train','cv','train_cv_average'}, optional
-      Which score to use as the performance score when calculating reliability.
-      Options are: 'train' for the training score, 'cv' for the cross-validation score,
-      and 'train_cv_average' for the average of the training and cross-validation scores.
-      Default is 'train_cv_average'.
-  log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
-      Logging level threshold. Use 'DEBUG' for detailed diagnostics,
-      'INFO' for standard output, 'WARNING' to suppress most output.
-      Default is logging.INFO.
-
-    Notes
-    -----
-    Automatic best-subset selection uses a reliability score.
-    With ``desired_performance_score='train'``, for each selected prefix,
-    ``performance_score = train``.
-    With ``desired_performance_score='cv'``, for each selected prefix,
-    ``performance_score = cv``.
-    With ``desired_performance_score='train_cv_average'``, for each selected prefix,
-    ``performance_score = (train + cv) / 2``.
-    ``instability_score = |train-cv|``, and for
-    higher-is-better metrics ``reliability_score = performance_score /
-    (1 + instability_score)``. For lower-is-better metrics, the performance
-    score gets its sign inverted so that the aim is still to maximise the
-    reliability score.
-  """
+        Parameters
+        ----------
+        estimator : object
+            Scikit-learn compatible estimator.
+        estimator_string : str, optional
+            Display name for the estimator.
+        metric : callable
+            Scoring function ``metric(y_true, y_pred)``.
+        max_features : int, optional
+            Maximum number of selected features.
+        cv_iter : int, optional
+            Number of CV folds when explicit folds are not provided.
+        cv_splitter : object, optional
+            CV splitter used instead of ``cv_iter``.
+        groups : array-like, optional
+            Group labels passed to ``cv_splitter``.
+        cv_indices : iterable of (array-like, array-like), optional
+            Explicit fold definitions.
+        logic : {'lower', 'greater'}, optional
+            Metric optimization direction.
+        task_type : {'classification', 'regression'}, optional
+            Task type.
+        desired_performance_score : {'train', 'cv', 'train_cv_average'}, optional
+            Performance component used for reliability computation.
+        log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
+            Logging threshold.
+        """
 
         self.estimator = estimator
         if not estimator_string:
@@ -963,66 +806,29 @@ Parameters
         parsimony_se_multiplier: float = 1.0,
     ) -> dict:
         """
-        Find the best feature subset based on reliability score and,
-        optionally, on parsimony.
+        Return the selected feature subset.
 
         Parameters
         ----------
         which : int, optional
-            If specified, returns the feature subset at the given index.
-            If None, the best subset is determined automatically using the
-            reliability score.
-                   parsimony_mode : {None, 'best', 'tolerance', 'standard_error', 'uncertainty', 'none'}, optional
-                      Parsimony mode used when ``which`` is ``None``.
-                      ``None`` disables parsimony (preferred) and returns reference
-                      subset ``k*`` (highest reliability score).
-                      ``'none'`` is accepted as a legacy alias for ``None``.
-                      ``'best'`` is an alias for returning ``k*``.
-                      For ``'tolerance'``, ``'standard_error'``, and ``'uncertainty'``:
-                      1. Identify reference subset ``k*`` as the prefix with highest
-                        reliability score.
-                      2. Orient fold-level CV scores so larger means better utility.
-                      3. For each smaller subset ``k < k*``, compute paired fold
-                        degradation ``d_r = μ[k*, r] - μ[k, r]``.
-                      4. Compute ``mean(d)`` and ``SE(d) = SD(d) / sqrt(R)``.
-                      5. Accept subset ``k`` when:
-                        - ``'tolerance'``: ``mean(d) <= parsimony_tolerance``
-                        - ``'standard_error'``:
-                          ``mean(d) <= parsimony_se_multiplier * SE(d)``
-                        - ``'uncertainty'``:
-                          ``mean(d) <= parsimony_tolerance + parsimony_se_multiplier * SE(d)``
-                      6. Return the smallest accepted ``k``; if none are accepted,
-                        fall back to ``k*``.
+            If provided, return the subset at this 1-based prefix length.
+            If None, automatic selection is used.
+        parsimony_mode : {None, 'none', 'best', 'tolerance', 'standard_error', 'uncertainty'}, optional
+            Parsimony strategy used only when ``which`` is None.
+            ``None`` (or ``'none'``) disables parsimony and returns the
+            reliability-optimal subset ``k*``.
         parsimony_tolerance : float, optional
-            Absolute tolerance used by ``'tolerance'`` and ``'uncertainty'``.
-            Default is 0.0.
+            Absolute tolerance used by parsimony modes that require it.
         parsimony_se_multiplier : float, optional
-            Standard-error multiplier used by ``'standard_error'`` and
-            ``'uncertainty'``. Default is 1.0.
+            Standard-error multiplier used by parsimony modes that require it.
 
         Returns
         -------
         dict
-            Dictionary containing the selected subset.
-
-            ``best_index`` : int
-                Number of selected features in the winning prefix.
-            ``features`` : list
-                Selected feature names.
-            When ``parsimony_mode`` is ``None`` or ``'none'``, additional
-            keys are:
-            ``reliability_score`` and ``best_score`` (alias).
-
-            When parsimony is enabled, additional keys are:
+            Selection payload including ``best_index`` and ``features``.
+            Automatic non-parsimony mode also returns ``reliability_score`` and
+            ``best_score``. Parsimony modes also return
             ``parsimony_mode`` and ``parsimony_diagnostics``.
-
-        Notes
-        -----
-
-        With parsimony selection enabled (via ``parsimony_mode``), reliability
-        score is used only to define reference subset ``k*``. Final subset
-        selection then follows the fold-level paired degradation criterion
-        described above.
         """
 
         if which is None:

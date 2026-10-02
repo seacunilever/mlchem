@@ -453,87 +453,60 @@ def y_scrambling(estimator,
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
                  ) -> dict[str, float | np.ndarray]:
     """
-Perform y-scrambling to assess model performance due to chance.
+    Perform y-scrambling to estimate chance-level model performance.
 
-This function evaluates the robustness of a model by randomly shuffling
-the target variable multiple times and measuring performance on the validation set.
-It compares the distribution of scores from scrambled targets to the actual
-model performance. More explained at https://doi.org/10.1021/ci700157b.
+    The target vector is shuffled ``n_scrambles`` times, each shuffled target is
+    cross-validated, and the null-score distribution is compared with the score
+    obtained from the unshuffled labels.
 
-Parameters
-----------
-estimator : object
-    A scikit-learn compatible estimator.
+    Parameters
+    ----------
+    estimator : object
+        Scikit-learn compatible estimator.
+    train_set : numpy.ndarray or pandas.DataFrame
+        Training feature matrix.
+    y_train : iterable
+        Target values.
+    metric : callable
+        Scoring function ``metric(y_true, y_pred)``.
+    n_scrambles : int, optional
+        Number of shuffled-label iterations. Default is 100.
+    n_fold : int, optional
+        Number of CV folds when explicit folds are not provided.
+    cv_splitter : object, optional
+        CV splitter overriding ``n_fold``.
+    groups : array-like, optional
+        Group labels passed to group-aware splitters.
+    cv_indices : iterable, optional
+        Explicit fold definitions overriding ``cv_splitter`` and ``n_fold``.
+    logic : {'lower', 'greater'}, optional
+        Score direction used for comparisons.
+    task_type : {'classification', 'regression'}, optional
+        Task type used by default CV strategy.
+    plot : bool, optional
+        If True, display a histogram of scrambled scores.
+    n_jobs : int, optional
+        Number of parallel workers. Use -1 for all CPUs.
+    safety_multiplier : float, optional
+        Multiplier defining ``safety_margin = safety_multiplier * scrambled_std``.
+    log_level : int or str, optional
+        Logging threshold.
 
-train_set : numpy.ndarray or pandas.DataFrame
-    Training feature matrix.
+    Returns
+    -------
+    dict
+        Mapping with keys:
 
-y_train : iterable
-    Target values for training.
-
-metric : callable
-    A scoring function that accepts (y_true, y_pred) as arguments.
-
-n_scrambles : int, optional (default=100)
-    Number of random target permutations used to build the null
-    performance distribution.
-
-n_fold : int, optional
-    Number of cross-validation folds. Default is 5. Ignored when
-    ``cv_splitter`` or ``cv_indices`` is provided.
-
-cv_splitter : object, optional
-    Cross-validation splitter. If provided, it overrides ``n_fold``.
-
-groups : array-like, optional
-    Group labels forwarded to group-aware splitters.
-
-cv_indices : iterable or None, optional
-    Predefined cross-validation index pairs. If provided, it overrides
-    ``n_fold`` and ``cv_splitter``.
-
-logic : {'lower', 'greater'}, optional
-    Logic to determine if a score is better. 'greater' means higher is better, 'lower' means lower is better.
-
-task_type : {'classification', 'regression'}, optional
-    Type of task. Determines the default behavior of certain metrics.
-
-plot : bool, optional (default=True)
-    Whether to display a histogram of the scrambled scores.
-
-n_jobs : int, optional (default=1)
-    Number of parallel workers for iterations. -1 uses all available CPUs.
-
-safety_multiplier : float, optional (default=2.3)
-    Multiplier applied to the standard deviation of scrambled scores to
-    define the absolute safety band:
-    ``safety_margin = safety_multiplier * scrambled_std``.
-    Use this parameter to apply a custom z-score-like thresholding
-    convention.
-
-log_level : int or str, optional (default=logging.INFO)
-    Logging level for diagnostics.
-
-Returns
--------
-dict
-        Dictionary with:
-        - ``reference_score``: float, CV score on true labels.
-        - ``scrambled_scores``: numpy.ndarray, CV scores on scrambled labels.
-        - ``scrambled_std``: float, standard deviation of scrambled scores.
-        - ``best_random_score``: float, best scrambled score according to
-            ``logic`` (max for ``'greater'``, min for ``'lower'``).
-        - ``probability_better``: float, empirical probability that scrambled
-            performance is at least as good as reference (or at most as good for
-            ``'lower'``).
-        - ``obtained_margin``: float, gap between reference score and
-            ``best_random_score`` in the direction of improvement.
-        - ``safety_margin``: float, absolute safety band width
-            (``safety_multiplier * scrambled_std``).
-        - ``safety_margin_ratio``: float, ``obtained_margin / safety_margin``.
-        - ``safety_multiplier``: float, multiplier used to define
-            ``safety_margin``.
-"""
+        - ``reference_score``
+        - ``scrambled_scores``
+        - ``scrambled_std``
+        - ``best_random_score``
+        - ``probability_better``
+        - ``obtained_margin``
+        - ``safety_margin``
+        - ``safety_margin_ratio``
+        - ``safety_multiplier``
+    """
 
     from sklearn.base import clone
     import random
@@ -656,48 +629,36 @@ dict
 
 class MajorityVote:
     """
-MajorityVote ensemble evaluation utility.
+    MajorityVote ensemble evaluation utility.
 
-This class supports two workflows:
-1) Recommended workflow: ``evaluate_cv()`` using fold-level
-    cross-validation, fold-level reliability, and reliability-based
-    ranking.
-2) Final consensus workflow: ``fit()`` to refit the selected estimator
-    set on the full training set and generate transparent train/test
-    prediction tables and consensus outputs.
+    This class supports two workflows:
 
-Parameters
-----------
-train_set : pandas.DataFrame
-    Training feature matrix.
+    1. ``evaluate_cv()`` for fold-based evaluation and estimator ranking.
+    2. ``fit()`` for final consensus fitting on full train/test data.
 
-y_train : iterable
-    Training labels/targets.
-
-task_type : {'classification', 'regression'}
-    Task type used to select the voting strategy.
-
-estimator_list : list
-    List of scikit-learn compatible estimators.
-
-column_list : list[list[str]]
-    Per-estimator feature subsets aligned with ``estimator_list``.
-
-test_set : pandas.DataFrame or None, optional
-    Hold-out feature matrix used only by ``fit()``.
-
-y_test : iterable or None, optional
-    Hold-out labels/targets used only by ``fit()``.
-
-estimator_names : list[str] or None, optional
-    Optional user-defined names for estimators.
-
-n_jobs : int, optional (default=1)
-    Number of workers used where parallel execution is supported.
-
-log_level : int or str, optional (default=logging.INFO)
-    Logging level used by this module.
-"""
+    Parameters
+    ----------
+    train_set : pandas.DataFrame
+        Training feature matrix.
+    y_train : iterable
+        Training labels/targets.
+    task_type : {'classification', 'regression'}
+        Task type used to select voting strategy.
+    estimator_list : list
+        List of scikit-learn compatible estimators.
+    column_list : list[list[str]]
+        Per-estimator feature subsets aligned with ``estimator_list``.
+    test_set : pandas.DataFrame or None, optional
+        Hold-out feature matrix used by ``fit()``.
+    y_test : iterable or None, optional
+        Hold-out labels/targets used by ``fit()``.
+    estimator_names : list[str] or None, optional
+        Optional user-defined estimator names.
+    n_jobs : int, optional
+        Number of workers used by parallel sections.
+    log_level : int or str, optional
+        Logging threshold.
+    """
 
     def __init__(
         self,

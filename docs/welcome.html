@@ -358,10 +358,9 @@ large rule dictionaries and medium-to-large training sets.</p>
 </pre></div>
 </div>
 </section>
-<section id="optional-diagnostics-for-undersampling-and-y-scrambling">
-<h3>optional diagnostics for undersampling and y-scrambling<a class="headerlink" href="#optional-diagnostics-for-undersampling-and-y-scrambling" title="Link to this heading">¶</a></h3>
+<section id="optional-diagnostics-for-undersampling">
+<h3>optional diagnostics for undersampling<a class="headerlink" href="#optional-diagnostics-for-undersampling" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.preprocessing.undersampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">undersample</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">y_scrambling</span>
 
 <span class="n">train_balanced</span><span class="p">,</span> <span class="n">test_updated</span> <span class="o">=</span> <span class="n">undersample</span><span class="p">(</span>
   <span class="n">train_set</span><span class="o">=</span><span class="n">train_df</span><span class="p">,</span>
@@ -370,20 +369,86 @@ large rule dictionaries and medium-to-large training sets.</p>
   <span class="n">desired_proportion_majority</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
   <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="stress-test-your-models-with-y-scrambling">
+<h3>Stress-test your models with y-scrambling<a class="headerlink" href="#stress-test-your-models-with-y-scrambling" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">y_scrambling</span>
 
 <span class="n">y_scrambling</span><span class="p">(</span>
   <span class="n">estimator</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
   <span class="n">train_set</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
   <span class="n">y_train</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
-  <span class="n">test_set</span><span class="o">=</span><span class="n">X_test</span><span class="p">,</span>
-  <span class="n">y_test</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
-  <span class="n">metric_function</span><span class="o">=</span><span class="n">metric_fn</span><span class="p">,</span>
-  <span class="n">n_iter</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+  <span class="n">metric</span><span class="o">=</span><span class="n">metric_fn</span><span class="p">,</span>
+  <span class="n">n_scrambles</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+  <span class="n">safety_multiplier</span><span class="o">=</span><span class="mf">2.3</span><span class="p">,</span>
   <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
   <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>Returned diagnostics include:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reference_score</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">best_random_score</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">probability_better</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">safety_margin_ratio</span></code></p></li>
+</ul>
+</section>
+<section id="cross-validation-centric-majority-voting">
+<h3>cross-validation-centric majority voting<a class="headerlink" href="#cross-validation-centric-majority-voting" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MajorityVote</span><span class="p">,</span> <span class="n">generate_cv_indices</span>
+
+<span class="n">estimators</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+  <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="n">X_train</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+  <span class="n">X_train</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+<span class="p">]</span>
+
+<span class="n">mv</span> <span class="o">=</span> <span class="n">MajorityVote</span><span class="p">(</span>
+  <span class="n">train_set</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+  <span class="n">y_train</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
+  <span class="n">task_type</span><span class="o">=</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span>
+  <span class="n">estimator_list</span><span class="o">=</span><span class="n">estimators</span><span class="p">,</span>
+  <span class="n">column_list</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span>
+  <span class="n">estimator_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;LR&#39;</span><span class="p">,</span> <span class="s1">&#39;RF&#39;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">folds</span> <span class="o">=</span> <span class="n">generate_cv_indices</span><span class="p">(</span>
+  <span class="n">X_train</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+  <span class="n">y</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
+  <span class="n">cv_iter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+  <span class="n">task_type</span><span class="o">=</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span>
+  <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+  <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">df_mv</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">evaluate_cv</span><span class="p">(</span>
+  <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
+  <span class="n">metric_name</span><span class="o">=</span><span class="s1">&#39;G&#39;</span><span class="p">,</span>
+  <span class="n">cv_indices</span><span class="o">=</span><span class="n">folds</span><span class="p">,</span>
+  <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">,</span>
+  <span class="n">desired_performance_score</span><span class="o">=</span><span class="s1">&#39;train_cv_average&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Ranked by reliability_mean (descending)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df_mv</span><span class="p">[[</span><span class="s1">&#39;combination&#39;</span><span class="p">,</span> <span class="s1">&#39;validation_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;reliability_mean&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+
+<span class="c1"># Final consensus stage: fit shortlisted estimators on full train set</span>
+<span class="c1"># and generate train/test prediction tables.</span>
+
+<span class="n">fit_report</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">return_prediction_dataframes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fit()</span></code> is the final consensus step after model selection.</p>
 </section>
 <section id="pattern-recognition">
 <h3>pattern recognition<a class="headerlink" href="#pattern-recognition" title="Link to this heading">¶</a></h3>
@@ -522,7 +587,9 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#calculate-fingerprints">calculate fingerprints</a></li>
 <li><a class="reference internal" href="#calculate-chemotypes-faster-on-larger-datasets">calculate chemotypes faster on larger datasets</a></li>
 <li><a class="reference internal" href="#control-ml-verbosity-in-notebooks-and-development-runs">control ML verbosity in notebooks and development runs</a></li>
-<li><a class="reference internal" href="#optional-diagnostics-for-undersampling-and-y-scrambling">optional diagnostics for undersampling and y-scrambling</a></li>
+<li><a class="reference internal" href="#optional-diagnostics-for-undersampling">optional diagnostics for undersampling</a></li>
+<li><a class="reference internal" href="#stress-test-your-models-with-y-scrambling">Stress-test your models with y-scrambling</a></li>
+<li><a class="reference internal" href="#cross-validation-centric-majority-voting">cross-validation-centric majority voting</a></li>
 <li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
 <li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
 <li><a class="reference internal" href="#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>

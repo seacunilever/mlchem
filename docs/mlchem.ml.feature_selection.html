@@ -122,14 +122,27 @@ higher than the threshold.</p>
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CombinatorialSelection</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Combinatorial feature selection using a given estimator and metric.</p>
-<p>This class performs a two-stage combinatorial feature selection process
-to identify optimal feature subsets based on reliability score. For each
-retained subset, <code class="docutils literal notranslate"><span class="pre">performance_score</span></code> is the geometric mean of training,
-cross-validation, and test scores for higher-is-better metrics. For
-lower-is-better metrics, the geometric mean is inverted. The final
-<code class="docutils literal notranslate"><span class="pre">reliability_score</span></code> is <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>,
-where <code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span> <span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code>.</p>
+<p>Combinatorial feature selection wrapper.</p>
+<p>This class performs a two-stage combinatorial search over feature
+subsets and ranks the surviving subsets with the same reliability
+score logic used by <a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection" title="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a>: the
+performance term is controlled by <cite>desired_performance_score</cite>,
+and can correspond to cv_score, train_score or their average.
+Lower-is-better metrics are sign-flipped before the
+reliability score is computed. Results are then ranked by
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">instability_score</span></code> is the sum of pairwise gaps between the
+available scores.</p>
+<section id="public-methods">
+<h4>Public Methods<a class="headerlink" href="#public-methods" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">__init__()</span></code>: Initialise the combinatorial selector.</p>
+<p><code class="docutils literal notranslate"><span class="pre">set_log_level()</span></code>: Set the logging level for diagnostics.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rank_features_by_relevance_redundancy()</span></code>: Optional pre-ranking of
+features before subset generation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fit_stage_1()</span></code>: Evaluate and filter candidate subsets in stage 1.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fit_stage_2()</span></code>: Refine the stage 1 winners in a second combinatorial
+pass.</p>
+<p><code class="docutils literal notranslate"><span class="pre">display_best()</span></code>: <strong>DEPRECATED</strong> Fit and report the best subset from stage 2.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator">
 <span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.estimator" title="Link to this definition">¶</a></dt>
@@ -145,7 +158,7 @@ where <code class="docutils literal notranslate"><span class="pre">instability_s
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.metric">
 <span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.metric" title="Link to this definition">¶</a></dt>
 <dd><p>A metric function to evaluate estimator performance. Must accept
-(y_true, y_pred).</p>
+<code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_pred)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>callable</p>
@@ -175,34 +188,90 @@ where <code class="docutils literal notranslate"><span class="pre">instability_s
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_splitter">
+<span class="sig-name descname"><span class="pre">cv_splitter</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_splitter" title="Link to this definition">¶</a></dt>
+<dd><p>A scikit-learn compatible cross-validation splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_indices">
+<span class="sig-name descname"><span class="pre">cv_indices</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_indices" title="Link to this definition">¶</a></dt>
+<dd><p>Explicit, pre-computed <code class="docutils literal notranslate"><span class="pre">(train_idx,</span> <span class="pre">valid_idx)</span></code> pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>iterable of (array-like, array-like), optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.groups">
+<span class="sig-name descname"><span class="pre">groups</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.groups" title="Link to this definition">¶</a></dt>
+<dd><p>Group labels propagated to <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array-like, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.log_level" title="Link to this definition">¶</a></dt>
+<dd><p>Logging threshold used by the wrapper logger.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int or str</p>
+</dd>
+</dl>
+</dd></dl>
+
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_classification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
 </pre></div>
 </div>
+<p>Standard cross-validation (existing behaviour):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cs</span> <span class="o">=</span> <span class="n">CombinatorialSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
 <span class="gp">... </span>                             <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
 <span class="gp">... </span>                             <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">train_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">features</span> <span class="o">=</span> <span class="n">train_set</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stage1</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">fit_stage_1</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="n">cv_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                        <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stage2</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">fit_stage_2</span><span class="p">(</span><span class="n">top_n_subsets</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">cv_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:</span><span class="mi">350</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="mi">350</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="mi">350</span><span class="p">:],</span> <span class="n">y</span><span class="p">[</span><span class="mi">350</span><span class="p">:]</span>
+<p>GroupKFold with scaffold groups:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupKFold</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cs</span> <span class="o">=</span> <span class="n">CombinatorialSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
+<span class="gp">... </span>                             <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">cv_splitter</span><span class="o">=</span><span class="n">GroupKFold</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span>
+<span class="gp">... </span>                             <span class="n">groups</span><span class="o">=</span><span class="n">scaffold_ids</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">train_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">test_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results_stage_1</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">fit_stage_1</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">train_set</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">training_threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">results_stage_2</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">fit_stage_2</span><span class="p">(</span><span class="n">top_n_subsets</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">cv_iter</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<p>Precomputed scaffold or UMAP-cluster folds:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cs</span> <span class="o">=</span> <span class="n">CombinatorialSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
+<span class="gp">... </span>                             <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">cv_indices</span><span class="o">=</span><span class="n">scaffold_fold_manifest</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desired_performance_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'train'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cv'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'train_cv_average'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'train_cv_average'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialise the CombinatorialSelection object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -212,7 +281,18 @@ where <code class="docutils literal notranslate"><span class="pre">instability_s
 <li><p><strong>logic</strong> (<em>{'greater'</em><em>, </em><em>'lower'}</em><em>, </em><em>optional</em>) – Determines whether a higher or lower score is considered better.
 Default is ‘greater’.</p></li>
 <li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em>) – Specifies the type of task. Default is ‘classification’.</p></li>
-<li><p><strong>log_level</strong> (<em>{{'DEBUG'</em><em>, </em><em>'INFO'</em><em>, </em><em>'WARNING'</em><em>, </em><em>'ERROR'</em><em>, </em><em>'CRITICAL'}}</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Logging level threshold. Use ‘DEBUG’ for detailed diagnostics,
+<li><p><strong>cv_splitter</strong> (<em>object</em><em>, </em><em>optional</em>) – A scikit-learn compatible cross-validation splitter. Takes
+precedence over the <code class="docutils literal notranslate"><span class="pre">cv_iter</span></code> passed to
+<code class="docutils literal notranslate"><span class="pre">fit_stage_1</span></code>/<code class="docutils literal notranslate"><span class="pre">fit_stage_2</span></code>.</p></li>
+<li><p><strong>cv_indices</strong> (<em>iterable</em><em> of </em><em>(</em><em>array-like</em><em>, </em><em>array-like</em><em>)</em><em>, </em><em>optional</em>) – Explicit <code class="docutils literal notranslate"><span class="pre">(train_idx,</span> <span class="pre">valid_idx)</span></code> fold pairs. Takes
+precedence over both <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code> and <code class="docutils literal notranslate"><span class="pre">cv_iter</span></code>.</p></li>
+<li><p><strong>groups</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Group labels forwarded to <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code>. Ignored when
+<code class="docutils literal notranslate"><span class="pre">cv_indices</span></code> is provided.</p></li>
+<li><p><strong>desired_performance_score</strong> (<em>{'train'</em><em>,</em><em>'cv'</em><em>,</em><em>'train_cv_average'}</em><em>, </em><em>optional</em>) – Which score to use as the performance score when calculating reliability.
+Options are: ‘train’ for the training score, ‘cv’ for the cross-validation score,
+and ‘train_cv_average’ for the average of the training and cross-validation scores.
+Default is ‘train_cv_average’.</p></li>
+<li><p><strong>log_level</strong> (<em>{'DEBUG'</em><em>, </em><em>'INFO'</em><em>, </em><em>'WARNING'</em><em>, </em><em>'ERROR'</em><em>, </em><em>'CRITICAL'}</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Logging level threshold. Use ‘DEBUG’ for detailed diagnostics,
 ‘INFO’ for standard output, ‘WARNING’ to suppress most output.
 Default is logging.INFO.</p></li>
 </ul>
@@ -241,15 +321,13 @@ Default is logging.INFO.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1">
-<span class="sig-name descname"><span class="pre">fit_stage_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_train_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_subsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_ranked_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relevance_metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mutual_info'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pearson'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'spearman'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mutual_info'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redundancy_metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'pearson'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'spearman'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pearson'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit_stage_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_train_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_subsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_ranked_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relevance_metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'mutual_info'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pearson'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'spearman'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mutual_info'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redundancy_metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'pearson'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'spearman'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pearson'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranking_random_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1" title="Link to this definition">¶</a></dt>
 <dd><p>Perform the first stage of combinatorial feature selection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>train_set</strong> (<em>pandas.DataFrame</em>) – The training dataset.</p></li>
 <li><p><strong>y_train</strong> (<em>iterable</em>) – Target values for the training dataset.</p></li>
-<li><p><strong>test_set</strong> (<em>pandas.DataFrame</em>) – The testing dataset.</p></li>
-<li><p><strong>y_test</strong> (<em>iterable</em>) – Target values for the testing dataset.</p></li>
 <li><p><strong>features</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – List of features to consider. Default is an empty list.</p></li>
 <li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of features to combine. Default is 2.</p></li>
 <li><p><strong>training_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum training score required to consider a subset.
@@ -285,10 +363,11 @@ feature selection.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>Generates all possible feature subsets of size <code class="docutils literal notranslate"><span class="pre">k</span></code> and evaluates
-each subset using training, cross-validation, and test scores. Results
-are filtered using training/CV thresholds and ranked by
-<code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>. The legacy <code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code> column is retained
-for compatibility, but will be removed in a future version.</p>
+each subset using training and cross-validation scores.
+Results are filtered using training/CV thresholds and ranked by
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>. The score uses the same arithmetic-mean
+performance term and lower-is-better orientation as SFS. The legacy
+<code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code> formulation is no longer used.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -316,12 +395,6 @@ feature selection.</p>
 <dd class="field-odd"><p>pandas.DataFrame</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>Identifies the most recurrent features from the top stage-1 subsets,
-generates new combinations, and evaluates them. Results are filtered
-using training/CV thresholds and ranked by <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>. The
-legacy <code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code> column is retained for compatibility, but
-will be removed in a future version.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -344,6 +417,7 @@ Higher <cite>beta</cite> increases redundancy penalty importance.</p>
 </dl>
 </dd></dl>
 
+</section>
 </dd></dl>
 
 <dl class="py class">
@@ -351,156 +425,70 @@ Higher <cite>beta</cite> increases redundancy penalty importance.</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SequentialForwardSelection</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Sequential Forward Feature Selection wrapper.</p>
-<p>This class performs Sequential Forward Feature Selection by iteratively
-adding features that yield the highest gain in cross-validation score.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator">
-<span class="sig-name descname"><span class="pre">estimator</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator" title="Link to this definition">¶</a></dt>
-<dd><p>The scikit-learn estimator used for feature selection.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>object</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string">
-<span class="sig-name descname"><span class="pre">estimator_string</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string" title="Link to this definition">¶</a></dt>
-<dd><p>A string representation of the estimator. If None, it is inferred from the estimator.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>str, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric">
-<span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric" title="Link to this definition">¶</a></dt>
-<dd><p>A function to evaluate model performance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>callable</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features">
-<span class="sig-name descname"><span class="pre">max_features</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features" title="Link to this definition">¶</a></dt>
-<dd><p>Maximum number of features to select. Default is 25.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter">
-<span class="sig-name descname"><span class="pre">cv_iter</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter" title="Link to this definition">¶</a></dt>
-<dd><p>Number of cross-validation iterations. Default is 5.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic">
-<span class="sig-name descname"><span class="pre">logic</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic" title="Link to this definition">¶</a></dt>
-<dd><p>Whether to minimize or maximize the cross-validation score. Default is ‘greater’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>{‘lower’, ‘greater’}, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type">
-<span class="sig-name descname"><span class="pre">task_type</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type" title="Link to this definition">¶</a></dt>
-<dd><p>Type of task. Default is ‘classification’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>{‘classification’, ‘regression’}, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level">
-<span class="sig-name descname"><span class="pre">log_level</span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level" title="Link to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Logging level threshold. Use ‘DEBUG’ for detailed diagnostics,
-‘INFO’ for standard output, ‘WARNING’ to suppress most output.
-Default is logging.INFO.</p>
-</div></blockquote>
-<p class="rubric">Notes</p>
-<p>Automatic best-subset selection uses a reliability score. For each
-selected prefix, <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">(train</span> <span class="pre">*</span> <span class="pre">cv</span> <span class="pre">*</span> <span class="pre">test)</span> <span class="pre">**</span> <span class="pre">(1/3)</span></code>,
-<code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span> <span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code>, and for
-higher-is-better metrics <code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span>
-<span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>. For lower-is-better metrics, the geometric
-mean is inverted first so the same reliability score can be maximised.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>{‘DEBUG’, ‘INFO’, ‘WARNING’, ‘ERROR’, ‘CRITICAL’} or int, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_classification</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">LogisticRegression</span><span class="p">(),</span>
-<span class="gp">... </span>                                 <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">max_features</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">cv_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-<span class="gp">... </span>                                 <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">n_informative</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">train_size</span> <span class="o">=</span> <span class="mf">0.8</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">train_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">train_size</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:</span><span class="n">train_samples</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="n">train_samples</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">train_samples</span><span class="p">:],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_samples</span><span class="p">:]</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">train_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">test_set</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">X_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_set</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">test_set</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sfs</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">best_feature</span><span class="o">=</span><span class="s1">&#39;None&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialise the SequentialForwardSelection object.</p>
+<p>This class iteratively builds a feature subset by selecting the next
+feature that maximizes cross-validation performance. It tracks train/CV
+fold metrics and a reliability score, and can apply a parsimony rule in
+<a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best" title="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_best()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>estimator</strong> (<em>object</em>) – The scikit-learn estimator used for feature selection.</p></li>
-<li><p><strong>estimator_string</strong> (<em>str</em><em>, </em><em>optional</em>) – A string representation of the estimator. If None, it is inferred from the estimator.</p></li>
-<li><p><strong>metric</strong> (<em>callable</em>) – A function to evaluate model performance.</p></li>
+<li><p><strong>estimator</strong> (<em>object</em>) – Scikit-learn compatible estimator used for feature selection.</p></li>
+<li><p><strong>estimator_string</strong> (<em>str</em><em>, </em><em>optional</em>) – Display name for the estimator. If None, inferred from the estimator.</p></li>
+<li><p><strong>metric</strong> (<em>callable</em>) – Scoring function with signature <code class="docutils literal notranslate"><span class="pre">metric(y_true,</span> <span class="pre">y_pred)</span></code>.</p></li>
 <li><p><strong>max_features</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of features to select. Default is 25.</p></li>
-<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cross-validation iterations. Default is 5.</p></li>
-<li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em><em>, </em><em>optional</em>) – Whether to minimise or maximise the cross-validation score. Default is ‘greater’.</p></li>
-<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em>) – Type of task. Default is ‘classification’.</p></li>
-<li><p><strong>log_level</strong> (<em>{'DEBUG'</em><em>, </em><em>'INFO'</em><em>, </em><em>'WARNING'</em><em>, </em><em>'ERROR'</em><em>, </em><em>'CRITICAL'}</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Logging level threshold. Use ‘DEBUG’ for detailed diagnostics,
-‘INFO’ for standard output, ‘WARNING’ to suppress most output.
-Default is logging.INFO.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CV folds when <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code>/<code class="docutils literal notranslate"><span class="pre">cv_indices</span></code> are not provided.</p></li>
+<li><p><strong>cv_splitter</strong> (<em>object</em><em>, </em><em>optional</em>) – Scikit-learn compatible CV splitter. Takes precedence over <code class="docutils literal notranslate"><span class="pre">cv_iter</span></code>.</p></li>
+<li><p><strong>groups</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Group labels passed to group-aware splitters.</p></li>
+<li><p><strong>cv_indices</strong> (<em>iterable</em><em> of </em><em>(</em><em>array-like</em><em>, </em><em>array-like</em><em>)</em><em>, </em><em>optional</em>) – Precomputed <code class="docutils literal notranslate"><span class="pre">(train_idx,</span> <span class="pre">valid_idx)</span></code> fold manifest. Takes precedence
+over <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code> and <code class="docutils literal notranslate"><span class="pre">cv_iter</span></code>.</p></li>
+<li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em><em>, </em><em>optional</em>) – Metric optimization direction. Default is <code class="docutils literal notranslate"><span class="pre">'greater'</span></code>.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em>) – Task type. Default is <code class="docutils literal notranslate"><span class="pre">'classification'</span></code>.</p></li>
+<li><p><strong>desired_performance_score</strong> (<em>{'train'</em><em>, </em><em>'cv'</em><em>, </em><em>'train_cv_average'}</em><em>, </em><em>optional</em>) – Performance component used by the reliability score.</p></li>
+<li><p><strong>log_level</strong> (<em>{'DEBUG'</em><em>, </em><em>'INFO'</em><em>, </em><em>'WARNING'</em><em>, </em><em>'ERROR'</em><em>, </em><em>'CRITICAL'}</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Logging threshold. Default is <code class="docutils literal notranslate"><span class="pre">logging.INFO</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Reliability combines performance and instability. For each subset:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train</span> <span class="pre">-</span> <span class="pre">cv|</span></code></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">desired_performance_score='train'</span></code>, <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">train</span></code></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">desired_performance_score='cv'</span></code>, <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">cv</span></code></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">desired_performance_score='train_cv_average'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">(train</span> <span class="pre">+</span> <span class="pre">cv)</span> <span class="pre">/</span> <span class="pre">2</span></code></p></li>
+<li><p>For higher-is-better metrics,
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code></p></li>
+</ul>
+<p>For lower-is-better metrics, performance is sign-oriented internally so the
+same maximization rule can be used.</p>
+<section id="scientific-rationale">
+<h4>Scientific Rationale<a class="headerlink" href="#scientific-rationale" title="Link to this heading">¶</a></h4>
+<p>The optional parsimony selector prefers the smallest subset whose paired
+fold-level degradation relative to the reference subset <code class="docutils literal notranslate"><span class="pre">k*</span></code> remains
+within a configurable empirical uncertainty margin.</p>
+<p class="rubric">References</p>
+<p>[1] Dietterich (1998), doi:10.1162/089976698300017197
+[2] Nadeau &amp; Bengio (2003), doi:10.1023/A:1024068626366
+[3] Bengio &amp; Grandvalet (2004), JMLR 5:1089-1105</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator_string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cv_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'lower'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'greater'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'greater'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'classification'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'regression'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'classification'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">desired_performance_score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'train'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'cv'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'train_cv_average'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'train_cv_average'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'DEBUG'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'INFO'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WARNING'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ERROR'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CRITICAL'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialise a SequentialForwardSelection wrapper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>estimator</strong> (<em>object</em>) – Scikit-learn compatible estimator.</p></li>
+<li><p><strong>estimator_string</strong> (<em>str</em><em>, </em><em>optional</em>) – Display name for the estimator.</p></li>
+<li><p><strong>metric</strong> (<em>callable</em>) – Scoring function <code class="docutils literal notranslate"><span class="pre">metric(y_true,</span> <span class="pre">y_pred)</span></code>.</p></li>
+<li><p><strong>max_features</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of selected features.</p></li>
+<li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of CV folds when explicit folds are not provided.</p></li>
+<li><p><strong>cv_splitter</strong> (<em>object</em><em>, </em><em>optional</em>) – CV splitter used instead of <code class="docutils literal notranslate"><span class="pre">cv_iter</span></code>.</p></li>
+<li><p><strong>groups</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Group labels passed to <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code>.</p></li>
+<li><p><strong>cv_indices</strong> (<em>iterable</em><em> of </em><em>(</em><em>array-like</em><em>, </em><em>array-like</em><em>)</em><em>, </em><em>optional</em>) – Explicit fold definitions.</p></li>
+<li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em><em>, </em><em>optional</em>) – Metric optimization direction.</p></li>
+<li><p><strong>task_type</strong> (<em>{'classification'</em><em>, </em><em>'regression'}</em><em>, </em><em>optional</em>) – Task type.</p></li>
+<li><p><strong>desired_performance_score</strong> (<em>{'train'</em><em>, </em><em>'cv'</em><em>, </em><em>'train_cv_average'}</em><em>, </em><em>optional</em>) – Performance component used for reliability computation.</p></li>
+<li><p><strong>log_level</strong> (<em>{'DEBUG'</em><em>, </em><em>'INFO'</em><em>, </em><em>'WARNING'</em><em>, </em><em>'ERROR'</em><em>, </em><em>'CRITICAL'}</em><em> or </em><em>int</em><em>, </em><em>optional</em>) – Logging threshold.</p></li>
 </ul>
 </dd>
 </dl>
@@ -508,63 +496,43 @@ Default is logging.INFO.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best">
-<span class="sig-name descname"><span class="pre">find_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best" title="Link to this definition">¶</a></dt>
-<dd><p>Find the best feature subset based on reliability.</p>
+<span class="sig-name descname"><span class="pre">find_best</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parsimony_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'none'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'best'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tolerance'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'standard_error'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'uncertainty'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parsimony_tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parsimony_se_multiplier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best" title="Link to this definition">¶</a></dt>
+<dd><p>Return the selected feature subset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>which</strong> (<em>int</em><em>, </em><em>optional</em>) – If specified, returns the feature subset at the given index.
-If None, the best subset is determined automatically using the
-reliability score.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>which</strong> (<em>int</em><em>, </em><em>optional</em>) – If provided, return the subset at this 1-based prefix length.
+If None, automatic selection is used.</p></li>
+<li><p><strong>parsimony_mode</strong> (<em>{None</em><em>, </em><em>'none'</em><em>, </em><em>'best'</em><em>, </em><em>'tolerance'</em><em>, </em><em>'standard_error'</em><em>, </em><em>'uncertainty'}</em><em>, </em><em>optional</em>) – Parsimony strategy used only when <code class="docutils literal notranslate"><span class="pre">which</span></code> is None.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> (or <code class="docutils literal notranslate"><span class="pre">'none'</span></code>) disables parsimony and returns the
+reliability-optimal subset <code class="docutils literal notranslate"><span class="pre">k*</span></code>.</p></li>
+<li><p><strong>parsimony_tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Absolute tolerance used by parsimony modes that require it.</p></li>
+<li><p><strong>parsimony_se_multiplier</strong> (<em>float</em><em>, </em><em>optional</em>) – Standard-error multiplier used by parsimony modes that require it.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>Dictionary containing the selected subset and reliability scores.</p>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">best_index</span></code><span class="classifier">int</span></dt><dd><p>Number of selected features in the winning prefix.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">features</span></code><span class="classifier">list</span></dt><dd><p>Selected feature names.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">performance_score</span></code><span class="classifier">float</span></dt><dd><p>Geometric performance contribution for the winning prefix.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">instability_score</span></code><span class="classifier">float</span></dt><dd><p>Sum of train/CV/test score gaps for the winning prefix.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">reliability_score</span></code><span class="classifier">float</span></dt><dd><p>Reliability score used for automatic selection.</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">best_score</span></code><span class="classifier">float</span></dt><dd><p>Alias of <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code> retained for backwards
-compatibility.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Selection payload including <code class="docutils literal notranslate"><span class="pre">best_index</span></code> and <code class="docutils literal notranslate"><span class="pre">features</span></code>.
+Automatic non-parsimony mode also returns <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code> and
+<code class="docutils literal notranslate"><span class="pre">best_score</span></code>. Parsimony modes also return
+<code class="docutils literal notranslate"><span class="pre">parsimony_mode</span></code> and <code class="docutils literal notranslate"><span class="pre">parsimony_diagnostics</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
-<p class="rubric">Notes</p>
-<p>For each feature subset, the automatic algorithm computes:</p>
-<p><code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code></p>
-<p>where:</p>
-<p><code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span> <span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code></p>
-<p>and, for higher-is-better metrics:</p>
-<p><code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">(train_score</span> <span class="pre">*</span> <span class="pre">cv_score</span> <span class="pre">*</span> <span class="pre">test_score)</span> <span class="pre">**</span> <span class="pre">(1/3)</span></code></p>
-<p>For lower-is-better metrics, such as RMSE, lower performance scores
-are better, so the geometric mean is inverted before the same
-reliability calculation is applied:</p>
-<p><code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">((train_score</span> <span class="pre">*</span> <span class="pre">cv_score</span> <span class="pre">*</span> <span class="pre">test_score)</span> <span class="pre">**</span> <span class="pre">(1/3))</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code></p>
-<p>The subset with the highest reliability score is selected. The test
-score is intentionally included in the calculation.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_train</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit" title="Link to this definition">¶</a></dt>
 <dd><p>Fit the Sequential Forward Selection model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>train_set</strong> (<em>pandas.DataFrame</em>) – Training dataset.</p></li>
 <li><p><strong>y_train</strong> (<em>iterable</em>) – Target values for the training set.</p></li>
-<li><p><strong>test_set</strong> (<em>pandas.DataFrame</em>) – Test dataset.</p></li>
+<li><p><strong>test_set</strong> (<em>pandas.DataFrame</em><em>, </em><em>optional</em>) – Optional test dataset. If provided, unseen-set scores are
+stored in <code class="docutils literal notranslate"><span class="pre">self.unseen_scores</span></code>.</p></li>
 <li><p><strong>y_test</strong> (<em>iterable</em>) – Target values for the test set.</p></li>
 <li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of parallel workers used to evaluate candidate
 features at each SFS cycle. Use -1 to use all available CPUs.
@@ -579,8 +547,10 @@ Default is 1.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best_feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['steelblue',</span> <span class="pre">'orange',</span> <span class="pre">'green']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#</span> <span class="pre">of</span> <span class="pre">features'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot" title="Link to this definition">¶</a></dt>
-<dd><p>Plot the performance of the Sequential Forward Selection process.</p>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">best_feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(10,</span> <span class="pre">6)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">['steelblue',</span> <span class="pre">'orange',</span> <span class="pre">'green']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alphas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[0.2,</span> <span class="pre">0.2,</span> <span class="pre">0.2]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'#</span> <span class="pre">of</span> <span class="pre">features'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Score'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendsize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.plot" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the performance of the Sequential Forward Selection process.
+The interval of 1 standard error is shown as a shaded region
+around the cv_score curve.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -588,8 +558,11 @@ Default is 1.</p></li>
 None, it is determined automatically using reliability-score
 selection. Default is ‘auto’.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – Size of the plot. Default is (10, 6).</p></li>
-<li><p><strong>colours</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Colours for training, validation, and test scores. Default is
+<li><p><strong>colours</strong> (<em>list</em><em> of </em><em>str</em><em>, </em><em>optional</em>) – Colours for training, validation, and reliability scores. Default is
 [‘steelblue’, ‘orange’, ‘green’].</p></li>
+<li><p><strong>alphas</strong> (<em>list</em><em> of </em><em>float</em><em>, </em><em>optional</em>) – Alpha values, with shape (3,), for the shaded regions
+representing the ±1 standard error. Setting any of these
+values to zero will make the corresponding shaded region fully transparent.</p></li>
 <li><p><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Title of the plot.</p></li>
 <li><p><strong>title_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Font size of the title. Default is 20.</p></li>
 <li><p><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – Label for the x-axis. Default is ‘# of features’.</p></li>
@@ -604,14 +577,12 @@ selection. Default is ‘auto’.</p></li>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The automatic algorithm for determining the best feature subset
-is the same as described in <cite>find_best</cite>: <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span>
-<span class="pre">(train</span> <span class="pre">*</span> <span class="pre">cv</span> <span class="pre">*</span> <span class="pre">test)</span> <span class="pre">**</span> <span class="pre">(1/3)</span></code>, <code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train-cv|</span> <span class="pre">+</span>
-<span class="pre">|train-test|</span> <span class="pre">+</span> <span class="pre">|cv-test|</span></code>, and for higher-is-better metrics
-<code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>.
-For lower-is-better metrics, the geometric mean is inverted before
-applying the same reliability formula. The subset with the highest
-reliability score is highlighted.</p>
+<p>The automatic algorithm for determining the best feature subset is
+the same as described in <a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best" title="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_best()</span></code></a> and uses the reliability
+scores already computed during <a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit" title="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></a>. Reliability is derived
+from train/CV scores (according to <code class="docutils literal notranslate"><span class="pre">desired_performance_score</span></code>) and
+train-vs-CV instability; test scores are not used in this selector.
+The highlighted subset is the one returned by <code class="docutils literal notranslate"><span class="pre">find_best()</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -626,6 +597,7 @@ reliability score is highlighted.</p>
 </dl>
 </dd></dl>
 
+</section>
 </dd></dl>
 
 </section>
@@ -655,6 +627,10 @@ reliability score is highlighted.</p>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.metric"><code class="docutils literal notranslate"><span class="pre">metric</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.logic"><code class="docutils literal notranslate"><span class="pre">logic</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.task_type"><code class="docutils literal notranslate"><span class="pre">task_type</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_splitter"><code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.cv_indices"><code class="docutils literal notranslate"><span class="pre">cv_indices</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.groups"><code class="docutils literal notranslate"><span class="pre">groups</span></code></a></li>
+<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.log_level"><code class="docutils literal notranslate"><span class="pre">log_level</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.display_best"><code class="docutils literal notranslate"><span class="pre">display_best()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.CombinatorialSelection.fit_stage_1"><code class="docutils literal notranslate"><span class="pre">fit_stage_1()</span></code></a></li>
@@ -664,14 +640,6 @@ reliability score is highlighted.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a><ul>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator"><code class="docutils literal notranslate"><span class="pre">estimator</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.estimator_string"><code class="docutils literal notranslate"><span class="pre">estimator_string</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.metric"><code class="docutils literal notranslate"><span class="pre">metric</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.max_features"><code class="docutils literal notranslate"><span class="pre">max_features</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.cv_iter"><code class="docutils literal notranslate"><span class="pre">cv_iter</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.logic"><code class="docutils literal notranslate"><span class="pre">logic</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.task_type"><code class="docutils literal notranslate"><span class="pre">task_type</span></code></a></li>
-<li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.log_level"><code class="docutils literal notranslate"><span class="pre">log_level</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.find_best"><code class="docutils literal notranslate"><span class="pre">find_best()</span></code></a></li>
 <li><a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
