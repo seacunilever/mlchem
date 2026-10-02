@@ -662,8 +662,12 @@ This class supports two workflows:
 1) Recommended workflow: ``evaluate_cv()`` using fold-level
     cross-validation, fold-level reliability, and reliability-based
     ranking.
-2) Legacy workflow (backward compatibility): ``fit()`` + ``predict()``
-   using a hold-out ``test_set`` / ``y_test``.
+2) Final consensus workflow: ``fit()`` to refit the selected estimator
+    set on the full training set and generate transparent train/test
+    prediction tables and consensus outputs.
+
+``predict()`` remains available as an additional, legacy helper for
+combination scoring on already-fitted estimator prediction tables.
 
 Parameters
 ----------
@@ -683,10 +687,10 @@ column_list : list[list[str]]
     Per-estimator feature subsets aligned with ``estimator_list``.
 
 test_set : pandas.DataFrame or None, optional
-    Hold-out feature matrix used only by legacy ``fit()``/``predict()``.
+    Hold-out feature matrix used only by ``fit()``.
 
 y_test : iterable or None, optional
-    Hold-out labels/targets used only by legacy ``fit()``/``predict()``.
+    Hold-out labels/targets used only by ``fit()``.
 
 estimator_names : list[str] or None, optional
     Optional user-defined names for estimators.
@@ -828,7 +832,7 @@ log_level : int or str, optional (default=logging.INFO)
         return_prediction_dataframes: bool = False,
     ) -> dict[str, list[str] | int] | dict:
         """
-        Legacy hold-out fitting using train and test sets.
+        Hold-out fitting using train and test sets.
 
         Parameters
         ----------
@@ -840,8 +844,8 @@ log_level : int or str, optional (default=logging.INFO)
         update_active_estimators : bool, optional (default=False)
             If True, permanently replace ``estimator_list`` / ``column_list`` /
             ``estimator_names`` with the selected subset after resolution.
-            This is useful for intentionally narrowing legacy hold-out
-            workflows.
+            This is useful for intentionally narrowing the final
+            consensus fit stage to shortlisted estimators.
 
         build_consensus : bool, optional (default=True)
             For classification tasks, build transparent hold-out prediction
@@ -860,22 +864,7 @@ log_level : int or str, optional (default=logging.INFO)
             ``successful_estimators``, ``failed_estimators``.
             When ``return_prediction_dataframes=True``, returns a dictionary
             containing the fit report and generated prediction DataFrames.
-
-        Notes
-        -----
-        This method is retained for backward compatibility. New workflows
-        should prefer ``evaluate_cv()`` to avoid test-set-driven model
-        selection and ranking.
         """
-
-        warnings.warn(
-            "MajorityVote.fit() is a legacy hold-out API kept for backward "
-            "compatibility. Prefer MajorityVote.evaluate_cv() for model "
-            "selection and ranking.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
         if self.test_set is None or self.y_test is None:
             raise ValueError(
                 "MajorityVote.fit requires 'test_set' and 'y_test'. "
@@ -891,7 +880,7 @@ log_level : int or str, optional (default=logging.INFO)
 
         self._log(
             logging.INFO,
-            "MajorityVote.fit legacy mode: requested_estimators=%d",
+            "MajorityVote.fit consensus stage: requested_estimators=%d",
             len(selected_estimators_resolved),
         )
 
@@ -1055,7 +1044,7 @@ log_level : int or str, optional (default=logging.INFO)
         }
         self._log(
             logging.INFO,
-            f"MajorityVote.fit legacy mode completed: "
+            f"MajorityVote.fit consensus stage completed: "
             f"successful={self.fit_report_['successful_count']} "
             f"failed={self.fit_report_['failed_count']}",
         )

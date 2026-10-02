@@ -100,7 +100,7 @@ def test_sequential_forward_selection_fit(fitted_sfs):
     assert len(sfs.extending_features) > 0
     assert len(sfs.train_scores) > 0
     assert len(sfs.cv_scores) > 0
-    assert len(sfs.cv_stds) > 0
+    assert len(sfs.cv_se) > 0
     assert len(sfs.unseen_scores) > 0
 
 
@@ -115,8 +115,6 @@ def test_sequential_forward_selection_task_type_annotation_uses_classification()
 def test_sequential_forward_selection_find_best(fitted_sfs):
     best_features = fitted_sfs.find_best()
     assert 'best_score' in best_features
-    assert 'performance_score' in best_features
-    assert 'instability_score' in best_features
     assert 'reliability_score' in best_features
     assert best_features['best_score'] == best_features['reliability_score']
     assert 'features' in best_features
@@ -136,13 +134,12 @@ def test_sequential_forward_selection_find_best_uses_reliability_score():
     sfs.train_scores = [0.9, 0.8, 0.95]
     sfs.cv_scores = [0.9, 0.75, 0.6]
     sfs.unseen_scores = [0.9, 0.78, 0.55]
+    sfs.reliability_scores = [0.9, 0.75, 0.6]
 
     best_features = sfs.find_best()
 
     assert best_features['best_index'] == 1
     assert best_features['features'] == ['a']
-    assert best_features['performance_score'] == pytest.approx(0.9)
-    assert best_features['instability_score'] == pytest.approx(0.0)
     assert best_features['reliability_score'] == pytest.approx(0.9)
 
 
@@ -159,17 +156,13 @@ def test_sequential_forward_selection_find_best_lower_logic_inverts_performance(
     sfs.train_scores = [1.0, 0.5, 0.4]
     sfs.cv_scores = [1.0, 0.6, 1.5]
     sfs.unseen_scores = [1.0, 0.55, 1.6]
+    sfs.reliability_scores = [1.0, 2.0, 0.8]
 
     best_features = sfs.find_best()
 
-    expected_performance = 1 / ((0.5 * 0.6 * 0.55) ** (1/3))
-    expected_instability = abs(0.5 - 0.6) + abs(0.5 - 0.55) + abs(0.6 - 0.55)
-    expected_reliability = expected_performance / (1 + expected_instability)
     assert best_features['best_index'] == 2
     assert best_features['features'] == ['a', 'b']
-    assert best_features['performance_score'] == pytest.approx(expected_performance)
-    assert best_features['instability_score'] == pytest.approx(expected_instability)
-    assert best_features['reliability_score'] == pytest.approx(expected_reliability)
+    assert best_features['reliability_score'] == pytest.approx(2.0)
 
 
 def test_sequential_forward_selection_find_best_integer_selection_unchanged():
@@ -271,7 +264,6 @@ def fitted_cs_stage_1():
 
     # Fit stage 1
     cs.fit_stage_1(train_set=train_set, y_train=y_train,
-                   test_set=test_set, y_test=y_test,
                    features=train_set.columns, training_threshold=0.7)
 
     return cs
@@ -288,12 +280,11 @@ def test_combinatorial_selection_fit_stage_1(fitted_cs_stage_1):
     assert 'feature_subsets' in results_stage_1.columns
     assert 'training_score' in results_stage_1.columns
     assert 'cv_score' in results_stage_1.columns
-    assert 'test_score' in results_stage_1.columns
-    assert 'performance_score' in results_stage_1.columns
-    assert 'instability_score' in results_stage_1.columns
     assert 'reliability_score' in results_stage_1.columns
-    assert 'geometric_mean' in results_stage_1.columns
-    assert results_stage_1['reliability_score'].is_monotonic_decreasing
+    assert 'training_se' in results_stage_1.columns
+    assert 'cv_se' in results_stage_1.columns
+    assert 'reliability_se' in results_stage_1.columns
+    assert results_stage_1['Reliability_lower_bound'].is_monotonic_decreasing
 
 def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     results_stage_2 = fitted_cs_stage_2.df_results_stage2
@@ -301,25 +292,30 @@ def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     assert 'feature_subsets' in results_stage_2.columns
     assert 'training_score' in results_stage_2.columns
     assert 'cv_score' in results_stage_2.columns
-    assert 'test_score' in results_stage_2.columns
-    assert 'performance_score' in results_stage_2.columns
-    assert 'instability_score' in results_stage_2.columns
     assert 'reliability_score' in results_stage_2.columns
-    assert 'geometric_mean' in results_stage_2.columns
-    assert results_stage_2['reliability_score'].is_monotonic_decreasing
+    assert 'training_se' in results_stage_2.columns
+    assert 'cv_se' in results_stage_2.columns
+    assert 'reliability_se' in results_stage_2.columns
+    assert results_stage_2['Reliability_lower_bound'].is_monotonic_decreasing
 
 
 def test_combinatorial_selection_lower_logic_inverts_performance_score():
     def rmse(y_true, y_pred):
         return float(np.sqrt(np.mean((np.asarray(y_true) - np.asarray(y_pred)) ** 2)))
 
-    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='regression', random_state=None, shuffle=False):
-        return np.array([metric(y, estimator.predict(X))])
+    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='regression', random_state=None, shuffle=False, **kwargs):
+        score = float(metric(y, estimator.predict(X)))
+        return {
+            'train_scores': np.array([score]),
+            'train_mean': score,
+            'train_se': 0.0,
+            'cv_scores': np.array([score]),
+            'cv_mean': score,
+            'cv_se': 0.0,
+        }
 
     train_set = pd.DataFrame({'low_error': [0.5, 0.5, 0.5], 'high_error': [1.0, 1.0, 1.0]})
-    test_set = train_set.copy()
     y_train = np.zeros(len(train_set))
-    y_test = np.zeros(len(test_set))
     cs = CombinatorialSelection(
         estimator=_FirstColumnRegressor(),
         metric=rmse,
@@ -331,8 +327,6 @@ def test_combinatorial_selection_lower_logic_inverts_performance_score():
         results = cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
-            test_set=test_set,
-            y_test=y_test,
             features=train_set.columns.tolist(),
             k=1,
             training_threshold=2.0,
@@ -341,36 +335,31 @@ def test_combinatorial_selection_lower_logic_inverts_performance_score():
 
     winning_row = results.iloc[0]
     assert winning_row['feature_subsets'] == ['low_error']
-    assert winning_row['geometric_mean'] == pytest.approx(0.5)
-    assert winning_row['performance_score'] == pytest.approx(2.0)
-    assert winning_row['instability_score'] == pytest.approx(0.0)
-    assert winning_row['reliability_score'] == pytest.approx(2.0)
+    assert winning_row['training_score'] == pytest.approx(0.5)
+    assert winning_row['cv_score'] == pytest.approx(0.5)
+    assert winning_row['reliability_score'] == pytest.approx(-0.5)
 
 def test_combinatorial_selection_display_best_logs_summary(fitted_cs_stage_2, caplog):
     fitted_cs_stage_2.set_log_level('INFO')
 
-    with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
-        fitted_cs_stage_2.display_best(row=1)
-
-    full_text = "\n".join(caplog.messages)
-    assert "Best Features" in full_text
-    assert "Train Score" in full_text
-    assert "CV Score" in full_text
-    assert "Test Score" in full_text
+    with pytest.raises(DeprecationWarning):
+        with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
+            fitted_cs_stage_2.display_best(row=1)
 
 
 def test_wrapper_logging_level_controls_output(fitted_cs_stage_2, caplog):
     fitted_cs_stage_2.set_log_level('WARNING')
-    with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
-        fitted_cs_stage_2.display_best(row=1)
+    with pytest.raises(DeprecationWarning):
+        with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
+            fitted_cs_stage_2.display_best(row=1)
     # At WARNING level, INFO logs should not appear
     assert len([m for m in caplog.messages if 'Best Features' in m]) == 0
 
     caplog.clear()
     fitted_cs_stage_2.set_log_level('INFO')
-    with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
-        fitted_cs_stage_2.display_best(row=1)
-    assert any('Best Features' in msg for msg in caplog.messages)
+    with pytest.raises(DeprecationWarning):
+        with caplog.at_level(logging.INFO, logger='mlchem.ml.feature_selection.wrappers'):
+            fitted_cs_stage_2.display_best(row=1)
 
 
 def test_combinatorial_selection_stage_1_max_subsets_guard():
@@ -393,8 +382,6 @@ def test_combinatorial_selection_stage_1_max_subsets_guard():
         cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
-            test_set=test_set,
-            y_test=y_test,
             features=train_set.columns,
             k=3,
             training_threshold=0.5,
@@ -418,8 +405,6 @@ def test_combinatorial_selection_stage_1_copies_features_input():
     cs.fit_stage_1(
         train_set=train_set,
         y_train=y_train,
-        test_set=test_set,
-        y_test=y_test,
         features=features,
         k=2,
         training_threshold=1.1,
@@ -446,8 +431,6 @@ def test_combinatorial_selection_lower_logic_rejects_zero_cv_train_ratio():
         cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
-            test_set=test_set,
-            y_test=y_test,
             features=train_set.columns.tolist(),
             cv_train_ratio=0.0,
         )
@@ -471,8 +454,6 @@ def test_combinatorial_selection_stage_1_max_subsets_none_and_parallel():
     results = cs.fit_stage_1(
         train_set=train_set,
         y_train=y_train,
-        test_set=test_set,
-        y_test=y_test,
         features=train_set.columns,
         k=3,
         training_threshold=0.5,
@@ -499,8 +480,6 @@ def test_combinatorial_selection_invalid_n_jobs_in_stage_1():
         cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
-            test_set=test_set,
-            y_test=y_test,
             features=train_set.columns,
             n_jobs=0,
         )
@@ -591,8 +570,6 @@ def test_combinatorial_stage_1_uses_ranked_features_subset():
     cs.fit_stage_1(
         train_set=train_set,
         y_train=y_train,
-        test_set=test_set,
-        y_test=y_test,
         features=train_set.columns.tolist(),
         k=2,
         training_threshold=0.0,
@@ -626,8 +603,6 @@ def test_combinatorial_stage_1_ranking_requires_target_when_top_requested():
         cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
-            test_set=test_set,
-            y_test=y_test,
             features=train_set.columns.tolist(),
             top_ranked_features=3,
         )
@@ -636,9 +611,16 @@ def test_combinatorial_stage_1_ranking_requires_target_when_top_requested():
 def test_sfs_outer_parallel_forces_inner_estimator_n_jobs_to_one():
     seen_n_jobs = []
 
-    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='classification', random_state=None, shuffle=False):
+    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='classification', random_state=None, shuffle=False, **kwargs):
         seen_n_jobs.append(getattr(estimator, 'n_jobs', None))
-        return np.array([0.6, 0.6, 0.6])
+        return {
+            'train_scores': np.array([0.6, 0.6, 0.6]),
+            'train_mean': 0.6,
+            'train_se': 0.0,
+            'cv_scores': np.array([0.6, 0.6, 0.6]),
+            'cv_mean': 0.6,
+            'cv_se': 0.0,
+        }
 
     sfs = SequentialForwardSelection(
         estimator=_ParallelAwareEstimator(n_jobs=4),
@@ -666,9 +648,16 @@ def test_sfs_outer_parallel_forces_inner_estimator_n_jobs_to_one():
 def test_combinatorial_outer_parallel_forces_inner_estimator_n_jobs_to_one():
     seen_n_jobs = []
 
-    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='classification', random_state=None, shuffle=False):
+    def fake_crossval(estimator, X, y, metric, n_fold=5, task_type='classification', random_state=None, shuffle=False, **kwargs):
         seen_n_jobs.append(getattr(estimator, 'n_jobs', None))
-        return np.array([0.6, 0.6, 0.6])
+        return {
+            'train_scores': np.array([0.6, 0.6, 0.6]),
+            'train_mean': 0.6,
+            'train_se': 0.0,
+            'cv_scores': np.array([0.6, 0.6, 0.6]),
+            'cv_mean': 0.6,
+            'cv_se': 0.0,
+        }
 
     cs = CombinatorialSelection(
         estimator=_ParallelAwareEstimator(n_jobs=8),
@@ -679,16 +668,12 @@ def test_combinatorial_outer_parallel_forces_inner_estimator_n_jobs_to_one():
     X, y = make_classification(80, 6, n_informative=3, random_state=17)
     train_samples = int(0.8 * len(X))
     train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
-    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
     y_train = y[:train_samples]
-    y_test = y[train_samples:]
 
     with patch('mlchem.ml.feature_selection.wrappers.crossval', side_effect=fake_crossval):
         cs.fit_stage_1(
             train_set=train_set,
             y_train=y_train,
-            test_set=test_set,
-            y_test=y_test,
             features=train_set.columns,
             k=2,
             training_threshold=0.0,
@@ -803,7 +788,7 @@ def test_sfs_cv_iter_cv_splitter_and_cv_indices_yield_identical_scores():
     np.testing.assert_allclose(sfs_legacy.cv_scores, sfs_indices.cv_scores)
 
 
-def test_sfs_selection_strategy_legacy_is_default():
+def test_sfs_find_best_default_mode_is_reliability_based():
     sfs = SequentialForwardSelection(
         estimator=LogisticRegression(),
         estimator_string=None,
@@ -811,46 +796,47 @@ def test_sfs_selection_strategy_legacy_is_default():
         max_features=3,
         cv_iter=3,
         logic='greater',
-    )
-    assert sfs.selection_strategy == 'legacy'
-
-
-def test_sfs_selection_strategy_rejects_invalid_value():
-    with pytest.raises(ValueError, match="'selection_strategy'"):
-        SequentialForwardSelection(
-            estimator=LogisticRegression(),
-            estimator_string=None,
-            metric=get_geometric_S,
-            selection_strategy='bogus',
-        )
-
-
-def test_sfs_cv_only_selection_ignores_test_score():
-    sfs = SequentialForwardSelection(
-        estimator=LogisticRegression(),
-        estimator_string=None,
-        metric=get_geometric_S,
-        max_features=3,
-        cv_iter=3,
-        logic='greater',
-        selection_strategy='cv_only',
     )
     sfs.extending_features = ['a', 'b', 'c']
-    sfs.train_scores = [0.9, 0.8, 0.95]
-    sfs.cv_scores = [0.7, 0.75, 0.6]
-    # Test scores are intentionally adversarial: they would change the
-    # winner under 'legacy' but must be ignored under 'cv_only'.
-    sfs.unseen_scores = [0.99, 0.01, 0.01]
+    sfs.cv_scores = [0.2, 0.9, 0.4]
+    sfs.reliability_scores = [0.2, 0.9, 0.4]
+    best = sfs.find_best()
+    assert best['best_score'] == best['reliability_score']
+    assert best['best_index'] == 2
 
-    best_cv_only = sfs.find_best()
 
-    sfs.selection_strategy = 'legacy'
-    best_legacy = sfs.find_best()
+def test_sfs_find_best_rejects_invalid_parsimony_mode():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+    )
+    sfs.extending_features = ['a', 'b', 'c']
+    sfs.reliability_scores = [0.3, 0.5, 0.4]
+    sfs.cv_scores = [0.3, 0.5, 0.4]
+    with pytest.raises(ValueError, match="parsimony_mode"):
+        sfs.find_best(parsimony_mode='bogus')
 
-    assert best_cv_only['best_index'] != best_legacy['best_index']
-    # cv_only must select purely from train/cv: index 2 ('b') has the best
-    # train/cv combination among the three prefixes.
-    assert best_cv_only['features'] == ['a', 'b']
+
+def test_sfs_find_best_uses_reliability_scores_only():
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=3,
+        cv_iter=3,
+        logic='greater',
+    )
+    sfs.extending_features = ['a', 'b', 'c']
+    sfs.reliability_scores = [0.2, 0.9, 0.4]
+    sfs.cv_scores = [0.2, 0.9, 0.4]
+
+    best = sfs.find_best()
+    assert best['best_index'] == 2
+    assert best['features'] == ['a', 'b']
 
 
 def test_combinatorial_selection_accepts_cv_indices_manifest():
@@ -860,9 +846,7 @@ def test_combinatorial_selection_accepts_cv_indices_manifest():
     X, y = make_classification(50, 6, n_informative=3, random_state=41)
     train_samples = int(0.8 * len(X))
     train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
-    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
     y_train = y[:train_samples]
-    y_test = y[train_samples:]
 
     n = len(train_set)
     manifest = [
@@ -875,7 +859,7 @@ def test_combinatorial_selection_accepts_cv_indices_manifest():
         cv_indices=manifest,
     )
     results = cs.fit_stage_1(
-        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+        train_set=train_set, y_train=y_train,
         features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
     )
 
@@ -891,9 +875,7 @@ def test_combinatorial_selection_accepts_group_kfold_with_groups():
     X, y = make_classification(60, 6, n_informative=3, random_state=43)
     train_samples = int(0.8 * len(X))
     train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
-    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
     y_train = y[:train_samples]
-    y_test = y[train_samples:]
     groups = np.arange(len(train_set)) % 4
 
     cs = CombinatorialSelection(
@@ -901,54 +883,41 @@ def test_combinatorial_selection_accepts_group_kfold_with_groups():
         cv_splitter=GroupKFold(n_splits=4), groups=groups,
     )
     results = cs.fit_stage_1(
-        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+        train_set=train_set, y_train=y_train,
         features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
     )
 
     assert not results.empty
 
 
-def test_combinatorial_selection_cv_only_matches_train_cv_only_ranking():
+def test_combinatorial_selection_desired_performance_score_variants():
     estimator = LogisticRegression()
     metric = get_geometric_S
 
     X, y = make_classification(60, 6, n_informative=3, random_state=45)
     train_samples = int(0.8 * len(X))
     train_set = pd.DataFrame(X[:train_samples], columns=np.arange(X.shape[1]))
-    test_set = pd.DataFrame(X[train_samples:], columns=np.arange(X.shape[1]))
     y_train = y[:train_samples]
-    y_test = y[train_samples:]
 
-    cs_legacy = CombinatorialSelection(estimator=estimator, metric=metric, logic='greater')
-    results_legacy = cs_legacy.fit_stage_1(
-        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+    cs_train = CombinatorialSelection(
+        estimator=estimator, metric=metric, logic='greater', desired_performance_score='train'
+    )
+    results_train = cs_train.fit_stage_1(
+        train_set=train_set, y_train=y_train,
         features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
     )
 
-    cs_cv_only = CombinatorialSelection(
-        estimator=estimator, metric=metric, logic='greater',
-        selection_strategy='cv_only',
+    cs_cv = CombinatorialSelection(
+        estimator=estimator, metric=metric, logic='greater', desired_performance_score='cv'
     )
-    results_cv_only = cs_cv_only.fit_stage_1(
-        train_set=train_set, y_train=y_train, test_set=test_set, y_test=y_test,
+    results_cv = cs_cv.fit_stage_1(
+        train_set=train_set, y_train=y_train,
         features=train_set.columns, training_threshold=0.0, cv_train_ratio=0.0,
     )
 
-    # Align rows by feature subset (both frames get re-sorted by their own
-    # reliability_score, which differs between strategies).
-    key_legacy = results_legacy['feature_subsets'].apply(tuple)
-    key_cv_only = results_cv_only['feature_subsets'].apply(tuple)
-    test_scores_legacy = results_legacy.set_index(key_legacy)['test_score'].sort_index()
-    test_scores_cv_only = results_cv_only.set_index(key_cv_only)['test_score'].sort_index()
-
-    # Identical train/cv/test scores, but different reliability_score
-    # formulas: cv_only must not depend on test_score at all.
-    pd.testing.assert_series_equal(
-        test_scores_legacy,
-        test_scores_cv_only,
-        check_names=False,
-    )
-    assert not results_legacy['reliability_score'].equals(results_cv_only['reliability_score'])
+    assert not results_train.empty
+    assert not results_cv.empty
+    assert not results_train['reliability_score'].equals(results_cv['reliability_score'])
 
 
 # ============================================================================
@@ -1210,6 +1179,8 @@ class TestSFSParsimonyBasic:
         sfs.train_scores = [0.2, 0.9, 0.4]
         sfs.cv_scores = [0.2, 0.8, 0.95]
         sfs.unseen_scores = [0.2, 0.9, 0.4]
+        sfs.reliability_scores = [0.2, 0.9, 0.4]
+        sfs.reliability_se = [0.0, 0.0, 0.0]
         sfs.cv_folds = [
             np.array([0.2, 0.2]),
             np.array([0.8, 0.8]),

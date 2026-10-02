@@ -331,10 +331,9 @@ cs = CombinatorialSelection(
 )
 ```
 
-### optional diagnostics for undersampling and y-scrambling
+### optional diagnostics for undersampling
 ```python
 from mlchem.ml.preprocessing.undersampling import undersample
-from mlchem.ml.modelling.model_evaluation import y_scrambling
 
 train_balanced, test_updated = undersample(
   train_set=train_df,
@@ -343,19 +342,83 @@ train_balanced, test_updated = undersample(
   desired_proportion_majority=0.5,
   log_level='INFO',
 )
+```
+
+### Stress-test your models with y-scrambling
+```python
+from mlchem.ml.modelling.model_evaluation import y_scrambling
 
 y_scrambling(
   estimator=model,
   train_set=X_train,
   y_train=y_train,
-  test_set=X_test,
-  y_test=y_test,
-  metric_function=metric_fn,
-  n_iter=50,
+  metric=metric_fn,
+  n_scrambles=50,
+  safety_multiplier=2.3,
   plot=False,
   log_level='INFO',
 )
 ```
+
+Returned diagnostics include:
+- `reference_score`
+- `best_random_score`
+- `probability_better`
+- `safety_margin_ratio`
+
+### cross-validation-centric majority voting
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from mlchem.metrics import get_geometric_S
+from mlchem.ml.modelling.model_evaluation import MajorityVote, generate_cv_indices
+
+estimators = [
+  LogisticRegression(random_state=1),
+  RandomForestClassifier(random_state=1),
+]
+
+columns = [
+  X_train.columns.tolist(),
+  X_train.columns.tolist(),
+]
+
+mv = MajorityVote(
+  train_set=X_train,
+  y_train=y_train,
+  task_type='classification',
+  estimator_list=estimators,
+  column_list=columns,
+  estimator_names=['LR', 'RF'],
+)
+
+folds = generate_cv_indices(
+  X_train.values,
+  y=y_train,
+  cv_iter=5,
+  task_type='classification',
+  shuffle=True,
+  random_state=42,
+)
+
+df_mv = mv.evaluate_cv(
+  metric=get_geometric_S,
+  metric_name='G',
+  cv_indices=folds,
+  logic='greater',
+  desired_performance_score='train_cv_average',
+)
+
+# Ranked by reliability_mean (descending)
+print(df_mv[['combination', 'validation_mean', 'reliability_mean']].head())
+
+# Final consensus stage: fit shortlisted estimators on full train set
+# and generate train/test prediction tables.
+
+fit_report = mv.fit(return_prediction_dataframes=True)
+```
+
+`fit()` is the final consensus step after model selection.
 
 ### pattern recognition
 ![image](assets/figure2.png)

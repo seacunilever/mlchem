@@ -87,8 +87,9 @@ def test_crossval_classification(sample_data):
     metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
     
     scores = crossval(estimator, train_set.values, y_train, metric_function, n_fold=5, task_type='classification')
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) == 5
+    assert isinstance(scores, dict)
+    assert set(['train_scores', 'train_mean', 'train_se', 'cv_scores', 'cv_mean', 'cv_se']).issubset(scores.keys())
+    assert len(scores['cv_scores']) == 5
 
 def test_crossval_regression(sample_data):
     train_set, y_train, _, _ = sample_data
@@ -97,8 +98,8 @@ def test_crossval_regression(sample_data):
     metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
 
     scores = crossval(estimator, train_set.values, y_train_reg, metric_function, n_fold=5, task_type='regression')
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) == 5
+    assert isinstance(scores, dict)
+    assert len(scores['cv_scores']) == 5
 
 
 def test_crossval_invalid_task_type_raises(sample_data):
@@ -138,8 +139,8 @@ def test_crossval_shuffle_false_ignores_random_state(sample_data, task_type, est
         shuffle=False,
     )
 
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) == 5
+    assert isinstance(scores, dict)
+    assert len(scores['cv_scores']) == 5
 
 
 @pytest.mark.parametrize('task_type, estimator, y_values', [
@@ -151,7 +152,11 @@ def test_crossval_shuffle_true_propagates_random_state(sample_data, task_type, e
     metric_function = lambda y_true, y_pred: np.mean(np.abs(y_true - y_pred))
     y_input = y_train if y_values == 'classification' else y_train.astype(float)
 
-    with patch('sklearn.model_selection.cross_val_score', return_value=np.array([1.0])) as mock_cross_val_score:
+    fake_result = {
+        'train_score': np.array([1.0]),
+        'test_score': np.array([1.0]),
+    }
+    with patch('sklearn.model_selection.cross_validate', return_value=fake_result) as mock_cross_validate:
         crossval(
             estimator,
             train_set.values,
@@ -163,7 +168,7 @@ def test_crossval_shuffle_true_propagates_random_state(sample_data, task_type, e
             shuffle=True,
         )
 
-    cv_splitter = mock_cross_val_score.call_args.kwargs['cv']
+    cv_splitter = mock_cross_validate.call_args.kwargs['cv']
     assert cv_splitter.shuffle is True
     assert cv_splitter.random_state == 77
 
@@ -279,7 +284,7 @@ def test_crossval_cv_splitter_matches_cv_indices_manifest(sample_data):
         cv_splitter=StratifiedKFold(n_splits=5),
     )
 
-    np.testing.assert_allclose(scores_from_indices, scores_from_splitter)
+    np.testing.assert_allclose(scores_from_indices['cv_scores'], scores_from_splitter['cv_scores'])
 
 
 def test_crossval_cv_iter_and_cv_indices_produce_identical_scores(sample_data):
@@ -300,7 +305,7 @@ def test_crossval_cv_iter_and_cv_indices_produce_identical_scores(sample_data):
         cv_indices=pairs,
     )
 
-    np.testing.assert_allclose(legacy_scores, explicit_scores)
+    np.testing.assert_allclose(legacy_scores['cv_scores'], explicit_scores['cv_scores'])
 
 
 def test_crossval_with_group_kfold_and_groups(sample_data):
@@ -314,8 +319,8 @@ def test_crossval_with_group_kfold_and_groups(sample_data):
         estimator, train_set.values, y_train, metric_function,
         cv_splitter=GroupKFold(n_splits=4), groups=groups,
     )
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) == 4
+    assert isinstance(scores, dict)
+    assert len(scores['cv_scores']) == 4
 
 
 def test_crossval_with_predefined_split(sample_data):
@@ -329,46 +334,54 @@ def test_crossval_with_predefined_split(sample_data):
         estimator, train_set.values, y_train, metric_function,
         cv_splitter=PredefinedSplit(test_fold),
     )
-    assert isinstance(scores, np.ndarray)
-    assert len(scores) == 2
+    assert isinstance(scores, dict)
+    assert len(scores['cv_scores']) == 2
 
 def test_y_scrambling(sample_data, tmp_path, monkeypatch):
-    train_set, y_train, test_set, y_test = sample_data
+    train_set, y_train, _, _ = sample_data
     estimator = LogisticRegression()
     metric_function = get_geometric_S
     monkeypatch.chdir(tmp_path)
     
-    with pytest.raises(ValueError, match='empty'):
-        # Test with invalid number of iterations
-        y_scrambling(estimator, train_set.values, y_train, test_set.values, y_test, metric_function, n_iter=-1)
+    with pytest.raises(ValueError, match="'safety_multiplier' must be greater than 0"):
+        y_scrambling(
+            estimator,
+            train_set.values,
+            y_train,
+            metric_function,
+            n_scrambles=5,
+            safety_multiplier=0,
+            plot=False,
+        )
 
     # Test with valid number of iterations
     with patch('matplotlib.pyplot.show') as mock_show:
-            y_scrambling(estimator, train_set.values, y_train, test_set.values, y_test, metric_function, n_iter=10)
+            y_scrambling(estimator, train_set.values, y_train, metric_function, n_scrambles=10)
             mock_show.assert_called_once()  # Ensure plt.show() is called
-            plot = y_scrambling(estimator, train_set.values, y_train, test_set.values, y_test, metric_function, n_iter=100,plot=False)
+            result = y_scrambling(estimator, train_set.values, y_train, metric_function, n_scrambles=20, plot=False)
             plt.savefig('y_scrambling_test_plot.png')
+            assert 'safety_margin_ratio' in result
 
 def test_y_scrambling_with_dataframe_inputs(sample_data):
-    train_set, y_train, test_set, y_test = sample_data
+    train_set, y_train, _, _ = sample_data
     estimator = LogisticRegression(max_iter=250)
     metric_function = get_geometric_S
 
     # Exercise DataFrame input branch in y_scrambling conversion logic.
-    y_scrambling(
+    result = y_scrambling(
         estimator,
         train_set,
         y_train,
-        test_set,
-        y_test,
         metric_function,
-        n_iter=2,
+        n_scrambles=2,
         plot=False,
     )
+    assert isinstance(result, dict)
+    assert 'scrambled_scores' in result
 
 
 def test_y_scrambling_logging_toggle(sample_data, caplog):
-    train_set, y_train, test_set, y_test = sample_data
+    train_set, y_train, _, _ = sample_data
     estimator = LogisticRegression(max_iter=250)
     metric_function = get_geometric_S
 
@@ -377,10 +390,8 @@ def test_y_scrambling_logging_toggle(sample_data, caplog):
             estimator,
             train_set,
             y_train,
-            test_set,
-            y_test,
             metric_function,
-            n_iter=2,
+            n_scrambles=2,
             plot=False,
             log_level='INFO',
         )
@@ -394,15 +405,12 @@ def test_y_scrambling_logging_toggle(sample_data, caplog):
             estimator,
             train_set,
             y_train,
-            test_set,
-            y_test,
             metric_function,
-            n_iter=2,
+            n_scrambles=2,
             plot=False,
             log_level='WARNING',
         )
-    # At WARNING level, only WARNING+ logs should be emitted
-    # Since we're logging at WARNING level, we should see the logs
+    # At WARNING level, the same diagnostics are emitted at WARNING severity.
     assert len([m for m in caplog.messages if 'Probability' in m]) == 1
 
 

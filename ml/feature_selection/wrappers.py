@@ -335,37 +335,6 @@ def _safe_abs_corr(x: np.ndarray, y: np.ndarray, method: str = 'pearson') -> flo
     return float(abs(corr))
 
 
-#def _add_reliability_columns(
-#    dataframe: pd.DataFrame,
-#    logic: Literal['lower', 'greater'],
-#    selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
-#    desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
-#) -> pd.DataFrame:
-#    score_columns = [
-#        'geometric_mean',
-#        'performance_score',
-#        'instability_score',
-#        'reliability_score',
-#    ]
-#    if dataframe.empty:
-#        for column in score_columns:
-#            dataframe[column] = pd.Series(dtype=float)
-#        return dataframe
-
-#    reliability_scores = dataframe.apply(
-#        lambda row: get_reliability_score_components(
-#            train_score=row.training_score,
-#            cv_score=row.cv_score,
-#            test_score=None if selection_strategy == 'cv_only' else row.test_score,
-#            logic=logic,
-#            desired_performance_score=desired_performance_score,
-#        ),
-#        axis=1,
-#        result_type='expand',
-#    )
-#    return pd.concat([dataframe, reliability_scores], axis=1)
-
-
 class SequentialForwardSelection:
     """
   Sequential Forward Feature Selection wrapper.
@@ -578,7 +547,7 @@ falls within the configured empirical margin on the supplied resamples.
         """
   Initialise the SequentialForwardSelection object.
 
-Attributes
+Parameters
   ----------
   estimator : object
       The scikit-learn estimator used for feature selection.
@@ -1082,22 +1051,6 @@ Attributes
                 }
             else:
                 self.parsimony_diagnostics = {}
-                
-                #scores = [
-                #    get_reliability_score_components(
-                #        train_score=train_score,
-                #        cv_score=cv_score,
-                #        test_score=None if self.selection_strategy == 'cv_only' else test_score,
-                #        logic=self.logic,
-                #        desired_performance_score=self.desired_performance_score,
-                #    )
-                #    for train_score, cv_score, test_score in zip(
-                #        self.train_scores,
-                #        self.cv_scores,
-                #        self.unseen_scores,
-                #    )
-                #]
-
                 best_index_zero_based = int(np.argmax(self.reliability_scores))
                 best_index = best_index_zero_based + 1
                 #winning_scores = scores[best_index_zero_based]

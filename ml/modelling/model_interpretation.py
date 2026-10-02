@@ -844,7 +844,6 @@ task_type : {'classification', 'regression'}
             cv_splitter=None,
             cv_indices=None,
             groups=None,
-            selection_strategy: Literal['legacy', 'cv_only'] = 'legacy',
             ) -> None:
         """
 Initialise the DescriptorExplainer with training/testing data, model, 
@@ -898,11 +897,6 @@ groups : array-like, optional
     Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.
     Ignored when ``cv_indices`` is provided.
 
-selection_strategy : {'legacy', 'cv_only'}, optional (default='legacy')
-    Whether the ``reliability_score`` used for ranking subsets includes
-    the test score (``'legacy'``, default, kept for backward
-    compatibility) or only train/CV information (``'cv_only'``,
-    leakage-free, recommended for new projects).
 """
 
         from mlchem.ml.feature_selection import wrappers
@@ -928,7 +922,6 @@ selection_strategy : {'legacy', 'cv_only'}, optional (default='legacy')
             cv_splitter=cv_splitter,
             cv_indices=cv_indices,
             groups=groups,
-            selection_strategy=selection_strategy,
         )
 
     def fit_stage_1(
@@ -966,8 +959,6 @@ None
         self.df_results_stage_1 = self.CombSelector.fit_stage_1(
             train_set=self.df_train,
             y_train=self.target_train.values,
-            test_set=self.df_test,
-            y_test=self.target_test.values,
             features=list(self.df_train.columns),
             k=k,
             training_threshold=training_threshold,
