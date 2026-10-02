@@ -394,7 +394,7 @@ class SequentialForwardSelection:
 
   `plot()`: Plot the performance of the Sequential Forward Selection process.
 
-Attributes
+Parameters
   ----------
   estimator : object
       The scikit-learn estimator used for feature selection.
@@ -449,56 +449,51 @@ Attributes
     score gets its sign inverted so that the aim is still to maximise the
     reliability score.
   
-  Examples
-  --------
-
-  >>> import pandas as pd
-  >>> import numpy as np
-  >>> from sklearn.linear_model import LogisticRegression
-  >>> from sklearn.datasets import make_classification
-  >>> from mlchem.metrics import get_geometric_S
-
-  Standard cross-validation (existing behaviour):
-
-    >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-    ...                                  estimator_string=None,
-    ...                                  metric=get_geometric_S,
-    ...                                  max_features=5,
-    ...                                  cv_iter=3,
-    ...                                  logic='greater')
-
-  GroupKFold with scaffold groups:
-
-  >>> from sklearn.model_selection import GroupKFold
-    >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-    ...                                  estimator_string=None,
-    ...                                  metric=get_geometric_S,
-  ...                                  cv_splitter=GroupKFold(5),
-    ...                                  groups=scaffold_ids)
-
-  Precomputed scaffold or cluster folds:
-
-    >>> sfs = SequentialForwardSelection(estimator=LogisticRegression(),
-    ...                                  estimator_string=None,
-    ...                                  metric=get_geometric_S,
-    ...                                  cv_indices=scaffold_fold_manifest)
-
-  >>> X, y = make_classification(300, 10, n_informative=5)
-  >>> train_size = 0.8
-  >>> train_samples = int(train_size * len(X))
-
-  >>> X_train, y_train = X[:train_samples], y[:train_samples]
-  >>> X_test, y_test = X[train_samples:], y[train_samples:]
-
-  >>> train_set = pd.DataFrame(X_train, columns=np.arange(X_train.shape[1]))
-  >>> test_set = pd.DataFrame(X_test, columns=np.arange(X_test.shape[1]))
-
-  >>> sfs.fit(train_set, y_train, test_set, y_test)
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from mlchem.metrics import get_geometric_S
+    >>> X, y = make_classification(300, 10, n_informative=5, random_state=1)
+    >>> split = int(0.8 * len(X))
+    >>> train_set = pd.DataFrame(X[:split], columns=np.arange(X.shape[1]))
+    >>> test_set = pd.DataFrame(X[split:], columns=np.arange(X.shape[1]))
+    >>> y_train, y_test = y[:split], y[split:]
+    >>> sfs = SequentialForwardSelection(
+    ...     estimator=LogisticRegression(),
+    ...     estimator_string='LogReg',
+    ...     metric=get_geometric_S,
+    ...     max_features=5,
+    ...     cv_iter=3,
+    ...     logic='greater',
+    ... )
+    >>> sfs.fit(train_set, y_train, test_set, y_test)
     >>> sfs.find_best(parsimony_mode=None)['best_index']
-    >>> sfs.find_best(parsimony_mode='uncertainty',
-    ...               parsimony_tolerance=0.01,
-    ...               parsimony_se_multiplier=1.0)['best_index']
-    >>> sfs.plot(best_feature=None)
+    >>> sfs.find_best(
+    ...     parsimony_mode='uncertainty',
+    ...     parsimony_tolerance=0.01,
+    ...     parsimony_se_multiplier=1.0,
+    ... )['best_index']
+
+    Group-aware folds:
+    >>> from sklearn.model_selection import GroupKFold
+    >>> sfs_grouped = SequentialForwardSelection(
+    ...     estimator=LogisticRegression(),
+    ...     estimator_string='LogReg_grouped',
+    ...     metric=get_geometric_S,
+    ...     cv_splitter=GroupKFold(5),
+    ...     groups=scaffold_ids,
+    ... )  # doctest: +SKIP
+
+    Precomputed folds:
+    >>> sfs_manifest = SequentialForwardSelection(
+    ...     estimator=LogisticRegression(),
+    ...     estimator_string='LogReg_manifest',
+    ...     metric=get_geometric_S,
+    ...     cv_indices=scaffold_fold_manifest,
+    ... )  # doctest: +SKIP
 
 
 Scientific Rationale
@@ -725,7 +720,8 @@ Attributes
         y_train : iterable
             Target values for the training set.
         test_set : pandas.DataFrame, optional
-            Test dataset. Default is None.
+            Optional test dataset. If provided, unseen-set scores are
+            stored in ``self.unseen_scores``.
         y_test : iterable
             Target values for the test set.
         n_jobs : int, optional
@@ -1007,27 +1003,27 @@ Attributes
             If specified, returns the feature subset at the given index.
             If None, the best subset is determined automatically using the
             reliability score.
-                parsimony_mode : {None, 'best', 'tolerance', 'standard_error', 'uncertainty', 'none'}, optional
-            Parsimony selection mode used when ``which`` is ``None``.
-                        ``None`` disables parsimony (preferred) and returns the
-                        reference subset ``k*`` (highest reliability score).
-                        ``'none'`` is accepted as a legacy alias for ``None``.
-                        ``'best'`` is an alias for returning ``k*``.
-                        For ``'tolerance'``, ``'standard_error'``, and ``'uncertainty'``:
-                        1. identify reference subset ``k*`` as the prefix with highest
-                             reliability score;
-                        2. orient fold-level CV scores so larger means better utility;
-                        3. for each smaller subset ``k < k*`` compute paired fold
-                             degradation ``d_r = μ[k*, r] - μ[k, r]``;
-                        4. compute ``mean(d)`` and ``SE(d) = SD(d) / sqrt(R)``;
-                        5. accept subset ``k`` when:
-                             - ``'tolerance'``: ``mean(d) <= parsimony_tolerance``
-                             - ``'standard_error'``:
-                                 ``mean(d) <= parsimony_se_multiplier * SE(d)``
-                             - ``'uncertainty'``:
-                                 ``mean(d) <= parsimony_tolerance + parsimony_se_multiplier * SE(d)``
-                        6. return the smallest accepted ``k``; if none are accepted,
-                             fall back to ``k*``.
+                   parsimony_mode : {None, 'best', 'tolerance', 'standard_error', 'uncertainty', 'none'}, optional
+                      Parsimony mode used when ``which`` is ``None``.
+                      ``None`` disables parsimony (preferred) and returns reference
+                      subset ``k*`` (highest reliability score).
+                      ``'none'`` is accepted as a legacy alias for ``None``.
+                      ``'best'`` is an alias for returning ``k*``.
+                      For ``'tolerance'``, ``'standard_error'``, and ``'uncertainty'``:
+                      1. Identify reference subset ``k*`` as the prefix with highest
+                        reliability score.
+                      2. Orient fold-level CV scores so larger means better utility.
+                      3. For each smaller subset ``k < k*``, compute paired fold
+                        degradation ``d_r = μ[k*, r] - μ[k, r]``.
+                      4. Compute ``mean(d)`` and ``SE(d) = SD(d) / sqrt(R)``.
+                      5. Accept subset ``k`` when:
+                        - ``'tolerance'``: ``mean(d) <= parsimony_tolerance``
+                        - ``'standard_error'``:
+                          ``mean(d) <= parsimony_se_multiplier * SE(d)``
+                        - ``'uncertainty'``:
+                          ``mean(d) <= parsimony_tolerance + parsimony_se_multiplier * SE(d)``
+                      6. Return the smallest accepted ``k``; if none are accepted,
+                        fall back to ``k*``.
         parsimony_tolerance : float, optional
             Absolute tolerance used by ``'tolerance'`` and ``'uncertainty'``.
             Default is 0.0.
@@ -1419,7 +1415,7 @@ class CombinatorialSelection:
             Options are: 'train' for the training score, 'cv' for the cross-validation score,
             and 'train_cv_average' for the average of the training and cross-validation scores.
             Default is 'train_cv_average'.
-        log_level : {{'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}} or int, optional
+        log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int, optional
             Logging level threshold. Use 'DEBUG' for detailed diagnostics,
             'INFO' for standard output, 'WARNING' to suppress most output.
             Default is logging.INFO.
@@ -1659,7 +1655,7 @@ class CombinatorialSelection:
         Notes
         -----
         Generates all possible feature subsets of size ``k`` and evaluates
-        each subset using training, cross-validation, and test scores.
+        each subset using training and cross-validation scores.
         Results are filtered using training/CV thresholds and ranked by
         ``reliability_score``. The score uses the same arithmetic-mean
         performance term and lower-is-better orientation as SFS. The legacy

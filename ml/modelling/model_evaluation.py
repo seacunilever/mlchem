@@ -275,10 +275,16 @@ def summarise_fold_scores(scores: Iterable[float]) -> dict:
         Dictionary containing the fold scores, the mean and
         standard error of the fold scores.
     """
+    scores_arr = np.asarray(list(scores), dtype=float)
+    mean = float(np.mean(scores_arr))
+    if len(scores_arr) <= 1:
+        se = 0.0
+    else:
+        se = float(np.std(scores_arr) / np.sqrt(len(scores_arr)))
     return {
-        'scores': scores,
-        'mean': np.mean(scores),
-        'stderr': np.std(scores) / np.sqrt(len(scores))
+        'scores': scores_arr,
+        'mean': mean,
+        'se': se,
     }
 
 def crossval(estimator,
@@ -293,7 +299,7 @@ def crossval(estimator,
              cv_splitter=None,
              cv_indices: Iterable | None = None,
              groups: np.ndarray | pd.Series | None = None,
-             ) -> np.ndarray:
+             ) -> dict[str, np.ndarray | float]:
     """
 Evaluate an estimator using cross-validation.
 
@@ -322,7 +328,7 @@ X : numpy.ndarray or pandas.DataFrame
 y : numpy.ndarray or pandas.DataFrame
     Target vector of shape (n_samples,) or (n_samples, 1).
 
-metric_function : callable
+metric : callable
     A scoring function that accepts (y_true, y_pred) as arguments.
 
 n_fold : int, optional (default=5)
@@ -358,8 +364,10 @@ groups : array-like, optional
 
 Returns
 -------
-numpy.ndarray
-    An array of train and cross-validation scores.
+dict
+    Dictionary with fold-level arrays and summary statistics:
+    ``train_scores``, ``train_mean``, ``train_se``,
+    ``cv_scores``, ``cv_mean``, ``cv_se``.
 """
 
     from sklearn.model_selection import cross_validate
@@ -385,36 +393,35 @@ numpy.ndarray
                                 y,
                                 cv=resolved_pairs,
                                 scoring=make_scorer(metric),
-                                groups=resolved_pairs,
-                                return_train_score=True,)
-
-    # ---- Legacy path: unchanged behaviour for cv_iter=n_fold. ----
-    validate_task_type(task_type)
-
-    cv_kwargs = {
-        'n_splits': n_fold,
-        'shuffle': shuffle,
-    }
-    if shuffle:
-        cv_kwargs['random_state'] = random_state
-
-    if task_type == 'classification':
-
-        from sklearn.model_selection import StratifiedKFold
-        result = cross_validate(estimator,
-                                X,
-                                y,
-                                cv=StratifiedKFold(**cv_kwargs),
-                                scoring=make_scorer(metric),
+                                groups=groups,
                                 return_train_score=True,)
     else:
-        from sklearn.model_selection import KFold
-    result = cross_validate(estimator,
-                            X,
-                            y,
-                            cv=KFold(**cv_kwargs),
-                            scoring=make_scorer(metric),
-                            return_train_score=True)
+        # ---- Legacy path: unchanged behaviour for n_fold. ----
+        validate_task_type(task_type)
+
+        cv_kwargs = {
+            'n_splits': n_fold,
+            'shuffle': shuffle,
+        }
+        if shuffle:
+            cv_kwargs['random_state'] = random_state
+
+        if task_type == 'classification':
+            from sklearn.model_selection import StratifiedKFold
+            result = cross_validate(estimator,
+                                    X,
+                                    y,
+                                    cv=StratifiedKFold(**cv_kwargs),
+                                    scoring=make_scorer(metric),
+                                    return_train_score=True,)
+        else:
+            from sklearn.model_selection import KFold
+            result = cross_validate(estimator,
+                                    X,
+                                    y,
+                                    cv=KFold(**cv_kwargs),
+                                    scoring=make_scorer(metric),
+                                    return_train_score=True)
     
     train_summary = summarise_fold_scores(result['train_score'])
     cv_summary = summarise_fold_scores(result['test_score'])
@@ -442,8 +449,9 @@ def y_scrambling(estimator,
                      'classification', 'regression'] = 'classification',
                  plot: bool = True,
                  n_jobs: int = 1,
+                 safety_multiplier: float = 2.3,
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
-                 ) -> None:
+                 ) -> dict[str, float | np.ndarray]:
     """
 Perform y-scrambling to assess model performance due to chance.
 
@@ -466,6 +474,10 @@ y_train : iterable
 metric : callable
     A scoring function that accepts (y_true, y_pred) as arguments.
 
+n_scrambles : int, optional (default=100)
+    Number of random target permutations used to build the null
+    performance distribution.
+
 n_fold : int, optional
     Number of cross-validation folds. Default is 5. Ignored when
     ``cv_splitter`` or ``cv_indices`` is provided.
@@ -474,10 +486,11 @@ cv_splitter : object, optional
     Cross-validation splitter. If provided, it overrides ``n_fold``.
 
 groups : array-like, optional
-    Group labels for the samples used while splitting the dataset into train/test set.
+    Group labels forwarded to group-aware splitters.
 
 cv_indices : iterable or None, optional
-    Predefined cross-validation indices. If provided, it overrides ``n_fold`` and ``cv_splitter``.
+    Predefined cross-validation index pairs. If provided, it overrides
+    ``n_fold`` and ``cv_splitter``.
 
 logic : {'lower', 'greater'}, optional
     Logic to determine if a score is better. 'greater' means higher is better, 'lower' means lower is better.
@@ -491,12 +504,35 @@ plot : bool, optional (default=True)
 n_jobs : int, optional (default=1)
     Number of parallel workers for iterations. -1 uses all available CPUs.
 
+safety_multiplier : float, optional (default=2.3)
+    Multiplier applied to the standard deviation of scrambled scores to
+    define the absolute safety band:
+    ``safety_margin = safety_multiplier * scrambled_std``.
+    Use this parameter to apply a custom z-score-like thresholding
+    convention.
+
 log_level : int or str, optional (default=logging.INFO)
     Logging level for diagnostics.
 
 Returns
 -------
-None
+dict
+        Dictionary with:
+        - ``reference_score``: float, CV score on true labels.
+        - ``scrambled_scores``: numpy.ndarray, CV scores on scrambled labels.
+        - ``scrambled_std``: float, standard deviation of scrambled scores.
+        - ``best_random_score``: float, best scrambled score according to
+            ``logic`` (max for ``'greater'``, min for ``'lower'``).
+        - ``probability_better``: float, empirical probability that scrambled
+            performance is at least as good as reference (or at most as good for
+            ``'lower'``).
+        - ``obtained_margin``: float, gap between reference score and
+            ``best_random_score`` in the direction of improvement.
+        - ``safety_margin``: float, absolute safety band width
+            (``safety_multiplier * scrambled_std``).
+        - ``safety_margin_ratio``: float, ``obtained_margin / safety_margin``.
+        - ``safety_multiplier``: float, multiplier used to define
+            ``safety_margin``.
 """
 
     from sklearn.base import clone
@@ -505,6 +541,8 @@ None
     resolved_log_level = coerce_log_level(log_level)
     _configure_module_logging(resolved_log_level)
     n_jobs = resolve_n_jobs(n_jobs)
+    if safety_multiplier <= 0:
+        raise ValueError("'safety_multiplier' must be greater than 0.")
 
     estimator_copy = clone(estimator)
     y_train_copy = list(y_train) if not isinstance(y_train, list) else y_train.copy()
@@ -562,24 +600,29 @@ None
 
     scores = np.array(scores)
     ys_max = max(scores)
+    ys_min = min(scores)
     ys_std = np.std(scores)
+    safety_margin = safety_multiplier * ys_std
 
     if logic == 'greater':
         value = len(scores[scores >= (ref_score)])/len(scores)
-        obtained_margin = max(ref_score-ys_max, 0)
+        best_random_score = ys_max
+        obtained_margin = max(ref_score - best_random_score, 0)
     else: # logic == 'lower'
         value = len(scores[scores <= (ref_score)])/len(scores)
-        obtained_margin = max(ys_max-ref_score, 0)
+        best_random_score = ys_min
+        obtained_margin = max(best_random_score - ref_score, 0)
 
     # Rucker et al, https://doi.org/10.1021/ci700157b
-    safety_margin = 2.3 * ys_std
+    # (generalised with user-configurable safety_multiplier)
+    safety_margin_ratio = obtained_margin / safety_margin if safety_margin > 0 else np.nan
 
     logger.log(
         resolved_log_level,
         f'Probability to obtain a better model by chance: {value:.3f}')
     logger.log(
         resolved_log_level,
-        f'Safety margin: {obtained_margin / (2.3 * ys_std):.2f}')
+        f'Safety margin: {safety_margin_ratio:.2f}')
 
     if plot:
         import seaborn as sns
@@ -588,61 +631,71 @@ None
         plt.axvline(ref_score,
                     color='red',
                     linestyle='--')
-        plt.axvspan(ys_max,
-                    ys_max + safety_margin,
-                    color='red',
-                    alpha=0.1)
+        if logic == 'greater':
+            plt.axvspan(best_random_score,
+                        best_random_score + safety_margin,
+                        color='red',
+                        alpha=0.1)
+        else:
+            plt.axvspan(best_random_score - safety_margin,
+                        best_random_score,
+                        color='red',
+                        alpha=0.1)
         plt.show()
 
     return {'reference_score': ref_score,
             'scrambled_scores': scores,
+            'scrambled_std': ys_std,
+            'best_random_score': best_random_score,
             'probability_better': value,
             'obtained_margin': obtained_margin,
-            'safety_margin': safety_margin
+            'safety_margin': safety_margin,
+            'safety_margin_ratio': safety_margin_ratio,
+            'safety_multiplier': safety_multiplier,
             }
 
 class MajorityVote:
     """
-MajorityVote(train_set, test_set, y_train, y_test, task_type, 
-estimator_list, column_list, estimator_names=None, n_jobs=1, log_level=logging.INFO)
+MajorityVote ensemble evaluation utility.
 
-Ensemble model using majority voting (for classification) or averaging (for regression).
-
-This class combines predictions from multiple estimators to 
-improve model performance and robustness by leveraging the strengths of
-different models. Supports parallel execution of estimator fitting and evaluation.
+This class supports two workflows:
+1) Recommended workflow: ``evaluate_cv()`` using fold-level
+    cross-validation, fold-level reliability, and reliability-based
+    ranking.
+2) Legacy workflow (backward compatibility): ``fit()`` + ``predict()``
+   using a hold-out ``test_set`` / ``y_test``.
 
 Parameters
 ----------
 train_set : pandas.DataFrame
-    The training dataset.
-
-test_set : pandas.DataFrame
-    The testing dataset.
+    Training feature matrix.
 
 y_train : iterable
-    Target values for the training dataset.
-
-y_test : iterable
-    Target values for the testing dataset.
+    Training labels/targets.
 
 task_type : {'classification', 'regression'}
-    The type of task to perform.
+    Task type used to select the voting strategy.
 
 estimator_list : list
-    A list of fitted scikit-learn estimators.
+    List of scikit-learn compatible estimators.
 
-column_list : list of str
-    A list of feature columns for each estimator.
+column_list : list[list[str]]
+    Per-estimator feature subsets aligned with ``estimator_list``.
 
-estimator_names : list of str, optional
-    A list of names for the estimators. Defaults to an empty list.
+test_set : pandas.DataFrame or None, optional
+    Hold-out feature matrix used only by legacy ``fit()``/``predict()``.
+
+y_test : iterable or None, optional
+    Hold-out labels/targets used only by legacy ``fit()``/``predict()``.
+
+estimator_names : list[str] or None, optional
+    Optional user-defined names for estimators.
 
 n_jobs : int, optional (default=1)
-    Number of parallel workers for fitting and evaluation. -1 uses all available CPUs.
+    Number of workers used where parallel execution is supported.
 
 log_level : int or str, optional (default=logging.INFO)
-    Logging level for diagnostics.
+    Logging level used by this module.
 """
 
     def __init__(
@@ -651,16 +704,18 @@ log_level : int or str, optional (default=logging.INFO)
         y_train: Iterable,
         task_type: Literal['classification', 'regression'],
         estimator_list: list,
-        column_list: list[str],
+        column_list: list[list[str]],
+        test_set: pd.DataFrame | None = None,
+        y_test: Iterable | None = None,
         estimator_names: list[str] | None = None,
         n_jobs: int = 1,
-        log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO
-         ) -> None:
+        log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+    ) -> None:
 
         self.task_type = validate_task_type(task_type)
-        self.estimator_list = estimator_list
+        self.estimator_list = list(estimator_list)
         self.estimator_names = [] if estimator_names is None else list(estimator_names)
-        self.column_list = column_list
+        self.column_list = list(column_list)
         self.train_set = train_set
         self.test_set = test_set
         self.y_train = y_train
@@ -669,48 +724,209 @@ log_level : int or str, optional (default=logging.INFO)
         self.log_level = coerce_log_level(log_level)
         _configure_module_logging(self.log_level)
 
-    def fit(self) -> None:
+    def _log(self, level: int, msg: str, *args) -> None:
+        if level >= self.log_level:
+            logger.log(level, msg, *args)
+
+    @staticmethod
+    def _mean_and_se(values: Iterable[float]) -> tuple[float, float]:
+        arr = np.asarray(list(values), dtype=float)
+        mean = float(np.mean(arr))
+        if arr.size <= 1:
+            return mean, 0.0
+        se = float(np.std(arr) / np.sqrt(arr.size))
+        return mean, se
+
+    @staticmethod
+    def _hard_vote(pred_matrix: np.ndarray) -> np.ndarray:
+        from scipy.stats import mode
+        voted = mode(pred_matrix, axis=1, keepdims=False)[0]
+        return np.asarray(voted).reshape(-1)
+
+    @staticmethod
+    def _soft_vote(prob_matrix: np.ndarray) -> np.ndarray:
+        return np.round(prob_matrix.mean(axis=1))
+
+    @staticmethod
+    def _mean_vote(pred_matrix: np.ndarray) -> np.ndarray:
+        return pred_matrix.mean(axis=1)
+
+    def _resolved_estimator_names(self) -> list[str]:
+        names = []
+        used = set()
+        for i, estimator in enumerate(self.estimator_list):
+            base_name = self.estimator_names[i] if i < len(self.estimator_names) else str(estimator)
+            candidate = str(base_name)
+            suffix = 2
+            while candidate in used:
+                candidate = f"{base_name}_{suffix}"
+                suffix += 1
+            used.add(candidate)
+            names.append(candidate)
+        return names
+
+    def _resolve_selected_estimators(
+        self,
+        selected_estimators: Iterable[int | str] | None = None,
+    ) -> list[tuple[int, object, list[str], str]]:
+        """Resolve user-selected estimators to indexed estimator payloads.
+
+        Parameters
+        ----------
+        selected_estimators : iterable of int or str, optional
+            Estimator indices and/or resolved estimator names. If None,
+            all configured estimators are selected.
+
+        Returns
+        -------
+        list of tuple
+            Tuples of ``(index, estimator, columns, estimator_name)``.
         """
-Fit the estimators on the training data and store predictions.
+        resolved_names = self._resolved_estimator_names()
 
-For classification tasks, both hard (class labels) and soft (probabilities)
-predictions are stored. For regression tasks, predicted values are stored.
-Supports parallel execution via n_jobs parameter.
+        if selected_estimators is None:
+            selected_idx = list(range(len(self.estimator_list)))
+        else:
+            selected_idx = []
+            for item in selected_estimators:
+                if isinstance(item, int):
+                    idx = item
+                    if idx < 0 or idx >= len(self.estimator_list):
+                        raise ValueError(
+                            f"Estimator index {idx} is out of bounds for "
+                            f"{len(self.estimator_list)} estimator(s)."
+                        )
+                elif isinstance(item, str):
+                    if item not in resolved_names:
+                        raise ValueError(
+                            f"Unknown estimator name '{item}'. Available names: "
+                            f"{resolved_names}."
+                        )
+                    idx = resolved_names.index(item)
+                else:
+                    raise TypeError(
+                        "'selected_estimators' items must be either int indices "
+                        "or str estimator names."
+                    )
 
-Returns
--------
-None
-"""
+                if idx not in selected_idx:
+                    selected_idx.append(idx)
+
+            if len(selected_idx) == 0:
+                raise ValueError("'selected_estimators' must not be empty.")
+
+        return [
+            (idx, self.estimator_list[idx], self.column_list[idx], resolved_names[idx])
+            for idx in selected_idx
+        ]
+
+    def fit(
+        self,
+        selected_estimators: Iterable[int | str] | None = None,
+        update_active_estimators: bool = False,
+        build_consensus: bool = True,
+        return_prediction_dataframes: bool = False,
+    ) -> dict[str, list[str] | int] | dict:
+        """
+        Legacy hold-out fitting using train and test sets.
+
+        Parameters
+        ----------
+        selected_estimators : iterable of int or str, optional
+            Optional subset of estimators to fit, provided as indices
+            and/or resolved estimator names. If None, all estimators are
+            fitted.
+
+        update_active_estimators : bool, optional (default=False)
+            If True, permanently replace ``estimator_list`` / ``column_list`` /
+            ``estimator_names`` with the selected subset after resolution.
+            This is useful for intentionally narrowing legacy hold-out
+            workflows.
+
+        build_consensus : bool, optional (default=True)
+            For classification tasks, build transparent hold-out prediction
+            tables with per-estimator probability/class columns plus
+            ``CONSENSUS_hard`` and ``CONSENSUS_soft``.
+
+        return_prediction_dataframes : bool, optional (default=False)
+            If True, return the generated prediction DataFrames together
+            with the fit report.
+
+        Returns
+        -------
+        dict
+            Fit report with keys:
+            ``requested_count``, ``successful_count``, ``failed_count``,
+            ``successful_estimators``, ``failed_estimators``.
+            When ``return_prediction_dataframes=True``, returns a dictionary
+            containing the fit report and generated prediction DataFrames.
+
+        Notes
+        -----
+        This method is retained for backward compatibility. New workflows
+        should prefer ``evaluate_cv()`` to avoid test-set-driven model
+        selection and ranking.
+        """
+
+        warnings.warn(
+            "MajorityVote.fit() is a legacy hold-out API kept for backward "
+            "compatibility. Prefer MajorityVote.evaluate_cv() for model "
+            "selection and ranking.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        if self.test_set is None or self.y_test is None:
+            raise ValueError(
+                "MajorityVote.fit requires 'test_set' and 'y_test'. "
+                "Use evaluate_cv() for cross-validation-centric evaluation."
+            )
+
+        selected_estimators_resolved = self._resolve_selected_estimators(selected_estimators)
+        if update_active_estimators:
+            self.estimator_list = [payload[1] for payload in selected_estimators_resolved]
+            self.column_list = [payload[2] for payload in selected_estimators_resolved]
+            self.estimator_names = [payload[3] for payload in selected_estimators_resolved]
+            selected_estimators_resolved = self._resolve_selected_estimators(None)
+
+        self._log(
+            logging.INFO,
+            "MajorityVote.fit legacy mode: requested_estimators=%d",
+            len(selected_estimators_resolved),
+        )
+
+        successful_estimators = []
+        failed_estimators = []
 
         def fit_and_predict(est_data):
             """Fit a single estimator and return predictions."""
-            i, estimator, columns = est_data
+            _, estimator, columns, estimator_name = est_data
             X_train = self.train_set[columns]
-            X_train = X_train.loc[:, ~X_train.columns.
-                                  duplicated(keep='first')].copy()
+            X_train = X_train.loc[:, ~X_train.columns.duplicated(keep='first')].copy()
             X_test = self.test_set[columns]
-            X_test = X_test.loc[:, ~X_test.columns.
-                                duplicated(keep='first')].copy()
-            if len(self.estimator_names) > 0:
-                estimator_name = self.estimator_names[i]
-            else:
-                estimator_name = str(estimator)
-            
+            X_test = X_test.loc[:, ~X_test.columns.duplicated(keep='first')].copy()
+
             try:
-                disable_estimator_parallelization(estimator)  # Prevent nested parallelization warnings
-                estimator.fit(X_train, self.y_train)
+                from sklearn.base import clone
+                estimator_copy = clone(estimator)
+                disable_estimator_parallelization(estimator_copy)
+                estimator_copy.fit(X_train, self.y_train)
                 if self.task_type == 'classification':
-                    y_train_hard = estimator.predict(X_train)
-                    y_test_hard = estimator.predict(X_test)
-                    y_train_soft = estimator.predict_proba(X_train)[:, 1]
-                    y_test_soft = estimator.predict_proba(X_test)[:, 1]
-                    return (estimator_name, 'classification',
-                            y_train_hard, y_test_hard, y_train_soft, y_test_soft)
-                else:  # regression
-                    y_train_pred = estimator.predict(X_train)
-                    y_test_pred = estimator.predict(X_test)
-                    return (estimator_name, 'regression',
-                            y_train_pred, y_test_pred)
+                    y_train_hard = estimator_copy.predict(X_train)
+                    y_test_hard = estimator_copy.predict(X_test)
+                    y_train_soft = estimator_copy.predict_proba(X_train)[:, 1]
+                    y_test_soft = estimator_copy.predict_proba(X_test)[:, 1]
+                    return (
+                        estimator_name,
+                        'classification',
+                        y_train_hard,
+                        y_test_hard,
+                        y_train_soft,
+                        y_test_soft,
+                    )
+                y_train_pred = estimator_copy.predict(X_train)
+                y_test_pred = estimator_copy.predict(X_test)
+                return (estimator_name, 'regression', y_train_pred, y_test_pred)
             except Exception as ex:
                 warnings.warn(
                     (
@@ -723,22 +939,14 @@ None
                 return None
 
         if self.task_type == 'classification':
-            self.df_train_predictions_hard = pd.\
-                DataFrame(index=self.train_set.index)
-            self.df_test_predictions_hard = pd.\
-                DataFrame(index=self.test_set.index)
+            self.df_train_predictions_hard = pd.DataFrame(index=self.train_set.index)
+            self.df_test_predictions_hard = pd.DataFrame(index=self.test_set.index)
 
-            self.df_train_predictions_soft = pd.\
-                DataFrame(index=self.train_set.index)
-            self.df_test_predictions_soft = pd.\
-                DataFrame(index=self.test_set.index)
+            self.df_train_predictions_soft = pd.DataFrame(index=self.train_set.index)
+            self.df_test_predictions_soft = pd.DataFrame(index=self.test_set.index)
 
-            # Parallel execution
-            est_data_list = list(enumerate(
-                zip(self.estimator_list, self.column_list)
-            ))
-            est_data_list = [(i, est, cols) for i, (est, cols) in est_data_list]
-            
+            est_data_list = selected_estimators_resolved
+
             if self.n_jobs == 1:
                 results = [fit_and_predict(data) for data in tqdm(est_data_list, desc="Fitting estimators", disable=False)]
             else:
@@ -752,11 +960,17 @@ None
             for result in results:
                 if result is None:
                     continue
-                estimator_name, task_type, y_train_hard, y_test_hard, y_train_soft, y_test_soft = result
+                estimator_name, _, y_train_hard, y_test_hard, y_train_soft, y_test_soft = result
+                successful_estimators.append(estimator_name)
                 self.df_train_predictions_hard[estimator_name] = y_train_hard
                 self.df_test_predictions_hard[estimator_name] = y_test_hard
                 self.df_train_predictions_soft[estimator_name] = y_train_soft
                 self.df_test_predictions_soft[estimator_name] = y_test_soft
+
+            failed_estimators = [
+                payload[3] for payload in est_data_list
+                if payload[3] not in successful_estimators
+            ]
 
             if self.df_train_predictions_hard.shape[1] == 0:
                 raise RuntimeError(
@@ -770,16 +984,36 @@ None
             self.df_train_predictions_soft['Y'] = self.y_train
             self.df_test_predictions_soft['Y'] = self.y_test
 
-        else:     # if regression
+            if build_consensus:
+                estimator_cols = list(self.df_train_predictions_hard.columns[:-1])
+
+                self.df_train_predictions = pd.DataFrame(index=self.train_set.index)
+                self.df_train_predictions['Y'] = self.y_train
+                self.df_test_predictions = pd.DataFrame(index=self.test_set.index)
+                self.df_test_predictions['Y'] = self.y_test
+
+                for est_name in estimator_cols:
+                    self.df_train_predictions[f'{est_name}_proba'] = self.df_train_predictions_soft[est_name].values
+                    self.df_train_predictions[f'{est_name}_CLASS'] = self.df_train_predictions_hard[est_name].values
+                    self.df_test_predictions[f'{est_name}_proba'] = self.df_test_predictions_soft[est_name].values
+                    self.df_test_predictions[f'{est_name}_CLASS'] = self.df_test_predictions_hard[est_name].values
+
+                hard_train_matrix = self.df_train_predictions_hard[estimator_cols].to_numpy(copy=False)
+                hard_test_matrix = self.df_test_predictions_hard[estimator_cols].to_numpy(copy=False)
+                soft_train_matrix = self.df_train_predictions_soft[estimator_cols].to_numpy(copy=False)
+                soft_test_matrix = self.df_test_predictions_soft[estimator_cols].to_numpy(copy=False)
+
+                self.df_train_predictions['CONSENSUS_hard'] = self._hard_vote(hard_train_matrix)
+                self.df_test_predictions['CONSENSUS_hard'] = self._hard_vote(hard_test_matrix)
+                self.df_train_predictions['CONSENSUS_soft'] = self._soft_vote(soft_train_matrix)
+                self.df_test_predictions['CONSENSUS_soft'] = self._soft_vote(soft_test_matrix)
+
+        else:
             self.df_train_predictions = pd.DataFrame(index=self.train_set.index)
             self.df_test_predictions = pd.DataFrame(index=self.test_set.index)
 
-            # Parallel execution
-            est_data_list = list(enumerate(
-                zip(self.estimator_list, self.column_list)
-            ))
-            est_data_list = [(i, est, cols) for i, (est, cols) in est_data_list]
-            
+            est_data_list = selected_estimators_resolved
+
             if self.n_jobs == 1:
                 results = [fit_and_predict(data) for data in tqdm(est_data_list, desc="Fitting estimators", disable=False)]
             else:
@@ -793,9 +1027,15 @@ None
             for result in results:
                 if result is None:
                     continue
-                estimator_name, task_type, y_train_pred, y_test_pred = result
+                estimator_name, _, y_train_pred, y_test_pred = result
+                successful_estimators.append(estimator_name)
                 self.df_train_predictions[estimator_name] = y_train_pred
                 self.df_test_predictions[estimator_name] = y_test_pred
+
+            failed_estimators = [
+                payload[3] for payload in est_data_list
+                if payload[3] not in successful_estimators
+            ]
 
             if self.df_train_predictions.shape[1] == 0:
                 raise RuntimeError(
@@ -806,112 +1046,129 @@ None
             self.df_train_predictions['Y'] = self.y_train
             self.df_test_predictions['Y'] = self.y_test
 
-    def predict(self,
-                metric,
-                metric_name: str,
-                n_estimators_max: int = 5) -> None:
+        self.fit_report_ = {
+            'requested_count': len(selected_estimators_resolved),
+            'successful_count': len(successful_estimators),
+            'failed_count': len(failed_estimators),
+            'successful_estimators': successful_estimators,
+            'failed_estimators': failed_estimators,
+        }
+        self._log(
+            logging.INFO,
+            f"MajorityVote.fit legacy mode completed: "
+            f"successful={self.fit_report_['successful_count']} "
+            f"failed={self.fit_report_['failed_count']}",
+        )
+
+        if return_prediction_dataframes:
+            response = {'fit_report': self.fit_report_}
+            if self.task_type == 'classification':
+                response['train_predictions_hard'] = self.df_train_predictions_hard
+                response['test_predictions_hard'] = self.df_test_predictions_hard
+                response['train_predictions_soft'] = self.df_train_predictions_soft
+                response['test_predictions_soft'] = self.df_test_predictions_soft
+                if build_consensus:
+                    response['train_predictions'] = self.df_train_predictions
+                    response['test_predictions'] = self.df_test_predictions
+            else:
+                response['train_predictions'] = self.df_train_predictions
+                response['test_predictions'] = self.df_test_predictions
+            return response
+
+        return self.fit_report_
+
+    def predict(self, metric, metric_name: str, n_estimators_max: int = 5) -> None:
         """
-Generate ensemble predictions and evaluate performance using a 
-specified metric.
+        Legacy hold-out prediction and combination scoring.
 
-For classification, both hard and soft voting are evaluated. 
-For regression, predictions are averaged. Results are stored for each 
-combination of estimators up to a specified maximum. Supports parallel 
-evaluation via n_jobs parameter.
+        Parameters
+        ----------
+        metric : callable
+            Scoring function accepting ``(y_true, y_pred)``.
 
-Parameters
-----------
-metric : callable
-    A scoring function that takes (y_true, y_pred) as input and returns a float.
+        metric_name : str
+            Metric label used in output column names.
 
-metric_name : str
-    Name of the metric used for evaluation.
+        n_estimators_max : int, optional (default=5)
+            Maximum ensemble size considered when generating combinations.
 
-n_estimators_max : int, optional
-    Maximum number of estimators to consider in combinations. Default is 5.
+        Notes
+        -----
+        This method is retained for backward compatibility with hold-out
+        workflows. For CV-centric selection and ranking, use
+        ``evaluate_cv()``.
+        """
 
-Returns
--------
-None
-"""
+        warnings.warn(
+            "MajorityVote.predict() is a legacy hold-out API kept for "
+            "backward compatibility. Prefer MajorityVote.evaluate_cv() for "
+            "model selection and ranking.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         from mlchem.helper import generate_combination_cascade
+
         self.n_estimators_max = n_estimators_max
 
-        def majority_vote(dataframe,
-                          individual_ys,
-                          hard: bool) -> np.ndarray:
-            """
-            Perform majority voting or averaging on the predictions.
-            """
+        def majority_vote(dataframe, individual_ys, hard: bool) -> np.ndarray:
             dataframe_probe = dataframe[individual_ys].to_numpy(copy=False)
             if hard:
-                from scipy.stats import mode
-                return mode(dataframe_probe, axis=1)[0]
-            else:
-                return np.round(dataframe_probe.mean(axis=1))
+                return self._hard_vote(dataframe_probe)
+            return self._soft_vote(dataframe_probe)
 
         def evaluate_combination(comb_data):
-            """Evaluate a single combination and return results."""
             combination, is_classification = comb_data
             train_results = {}
             test_results = {}
-            
+
             if is_classification:
-                # Soft predictions
                 key_soft = f'{combination}_soft_{metric_name}'
                 train_results[key_soft] = metric(
                     self.df_train_predictions_soft.Y.values,
-                    majority_vote(self.df_train_predictions_soft, combination, hard=False)
+                    majority_vote(self.df_train_predictions_soft, combination, hard=False),
                 )
                 test_results[key_soft] = metric(
                     self.df_test_predictions_soft.Y.values,
-                    majority_vote(self.df_test_predictions_soft, combination, hard=False)
+                    majority_vote(self.df_test_predictions_soft, combination, hard=False),
                 )
-                
-                # Hard predictions
+
                 key_hard = f'{combination}_hard_{metric_name}'
                 train_results[key_hard] = metric(
                     self.df_train_predictions_hard.Y.values,
-                    majority_vote(self.df_train_predictions_hard, combination, hard=True)
+                    majority_vote(self.df_train_predictions_hard, combination, hard=True),
                 )
                 test_results[key_hard] = metric(
                     self.df_test_predictions_hard.Y.values,
-                    majority_vote(self.df_test_predictions_hard, combination, hard=True)
+                    majority_vote(self.df_test_predictions_hard, combination, hard=True),
                 )
-            else:  # regression
+            else:
                 key = f'{combination}_{metric_name}'
                 train_results[key] = metric(
                     self.df_train_predictions.Y.values,
-                    majority_vote(self.df_train_predictions, combination, hard=False)
+                    majority_vote(self.df_train_predictions, combination, hard=False),
                 )
                 test_results[key] = metric(
                     self.df_test_predictions.Y.values,
-                    majority_vote(self.df_test_predictions, combination, hard=False)
+                    majority_vote(self.df_test_predictions, combination, hard=False),
                 )
-            
+
             return {'train': train_results, 'test': test_results}
 
         if self.task_type == 'classification':
             self.combinations = generate_combination_cascade(
                 self.df_train_predictions_hard.columns[:-1],
-                self.n_estimators_max
-                )
-            # exclude even number of estimators for classification
-            self.combinations = [x for
-                                 x in
-                                 self.combinations if
-                                 len(x) % 2 != 0]
+                self.n_estimators_max,
+            )
+            self.combinations = [x for x in self.combinations if len(x) % 2 != 0]
         else:
             self.combinations = generate_combination_cascade(
                 self.df_train_predictions.columns[:-1],
-                self.n_estimators_max
-                )
+                self.n_estimators_max,
+            )
 
-        # Prepare combination data for parallel processing
         comb_data_list = [(comb, self.task_type == 'classification') for comb in self.combinations]
 
-        # Parallel execution of combinations
         if self.n_jobs == 1:
             all_results = [evaluate_combination(data) for data in tqdm(comb_data_list, desc="Evaluating combinations", disable=False)]
         else:
@@ -922,7 +1179,6 @@ None
                 for future in tqdm(as_completed(futures), total=len(futures), desc="Evaluating combinations", disable=False):
                     all_results.append(future.result())
 
-        # Merge all results
         dict_results_train = {}
         dict_results_test = {}
         for result_pair in all_results:
@@ -930,32 +1186,277 @@ None
             dict_results_test.update(result_pair['test'])
 
         def extract_from(results, models):
-            """
-            Extract scores from the results dictionary for the given
-            models.
-            """
             return [results[model] for model in models]
 
-        models = [a for a in
-                  dict_results_train.keys()]
-        self.final_results_train = \
-            pd.DataFrame(index=models,
-                         data=extract_from(results=dict_results_train,
-                                           models=models),
-                         columns=[f'{metric_name}_train'])
-        self.final_results_test = \
-            pd.DataFrame(index=models,
-                         data=extract_from(results=dict_results_test,
-                                           models=models),
-                         columns=[f'{metric_name}_test'])
+        models = [a for a in dict_results_train.keys()]
+        self.final_results_train = pd.DataFrame(
+            index=models,
+            data=extract_from(results=dict_results_train, models=models),
+            columns=[f'{metric_name}_train'],
+        )
+        self.final_results_test = pd.DataFrame(
+            index=models,
+            data=extract_from(results=dict_results_test, models=models),
+            columns=[f'{metric_name}_test'],
+        )
 
-        self.final_results = \
-            pd.DataFrame(index=[c[:-(len(metric_name) + 1)]
-                                for c in self.final_results_train.index])
-        self.final_results[f'{metric_name}_train'] = \
-            self.final_results_train[f'{metric_name}_train'].values
-        self.final_results[f'{metric_name}_test'] = \
-            self.final_results_test[f'{metric_name}_test'].values
+        self.final_results = pd.DataFrame(
+            index=[c[:-(len(metric_name) + 1)] for c in self.final_results_train.index]
+        )
+        self.final_results[f'{metric_name}_train'] = self.final_results_train[f'{metric_name}_train'].values
+        self.final_results[f'{metric_name}_test'] = self.final_results_test[f'{metric_name}_test'].values
+
+    def evaluate_cv(
+        self,
+        metric: Callable,
+        metric_name: str,
+        cv_iter: int = 5,
+        cv_splitter=None,
+        cv_indices: Iterable | None = None,
+        groups: np.ndarray | pd.Series | None = None,
+        n_estimators_max: int = 5,
+        logic: Literal['lower', 'greater'] = 'greater',
+        desired_performance_score: Literal['train', 'cv', 'train_cv_average'] = 'train_cv_average',
+        shuffle: bool = False,
+        random_state: int | None = None,
+    ) -> pd.DataFrame:
+        """
+Evaluate ensemble combinations using fold-level cross-validation.
+
+The same explicit fold definitions are reused for every estimator and
+combination, ensuring fair fold-wise comparison.
+
+Parameters
+----------
+metric : callable
+    Scoring function accepting ``(y_true, y_pred)``.
+
+metric_name : str
+    Label appended to generated combination identifiers.
+
+cv_iter : int, optional (default=5)
+    Number of folds used when ``cv_indices`` and ``cv_splitter`` are not
+    supplied.
+
+cv_splitter : object, optional
+    Scikit-learn compatible splitter exposing ``split(X, y, groups)``.
+
+cv_indices : iterable of (train_idx, valid_idx), optional
+    Explicit precomputed fold manifest. When supplied, all combinations
+    are evaluated on exactly these folds.
+
+groups : array-like, optional
+    Group labels forwarded to group-aware ``cv_splitter`` objects.
+
+n_estimators_max : int, optional (default=5)
+    Maximum combination size passed to ``generate_combination_cascade``.
+
+logic : {'lower', 'greater'}, optional (default='greater')
+    Direction of optimization for reliability computation.
+
+desired_performance_score : {'train', 'cv', 'train_cv_average'}, optional
+    Performance component used inside
+    ``get_reliability_score_components``.
+
+shuffle : bool, optional (default=False)
+    Whether generated CV folds are shuffled when using ``cv_iter``.
+
+random_state : int or None, optional
+    Random seed used with generated shuffled folds.
+
+Returns
+-------
+pandas.DataFrame
+    One row per evaluated ensemble variant. Columns include:
+    ``combination``, ``train_mean``, ``train_se``,
+    ``validation_mean``, ``validation_se``,
+    ``reliability_mean``, ``reliability_se``,
+    ``train_folds``, ``validation_folds``, ``reliability_folds``.
+    Results are ranked by ``reliability_mean`` descending.
+"""
+
+        from sklearn.base import clone
+        from mlchem.helper import generate_combination_cascade
+        from mlchem.metrics import get_reliability_score_components
+
+        y_all = np.asarray(self.y_train)
+        resolved_pairs = generate_cv_indices(
+            self.train_set.values,
+            y=y_all,
+            cv_iter=cv_iter,
+            cv_splitter=cv_splitter,
+            cv_indices=cv_indices,
+            groups=groups,
+            task_type=self.task_type,
+            shuffle=shuffle,
+            random_state=random_state,
+        )
+
+        estimator_names = self._resolved_estimator_names()
+
+        fold_train_hard = []
+        fold_valid_hard = []
+        fold_train_soft = []
+        fold_valid_soft = []
+        fold_train_reg = []
+        fold_valid_reg = []
+
+        valid_estimators = set(estimator_names)
+
+        for train_idx, valid_idx in resolved_pairs:
+            y_train_fold = y_all[train_idx]
+            y_valid_fold = y_all[valid_idx]
+
+            fold_data_train_hard = {}
+            fold_data_valid_hard = {}
+            fold_data_train_soft = {}
+            fold_data_valid_soft = {}
+            fold_data_train_reg = {}
+            fold_data_valid_reg = {}
+
+            for i, (estimator, columns) in enumerate(zip(self.estimator_list, self.column_list)):
+                estimator_name = estimator_names[i]
+                if estimator_name not in valid_estimators:
+                    continue
+
+                X_cols = self.train_set[columns]
+                X_cols = X_cols.loc[:, ~X_cols.columns.duplicated(keep='first')]
+                X_train_fold = X_cols.iloc[train_idx]
+                X_valid_fold = X_cols.iloc[valid_idx]
+
+                try:
+                    est = clone(estimator)
+                    disable_estimator_parallelization(est)
+                    est.fit(X_train_fold, y_train_fold)
+
+                    if self.task_type == 'classification':
+                        fold_data_train_hard[estimator_name] = np.asarray(est.predict(X_train_fold))
+                        fold_data_valid_hard[estimator_name] = np.asarray(est.predict(X_valid_fold))
+                        fold_data_train_soft[estimator_name] = np.asarray(est.predict_proba(X_train_fold)[:, 1])
+                        fold_data_valid_soft[estimator_name] = np.asarray(est.predict_proba(X_valid_fold)[:, 1])
+                    else:
+                        fold_data_train_reg[estimator_name] = np.asarray(est.predict(X_train_fold))
+                        fold_data_valid_reg[estimator_name] = np.asarray(est.predict(X_valid_fold))
+                except Exception as ex:
+                    valid_estimators.discard(estimator_name)
+                    warnings.warn(
+                        (
+                            f"Skipping estimator '{estimator_name}' during "
+                            f"MajorityVote.evaluate_cv ({self.task_type}): {ex}"
+                        ),
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+
+            if self.task_type == 'classification':
+                fold_train_hard.append((fold_data_train_hard, y_train_fold))
+                fold_valid_hard.append((fold_data_valid_hard, y_valid_fold))
+                fold_train_soft.append((fold_data_train_soft, y_train_fold))
+                fold_valid_soft.append((fold_data_valid_soft, y_valid_fold))
+            else:
+                fold_train_reg.append((fold_data_train_reg, y_train_fold))
+                fold_valid_reg.append((fold_data_valid_reg, y_valid_fold))
+
+        valid_estimators = [name for name in estimator_names if name in valid_estimators]
+        if len(valid_estimators) == 0:
+            raise RuntimeError(
+                "No estimators were successfully fitted in MajorityVote.evaluate_cv."
+            )
+
+        combinations = generate_combination_cascade(valid_estimators, n_estimators_max)
+        if self.task_type == 'classification':
+            combinations = [comb for comb in combinations if len(comb) % 2 != 0]
+
+        rows = []
+
+        for combination in combinations:
+            if self.task_type == 'classification':
+                strategies = ('hard', 'soft')
+            else:
+                strategies = ('mean',)
+
+            for strategy in strategies:
+                train_scores = []
+                validation_scores = []
+
+                for fold_idx in range(len(resolved_pairs)):
+                    if self.task_type == 'classification':
+                        train_dict, y_train_fold = fold_train_hard[fold_idx]
+                        valid_dict, y_valid_fold = fold_valid_hard[fold_idx]
+                        if strategy == 'soft':
+                            train_dict, y_train_fold = fold_train_soft[fold_idx]
+                            valid_dict, y_valid_fold = fold_valid_soft[fold_idx]
+                    else:
+                        train_dict, y_train_fold = fold_train_reg[fold_idx]
+                        valid_dict, y_valid_fold = fold_valid_reg[fold_idx]
+
+                    if any(name not in train_dict for name in combination):
+                        train_scores = []
+                        validation_scores = []
+                        break
+
+                    train_matrix = np.column_stack([train_dict[name] for name in combination])
+                    valid_matrix = np.column_stack([valid_dict[name] for name in combination])
+
+                    if strategy == 'hard':
+                        y_train_pred = self._hard_vote(train_matrix)
+                        y_valid_pred = self._hard_vote(valid_matrix)
+                    elif strategy == 'soft':
+                        y_train_pred = self._soft_vote(train_matrix)
+                        y_valid_pred = self._soft_vote(valid_matrix)
+                    else:
+                        y_train_pred = self._mean_vote(train_matrix)
+                        y_valid_pred = self._mean_vote(valid_matrix)
+
+                    train_scores.append(float(metric(y_train_fold, y_train_pred)))
+                    validation_scores.append(float(metric(y_valid_fold, y_valid_pred)))
+
+                if len(train_scores) == 0:
+                    continue
+
+                reliability_folds = []
+                for train_score, validation_score in zip(train_scores, validation_scores):
+                    comp = get_reliability_score_components(
+                        train_score=train_score,
+                        cv_score=validation_score,
+                        logic=logic,
+                        desired_performance_score=desired_performance_score,
+                    )
+                    reliability_folds.append(float(comp['reliability_score']))
+
+                train_mean, train_se = self._mean_and_se(train_scores)
+                validation_mean, validation_se = self._mean_and_se(validation_scores)
+                reliability_mean, reliability_se = self._mean_and_se(reliability_folds)
+
+                if self.task_type == 'classification':
+                    comb_label = f"{combination}_{strategy}_{metric_name}"
+                else:
+                    comb_label = f"{combination}_{metric_name}"
+
+                rows.append({
+                    'combination': comb_label,
+                    'train_mean': train_mean,
+                    'train_se': train_se,
+                    'validation_mean': validation_mean,
+                    'validation_se': validation_se,
+                    'reliability_mean': reliability_mean,
+                    'reliability_se': reliability_se,
+                    'train_folds': np.asarray(train_scores),
+                    'validation_folds': np.asarray(validation_scores),
+                    'reliability_folds': np.asarray(reliability_folds),
+                })
+
+        if len(rows) == 0:
+            raise RuntimeError(
+                "No ensemble combinations were successfully evaluated in "
+                "MajorityVote.evaluate_cv."
+            )
+
+        self.final_results_cv = pd.DataFrame(rows)
+        self.final_results_cv = self.final_results_cv.sort_values(
+            by='reliability_mean', ascending=False
+        ).reset_index(drop=True)
+        return self.final_results_cv
 
 
 class ApplicabilityDomain:
