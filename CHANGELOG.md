@@ -33,6 +33,12 @@ All notable user-facing changes are documented in this file.
 
 - Refreshed README, API docstrings, and generated docs to reflect new cross-validation interfaces, reliability behavior, and majority-vote workflow.
 - Updated/re-ran tutorial notebooks and example artifacts to align with the refactored APIs.
+- Documentation versioning now resolves from `setup.py` at docs build time (`make clean && make html`), removing manual version string sync steps.
+
+### CI
+
+- Refactored tag-time version workflow into validation-only docs checks (no repository write-back from CI).
+- Removed CI-driven coverage badge commit/PR automation from compatibility matrix; badge refresh is now a local maintainer action via `scripts/run_local_matrix.py --refresh-badges`.
 
 ### Compatibility Notes
 

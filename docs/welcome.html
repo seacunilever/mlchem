@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem &#8212; mlchem 1.1.5 documentation</title>
+    <title>mlchem &#8212; mlchem 1.2.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=a48ae3df"></script>
+    <script src="_static/documentation_options.js?v=ca842793"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
@@ -237,6 +237,7 @@ python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w">
 </pre></div>
 </div>
 <p>Note: both badges (<code class="docutils literal notranslate"><span class="pre">assets/coverage.svg</span></code> for line coverage and <code class="docutils literal notranslate"><span class="pre">assets/coverage-branch.svg</span></code> for branch coverage) are refreshed automatically by GitHub CI on push (py312 job), so local regeneration is optional and mainly useful for previewing changes before pushing.</p>
+<p>Note: coverage badges are now refreshed locally by maintainers (not auto-committed by CI) to avoid protected-branch push permissions.</p>
 <p>Current policy:</p>
 <ul class="simple">
 <li><p>Python 3.12 and 3.13 are required to pass.</p></li>
@@ -248,6 +249,10 @@ python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w">
 <p>Run all environments in fast mode (default: no dependency reinstall):</p>
 <p>From repository root:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py
+</pre></div>
+</div>
+<p>Run matrix plus local coverage badge refresh (recommended before release/PR merge):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--refresh-badges
 </pre></div>
 </div>
 <p>From <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> directory:</p>
@@ -283,6 +288,27 @@ python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w">
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">py314</span></code> tox environment is marked non-blocking during early adoption.</p>
 </section>
+</section>
+<section id="maintainer-release-refresh-flow-local">
+<h2>Maintainer release refresh flow (local)<a class="headerlink" href="#maintainer-release-refresh-flow-local" title="Link to this heading">¶</a></h2>
+<p>Use this when preparing docs and badges without any CI write-back permissions:</p>
+<ol class="arabic simple">
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">version=</span></code> in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.</p></li>
+<li><p>Regenerate docs locally from <code class="docutils literal notranslate"><span class="pre">docs/</span></code>:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>clean
+make<span class="w"> </span>html
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Refresh compatibility matrix + badges from repo root:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--refresh-badges
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Commit the resulting docs and badge changes in your PR.</p></li>
+</ol>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
@@ -582,6 +608,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#tox-entrypoint">tox entrypoint</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#maintainer-release-refresh-flow-local">Maintainer release refresh flow (local)</a></li>
 <li><a class="reference internal" href="#usage">Usage</a><ul>
 <li><a class="reference internal" href="#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
 <li><a class="reference internal" href="#calculate-fingerprints">calculate fingerprints</a></li>
@@ -656,7 +683,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
         <li class="right" >
           <a href="index.html" title="Contents"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.1.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>

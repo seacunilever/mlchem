@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -114,6 +115,116 @@ def _run_and_check(
     tail = (proc.stderr or proc.stdout or "").strip().splitlines()
     detail = "\n".join(tail[-12:]) if tail else f"{label} failed with exit code {proc.returncode}"
     return False, detail
+
+
+def _refresh_coverage_badges(py312: Path, live_output: bool) -> tuple[bool, str]:
+    """Run py3.12 coverage and refresh local badge SVGs under assets/."""
+    ok, detail = _run_and_check(
+        [
+            str(py312),
+            "-m",
+            "pip",
+            "install",
+            "pytest-cov",
+            "anybadge",
+        ],
+        REPO_ROOT,
+        "install badge tooling",
+        live_output,
+        "3.12",
+    )
+    if not ok:
+        return False, f"could not install badge tooling\n{detail}"
+
+    ok, detail = _run_and_check(
+        [
+            str(py312),
+            "-m",
+            "pytest",
+            "-q",
+            "tests",
+            "--cov=mlchem",
+            "--cov-config=.coveragerc",
+            "--cov-branch",
+            "--cov-report=term",
+            "--cov-report=xml:coverage.xml",
+        ],
+        REPO_ROOT,
+        "coverage run",
+        live_output,
+        "3.12",
+    )
+    if not ok:
+        return False, f"coverage run failed\n{detail}"
+
+    coverage_xml = REPO_ROOT / "coverage.xml"
+    if not coverage_xml.exists():
+        return False, "coverage.xml was not generated"
+
+    root = ET.parse(coverage_xml).getroot()
+    line_pct = round(float(root.get("line-rate", 0.0)) * 100)
+    branch_pct = round(float(root.get("branch-rate", 0.0)) * 100)
+
+    line_badge = REPO_ROOT / "assets" / "coverage.svg"
+    branch_badge = REPO_ROOT / "assets" / "coverage-branch.svg"
+
+    ok, detail = _run_and_check(
+        [
+            str(py312),
+            "-m",
+            "anybadge",
+            "--label",
+            "line cov",
+            "--value",
+            str(line_pct),
+            "--file",
+            str(line_badge),
+            "--overwrite",
+            "50=red",
+            "60=orange",
+            "70=yellow",
+            "80=yellowgreen",
+            "90=green",
+        ],
+        REPO_ROOT,
+        "line badge",
+        live_output,
+        "3.12",
+    )
+    if not ok:
+        return False, f"line badge generation failed\n{detail}"
+
+    ok, detail = _run_and_check(
+        [
+            str(py312),
+            "-m",
+            "anybadge",
+            "--label",
+            "branch cov",
+            "--value",
+            str(branch_pct),
+            "--file",
+            str(branch_badge),
+            "--overwrite",
+            "50=red",
+            "60=orange",
+            "70=yellow",
+            "80=yellowgreen",
+            "90=green",
+        ],
+        REPO_ROOT,
+        "branch badge",
+        live_output,
+        "3.12",
+    )
+    if not ok:
+        return False, f"branch badge generation failed\n{detail}"
+
+    message = (
+        f"coverage badges refreshed from py3.12 run "
+        f"(line={line_pct}%, branch={branch_pct}%)."
+    )
+    return True, message
 
 
 def run_matrix(
@@ -266,6 +377,14 @@ def main() -> int:
         nargs=argparse.REMAINDER,
         help="Arguments passed to pytest (example: -- -vv tests).",
     )
+    parser.add_argument(
+        "--refresh-badges",
+        action="store_true",
+        help=(
+            "After matrix checks, run a dedicated py3.12 coverage pass and "
+            "refresh assets/coverage.svg and assets/coverage-branch.svg locally."
+        ),
+    )
     args = parser.parse_args()
 
     allow_314_failure = False if args.strict_314 else args.allow_314_failure
@@ -284,8 +403,30 @@ def main() -> int:
     )
     print_summary(results)
 
+    badges_failed = False
+    if args.refresh_badges:
+        py312 = _python_path(DEFAULT_ENVS["3.12"])
+        py312_result = next((r for r in results if r.version == "3.12"), None)
+        if py312_result is None or py312_result.status != "pass":
+            print(
+                "\nSkipping badge refresh: Python 3.12 matrix leg did not pass. "
+                "Run again once py3.12 is green."
+            )
+            badges_failed = True
+        elif not py312.exists():
+            print(f"\nSkipping badge refresh: interpreter not found at {py312}")
+            badges_failed = True
+        else:
+            print("\nRefreshing coverage badges locally from py3.12...")
+            ok, detail = _refresh_coverage_badges(py312, live_output=args.live_output)
+            if ok:
+                print(detail)
+            else:
+                print(detail)
+                badges_failed = True
+
     hard_fail = any(r.status == "fail" for r in results)
-    return 1 if hard_fail else 0
+    return 1 if hard_fail or badges_failed else 0
 
 
 if __name__ == "__main__":

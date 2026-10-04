@@ -194,7 +194,7 @@ python -m anybadge --label "line cov" --value <LINE_PERCENT> --file assets/cover
 python -m anybadge --label "branch cov" --value <BRANCH_PERCENT> --file assets/coverage-branch.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
 ```
 
-Note: both badges (`assets/coverage.svg` for line coverage and `assets/coverage-branch.svg` for branch coverage) are refreshed automatically by GitHub CI on push (py312 job), so local regeneration is optional and mainly useful for previewing changes before pushing.
+Note: both badges (`assets/coverage.svg` for line coverage and `assets/coverage-branch.svg` for branch coverage) are refreshed locally by maintainers (not auto-committed by CI) to avoid protected-branch push permissions.
 
 Current policy:
 
@@ -211,6 +211,12 @@ From repository root:
 
 ```bash
 python scripts/run_local_matrix.py
+```
+
+Run matrix plus local coverage badge refresh (recommended before release/PR merge):
+
+```bash
+python scripts/run_local_matrix.py --refresh-badges
 ```
 
 From `scripts/` directory:
@@ -258,6 +264,26 @@ python -m tox -e py312,py313,py314
 ```
 
 The `py314` tox environment is marked non-blocking during early adoption.
+
+## Maintainer release refresh flow (local)
+
+Use this when preparing docs and badges without any CI write-back permissions:
+
+1. Update `version=` in `setup.py`.
+2. Regenerate docs locally from `docs/`:
+
+```bash
+make clean
+make html
+```
+
+3. Refresh compatibility matrix + badges from repo root:
+
+```bash
+python scripts/run_local_matrix.py --refresh-badges
+```
+
+4. Commit the resulting docs and badge changes in your PR.
 
 ## Usage
 

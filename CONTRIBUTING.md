@@ -77,6 +77,12 @@ Run compatibility matrix checks:
 python scripts/run_local_matrix.py
 ```
 
+Run compatibility matrix checks and refresh local coverage badges:
+
+```bash
+python scripts/run_local_matrix.py --refresh-badges
+```
+
 Run tox matrix:
 
 ```bash
@@ -106,6 +112,42 @@ make.bat html
 
 The html target mirrors docs/build/html into docs/ via docs/_publish.py.
 Commit regenerated docs output when documentation content changes.
+
+Version note: docs version strings are sourced from `setup.py` during the docs build.
+There is no CI write-back step for docs-version metadata.
+
+## Maintainer release refresh checklist (local)
+
+Use this flow when preparing a release PR/tag:
+
+1. Update `version=` in `setup.py`.
+2. Regenerate docs locally:
+
+```bash
+cd docs
+make clean
+make html
+```
+
+On Windows:
+
+```bash
+cd docs
+make.bat clean
+make.bat html
+```
+
+3. From repository root, run compatibility matrix plus badge refresh:
+
+```bash
+python scripts/run_local_matrix.py --refresh-badges
+```
+
+4. Commit updated docs and badge files in the same PR:
+
+- `docs/**` (generated HTML/assets)
+- `assets/coverage.svg`
+- `assets/coverage-branch.svg`
 
 ## Coding expectations
 
