@@ -2,7 +2,7 @@
 
 All notable user-facing changes are documented in this file.
 
-## [1.2.1] - 2026-10-02
+## [1.2.1] - 2026-10-03
 
 ### Added
 
@@ -38,7 +38,7 @@ All notable user-facing changes are documented in this file.
 
 - This release includes API-surface changes that may require downstream code updates, notably:
 	- `crossval(..., metric_function=...)` -> `crossval(..., metric=...)`
-	- `MajorityVote.predict()` removal in favor of `MajorityVote.fit()`
+	- `MajorityVote.predict()` removal in favour of `MajorityVote.fit()`
 
 ## [1.1.5] - 2026-09-10
 
