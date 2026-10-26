@@ -1209,6 +1209,14 @@ class CombinatorialSelection:
         if level >= self.log_level:
             logger.log(level, msg, *args)
 
+    def _passes_ratio(self, train_mean: float, cv_mean: float) -> bool:
+        """Per-subset generalisation check: cv/train >= r ('greater'),
+        or cv <= train/r ('lower', i.e. CV error at most train error / r).
+        """
+        if self.logic == 'greater':
+            return cv_mean >= self.cv_train_ratio * train_mean
+        return cv_mean * self.cv_train_ratio <= train_mean
+
     @staticmethod
     def _validate_subset_limit(
         n_features: int,
@@ -1375,8 +1383,10 @@ class CombinatorialSelection:
             Minimum training score required to consider a subset.
             Default is 0.25.
         cv_train_ratio : float, optional
-            Minimum ratio of cross-validation to training score. Default
-            is 0.7.
+            Minimum per-subset ratio of fold-mean CV score to fold-mean
+            training score (cv/train >= r for logic='greater';
+            cv <= train/r for logic='lower'). Applied in both stages.
+            Default is 0.7.
         cv_iter : int, optional
             Number of cross-validation iterations. Default is 5.
         max_subsets : int or None, optional
@@ -1415,15 +1425,16 @@ class CombinatorialSelection:
         -----
         Generates all possible feature subsets of size ``k`` and evaluates
         each subset using training and cross-validation scores.
-        Results are filtered using training/CV thresholds and ranked by
+        Results are filtered by an absolute training threshold
+        and a per-subset cv/train ratio and ranked by
         ``reliability_score``. The score uses the same arithmetic-mean
         performance term and lower-is-better orientation as SFS. The legacy
         ``geometric_mean`` formulation is no longer used.
         """
 
 
-        def is_better(a: float | int, b: float | int) -> bool:
-            return a > b if self.logic == 'greater' else a < b
+        def is_at_least(a: float | int, b: float | int) -> bool:
+            return a >= b if self.logic == 'greater' else a <= b
 
         self.train_set = train_set
         self.y_train = y_train
@@ -1462,10 +1473,10 @@ class CombinatorialSelection:
                 "'cv_train_ratio' must be greater than 0 when logic='lower'."
             )
 
-        # Set cv threshold based on the desired cv/train ratio
-        self.cv_threshold = self.training_threshold * self.cv_train_ratio \
-            if self.logic == 'greater' else \
-            self.training_threshold / self.cv_train_ratio
+        ## Set cv threshold based on the desired cv/train ratio (deprecated, as the logic is now handled dynamically)
+        #self.cv_threshold = self.training_threshold * self.cv_train_ratio \
+        #    if self.logic == 'greater' else \
+        #    self.training_threshold / self.cv_train_ratio
 
         self.ascending_decision = False if self.logic == 'greater' else \
         True
@@ -1515,7 +1526,7 @@ class CombinatorialSelection:
             estimator_copy.fit(x.values, self.y_train)
             y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
-            if not is_better(train_score, self.training_threshold):
+            if not is_at_least(train_score, self.training_threshold):
                 self._log(
                     logging.DEBUG,
                     f"Stage 1 rejected subset={subset} by train threshold: {train_score:.3f}",
@@ -1569,10 +1580,12 @@ class CombinatorialSelection:
                 )
  
 
-            if not is_better(subset_cv_mean, self.cv_threshold):
+            if not self._passes_ratio(subset_train_mean, subset_cv_mean):
                 self._log(
                     logging.DEBUG,
-                    f"Stage 1 rejected subset={subset} by cv threshold: {subset_cv_mean:.3f}",
+                    f"Stage 1 rejected subset={subset} by cv/train ratio: "
+                    f"cv={subset_cv_mean:.3f}, train={subset_train_mean:.3f}, "
+                    f"r={self.cv_train_ratio}",
                 )
                 return None
 
@@ -1666,8 +1679,8 @@ class CombinatorialSelection:
             feature selection.
         """
 
-        def is_better(a: float | int, b: float | int) -> bool:
-            return a > b if self.logic == 'greater' else a < b
+        def is_at_least(a: float | int, b: float | int) -> bool:
+            return a >= b if self.logic == 'greater' else a <= b
 
         self.cv_iter = cv_iter
         self.n_jobs = resolve_n_jobs(n_jobs)
@@ -1707,17 +1720,15 @@ class CombinatorialSelection:
             f" subset_size={top_n_subsets}, n_jobs={self.n_jobs}",
         )
 
-        # Set cv threshold based on the desirede cv/train ratio
+        # Stage-2 floors: at least as good as the weakest top-N stage-1 winner.
+
+        top = self.df_results_stage1.head(top_n_subsets)
         if self.logic == 'greater':
-            self.training_threshold_2 = self.df_results_stage1.\
-                training_score.head(top_n_subsets).min()
-            self.cv_threshold_2 = self.training_threshold_2 *\
-                self.cv_train_ratio
+            self.training_threshold_2 = top.training_score.min()
+            self.cv_threshold_2 = top.cv_score.min()
         else:
-            self.training_threshold_2 = self.df_results_stage1.\
-                training_score.head(top_n_subsets).max()
-            self.cv_threshold_2 = self.\
-                training_threshold_2/self.cv_train_ratio
+            self.training_threshold_2 = top.training_score.max()
+            self.cv_threshold_2 = top.cv_score.max()
 
         self.dict_results_2 = {
             'feature_subsets': [],
@@ -1735,7 +1746,7 @@ class CombinatorialSelection:
             estimator_copy.fit(x.values, self.y_train)
             y_train_pred = estimator_copy.predict(x.values)
             train_score = self.metric(self.y_train, y_train_pred)
-            if not is_better(train_score, self.training_threshold_2):
+            if not is_at_least(train_score, self.training_threshold_2):
                 self._log(
                     logging.DEBUG,
                     f"Stage 2 rejected subset={subset} by train threshold: {train_score:.3f}",
@@ -1777,10 +1788,27 @@ class CombinatorialSelection:
                 )
  
 
-            if not is_better(subset_cv_mean, self.cv_threshold_2):
+            if not is_at_least(subset_train_mean, self.training_threshold_2):
+                self._log(
+                    logging.DEBUG,
+                    f"Stage 2 rejected subset={subset} by fold-mean train threshold: "
+                    f"{subset_train_mean:.3f}",
+                )
+                return None
+
+            if not is_at_least(subset_cv_mean, self.cv_threshold_2):
                 self._log(
                     logging.DEBUG,
                     f"Stage 2 rejected subset={subset} by cv threshold: {subset_cv_mean:.3f}",
+                )
+                return None
+
+            if not self._passes_ratio(subset_train_mean, subset_cv_mean):
+                self._log(
+                    logging.DEBUG,
+                    f"Stage 2 rejected subset={subset} by cv/train ratio: "
+                    f"cv={subset_cv_mean:.3f}, train={subset_train_mean:.3f}, "
+                    f"r={self.cv_train_ratio}",
                 )
                 return None
 
@@ -1838,6 +1866,16 @@ class CombinatorialSelection:
             ascending=False,
             inplace=True)
 
+        if self.df_results_stage2.empty:
+            self.best_record, self.best_cols = None, []
+            self._log(
+                logging.WARNING,
+                f"Combinatorial stage 2 completed: no subset passed "
+                f"(train>={self.training_threshold_2:.4f}, "
+                f"cv>={self.cv_threshold_2:.4f}, ratio>={self.cv_train_ratio})",
+            )
+            return self.df_results_stage2
+        
         self.best_record = self.df_results_stage2.iloc[0]
         self.best_cols = self.best_record['feature_subsets']
         self._log(

@@ -275,7 +275,8 @@ def fitted_cs_stage_2(fitted_cs_stage_1):
     return fitted_cs_stage_1
 
 def test_combinatorial_selection_fit_stage_1(fitted_cs_stage_1):
-    results_stage_1 = fitted_cs_stage_1.df_results_stage1
+    cs = fitted_cs_stage_1
+    results_stage_1 = cs.df_results_stage1
     assert isinstance(results_stage_1, pd.DataFrame)
     assert 'feature_subsets' in results_stage_1.columns
     assert 'training_score' in results_stage_1.columns
@@ -285,9 +286,12 @@ def test_combinatorial_selection_fit_stage_1(fitted_cs_stage_1):
     assert 'cv_se' in results_stage_1.columns
     assert 'reliability_se' in results_stage_1.columns
     assert results_stage_1['Reliability_lower_bound'].is_monotonic_decreasing
+    assert (results_stage_1['cv_score']
+            >= cs.cv_train_ratio * results_stage_1['training_score']).all()
 
 def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
-    results_stage_2 = fitted_cs_stage_2.df_results_stage2
+    cs = fitted_cs_stage_2
+    results_stage_2 = cs.df_results_stage2
     assert isinstance(results_stage_2, pd.DataFrame)
     assert 'feature_subsets' in results_stage_2.columns
     assert 'training_score' in results_stage_2.columns
@@ -297,6 +301,11 @@ def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     assert 'cv_se' in results_stage_2.columns
     assert 'reliability_se' in results_stage_2.columns
     assert results_stage_2['Reliability_lower_bound'].is_monotonic_decreasing
+    # Floors and ratio invariants (vacuously true if empty)
+    assert (results_stage_2['training_score'] >= cs.training_threshold_2).all()
+    assert (results_stage_2['cv_score'] >= cs.cv_threshold_2).all()
+    assert (results_stage_2['cv_score']
+            >= cs.cv_train_ratio * results_stage_2['training_score']).all()
 
 
 def test_combinatorial_selection_lower_logic_inverts_performance_score():
@@ -513,11 +522,10 @@ def test_combinatorial_selection_stage_2_max_subsets_guard(fitted_cs_stage_1):
 def test_combinatorial_selection_stage_2_parallel_and_no_limit(fitted_cs_stage_1):
     results = fitted_cs_stage_1.fit_stage_2(
         top_n_subsets=2,
-        cv_iter=3,
+        cv_iter=5,          # must match stage 1 so the floors are comparable
         max_subsets=None,
         n_jobs=2,
     )
-
     assert isinstance(results, pd.DataFrame)
 
 
