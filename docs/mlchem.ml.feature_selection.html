@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.ml.feature_selection package &#8212; mlchem 1.2.1 documentation</title>
+    <title>mlchem.ml.feature_selection package &#8212; mlchem 1.2.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=ca842793"></script>
+    <script src="_static/documentation_options.js?v=fd7cadf9"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.ml.html" title="mlchem.ml package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.2 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" accesskey="U"><strong>mlchem.ml package</strong></a> &#187;</li>
@@ -332,8 +332,10 @@ Default is logging.INFO.</p></li>
 <li><p><strong>k</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of features to combine. Default is 2.</p></li>
 <li><p><strong>training_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum training score required to consider a subset.
 Default is 0.25.</p></li>
-<li><p><strong>cv_train_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum ratio of cross-validation to training score. Default
-is 0.7.</p></li>
+<li><p><strong>cv_train_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum per-subset ratio of fold-mean CV score to fold-mean
+training score (cv/train &gt;= r for logic=’greater’;
+cv &lt;= train/r for logic=’lower’). Applied in both stages.
+Default is 0.7.</p></li>
 <li><p><strong>cv_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of cross-validation iterations. Default is 5.</p></li>
 <li><p><strong>max_subsets</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Hard cap on the number of generated feature subsets.
 If None, no hard cap is applied. Default is None.</p></li>
@@ -364,7 +366,8 @@ feature selection.</p>
 <p class="rubric">Notes</p>
 <p>Generates all possible feature subsets of size <code class="docutils literal notranslate"><span class="pre">k</span></code> and evaluates
 each subset using training and cross-validation scores.
-Results are filtered using training/CV thresholds and ranked by
+Results are filtered by an absolute training threshold
+and a per-subset cv/train ratio and ranked by
 <code class="docutils literal notranslate"><span class="pre">reliability_score</span></code>. The score uses the same arithmetic-mean
 performance term and lower-is-better orientation as SFS. The legacy
 <code class="docutils literal notranslate"><span class="pre">geometric_mean</span></code> formulation is no longer used.</p>
@@ -702,7 +705,7 @@ The highlighted subset is the one returned by <code class="docutils literal notr
         <li class="right" >
           <a href="mlchem.ml.html" title="mlchem.ml package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.2 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" ><strong>mlchem.ml package</strong></a> &#187;</li>
