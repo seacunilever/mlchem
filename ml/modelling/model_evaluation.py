@@ -722,10 +722,6 @@ class MajorityVote:
         Number of workers used by parallel sections.
     log_level : int or str, optional
         Logging threshold.
-    response_method : {'predict', 'predict_proba', 'decision_function'}, optional
-        Estimator method used to obtain metric inputs. The estimator must
-        implement it. Use ``predict_proba`` or ``decision_function`` for
-        ROC-AUC; the default ``predict`` preserves label-based scoring.
     """
 
     def __init__(
