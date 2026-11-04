@@ -94,13 +94,17 @@ def test_shap_explainer_notree_load(shap_explainer_notree):
     assert np.array_equal(shap_explainer_notree.shap_values, shap_values)
 
 @patch('joblib.dump')
-def test_shap_tree_explainer_save(mock_dump, shap_explainer_tree):
-    shap_explainer_tree.save(path='test_path', filename='test_filename')
+def test_shap_tree_explainer_save(mock_dump, shap_explainer_tree, tmp_path):
+    output_dir = tmp_path / 'tree'
+    shap_explainer_tree.save(path=str(output_dir), filename='test_filename')
+    assert output_dir.is_dir()
     assert mock_dump.call_count == 2
 
 @patch('joblib.dump')
-def test_shap_notree_explainer_save(mock_dump, shap_explainer_notree):
-    shap_explainer_notree.save(path='test_path', filename='test_filename')
+def test_shap_notree_explainer_save(mock_dump, shap_explainer_notree, tmp_path):
+    output_dir = tmp_path / 'notree'
+    shap_explainer_notree.save(path=str(output_dir), filename='test_filename')
+    assert output_dir.is_dir()
     assert mock_dump.call_count == 2
 
 @patch('shap.initjs')

@@ -415,11 +415,10 @@ def test_crossval_with_predefined_split(sample_data):
     assert isinstance(scores, dict)
     assert len(scores['cv_scores']) == 2
 
-def test_y_scrambling(sample_data, tmp_path, monkeypatch):
+def test_y_scrambling(sample_data, tmp_path):
     train_set, y_train, _, _ = sample_data
     estimator = LogisticRegression()
     metric_function = get_geometric_S
-    monkeypatch.chdir(tmp_path)
     
     with pytest.raises(ValueError, match="'safety_multiplier' must be greater than 0"):
         y_scrambling(
@@ -437,7 +436,9 @@ def test_y_scrambling(sample_data, tmp_path, monkeypatch):
             y_scrambling(estimator, train_set.values, y_train, metric_function, n_scrambles=10)
             mock_show.assert_called_once()  # Ensure plt.show() is called
             result = y_scrambling(estimator, train_set.values, y_train, metric_function, n_scrambles=20, plot=False)
-            plt.savefig('y_scrambling_test_plot.png')
+            output_file = tmp_path / 'y_scrambling_test_plot.png'
+            plt.savefig(output_file)
+            assert output_file.exists()
             assert 'safety_margin_ratio' in result
 
 def test_y_scrambling_with_dataframe_inputs(sample_data):

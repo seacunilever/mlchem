@@ -255,19 +255,18 @@ def test_identify_df_duplicates_validation_errors():
     with pytest.raises(ValueError):
         identify_df_duplicates(df, "A", keep='invalid')
 
-def test_create_structure_files(tmpdir):
+def test_create_structure_files(tmp_path):
     df = pd.DataFrame({"SMILES": ["CCO", "CCC"]})
-    folder = tmpdir.mkdir("structures")
+    folder = tmp_path / "structures"
     create_structure_files(df, "SMILES", str(folder))
-    assert len(folder.listdir()) == 2
+    assert len(list(folder.iterdir())) == 2
 
-def test_prepare_dataframe(tmpdir):
+def test_prepare_dataframe(tmp_path):
     df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
-    folder = tmpdir.mkdir("files")
-    file1 = folder.join("file1.txt")
-    file2 = folder.join("file2.txt")
-    file1.write("content1")
-    file2.write("content2")
+    folder = tmp_path / "files"
+    folder.mkdir()
+    (folder / "file1.txt").write_text("content1", encoding="utf-8")
+    (folder / "file2.txt").write_text("content2", encoding="utf-8")
     result = prepare_dataframe(df, str(folder))
     assert "MOLFILE" in result.columns
 
@@ -342,11 +341,11 @@ def test_normalise_iterable():
     assert normalise_iterable([]) == []
     assert normalise_iterable((x for x in [1, 2, 3])) == [1/3, 2/3, 1]
 
-def test_dfs_to_excel(tmpdir):
+def test_dfs_to_excel(tmp_path):
     df1 = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
     df2 = pd.DataFrame({"C": [5, 6], "D": [7, 8]})
-    file_path = tmpdir.join("test.xlsx")
-    dfs_to_excel(file_path, [df1, df2], ["Sheet1", "Sheet2"])
+    file_path = tmp_path / "test.xlsx"
+    dfs_to_excel(str(file_path), [df1, df2], ["Sheet1", "Sheet2"])
     assert file_path.exists()
 
 def test_generate_cartesian_product_two_lists():
