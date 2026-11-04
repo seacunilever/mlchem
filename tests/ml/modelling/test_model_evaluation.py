@@ -485,6 +485,36 @@ def test_y_scrambling_propagates_response_method_to_reference_and_scrambles(
     assert response_methods == ['predict_proba', 'predict_proba']
 
 
+def test_y_scrambling_disables_parallelism_on_each_scramble_clone(sample_data):
+    train_set, y_train, _, _ = sample_data
+    observed_estimators = []
+
+    def fake_crossval(estimator, *args, **kwargs):
+        observed_estimators.append(estimator)
+        return {'cv_mean': 0.8 if estimator.n_jobs == 4 else 0.4}
+
+    with patch(
+        'mlchem.ml.modelling.model_evaluation.crossval',
+        side_effect=fake_crossval,
+    ):
+        y_scrambling(
+            RandomForestClassifier(n_estimators=5, n_jobs=4),
+            train_set.values,
+            y_train,
+            roc_auc_score,
+            n_scrambles=2,
+            n_jobs=2,
+            plot=False,
+        )
+
+    reference_estimator, *scramble_estimators = observed_estimators
+    assert reference_estimator.n_jobs == 4
+    assert len(scramble_estimators) == 2
+    assert all(estimator is not reference_estimator for estimator in scramble_estimators)
+    assert len({id(estimator) for estimator in scramble_estimators}) == 2
+    assert all(estimator.n_jobs in (None, 1) for estimator in scramble_estimators)
+
+
 def test_y_scrambling_logging_toggle(sample_data, caplog):
     train_set, y_train, _, _ = sample_data
     estimator = LogisticRegression(max_iter=250)

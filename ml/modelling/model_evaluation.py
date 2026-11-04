@@ -606,7 +606,7 @@ def y_scrambling(estimator,
         est = clone(estimator)
         disable_estimator_parallelization(est)  # Prevent nested parallelization warnings
         cv_result = crossval(
-            estimator_copy,
+            est,
             X_train,
             y_shuffled,
             metric,
