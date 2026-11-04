@@ -129,8 +129,6 @@ def test_compress_se_uses_override_dataframe_for_fractional_neighbours(sample_da
 def test_compress_umap_dict_params_and_custom_dataframe(sample_dataframe):
     compressor = Compressor(dataframe=sample_dataframe.iloc[:20])
     compressor.compress_UMAP(
-        n_components=2,
-        neighbours_number_or_fraction=5,
         dataframe=sample_dataframe,
         dict_params={
             'n_components': 2,
@@ -144,10 +142,46 @@ def test_compress_umap_dict_params_and_custom_dataframe(sample_dataframe):
 
 def test_compress_mds_dict_params_path(compressor):
     compressor.compress_MDS(
-        n_components=2,
         dict_params={'n_components': 2, 'random_state': 1, 'init': 'random'}
     )
     assert compressor.dataframe_compressed.shape[1] == 2
+
+
+@pytest.mark.parametrize(
+    ('method_name', 'dict_params'),
+    [
+        (
+            'compress_SE',
+            {'n_components': 2, 'n_neighbors': 5, 'n_jobs': 1, 'random_state': 1},
+        ),
+        (
+            'compress_LLE',
+            {'n_components': 2, 'n_neighbors': 5, 'n_jobs': 1},
+        ),
+        (
+            'compress_ISOMAP',
+            {'n_components': 2, 'n_neighbors': 5, 'n_jobs': 1},
+        ),
+    ],
+)
+def test_compressors_accept_dict_params_without_regular_arguments(
+    compressor, method_name, dict_params
+):
+    getattr(compressor, method_name)(dict_params=dict_params)
+    assert compressor.dataframe_compressed.shape[1] == 2
+
+
+@pytest.mark.parametrize(
+    'method_name',
+    ['compress_SE', 'compress_UMAP', 'compress_MDS', 'compress_LLE', 'compress_ISOMAP'],
+)
+def test_compressors_require_regular_arguments_without_dict_params(
+    compressor, method_name
+):
+    with pytest.raises(
+        ValueError, match='required when dict_params is not provided'
+    ):
+        getattr(compressor, method_name)()
 
 
 def test_compress_lle_invalid_float_neighbours_raises(compressor):

@@ -275,8 +275,8 @@ None
 
     def compress_SE(
         self,
-        n_components: int,
-        neighbours_number_or_fraction: float | int,
+        n_components: int | None = None,
+        neighbours_number_or_fraction: float | int | None = None,
         dataframe: pd.DataFrame | None = None,
         random_state: int = 1,
         dict_params: dict | None = None
@@ -289,11 +289,13 @@ based on graph Laplacian eigenmaps.
 
 Parameters
 ----------
-n_components : int
-    Number of dimensions to reduce to.
+n_components : int, optional
+    Number of dimensions to reduce to. Required when ``dict_params`` is not
+    provided.
 
-neighbours_number_or_fraction : float or int
+neighbours_number_or_fraction : float or int, optional
     Number or fraction of neighbors to consider for graph construction.
+    Required when ``dict_params`` is not provided.
 
 dataframe : pandas.DataFrame or None, optional
     DataFrame to compress. If None, uses the instance's dataframe.
@@ -308,6 +310,14 @@ Returns
 -------
 None
 """
+
+        if dict_params is None and (
+            n_components is None or neighbours_number_or_fraction is None
+        ):
+            raise ValueError(
+                "'n_components' and 'neighbours_number_or_fraction' are "
+                "required when dict_params is not provided."
+            )
 
         from sklearn.manifold import SpectralEmbedding
         df = dataframe if dataframe is not None else self.dataframe
@@ -340,8 +350,8 @@ None
 
     def compress_UMAP(
         self,
-        n_components: int,
-        neighbours_number_or_fraction: float | int,
+        n_components: int | None = None,
+        neighbours_number_or_fraction: float | int | None = None,
         dataframe: pd.DataFrame | None = None,
         random_state: int = 1,
         dict_params: dict | None = None
@@ -354,11 +364,13 @@ while preserving local and global structure.
 
 Parameters
 ----------
-n_components : int
-    Number of dimensions to reduce to.
+n_components : int, optional
+    Number of dimensions to reduce to. Required when ``dict_params`` is not
+    provided.
 
-neighbours_number_or_fraction : float or int
+neighbours_number_or_fraction : float or int, optional
     Number or fraction of neighbors to consider for local connectivity.
+    Required when ``dict_params`` is not provided.
 
 dataframe : pandas.DataFrame or None, optional
     DataFrame to compress. If None, uses the instance's dataframe.
@@ -373,6 +385,14 @@ Returns
 -------
 None
 """
+
+        if dict_params is None and (
+            n_components is None or neighbours_number_or_fraction is None
+        ):
+            raise ValueError(
+                "'n_components' and 'neighbours_number_or_fraction' are "
+                "required when dict_params is not provided."
+            )
 
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -411,7 +431,7 @@ None
 
     def compress_MDS(
         self,
-        n_components: int,
+        n_components: int | None = None,
         dataframe: pd.DataFrame | None = None,
         random_state: int = 1,
         dict_params: dict | None = None
@@ -424,8 +444,9 @@ based on pairwise distances.
 
 Parameters
 ----------
-n_components : int
-    Number of dimensions to reduce to.
+n_components : int, optional
+    Number of dimensions to reduce to. Required when ``dict_params`` is not
+    provided.
 
 dataframe : pandas.DataFrame or None, optional
     DataFrame to compress. If None, uses the instance's dataframe.
@@ -440,6 +461,11 @@ Returns
 -------
 None
 """
+
+        if dict_params is None and n_components is None:
+            raise ValueError(
+                "'n_components' is required when dict_params is not provided."
+            )
 
         from sklearn.manifold import MDS
 
@@ -468,8 +494,8 @@ None
 
     def compress_LLE(
         self,
-        n_components: int,
-        neighbours_number_or_fraction: float | int,
+        n_components: int | None = None,
+        neighbours_number_or_fraction: float | int | None = None,
         dataframe: pd.DataFrame | None = None,
         random_state: int = 1,
         dict_params: dict | None = None
@@ -482,11 +508,13 @@ by preserving local neighborhood relationships.
 
 Parameters
 ----------
-n_components : int
-    Number of dimensions to reduce to.
+n_components : int, optional
+    Number of dimensions to reduce to. Required when ``dict_params`` is not
+    provided.
 
-neighbours_number_or_fraction : float or int
+neighbours_number_or_fraction : float or int, optional
     Number or fraction of neighbors to consider for local reconstruction.
+    Required when ``dict_params`` is not provided.
 
 dataframe : pandas.DataFrame or None, optional
     DataFrame to compress. If None, uses the instance's dataframe.
@@ -501,6 +529,14 @@ Returns
 -------
 None
 """
+
+        if dict_params is None and (
+            n_components is None or neighbours_number_or_fraction is None
+        ):
+            raise ValueError(
+                "'n_components' and 'neighbours_number_or_fraction' are "
+                "required when dict_params is not provided."
+            )
 
         from sklearn.manifold import LocallyLinearEmbedding
         df = dataframe if dataframe is not None else self.dataframe
@@ -533,8 +569,8 @@ None
 
     def compress_ISOMAP(
         self,
-        n_components: int,
-        neighbours_number_or_fraction: float | int,
+        n_components: int | None = None,
+        neighbours_number_or_fraction: float | int | None = None,
         dataframe: pd.DataFrame | None = None,
         dict_params: dict | None = None
     ) -> None:
@@ -546,12 +582,13 @@ by preserving geodesic distances between all points.
 
 Parameters
 ----------
-n_components : int
-    Number of dimensions to reduce to.
+n_components : int, optional
+    Number of dimensions to reduce to. Required when ``dict_params`` is not
+    provided.
 
-neighbours_number_or_fraction : float or int
+neighbours_number_or_fraction : float or int, optional
     Number or fraction of neighbors to consider for neighborhood 
-    graph construction.
+    graph construction. Required when ``dict_params`` is not provided.
 
 dataframe : pandas.DataFrame or None, optional
     DataFrame to compress. If None, uses the instance's dataframe.
@@ -563,6 +600,14 @@ Returns
 -------
 None
 """
+
+        if dict_params is None and (
+            n_components is None or neighbours_number_or_fraction is None
+        ):
+            raise ValueError(
+                "'n_components' and 'neighbours_number_or_fraction' are "
+                "required when dict_params is not provided."
+            )
 
         from sklearn.manifold import Isomap
         df = dataframe if dataframe is not None else self.dataframe
