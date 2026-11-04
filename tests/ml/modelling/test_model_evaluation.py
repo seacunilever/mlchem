@@ -607,6 +607,33 @@ def test_majority_vote_init(majority_vote_classification):
     assert isinstance(mv.y_test, np.ndarray)
 
 
+@pytest.mark.parametrize('missing_from', ['train_set', 'test_set'])
+def test_majority_vote_fit_rejects_missing_estimator_columns(
+    sample_data, missing_from
+):
+    train_set, y_train, test_set, y_test = sample_data
+    if missing_from == 'train_set':
+        columns = ['missing_feature']
+    else:
+        columns = [train_set.columns[0]]
+        test_set = test_set.drop(columns=columns)
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type='classification',
+        estimator_list=[LogisticRegression()],
+        column_list=[columns],
+    )
+
+    with pytest.raises(
+        KeyError, match=f'Columns not found in {missing_from}'
+    ):
+        mv.fit()
+
+
 def test_majority_vote_default_estimator_names_are_isolated(sample_data):
     train_set, y_train, test_set, y_test = sample_data
     estimator_list = [LogisticRegression(random_state=1)]

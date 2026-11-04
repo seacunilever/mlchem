@@ -48,6 +48,7 @@ from mlchem.helper import (
     coerce_log_level,
     resolve_n_jobs,
     validate_task_type,
+    validate_dataframe_columns,
 )
 from mlchem.metrics import get_reliability_score_components
 from mlchem.ml.modelling.model_evaluation import (
@@ -547,7 +548,8 @@ class SequentialForwardSelection:
             Target values for the training set.
         test_set : pandas.DataFrame, optional
             Optional test dataset. If provided, unseen-set scores are
-            stored in ``self.unseen_scores``.
+            stored in ``self.unseen_scores``. It must contain all columns
+            from ``train_set``; additional columns are allowed.
         y_test : iterable
             Target values for the test set.
         n_jobs : int, optional
@@ -559,6 +561,13 @@ class SequentialForwardSelection:
         -------
         None
         """
+
+        if test_set is not None:
+            validate_dataframe_columns(
+                test_set,
+                train_set.columns,
+                dataframe_name='test_set',
+            )
 
         self.train_set = train_set
         self.y_train = y_train
@@ -1407,7 +1416,8 @@ class CombinatorialSelection:
         y_train : iterable
             Target values for the training dataset.
         features : list of str, optional
-            List of features to consider. Default is an empty list.
+            List of features to consider. Each feature must be a column
+            in ``train_set``. Default is an empty list.
         k : int, optional
             Number of features to combine. Default is 2.
         training_threshold : float, optional
@@ -1467,10 +1477,17 @@ class CombinatorialSelection:
         def is_at_least(a: float | int, b: float | int) -> bool:
             return a >= b if self.logic == 'greater' else a <= b
 
+        resolved_features = [] if features is None else list(features)
+        validate_dataframe_columns(
+            train_set,
+            resolved_features,
+            dataframe_name='train_set',
+        )
+
         self.train_set = train_set
         self.y_train = y_train
 
-        self.features = [] if features is None else list(features)
+        self.features = resolved_features
         self.k = k
         self.training_threshold = training_threshold
         self.cv_train_ratio = cv_train_ratio

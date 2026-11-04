@@ -33,6 +33,7 @@
 
 import pandas as pd
 from collections.abc import Iterable
+from mlchem.helper import validate_dataframe_columns
 from sklearn.preprocessing import (StandardScaler,
                                    MinMaxScaler,
                                    RobustScaler)
@@ -57,9 +58,7 @@ def _split_scale_columns(
     else:
         excluded_columns_list = list(columns_to_exclude)
 
-    missing_columns = [col for col in excluded_columns_list if col not in df.columns]
-    if missing_columns:
-        raise KeyError(f"Columns not found in dataframe: {missing_columns}")
+    validate_dataframe_columns(df, excluded_columns_list)
 
     sliced_df = df.drop(columns=excluded_columns_list)
 

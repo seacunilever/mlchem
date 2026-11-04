@@ -529,6 +529,26 @@ ValueError
     return task_type
 
 
+def validate_dataframe_columns(
+    dataframe: pd.DataFrame,
+    required_columns: Iterable[Any],
+    dataframe_name: str = 'dataframe',
+) -> None:
+    """Raise a clear error when a DataFrame lacks required columns."""
+    if not isinstance(dataframe, pd.DataFrame):
+        raise TypeError(f"'{dataframe_name}' must be a pandas DataFrame.")
+    if isinstance(required_columns, (str, bytes)):
+        raise TypeError("'required_columns' must be an iterable of column names, not a string.")
+
+    missing_columns = list(dict.fromkeys(
+        column for column in required_columns if column not in dataframe.columns
+    ))
+    if missing_columns:
+        raise KeyError(
+            f"Columns not found in {dataframe_name}: {missing_columns}"
+        )
+
+
 def resolve_n_jobs(n_jobs: int) -> int:
     """
 Normalize n_jobs values used by parallel wrappers.

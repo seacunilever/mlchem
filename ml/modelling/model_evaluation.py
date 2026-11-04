@@ -38,7 +38,13 @@ import warnings
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
-from mlchem.helper import coerce_log_level, validate_task_type, resolve_n_jobs, disable_estimator_parallelization
+from mlchem.helper import (
+    coerce_log_level,
+    validate_task_type,
+    resolve_n_jobs,
+    disable_estimator_parallelization,
+    validate_dataframe_columns,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -712,6 +718,8 @@ class MajorityVote:
         voting.
     column_list : list[list[str]]
         Per-estimator feature subsets aligned with ``estimator_list``.
+        For ``fit()``, each listed column must exist in both the training
+        and hold-out DataFrames.
     test_set : pandas.DataFrame or None, optional
         Hold-out feature matrix used by ``fit()``.
     y_test : iterable or None, optional
@@ -894,6 +902,18 @@ class MajorityVote:
             )
 
         selected_estimators_resolved = self._resolve_selected_estimators(selected_estimators)
+        for _, _, columns, estimator_name in selected_estimators_resolved:
+            validate_dataframe_columns(
+                self.train_set,
+                columns,
+                dataframe_name=f"train_set for estimator '{estimator_name}'",
+            )
+            validate_dataframe_columns(
+                self.test_set,
+                columns,
+                dataframe_name=f"test_set for estimator '{estimator_name}'",
+            )
+
         if update_active_estimators:
             self.estimator_list = [payload[1] for payload in selected_estimators_resolved]
             self.column_list = [payload[2] for payload in selected_estimators_resolved]

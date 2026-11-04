@@ -237,6 +237,21 @@ def test_sequential_forward_selection_invalid_n_jobs():
         sfs.fit(train_set, y_train, test_set, y_test, n_jobs=0)
 
 
+def test_sfs_rejects_test_set_missing_training_columns():
+    train_set = pd.DataFrame({'signal': [0, 1, 0, 1], 'noise': [1, 0, 1, 0]})
+    test_set = pd.DataFrame({'signal': [0, 1]})
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string=None,
+        metric=get_geometric_S,
+        max_features=1,
+        cv_iter=2,
+    )
+
+    with pytest.raises(KeyError, match='Columns not found in test_set:.*noise'):
+        sfs.fit(train_set, [0, 1, 0, 1], test_set, [0, 1])
+
+
 def test_sequential_forward_selection_invalid_task_type_raises():
     with pytest.raises(ValueError, match="must be either 'classification' or 'regression'"):
         SequentialForwardSelection(
@@ -536,6 +551,22 @@ def test_combinatorial_selection_stage_1_copies_features_input():
     features.append('external-mutation')
 
     assert cs.features == train_set.columns.tolist()
+
+
+def test_combinatorial_stage_1_rejects_unknown_feature_names():
+    cs = CombinatorialSelection(
+        estimator=LogisticRegression(),
+        metric=get_geometric_S,
+    )
+    train_set = pd.DataFrame({'feature': [0, 1, 0, 1]})
+
+    with pytest.raises(KeyError, match='Columns not found in train_set:.*missing'):
+        cs.fit_stage_1(
+            train_set=train_set,
+            y_train=[0, 1, 0, 1],
+            features=['missing'],
+            k=1,
+        )
 
 
 def test_combinatorial_selection_lower_logic_rejects_zero_cv_train_ratio():

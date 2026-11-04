@@ -47,8 +47,30 @@ from mlchem.helper import (
     process_custom_string, sort_list_by_other_list, merge_dicts_with_duplicates,
     add_inchi_to_dataframe, identify_df_duplicates, create_structure_files,
     prepare_dataframe, prepare_datatable, compute_alpha, size_ratio, bokeh_plot,
-    create_mask, assign_sign, normalise_iterable, dfs_to_excel, generate_cartesian_product
+    create_mask, assign_sign, normalise_iterable, dfs_to_excel, generate_cartesian_product,
+    validate_dataframe_columns,
 )
+
+
+def test_validate_dataframe_columns_reports_missing_names():
+    dataframe = pd.DataFrame({'present': [1]})
+
+    with pytest.raises(
+        KeyError, match='Columns not found in sample:.*missing'
+    ):
+        validate_dataframe_columns(
+            dataframe,
+            ['present', 'missing'],
+            dataframe_name='sample',
+        )
+
+
+def test_validate_dataframe_columns_rejects_string_column_list():
+    dataframe = pd.DataFrame({'feature': [1]})
+
+    with pytest.raises(TypeError, match='iterable of column names'):
+        validate_dataframe_columns(dataframe, 'feature')
+
 
 def test_convert_size():
     assert convert_size(size=(2, 3), dpi=100) == (200, 300)
