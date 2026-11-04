@@ -50,7 +50,11 @@ from mlchem.helper import (
     validate_task_type,
 )
 from mlchem.metrics import get_reliability_score_components
-from mlchem.ml.modelling.model_evaluation import crossval, generate_cv_indices
+from mlchem.ml.modelling.model_evaluation import (
+    _score_estimator,
+    crossval,
+    generate_cv_indices,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -352,6 +356,10 @@ class SequentialForwardSelection:
         Display name for the estimator. If None, inferred from the estimator.
     metric : callable
         Scoring function with signature ``metric(y_true, y_pred)``.
+    response_method : {'predict', 'predict_proba', 'decision_function'}, optional
+        Estimator method used for metric inputs. The estimator must implement
+        it. Defaults to ``predict``; use ``predict_proba`` or
+        ``decision_function`` for ROC-AUC.
     max_features : int, optional
         Maximum number of features to select. Default is 25.
     cv_iter : int, optional
@@ -414,6 +422,9 @@ class SequentialForwardSelection:
                      'classification', 'regression'] = 'classification',
                  desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 response_method: Literal['predict',
+                                           'predict_proba',
+                                           'decision_function'] = 'predict',
                  ) -> None:
         """
         Initialise a SequentialForwardSelection wrapper.
@@ -426,6 +437,9 @@ class SequentialForwardSelection:
             Display name for the estimator.
         metric : callable
             Scoring function ``metric(y_true, y_pred)``.
+        response_method : {'predict', 'predict_proba', 'decision_function'}, optional
+            Estimator method used for metric inputs. The estimator must
+            implement it. Defaults to ``predict``.
         max_features : int, optional
             Maximum number of selected features.
         cv_iter : int, optional
@@ -457,7 +471,7 @@ class SequentialForwardSelection:
         self.cv_indices = cv_indices
         self.groups = groups
         self.desired_performance_score = desired_performance_score
-    
+        self.response_method = response_method
 
         self.logic = logic
         self.task_type = validate_task_type(task_type)
@@ -596,6 +610,7 @@ class SequentialForwardSelection:
                 self.cv_iter,
                 self.task_type,
                 cv_indices=self._resolved_cv_indices,
+                response_method=self.response_method,
             )
 
             train_scores_folds = cv_result['train_scores']
@@ -741,8 +756,14 @@ class SequentialForwardSelection:
                 test_set_temp = self.test_set[self.extending_features]
                 self.estimator.fit(train_set_temp, y_train)
                 #y_train_pred = self.estimator.predict(train_set_temp)
-                y_test_pred = self.estimator.predict(test_set_temp)
-                self.unseen_scores.append(self.metric(self.y_test, y_test_pred))
+                test_score = _score_estimator(
+                    self.metric,
+                    self.estimator,
+                    test_set_temp,
+                    self.y_test,
+                    self.response_method,
+                )
+                self.unseen_scores.append(test_score)
                 self._log(
                     logging.DEBUG,
                     f"SFS cycle={cycle + 1} scores | "
@@ -1081,6 +1102,10 @@ class CombinatorialSelection:
     metric : callable
         A metric function to evaluate estimator performance. Must accept
         ``(y_true, y_pred)``.
+    response_method : {'predict', 'predict_proba', 'decision_function'}, optional
+        Estimator method used for metric inputs. The estimator must implement
+        it. Defaults to ``predict``; use ``predict_proba`` or
+        ``decision_function`` for ROC-AUC.
     logic : {'greater', 'lower'}
         Determines whether a higher or lower score is considered better.
     task_type : {'classification', 'regression'}
@@ -1144,6 +1169,9 @@ class CombinatorialSelection:
                  groups=None,
                  desired_performance_score: Literal['train','cv','train_cv_average'] = 'train_cv_average',
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 response_method: Literal['predict',
+                                           'predict_proba',
+                                           'decision_function'] = 'predict',
                  ) -> None:
         """
         Initialise the CombinatorialSelection object.
@@ -1169,6 +1197,9 @@ class CombinatorialSelection:
         groups : array-like, optional
             Group labels forwarded to ``cv_splitter``. Ignored when
             ``cv_indices`` is provided.
+        response_method : {'predict', 'predict_proba', 'decision_function'}, optional
+            Estimator method used for metric inputs. The estimator must
+            implement it. Defaults to ``predict``.
         desired_performance_score : {'train','cv','train_cv_average'}, optional
             Which score to use as the performance score when calculating reliability.
             Options are: 'train' for the training score, 'cv' for the cross-validation score,
@@ -1189,7 +1220,7 @@ class CombinatorialSelection:
         self.cv_indices = cv_indices
         self.groups = groups
         self.desired_performance_score = desired_performance_score  # default value
-        
+        self.response_method = response_method
 
         _configure_wrapper_logging(self.log_level)
 
@@ -1524,8 +1555,13 @@ class CombinatorialSelection:
             x = self.train_set[subset]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(x.values, self.y_train)
-            y_train_pred = estimator_copy.predict(x.values)
-            train_score = self.metric(self.y_train, y_train_pred)
+            train_score = _score_estimator(
+                self.metric,
+                estimator_copy,
+                x.values,
+                self.y_train,
+                self.response_method,
+            )
             if not is_at_least(train_score, self.training_threshold):
                 self._log(
                     logging.DEBUG,
@@ -1551,6 +1587,7 @@ class CombinatorialSelection:
                 self.cv_iter,
                 self.task_type,
                 cv_indices=self._resolved_cv_indices,
+                response_method=self.response_method,
             )
 
 
@@ -1744,8 +1781,13 @@ class CombinatorialSelection:
             x = self.train_set[subset]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(x.values, self.y_train)
-            y_train_pred = estimator_copy.predict(x.values)
-            train_score = self.metric(self.y_train, y_train_pred)
+            train_score = _score_estimator(
+                self.metric,
+                estimator_copy,
+                x.values,
+                self.y_train,
+                self.response_method,
+            )
             if not is_at_least(train_score, self.training_threshold_2):
                 self._log(
                     logging.DEBUG,
@@ -1761,6 +1803,7 @@ class CombinatorialSelection:
                 self.cv_iter,
                 self.task_type,
                 cv_indices=self._resolved_cv_indices,
+                response_method=self.response_method,
             )
             subset_train_scores_folds = cv_result['train_scores']
             subset_train_mean = cv_result['train_mean']
@@ -1928,13 +1971,6 @@ class CombinatorialSelection:
 
         # Fit the estimator on the best feature subset
         self.estimator.fit(self.train_set[self.best_cols], self.y_train)
-        self.y_train_pred = self.estimator.predict(
-            self.train_set[self.best_cols]
-            )
-        self.y_test_pred = self.estimator.predict(
-            self.test_set[self.best_cols]
-            )
-
         # Perform cross-validation
         self.cv_performance = crossval(
             self.estimator,
@@ -1944,6 +1980,7 @@ class CombinatorialSelection:
             5,
             self.task_type,
             **({'cv_indices': self._resolved_cv_indices} if getattr(self, '_resolved_cv_indices', None) is not None else {}),
+            response_method=self.response_method,
         )
 
         # Display results through logger
@@ -1952,7 +1989,13 @@ class CombinatorialSelection:
         self._log(
             logging.INFO,
             'Train Score: %.3f',
-            self.metric(self.y_train, self.y_train_pred),
+            _score_estimator(
+                self.metric,
+                self.estimator,
+                self.train_set[self.best_cols],
+                self.y_train,
+                self.response_method,
+            ),
         )
         self._log(
             logging.INFO,
@@ -1963,5 +2006,11 @@ class CombinatorialSelection:
         self._log(
             logging.INFO,
             'Test Score: %.3f',
-            self.metric(self.y_test, self.y_test_pred),
+            _score_estimator(
+                self.metric,
+                self.estimator,
+                self.test_set[self.best_cols],
+                self.y_test,
+                self.response_method,
+            ),
         )

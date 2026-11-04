@@ -40,8 +40,9 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
-from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import matthews_corrcoef, roc_auc_score
 from sklearn.model_selection import GroupKFold
+from sklearn.model_selection import train_test_split
 from mlchem.ml.feature_selection.wrappers import (SequentialForwardSelection,
                                                   CombinatorialSelection,
                                                   _orient_scores_to_utility,
@@ -245,6 +246,59 @@ def test_sequential_forward_selection_invalid_task_type_raises():
             task_type='invalid',
         )
 
+
+def test_sfs_response_method_propagates_and_scores_test_probabilities():
+    X, y = make_classification(
+        n_samples=80,
+        n_features=1,
+        n_informative=1,
+        n_redundant=0,
+        n_repeated=0,
+        n_clusters_per_class=1,
+        class_sep=2.0,
+        random_state=7,
+    )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.25, random_state=11, stratify=y
+    )
+    train_set = pd.DataFrame(X_train, columns=['signal'])
+    test_set = pd.DataFrame(X_test, columns=['signal'])
+    response_methods = []
+
+    def fake_crossval(*args, **kwargs):
+        response_methods.append(kwargs.get('response_method'))
+        return {
+            'train_scores': np.array([0.8, 0.8]),
+            'train_mean': 0.8,
+            'train_se': 0.0,
+            'cv_scores': np.array([0.8, 0.8]),
+            'cv_mean': 0.8,
+            'cv_se': 0.0,
+        }
+
+    sfs = SequentialForwardSelection(
+        estimator=LogisticRegression(),
+        estimator_string='lr',
+        metric=roc_auc_score,
+        max_features=1,
+        cv_iter=2,
+        response_method='predict_proba',
+    )
+    with patch(
+        'mlchem.ml.feature_selection.wrappers.crossval',
+        side_effect=fake_crossval,
+    ):
+        sfs.fit(train_set, y_train, test_set, y_test)
+
+    assert response_methods == ['predict_proba']
+    test_probabilities = sfs.estimator.predict_proba(
+        test_set[sfs.extending_features]
+    )[:, 1]
+    assert sfs.unseen_scores[0] == pytest.approx(
+        roc_auc_score(y_test, test_probabilities)
+    )
+
+
 @pytest.fixture
 def fitted_cs_stage_1():
     estimator = LogisticRegression()
@@ -306,6 +360,66 @@ def test_combinatorial_selection_fit_stage_2(fitted_cs_stage_2):
     assert (results_stage_2['cv_score'] >= cs.cv_threshold_2).all()
     assert (results_stage_2['cv_score']
             >= cs.cv_train_ratio * results_stage_2['training_score']).all()
+
+
+def test_combinatorial_selection_response_method_and_direct_training_auc():
+    X, y = make_classification(
+        n_samples=80,
+        n_features=1,
+        n_informative=1,
+        n_redundant=0,
+        n_repeated=0,
+        n_clusters_per_class=1,
+        class_sep=2.0,
+        random_state=7,
+    )
+    train_set = pd.DataFrame(X, columns=['signal'])
+    response_methods = []
+    direct_scores = []
+
+    def recording_auc(y_true, y_score):
+        score = roc_auc_score(y_true, y_score)
+        direct_scores.append(score)
+        return score
+
+    def fake_crossval(*args, **kwargs):
+        response_methods.append(kwargs.get('response_method'))
+        return {
+            'train_scores': np.array([0.8, 0.8]),
+            'train_mean': 0.8,
+            'train_se': 0.0,
+            'cv_scores': np.array([0.8, 0.8]),
+            'cv_mean': 0.8,
+            'cv_se': 0.0,
+        }
+
+    cs = CombinatorialSelection(
+        estimator=LogisticRegression(),
+        metric=recording_auc,
+        response_method='predict_proba',
+    )
+    with patch(
+        'mlchem.ml.feature_selection.wrappers.crossval',
+        side_effect=fake_crossval,
+    ):
+        stage1 = cs.fit_stage_1(
+            train_set,
+            y,
+            features=['signal'],
+            k=1,
+            training_threshold=0.0,
+            cv_train_ratio=0.0,
+            cv_iter=2,
+        )
+        stage2 = cs.fit_stage_2(top_n_subsets=1, cv_iter=2)
+
+    assert len(response_methods) == 2
+    assert response_methods == ['predict_proba', 'predict_proba']
+    expected_probabilities = LogisticRegression().fit(
+        train_set, y
+    ).predict_proba(train_set)[:, 1]
+    expected_auc = roc_auc_score(y, expected_probabilities)
+    assert direct_scores == pytest.approx([expected_auc, expected_auc])
 
 
 def test_combinatorial_selection_lower_logic_inverts_performance_score():

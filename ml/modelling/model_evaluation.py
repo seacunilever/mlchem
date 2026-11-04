@@ -287,6 +287,52 @@ def summarise_fold_scores(scores: Iterable[float]) -> dict:
         'se': se,
     }
 
+def _make_metric_scorer(
+    metric: Callable,
+    response_method: Literal['predict', 'predict_proba', 'decision_function'],
+):
+    from sklearn.metrics import make_scorer
+
+    return make_scorer(metric, response_method=response_method)
+
+
+def _score_estimator(
+    metric: Callable,
+    estimator,
+    X,
+    y,
+    response_method: Literal['predict', 'predict_proba', 'decision_function'],
+) -> float:
+    """Score a fitted estimator using the same response handling as crossval."""
+    scorer = _make_metric_scorer(metric, response_method)
+    return float(scorer(estimator, X, y))
+
+
+def _second_class_probability(estimator, X) -> np.ndarray:
+    """Return probability for ``classes_[1]``, as sklearn does for binary AUC."""
+    probabilities = np.asarray(estimator.predict_proba(X))
+    classes = np.asarray(estimator.classes_)
+    if (
+        probabilities.ndim != 2
+        or classes.ndim != 1
+        or probabilities.shape[1] != classes.size
+        or classes.size < 2
+    ):
+        raise ValueError(
+            "predict_proba output columns must align with at least two "
+            "estimator.classes_ labels."
+        )
+
+    selected_class = classes[1]
+    selected_indices = np.flatnonzero(classes == selected_class)
+    if selected_indices.size != 1:
+        raise ValueError(
+            "Could not uniquely select estimator.classes_[1] from "
+            "predict_proba output."
+        )
+    return probabilities[:, int(selected_indices[0])]
+
+
 def crossval(estimator,
              X: np.ndarray | pd.DataFrame,
              y: np.ndarray | pd.DataFrame,
@@ -299,6 +345,9 @@ def crossval(estimator,
              cv_splitter=None,
              cv_indices: Iterable | None = None,
              groups: np.ndarray | pd.Series | None = None,
+             response_method: Literal['predict',
+                                      'predict_proba',
+                                      'decision_function'] = 'predict',
              ) -> dict[str, np.ndarray | float]:
     """
 Evaluate an estimator using cross-validation.
@@ -330,6 +379,14 @@ y : numpy.ndarray or pandas.DataFrame
 
 metric : callable
     A scoring function that accepts (y_true, y_pred) as arguments.
+
+response_method : {'predict', 'predict_proba', 'decision_function'}, optional (default='predict')
+    Estimator method used to obtain metric inputs. The estimator must
+    implement the selected method. For binary ``predict_proba``, sklearn
+    selects the probability for ``estimator.classes_[1]``; for multiclass
+    classification it passes the full score matrix. Use ``predict_proba`` or
+    ``decision_function`` for ROC-AUC; label-based metrics should use
+    ``predict``.
 
 n_fold : int, optional (default=5)
     Number of folds for cross-validation. If equal to n_samples, performs
@@ -371,7 +428,7 @@ dict
 """
 
     from sklearn.model_selection import cross_validate
-    from sklearn.metrics import make_scorer
+    scorer = _make_metric_scorer(metric, response_method)
 
     # Resolve cross-validation indices if any of cv_indices,
     # cv_splitter, or groups are provided.
@@ -392,7 +449,7 @@ dict
                                 X,
                                 y,
                                 cv=resolved_pairs,
-                                scoring=make_scorer(metric),
+                                scoring=scorer,
                                 groups=groups,
                                 return_train_score=True,)
     else:
@@ -412,7 +469,7 @@ dict
                                     X,
                                     y,
                                     cv=StratifiedKFold(**cv_kwargs),
-                                    scoring=make_scorer(metric),
+                                    scoring=scorer,
                                     return_train_score=True,)
         else:
             from sklearn.model_selection import KFold
@@ -420,7 +477,7 @@ dict
                                     X,
                                     y,
                                     cv=KFold(**cv_kwargs),
-                                    scoring=make_scorer(metric),
+                                    scoring=scorer,
                                     return_train_score=True)
     
     train_summary = summarise_fold_scores(result['train_score'])
@@ -451,6 +508,9 @@ def y_scrambling(estimator,
                  n_jobs: int = 1,
                  safety_multiplier: float = 2.3,
                  log_level: int | str | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = logging.INFO,
+                 response_method: Literal['predict',
+                                           'predict_proba',
+                                           'decision_function'] = 'predict',
                  ) -> dict[str, float | np.ndarray]:
     """
     Perform y-scrambling to estimate chance-level model performance.
@@ -534,6 +594,7 @@ def y_scrambling(estimator,
         cv_splitter=cv_splitter,
         cv_indices=cv_indices,
         groups=groups,
+        response_method=response_method,
     )
     ref_score = reference['cv_mean']
 
@@ -554,6 +615,7 @@ def y_scrambling(estimator,
             cv_splitter=cv_splitter,
             cv_indices=cv_indices,
             groups=groups,
+            response_method=response_method,
         )
         return cv_result['cv_mean']
 
@@ -646,6 +708,8 @@ class MajorityVote:
         Task type used to select voting strategy.
     estimator_list : list
         List of scikit-learn compatible estimators.
+        Classification estimators must provide ``predict_proba`` for soft
+        voting.
     column_list : list[list[str]]
         Per-estimator feature subsets aligned with ``estimator_list``.
     test_set : pandas.DataFrame or None, optional
@@ -658,6 +722,10 @@ class MajorityVote:
         Number of workers used by parallel sections.
     log_level : int or str, optional
         Logging threshold.
+    response_method : {'predict', 'predict_proba', 'decision_function'}, optional
+        Estimator method used to obtain metric inputs. The estimator must
+        implement it. Use ``predict_proba`` or ``decision_function`` for
+        ROC-AUC; the default ``predict`` preserves label-based scoring.
     """
 
     def __init__(
@@ -861,8 +929,8 @@ class MajorityVote:
                 if self.task_type == 'classification':
                     y_train_hard = estimator_copy.predict(X_train)
                     y_test_hard = estimator_copy.predict(X_test)
-                    y_train_soft = estimator_copy.predict_proba(X_train)[:, 1]
-                    y_test_soft = estimator_copy.predict_proba(X_test)[:, 1]
+                    y_train_soft = _second_class_probability(estimator_copy, X_train)
+                    y_test_soft = _second_class_probability(estimator_copy, X_test)
                     return (
                         estimator_name,
                         'classification',
@@ -1028,6 +1096,7 @@ class MajorityVote:
         self,
         metric: Callable,
         metric_name: str,
+        use_continuous_probabilities: bool = False,
         cv_iter: int = 5,
         cv_splitter=None,
         cv_indices: Iterable | None = None,
@@ -1051,6 +1120,11 @@ metric : callable
 
 metric_name : str
     Label appended to generated combination identifiers.
+
+use_continuous_probabilities : bool, optional (default=False)
+    For classification soft-vote strategies, use mean predicted
+    probabilities directly instead of rounding them to class labels. Enable
+    this for binary ROC-AUC; the probability for ``classes_[1]`` is used.
 
 cv_iter : int, optional (default=5)
     Number of folds used when ``cv_indices`` and ``cv_splitter`` are not
@@ -1150,8 +1224,12 @@ pandas.DataFrame
                     if self.task_type == 'classification':
                         fold_data_train_hard[estimator_name] = np.asarray(est.predict(X_train_fold))
                         fold_data_valid_hard[estimator_name] = np.asarray(est.predict(X_valid_fold))
-                        fold_data_train_soft[estimator_name] = np.asarray(est.predict_proba(X_train_fold)[:, 1])
-                        fold_data_valid_soft[estimator_name] = np.asarray(est.predict_proba(X_valid_fold)[:, 1])
+                        fold_data_train_soft[estimator_name] = _second_class_probability(
+                            est, X_train_fold
+                        )
+                        fold_data_valid_soft[estimator_name] = _second_class_probability(
+                            est, X_valid_fold
+                        )
                     else:
                         fold_data_train_reg[estimator_name] = np.asarray(est.predict(X_train_fold))
                         fold_data_valid_reg[estimator_name] = np.asarray(est.predict(X_valid_fold))
@@ -1220,8 +1298,12 @@ pandas.DataFrame
                         y_train_pred = self._hard_vote(train_matrix)
                         y_valid_pred = self._hard_vote(valid_matrix)
                     elif strategy == 'soft':
-                        y_train_pred = self._soft_vote(train_matrix)
-                        y_valid_pred = self._soft_vote(valid_matrix)
+                        if use_continuous_probabilities:
+                            y_train_pred = train_matrix.mean(axis=1)
+                            y_valid_pred = valid_matrix.mean(axis=1)
+                        else:
+                            y_train_pred = self._soft_vote(train_matrix)
+                            y_valid_pred = self._soft_vote(valid_matrix)
                     else:
                         y_train_pred = self._mean_vote(train_matrix)
                         y_valid_pred = self._mean_vote(valid_matrix)

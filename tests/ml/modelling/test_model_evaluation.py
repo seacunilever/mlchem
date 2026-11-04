@@ -41,6 +41,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_classification
+from sklearn.metrics import roc_auc_score
 from mlchem.ml.modelling.model_evaluation import (crossval,
                                                   y_scrambling,
                                                   ApplicabilityDomain,
@@ -90,6 +91,83 @@ def test_crossval_classification(sample_data):
     assert isinstance(scores, dict)
     assert set(['train_scores', 'train_mean', 'train_se', 'cv_scores', 'cv_mean', 'cv_se']).issubset(scores.keys())
     assert len(scores['cv_scores']) == 5
+
+
+def test_crossval_default_response_method_matches_predict(sample_data):
+    train_set, y_train, _, _ = sample_data
+    metric_function = lambda y_true, y_pred: (y_true == y_pred).mean()
+
+    implicit_default = crossval(
+        LogisticRegression(),
+        train_set.values,
+        y_train,
+        metric_function,
+        n_fold=4,
+    )
+    explicit_predict = crossval(
+        LogisticRegression(),
+        train_set.values,
+        y_train,
+        metric_function,
+        n_fold=4,
+        response_method='predict',
+    )
+
+    np.testing.assert_array_equal(
+        implicit_default['train_scores'], explicit_predict['train_scores']
+    )
+    np.testing.assert_array_equal(
+        implicit_default['cv_scores'], explicit_predict['cv_scores']
+    )
+
+
+@pytest.mark.parametrize(
+    'response_method',
+    ['predict_proba', 'decision_function'],
+)
+def test_crossval_response_method_supports_binary_auc(
+    sample_data,
+    response_method,
+):
+    train_set, y_train, _, _ = sample_data
+    string_labels = np.where(y_train == 1, 'positive', 'negative')
+
+    scores = crossval(
+        LogisticRegression(max_iter=500),
+        train_set.values,
+        string_labels,
+        roc_auc_score,
+        n_fold=4,
+        response_method=response_method,
+    )
+
+    assert 0.5 <= scores['cv_mean'] <= 1.0
+    assert np.isfinite(scores['train_scores']).all()
+
+
+def test_crossval_probability_response_method_preserves_multiclass_scores():
+    X, y = make_classification(
+        n_samples=90,
+        n_features=6,
+        n_informative=4,
+        n_classes=3,
+        n_clusters_per_class=1,
+        random_state=5,
+    )
+    multiclass_auc = lambda y_true, y_score: roc_auc_score(
+        y_true, y_score, multi_class='ovr'
+    )
+
+    scores = crossval(
+        LogisticRegression(max_iter=500),
+        X,
+        y,
+        multiclass_auc,
+        n_fold=3,
+        response_method='predict_proba',
+    )
+
+    assert 0.0 <= scores['cv_mean'] <= 1.0
 
 def test_crossval_regression(sample_data):
     train_set, y_train, _, _ = sample_data
@@ -380,6 +458,33 @@ def test_y_scrambling_with_dataframe_inputs(sample_data):
     assert 'scrambled_scores' in result
 
 
+def test_y_scrambling_propagates_response_method_to_reference_and_scrambles(
+    sample_data,
+):
+    train_set, y_train, _, _ = sample_data
+    response_methods = []
+
+    def fake_crossval(*args, **kwargs):
+        response_methods.append(kwargs.get('response_method'))
+        return {'cv_mean': 0.8 if len(response_methods) == 1 else 0.4}
+
+    with patch(
+        'mlchem.ml.modelling.model_evaluation.crossval',
+        side_effect=fake_crossval,
+    ):
+        y_scrambling(
+            LogisticRegression(),
+            train_set.values,
+            y_train,
+            roc_auc_score,
+            n_scrambles=1,
+            response_method='predict_proba',
+            plot=False,
+        )
+
+    assert response_methods == ['predict_proba', 'predict_proba']
+
+
 def test_y_scrambling_logging_toggle(sample_data, caplog):
     train_set, y_train, _, _ = sample_data
     estimator = LogisticRegression(max_iter=250)
@@ -635,6 +740,76 @@ def test_majority_vote_evaluate_cv_classification_outputs_fold_metrics(
     assert all(len(fold_scores) == 4 for fold_scores in results['train_folds'])
     assert all(len(fold_scores) == 4 for fold_scores in results['validation_folds'])
     assert all(len(fold_scores) == 4 for fold_scores in results['reliability_folds'])
+
+
+def test_majority_vote_evaluate_cv_can_use_continuous_probabilities(
+    majority_vote_classification,
+):
+    mv = majority_vote_classification
+    predictions = []
+
+    def metric_function(y_true, y_pred):
+        predictions.append(np.asarray(y_pred))
+        return roc_auc_score(y_true, y_pred)
+
+    results = mv.evaluate_cv(
+        metric=metric_function,
+        metric_name='roc_auc',
+        use_continuous_probabilities=True,
+        cv_iter=4,
+    )
+
+    assert not results.empty
+    assert any(np.any((pred > 0) & (pred < 1)) for pred in predictions)
+    assert np.isfinite(results['validation_mean']).all()
+
+
+def test_majority_vote_default_soft_vote_matches_explicit_false(
+    majority_vote_classification,
+):
+    mv = majority_vote_classification
+
+    def collect_predictions(explicit_default):
+        predictions = []
+
+        def metric_function(y_true, y_pred):
+            predictions.append(np.asarray(y_pred).copy())
+            return (y_true == np.round(y_pred)).mean()
+
+        kwargs = {'use_continuous_probabilities': False} if explicit_default else {}
+        mv.evaluate_cv(
+            metric=metric_function,
+            metric_name='accuracy',
+            cv_iter=2,
+            n_estimators_max=1,
+            **kwargs,
+        )
+        return predictions
+
+    implicit_default = collect_predictions(explicit_default=False)
+    explicit_false = collect_predictions(explicit_default=True)
+
+    assert len(implicit_default) == len(explicit_false)
+    for implicit, explicit in zip(implicit_default, explicit_false):
+        np.testing.assert_array_equal(implicit, explicit)
+
+
+def test_majority_vote_soft_auc_handles_string_class_labels(
+    majority_vote_classification,
+):
+    mv = majority_vote_classification
+    mv.y_train = np.where(mv.y_train == 1, 3, 0)
+
+    results = mv.evaluate_cv(
+        metric=roc_auc_score,
+        metric_name='roc_auc',
+        use_continuous_probabilities=True,
+        cv_iter=2,
+        n_estimators_max=1,
+    )
+
+    assert not results.empty
+    assert np.isfinite(results['validation_mean']).all()
 
 
 def test_majority_vote_evaluate_cv_uses_explicit_cv_indices(
