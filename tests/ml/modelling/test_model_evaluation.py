@@ -33,10 +33,12 @@
 
 import pytest
 import logging
+import warnings
 from unittest.mock import patch
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.base import BaseEstimator
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
@@ -67,6 +69,19 @@ class NoProbaEstimator:
 
     def predict(self, X):
         return np.zeros(len(X), dtype=int)
+
+
+class _FastPredictionEstimator(BaseEstimator):
+    def fit(self, X, y):
+        self.classes_ = np.unique(y)
+        return self
+
+    def predict(self, X):
+        return np.zeros(len(X), dtype=int)
+
+    def predict_proba(self, X):
+        return np.tile([0.25, 0.75], (len(X), 1))
+
 
 @pytest.fixture
 def sample_data():
@@ -691,6 +706,49 @@ def test_majority_vote_fit(majority_vote_classification):
     assert not mv.df_test_predictions_hard.empty
     assert not mv.df_train_predictions_soft.empty
     assert not mv.df_test_predictions_soft.empty
+
+
+@pytest.mark.parametrize(
+    ('task_type', 'n_estimators'),
+    [('classification', 55), ('regression', 105)],
+)
+def test_majority_vote_fit_builds_prediction_frames_without_fragmentation(
+    task_type, n_estimators
+):
+    train_set = pd.DataFrame({'feature': np.arange(12)})
+    test_set = pd.DataFrame({'feature': np.arange(12, 18)})
+    if task_type == 'classification':
+        y_train = np.array([0, 1] * 6)
+        y_test = np.array([0, 1] * 3)
+    else:
+        y_train = np.arange(12)
+        y_test = np.arange(12, 18)
+
+    mv = MajorityVote(
+        train_set=train_set,
+        test_set=test_set,
+        y_train=y_train,
+        y_test=y_test,
+        task_type=task_type,
+        estimator_list=[_FastPredictionEstimator() for _ in range(n_estimators)],
+        column_list=[['feature'] for _ in range(n_estimators)],
+        n_jobs=1,
+    )
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always', pd.errors.PerformanceWarning)
+        mv.fit()
+
+    assert not any(
+        issubclass(warning.category, pd.errors.PerformanceWarning)
+        for warning in caught
+    )
+    if task_type == 'classification':
+        assert len(mv.df_train_predictions) == len(train_set)
+        assert len(mv.df_train_predictions.columns) == 2 * n_estimators + 3
+    else:
+        assert len(mv.df_train_predictions) == len(train_set)
+        assert len(mv.df_train_predictions.columns) == n_estimators + 1
 
 
 def test_majority_vote_fit_skips_failed_classification_estimator(sample_data):

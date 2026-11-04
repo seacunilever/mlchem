@@ -975,6 +975,10 @@ class MajorityVote:
 
             self.df_train_predictions_soft = pd.DataFrame(index=self.train_set.index)
             self.df_test_predictions_soft = pd.DataFrame(index=self.test_set.index)
+            train_hard_predictions = {}
+            test_hard_predictions = {}
+            train_soft_predictions = {}
+            test_soft_predictions = {}
 
             est_data_list = selected_estimators_resolved
 
@@ -993,55 +997,78 @@ class MajorityVote:
                     continue
                 estimator_name, _, y_train_hard, y_test_hard, y_train_soft, y_test_soft = result
                 successful_estimators.append(estimator_name)
-                self.df_train_predictions_hard[estimator_name] = y_train_hard
-                self.df_test_predictions_hard[estimator_name] = y_test_hard
-                self.df_train_predictions_soft[estimator_name] = y_train_soft
-                self.df_test_predictions_soft[estimator_name] = y_test_soft
+                train_hard_predictions[estimator_name] = y_train_hard
+                test_hard_predictions[estimator_name] = y_test_hard
+                train_soft_predictions[estimator_name] = y_train_soft
+                test_soft_predictions[estimator_name] = y_test_soft
 
             failed_estimators = [
                 payload[3] for payload in est_data_list
                 if payload[3] not in successful_estimators
             ]
 
-            if self.df_train_predictions_hard.shape[1] == 0:
+            if not train_hard_predictions:
                 raise RuntimeError(
                     "No estimators were successfully fitted in "
                     "MajorityVote.fit for classification."
                 )
 
-            self.df_train_predictions_hard['Y'] = self.y_train
-            self.df_test_predictions_hard['Y'] = self.y_test
-
-            self.df_train_predictions_soft['Y'] = self.y_train
-            self.df_test_predictions_soft['Y'] = self.y_test
+            train_hard_predictions['Y'] = self.y_train
+            test_hard_predictions['Y'] = self.y_test
+            train_soft_predictions['Y'] = self.y_train
+            test_soft_predictions['Y'] = self.y_test
+            self.df_train_predictions_hard = pd.DataFrame(
+                train_hard_predictions,
+                index=self.train_set.index,
+            )
+            self.df_test_predictions_hard = pd.DataFrame(
+                test_hard_predictions,
+                index=self.test_set.index,
+            )
+            self.df_train_predictions_soft = pd.DataFrame(
+                train_soft_predictions,
+                index=self.train_set.index,
+            )
+            self.df_test_predictions_soft = pd.DataFrame(
+                test_soft_predictions,
+                index=self.test_set.index,
+            )
 
             if build_consensus:
                 estimator_cols = list(self.df_train_predictions_hard.columns[:-1])
 
-                self.df_train_predictions = pd.DataFrame(index=self.train_set.index)
-                self.df_train_predictions['Y'] = self.y_train
-                self.df_test_predictions = pd.DataFrame(index=self.test_set.index)
-                self.df_test_predictions['Y'] = self.y_test
+                train_predictions = {'Y': self.y_train}
+                test_predictions = {'Y': self.y_test}
 
                 for est_name in estimator_cols:
-                    self.df_train_predictions[f'{est_name}_proba'] = self.df_train_predictions_soft[est_name].values
-                    self.df_train_predictions[f'{est_name}_CLASS'] = self.df_train_predictions_hard[est_name].values
-                    self.df_test_predictions[f'{est_name}_proba'] = self.df_test_predictions_soft[est_name].values
-                    self.df_test_predictions[f'{est_name}_CLASS'] = self.df_test_predictions_hard[est_name].values
+                    train_predictions[f'{est_name}_proba'] = self.df_train_predictions_soft[est_name].values
+                    train_predictions[f'{est_name}_CLASS'] = self.df_train_predictions_hard[est_name].values
+                    test_predictions[f'{est_name}_proba'] = self.df_test_predictions_soft[est_name].values
+                    test_predictions[f'{est_name}_CLASS'] = self.df_test_predictions_hard[est_name].values
 
                 hard_train_matrix = self.df_train_predictions_hard[estimator_cols].to_numpy(copy=False)
                 hard_test_matrix = self.df_test_predictions_hard[estimator_cols].to_numpy(copy=False)
                 soft_train_matrix = self.df_train_predictions_soft[estimator_cols].to_numpy(copy=False)
                 soft_test_matrix = self.df_test_predictions_soft[estimator_cols].to_numpy(copy=False)
 
-                self.df_train_predictions['CONSENSUS_hard'] = self._hard_vote(hard_train_matrix)
-                self.df_test_predictions['CONSENSUS_hard'] = self._hard_vote(hard_test_matrix)
-                self.df_train_predictions['CONSENSUS_soft'] = self._soft_vote(soft_train_matrix)
-                self.df_test_predictions['CONSENSUS_soft'] = self._soft_vote(soft_test_matrix)
+                train_predictions['CONSENSUS_hard'] = self._hard_vote(hard_train_matrix)
+                test_predictions['CONSENSUS_hard'] = self._hard_vote(hard_test_matrix)
+                train_predictions['CONSENSUS_soft'] = self._soft_vote(soft_train_matrix)
+                test_predictions['CONSENSUS_soft'] = self._soft_vote(soft_test_matrix)
+                self.df_train_predictions = pd.DataFrame(
+                    train_predictions,
+                    index=self.train_set.index,
+                )
+                self.df_test_predictions = pd.DataFrame(
+                    test_predictions,
+                    index=self.test_set.index,
+                )
 
         else:
             self.df_train_predictions = pd.DataFrame(index=self.train_set.index)
             self.df_test_predictions = pd.DataFrame(index=self.test_set.index)
+            train_predictions = {}
+            test_predictions = {}
 
             est_data_list = selected_estimators_resolved
 
@@ -1060,22 +1087,30 @@ class MajorityVote:
                     continue
                 estimator_name, _, y_train_pred, y_test_pred = result
                 successful_estimators.append(estimator_name)
-                self.df_train_predictions[estimator_name] = y_train_pred
-                self.df_test_predictions[estimator_name] = y_test_pred
+                train_predictions[estimator_name] = y_train_pred
+                test_predictions[estimator_name] = y_test_pred
 
             failed_estimators = [
                 payload[3] for payload in est_data_list
                 if payload[3] not in successful_estimators
             ]
 
-            if self.df_train_predictions.shape[1] == 0:
+            if not train_predictions:
                 raise RuntimeError(
                     "No estimators were successfully fitted in "
                     "MajorityVote.fit for regression."
                 )
 
-            self.df_train_predictions['Y'] = self.y_train
-            self.df_test_predictions['Y'] = self.y_test
+            train_predictions['Y'] = self.y_train
+            test_predictions['Y'] = self.y_test
+            self.df_train_predictions = pd.DataFrame(
+                train_predictions,
+                index=self.train_set.index,
+            )
+            self.df_test_predictions = pd.DataFrame(
+                test_predictions,
+                index=self.test_set.index,
+            )
 
         self.fit_report_ = {
             'requested_count': len(selected_estimators_resolved),
