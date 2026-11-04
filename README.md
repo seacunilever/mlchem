@@ -25,6 +25,8 @@ Available at [seacunilever.github.io/mlchem](https://seacunilever.github.io/mlch
 
 ![image](assets/figure1.png)
 
+For package responsibilities and the typical data flow, see the [architecture guide](https://seacunilever.github.io/mlchem/architecture.html).
+
 
 ## Modules
 
