@@ -196,6 +196,10 @@ python -m anybadge --label "branch cov" --value <BRANCH_PERCENT> --file assets/c
 
 Note: both badges (`assets/coverage.svg` for line coverage and `assets/coverage-branch.svg` for branch coverage) are refreshed locally by maintainers (not auto-committed by CI) to avoid protected-branch push permissions.
 
+Line coverage measures which executable lines ran; branch coverage measures
+whether each outcome of conditional logic ran. Branch coverage can therefore
+identify untested decisions even when the line containing them was executed.
+
 Current policy:
 
 - Python 3.12 and 3.13 are required to pass.
