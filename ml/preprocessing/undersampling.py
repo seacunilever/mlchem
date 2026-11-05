@@ -34,7 +34,7 @@
 from typing import Iterable, Optional, Literal
 import logging
 import pandas as pd
-from mlchem.helper import coerce_log_level
+from mlchem.helper import coerce_log_level, validate_dataframe_columns
 
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,8 @@ train_set : pandas.DataFrame
     The training dataset.
 
 test_set : pandas.DataFrame
-    The test dataset.
+    The test dataset. It must contain `class_column` when
+    `add_dropped_to_test=True`.
 
 class_column : str
     Name of the column containing class labels.
@@ -130,6 +131,10 @@ tuple of pandas.DataFrame
             "'desired_proportion_majority' must be strictly between 0 and 1."
         )
 
+    validate_dataframe_columns(train_set, [class_column], 'train_set')
+    if add_dropped_to_test:
+        validate_dataframe_columns(test_set, [class_column], 'test_set')
+
     class_counts = train_set[class_column].value_counts()
     if len(class_counts) != 2:
         raise ValueError(
@@ -150,10 +155,6 @@ tuple of pandas.DataFrame
         raise ValueError(
             "'desired_proportion_majority' implies majority-class growth. "
             "Use oversampling for this target."
-        )
-    if cycles > majority_class:
-        raise ValueError(
-            "Computed majority-class removals exceed available samples."
         )
     logger.log(resolved_log_level, 'Samples to remove: %d', cycles)
 

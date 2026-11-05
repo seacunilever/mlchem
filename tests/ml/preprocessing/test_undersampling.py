@@ -104,6 +104,49 @@ def test_undersample_add_dropped_to_test(sample_data):
     assert len(undersampled_test_set) == 11
 
 
+def test_undersample_requires_class_column_in_train_set(sample_data):
+    train_set, test_set = sample_data
+    train_set = train_set.drop(columns='class')
+
+    with pytest.raises(KeyError, match='Columns not found in train_set'):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=0.5,
+        )
+
+
+def test_undersample_requires_class_column_in_test_set_when_adding_dropped(sample_data):
+    train_set, test_set = sample_data
+    test_set = test_set.drop(columns='class')
+
+    with pytest.raises(KeyError, match='Columns not found in test_set'):
+        undersample(
+            train_set=train_set,
+            test_set=test_set,
+            class_column='class',
+            desired_proportion_majority=0.5,
+            add_dropped_to_test=True,
+        )
+
+
+def test_undersample_allows_test_set_without_class_column_when_not_adding_dropped(sample_data):
+    train_set, test_set = sample_data
+    test_set = test_set.drop(columns='class')
+
+    _, returned_test_set = undersample(
+        train_set=train_set,
+        test_set=test_set,
+        class_column='class',
+        desired_proportion_majority=0.5,
+        add_dropped_to_test=False,
+        random_seed=1,
+    )
+
+    pd.testing.assert_frame_equal(returned_test_set, test_set)
+
+
 def test_undersample_ratio_equal_1_raises_valueerror(sample_data):
     train_set, test_set = sample_data
     with pytest.raises(ValueError, match="strictly between 0 and 1"):
@@ -144,19 +187,6 @@ def test_undersample_ratio_negative_raises_valueerror(sample_data):
 
 
 def test_undersample_ratio_above_one_raises_valueerror(sample_data):
-    train_set, test_set = sample_data
-    with pytest.raises(ValueError, match="strictly between 0 and 1"):
-        undersample(
-            train_set=train_set,
-            test_set=test_set,
-            class_column='class',
-            desired_proportion_majority=1.2,
-            add_dropped_to_test=False,
-            random_seed=1,
-        )
-
-
-def test_undersample_ratio_above_one_raises_clean_error(sample_data):
     train_set, test_set = sample_data
     with pytest.raises(ValueError, match="strictly between 0 and 1"):
         undersample(
