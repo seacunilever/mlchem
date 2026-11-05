@@ -2,6 +2,56 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.4] - Unreleased
+
+### Added
+
+- Added shared DataFrame column validation with fail-fast checks in feature-selection and majority-vote fitting, reused by scaling and undersampling.
+- Allowed manifold-compression methods to take their parameters from `dict_params` without requiring duplicate positional arguments.
+
+### Changed
+
+- Built majority-vote prediction DataFrames from collected columns to avoid repeated insertion and reduce fragmentation warnings.
+- Disabled nested estimator parallelism in y-scrambling runs to reduce parallelism conflicts.
+- Strengthened undersampling input checks, including explicit target-column requirements when dropped rows are added to the test set.
+
+### Docs
+
+- Added an architecture guide, an end-to-end quickstart, linked API/module references, and usage examples in public docstrings.
+- Added source-code links to documented modules, classes, and methods.
+
+### CI
+
+- Made Python 3.14 a required CI, tox, and local-matrix test version alongside Python 3.12 and 3.13.
+- Isolated file-generating tests to avoid leaving test artifacts in the repository.
+
+## [1.2.3] - 2026-11-04
+
+### Added
+
+- Added a `response_method` option to `crossval()`, y-scrambling, and feature-selection workflows. It defaults to `predict` for compatibility; use `predict_proba` or `decision_function` to score ROC-AUC with continuous scores.
+- Added continuous probability averaging for soft-vote ROC-AUC in `MajorityVote.evaluate_cv()` while retaining rounded soft votes by default and hard voting as a separate strategy.
+
+### Changed
+
+- Aligned direct train/test metric calculations with the selected response method and selected binary probabilities using `estimator.classes_[1]`.
+- Preserved multiclass score outputs and label-based scoring with the default `predict` response.
+
+### Docs
+
+- Documented line and branch coverage workflows and ignored the generated coverage report.
+
+## [1.2.2] - 2026-10-26
+
+### Changed
+
+- Applied `cv_train_ratio` to each feature subset in both stages of combinatorial selection, rather than deriving one global CV threshold from the training threshold.
+- Set stage-two training and CV floors from the weakest of the selected stage-one top-N subsets and accepted ties at those floors.
+
+### Fixed
+
+- Returned an empty result with a warning when no subset passes stage two, instead of raising an `IndexError`.
+
 ## [1.2.1] - 2026-10-03
 
 ### Added
