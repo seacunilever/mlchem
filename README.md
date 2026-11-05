@@ -6,7 +6,7 @@
 [![Branch Coverage](assets/coverage-branch.svg)](https://github.com/seacunilever/mlchem/blob/master/assets/coverage-branch.svg)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
-The library has been tested for python 3.12, 3.13 and 3.14 (experimental).
+The library has been tested with Python 3.12, 3.13, and 3.14; all three versions are required to pass in CI.
 
 ## Documentation
 
@@ -204,8 +204,7 @@ identify untested decisions even when the line containing them was executed.
 
 Current policy:
 
-- Python 3.12 and 3.13 are required to pass.
-- Python 3.14 is currently experimental (reported, not blocking).
+- Python 3.12, 3.13, and 3.14 are all required to pass in CI.
 
 ### Local matrix (default envs under ~/Envs)
 
@@ -245,10 +244,11 @@ Run all environments with full dependency reinstall + tests:
 python scripts/run_local_matrix.py --full-install -- -vv tests
 ```
 
-Strict mode (make Python 3.14 failures blocking):
+All selected versions are blocking by default, matching CI. For an exploratory
+local run that treats Python 3.14 failures as warnings:
 
 ```bash
-python scripts/run_local_matrix.py --strict-314 -- -vv tests
+python scripts/run_local_matrix.py --allow-314-failure -- -vv tests
 ```
 
 Quiet mode (disable live streaming and print only summary):
@@ -269,7 +269,9 @@ python -m pip install tox
 python -m tox -e py312,py313,py314
 ```
 
-The `py314` tox environment is marked non-blocking during early adoption.
+The `py314` tox environment blocks on test failures when Python 3.14 is
+available. Tox skips missing interpreters locally; CI installs Python 3.14 and
+requires the job to pass.
 
 ## Maintainer release refresh flow (local)
 
@@ -363,7 +365,10 @@ cs = CombinatorialSelection(
 )
 ```
 
-### optional diagnostics for undersampling
+### Undersampling
+
+The `class_column` must exist in `train_set`. It is also required in `test_set` when `add_dropped_to_test=True`; otherwise, the test-set target column is not accessed. Invalid target proportions and non-binary training labels raise `ValueError`; missing required columns raise `KeyError` with the missing column names.
+
 ```python
 from mlchem.ml.preprocessing.undersampling import undersample
 

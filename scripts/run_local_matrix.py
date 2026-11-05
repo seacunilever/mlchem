@@ -35,9 +35,9 @@
 """Run reproducible install+test checks across local Python envs.
 
 Default env roots are under ~/Envs.
-This script is intentionally conservative:
-- 3.12 and 3.13 are required to pass.
-- 3.14 is reported as experimental by default.
+All selected Python versions are required to pass by default. Python 3.14
+failures can be reported as warnings for an exploratory local run with
+--allow-314-failure.
 """
 
 from __future__ import annotations
@@ -342,13 +342,12 @@ def main() -> int:
     parser.add_argument(
         "--allow-314-failure",
         action="store_true",
-        default=True,
-        help="Treat Python 3.14 failures as warnings.",
+        help="Treat Python 3.14 failures as warnings for an exploratory local run.",
     )
     parser.add_argument(
         "--strict-314",
         action="store_true",
-        help="Override and fail when 3.14 fails.",
+        help="Force Python 3.14 failures to block, even with --allow-314-failure.",
     )
     parser.add_argument(
         "--full-install",
@@ -387,7 +386,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    allow_314_failure = False if args.strict_314 else args.allow_314_failure
+    allow_314_failure = args.allow_314_failure and not args.strict_314
     pytest_args = args.pytest_args if args.pytest_args else ["-vv", "tests"]
     if pytest_args and pytest_args[0] == "--":
         pytest_args = pytest_args[1:]

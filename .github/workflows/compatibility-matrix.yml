@@ -29,7 +29,7 @@ jobs:
           - python-version: "3.13"
             experimental: false
           - python-version: "3.14"
-            experimental: true
+            experimental: false
 
     steps:
       - name: Checkout
@@ -79,4 +79,3 @@ jobs:
             echo "$forbidden_status"
             exit 1
           fi
-

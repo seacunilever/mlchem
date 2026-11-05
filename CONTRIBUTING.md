@@ -50,8 +50,7 @@ python -m pip install -e .
 
 ## Supported test policy
 
-- Python 3.12 and 3.13 are required to pass.
-- Python 3.14 is experimental (non-blocking by default).
+- Python 3.12, 3.13, and 3.14 are required to pass in CI.
 
 ## Run tests locally
 
