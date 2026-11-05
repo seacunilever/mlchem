@@ -1,0 +1,1762 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.helper &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.helper</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.helper</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataTable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">figure</span>
+
+
+<span class="c1"># DRAWING #</span>
+
+
+<div class="viewcode-block" id="convert_size">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.convert_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_size</span><span class="p">(</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pixel_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert between size in inches and size in pixels.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    size : tuple of float, optional</span>
+<span class="sd">        Size in inches as (width, height).</span>
+
+<span class="sd">    pixel_size : tuple of int, optional</span>
+<span class="sd">        Size in pixels as (width, height).</span>
+
+<span class="sd">    dpi : int, default=100</span>
+<span class="sd">        Dots per inch used for conversion.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of int or tuple of float</span>
+<span class="sd">        Converted size in pixels if `size` is provided, or in inches </span>
+<span class="sd">        if `pixel_size` is provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">size</span> <span class="ow">and</span> <span class="n">pixel_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provide either size or pixel_size, not both.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">size</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pixel_size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either size or pixel_size must be provided.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">size</span><span class="p">:</span>
+        <span class="n">width_px</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dpi</span>
+        <span class="n">height_px</span> <span class="o">=</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">dpi</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">width_px</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">height_px</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pixel_size</span><span class="p">:</span>
+        <span class="n">width_in</span> <span class="o">=</span> <span class="n">pixel_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">dpi</span>
+        <span class="n">height_in</span> <span class="o">=</span> <span class="n">pixel_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">dpi</span>
+        <span class="k">return</span> <span class="n">width_in</span><span class="p">,</span> <span class="n">height_in</span></div>
+
+
+
+<div class="viewcode-block" id="generate_random_rgb">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.generate_random_rgb">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_random_rgb</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a random RGB color.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of float</span>
+<span class="sd">        A tuple of three floats representing an RGB color, with each </span>
+<span class="sd">        component in the range [0, 1].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="convert_rgb">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.convert_rgb">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_rgb</span><span class="p">(</span>
+    <span class="n">rgb_tuple</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;normalise&#39;</span><span class="p">,</span> <span class="s1">&#39;denormalise&#39;</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert RGB values between 0-255 and 0-1 ranges.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rgb_tuple : tuple of int</span>
+<span class="sd">        RGB values in the form (R, G, B).</span>
+
+<span class="sd">    mode : {&#39;normalise&#39;, &#39;denormalise&#39;}</span>
+<span class="sd">        Conversion mode. &#39;normalise&#39; converts from 0-255 to 0-1, </span>
+<span class="sd">        &#39;denormalise&#39; converts from 0-1 to 0-255.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of float or tuple of int</span>
+<span class="sd">        Converted RGB values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;normalise&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span> <span class="o">/</span> <span class="mf">255.0</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">rgb_tuple</span><span class="p">)</span>    <span class="c1"># (0,1)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;denormalise&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">rgb_tuple</span><span class="p">)</span>     <span class="c1"># (0,255)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mode must be either &#39;normalise&#39; or &#39;denormalise&#39;.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="make_rgb_transparent">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.make_rgb_transparent">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_rgb_transparent</span><span class="p">(</span>
+    <span class="n">fg_rgb</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">bg_rgb</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Apply transparency to a foreground RGB color over a background color.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">fg_rgb : tuple of float</span>
+<span class="sd">    Foreground RGB color in the range [0, 1].</span>
+
+<span class="sd">bg_rgb : tuple of float, optional</span>
+<span class="sd">    Background RGB color in the range [0, 1]. Default is white </span>
+<span class="sd">    (1.0, 1.0, 1.0).</span>
+
+<span class="sd">alpha : float, default=0.5</span>
+<span class="sd">    Transparency level, where 0 is fully transparent and 1 is fully opaque.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">tuple of float</span>
+<span class="sd">    RGB color after applying transparency.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">c1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">c2</span> <span class="k">for</span>
+              <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span>
+              <span class="nb">zip</span><span class="p">(</span><span class="n">fg_rgb</span><span class="p">,</span> <span class="n">bg_rgb</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">result</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="visualise_colour">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.visualise_colour">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">visualise_colour</span><span class="p">(</span>
+    <span class="n">rgb_tuple</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a single RGB color.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">rgb_tuple : tuple of float</span>
+<span class="sd">    RGB values in the range [0, 1].</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="visualise_colour_grid">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.visualise_colour_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">visualise_colour_grid</span><span class="p">(</span>
+    <span class="n">colour_dictionary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a grid of RGB colors.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">colour_dictionary : dict of str to tuple of float</span>
+<span class="sd">    Dictionary mapping color names to RGB tuples.</span>
+
+<span class="sd">save : bool, default=False</span>
+<span class="sd">    Whether to save the figure.</span>
+
+<span class="sd">filename : str, optional</span>
+<span class="sd">    Filename to save the figure if `save` is True.</span>
+
+<span class="sd">figsize : tuple of int, default=(20, 20)</span>
+<span class="sd">    Size of the figure.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="c1"># Calculate the number of rows and columns to display the colour grid</span>
+    <span class="n">num_colors</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">colour_dictionary</span><span class="p">)</span>
+    <span class="n">num_columns</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num_colors</span><span class="p">)))</span>
+    <span class="n">num_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_colors</span> <span class="o">/</span> <span class="n">num_columns</span><span class="p">))</span>
+
+    <span class="c1"># Create a figure with subplots</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_columns</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+
+    <span class="c1"># Flatten the axes array for easy iteration</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="c1"># Loop through the colour dictionary and create a subplot for each colour</span>
+    <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">colour_name</span><span class="p">,</span> <span class="n">rgb_tuple</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">colour_dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">colour_name</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="c1"># Hide any unused subplots</span>
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">colour_dictionary</span><span class="p">):]:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Adjust layout to prevent overlap</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="show_png">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.show_png">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">show_png</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a PNG image from binary data.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">data : bytes</span>
+<span class="sd">    Binary data of the PNG image.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">Image.Image</span>
+<span class="sd">    PIL Image object.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+
+    <span class="n">bio</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">bio</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span></div>
+
+
+
+<div class="viewcode-block" id="create_smooth_gradient_circle">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.create_smooth_gradient_circle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_smooth_gradient_circle</span><span class="p">(</span>
+    <span class="n">radius</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">color</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Create a smooth gradient circle with transparency.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">radius : int</span>
+<span class="sd">    Radius of the circle.</span>
+
+<span class="sd">color : tuple of int</span>
+<span class="sd">    Base RGB color in the range [0, 255].</span>
+
+<span class="sd">alpha : float</span>
+<span class="sd">    Transparency level in the range [0, 1].</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">Image.Image</span>
+<span class="sd">    PIL Image object containing the gradient circle.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageDraw</span>
+
+    <span class="n">diameter</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="n">gradient</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;RGBA&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">diameter</span><span class="p">,</span> <span class="n">diameter</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">radius</span><span class="p">):</span>
+        <span class="n">current_alpha</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">255</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">i</span> <span class="o">/</span> <span class="n">radius</span><span class="p">))</span>
+        <span class="n">draw</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">diameter</span> <span class="o">-</span> <span class="n">i</span><span class="p">,</span> <span class="n">diameter</span> <span class="o">-</span> <span class="n">i</span><span class="p">),</span>
+            <span class="n">fill</span><span class="o">=</span><span class="n">color</span> <span class="o">+</span> <span class="p">(</span><span class="n">current_alpha</span><span class="p">,)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gradient</span></div>
+
+
+
+<span class="c1"># MISCELLANEOUS #</span>
+
+
+<div class="viewcode-block" id="coerce_log_level">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.coerce_log_level">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">coerce_log_level</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Resolve a logging level name or integer into a numeric logging level.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">level : int or str</span>
+<span class="sd">    Logging level as integer (e.g. 20) or level name (e.g. &#39;INFO&#39;).</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">int</span>
+<span class="sd">    Numeric logging level.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If level is not a valid logging level name or integer.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">level</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">level_map</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLevelNamesMapping</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">level_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">level_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;log_level&#39; must be a valid logging level name or integer.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LogCapture">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LogCapture</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Configure mlchem pipeline logging with optional file persistence.</span>
+
+<span class="sd">By default, mlchem functions emit INFO-level logs to console. Use LogCapture</span>
+<span class="sd">to add file logging, change the log level, or silence console output.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">log_level : int or str, default=&#39;INFO&#39;</span>
+<span class="sd">    Logging level threshold (e.g., &#39;INFO&#39;, &#39;DEBUG&#39;, &#39;WARNING&#39;).</span>
+
+<span class="sd">to_console : bool, default=True</span>
+<span class="sd">    Whether to print logs to console. Set False to log only to file.</span>
+
+<span class="sd">to_file : str or None, default=None</span>
+<span class="sd">    Optional file path to write logs to. If provided, logs are appended</span>
+<span class="sd">    to the file as well as console (if to_console=True).</span>
+
+<span class="sd">Attributes</span>
+<span class="sd">----------</span>
+<span class="sd">stream : StringIO</span>
+<span class="sd">    In-memory buffer containing captured logs.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; # Default: logs appear on console automatically</span>
+<span class="sd">&gt;&gt;&gt; sfs = SequentialForwardSelection(...)</span>
+<span class="sd">&gt;&gt;&gt; sfs.fit(X_train, y_train, X_test, y_test)</span>
+<span class="sd">&gt;&gt;&gt; # Output appears on console immediately</span>
+
+<span class="sd">&gt;&gt;&gt; # Optionally: capture to file + memory for inspection</span>
+<span class="sd">&gt;&gt;&gt; logs = LogCapture(to_file=&#39;pipeline.log&#39;)</span>
+<span class="sd">&gt;&gt;&gt; sfs.fit(X_train, y_train, X_test, y_test)</span>
+<span class="sd">&gt;&gt;&gt; print(logs.get_logs())  # View memory capture</span>
+<span class="sd">&gt;&gt;&gt; # Also check pipeline.log file</span>
+
+<span class="sd">&gt;&gt;&gt; # Silent mode: only to file</span>
+<span class="sd">&gt;&gt;&gt; logs = LogCapture(to_console=False, to_file=&#39;pipeline.log&#39;)</span>
+<span class="sd">&gt;&gt;&gt; sfs.fit(X_train, y_train, X_test, y_test)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LogCapture.__init__">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;WARNING&#39;</span><span class="p">,</span> <span class="s1">&#39;ERROR&#39;</span><span class="p">,</span> <span class="s1">&#39;CRITICAL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                 <span class="n">to_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">to_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_console</span> <span class="o">=</span> <span class="n">to_console</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_file</span> <span class="o">=</span> <span class="n">to_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">coerce_log_level</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_handlers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">)</span>
+
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> - </span><span class="si">%(name)s</span><span class="s1"> - </span><span class="si">%(levelname)s</span><span class="s1"> - </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="n">datefmt</span><span class="o">=</span><span class="s1">&#39;%H:%M:%S&#39;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Set up memory handler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+
+        <span class="c1"># Set up console handler if requested</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_console</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span><span class="p">)</span>
+
+        <span class="c1"># Set up file handler if requested</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LogCapture.get_logs">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture.get_logs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_logs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Retrieve all captured logs from memory as a string.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    Complete captured log output from in-memory buffer.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="LogCapture.clear">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture.clear">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear captured logs from memory buffer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LogCapture.stop">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture.stop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stop capturing logs and remove handlers.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_handler</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original_level</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="start_logging">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.start_logging">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">start_logging</span><span class="p">(</span><span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;WARNING&#39;</span><span class="p">,</span> <span class="s1">&#39;ERROR&#39;</span><span class="p">,</span> <span class="s1">&#39;CRITICAL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                  <span class="n">to_console</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                  <span class="n">to_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LogCapture</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Configure mlchem pipeline logging with optional file persistence.</span>
+
+<span class="sd">Convenience function to set up logging. Logs are emitted to console by</span>
+<span class="sd">default; optionally also to a file for later inspection.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">log_level : int or str, default=&#39;INFO&#39;</span>
+<span class="sd">    Logging level threshold (e.g., &#39;INFO&#39;, &#39;DEBUG&#39;, &#39;WARNING&#39;).</span>
+
+<span class="sd">to_console : bool, default=True</span>
+<span class="sd">    Whether to print logs to console.</span>
+
+<span class="sd">to_file : str or None, default=None</span>
+<span class="sd">    Optional file path to write logs to.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">LogCapture</span>
+<span class="sd">    Log manager object with .get_logs() for memory inspection.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; # Log to console + file</span>
+<span class="sd">&gt;&gt;&gt; logs = start_logging(to_file=&#39;pipeline.log&#39;)</span>
+<span class="sd">&gt;&gt;&gt; sfs.fit(X_train, y_train, X_test, y_test)</span>
+<span class="sd">&gt;&gt;&gt; print(logs.get_logs())  # Inspect memory</span>
+
+<span class="sd">&gt;&gt;&gt; # Log only to file (silent)</span>
+<span class="sd">&gt;&gt;&gt; logs = start_logging(to_console=False, to_file=&#39;pipeline.log&#39;)</span>
+<span class="sd">&gt;&gt;&gt; sfs.fit(X_train, y_train, X_test, y_test)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">LogCapture</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span> <span class="n">to_console</span><span class="o">=</span><span class="n">to_console</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="n">to_file</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_task_type">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.validate_task_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_task_type</span><span class="p">(</span><span class="n">task_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Validate task type used by ML helpers.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">task_type : str</span>
+<span class="sd">    Task kind.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    The validated task type.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If task_type is not &#39;classification&#39; or &#39;regression&#39;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">task_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span> <span class="s1">&#39;regression&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;task_type&#39; must be either &#39;classification&#39; or &#39;regression&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">task_type</span></div>
+
+
+
+<div class="viewcode-block" id="validate_dataframe_columns">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.validate_dataframe_columns">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_dataframe_columns</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">required_columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+    <span class="n">dataframe_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;dataframe&#39;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise a clear error when a DataFrame lacks required columns.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">dataframe_name</span><span class="si">}</span><span class="s2">&#39; must be a pandas DataFrame.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">required_columns</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;required_columns&#39; must be an iterable of column names, not a string.&quot;</span><span class="p">)</span>
+
+    <span class="n">missing_columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span>
+        <span class="n">column</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">required_columns</span> <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span>
+    <span class="p">))</span>
+    <span class="k">if</span> <span class="n">missing_columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Columns not found in </span><span class="si">{</span><span class="n">dataframe_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">missing_columns</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_n_jobs">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.resolve_n_jobs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_n_jobs</span><span class="p">(</span><span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Normalize n_jobs values used by parallel wrappers.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_jobs : int</span>
+<span class="sd">    Requested number of workers. -1 means all CPUs.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">int</span>
+<span class="sd">    Resolved positive worker count.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If n_jobs is not -1 or a positive integer.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+    <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;n_jobs&#39; must be -1 or a positive integer.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">n_jobs</span></div>
+
+
+
+<div class="viewcode-block" id="suppress_warnings">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.suppress_warnings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">suppress_warnings</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Suppress all warnings in the current Python session.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="standardise_path">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.standardise_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">standardise_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Convert a Windows-style path to a standardised format.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">path : str</span>
+<span class="sd">    Path string with backslashes.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    Path string with forward slashes.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="generate_cartesian_product">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.generate_cartesian_product">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_cartesian_product</span><span class="p">(</span><span class="o">*</span><span class="n">lists</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate the Cartesian product of multiple lists.</span>
+
+<span class="sd">Produces all combinations where each combination contains exactly one element</span>
+<span class="sd">from each input list. For example, given lists A, B, and C, returns all tuples</span>
+<span class="sd">(a, b, c) where a ∈ A, b ∈ B, c ∈ C.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">*lists : iterable</span>
+<span class="sd">    Two or more iterables (lists, tuples, etc.) to combine.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">list of list</span>
+<span class="sd">    List of combinations, where each combination is a list containing</span>
+<span class="sd">    one element from each input list.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If fewer than two lists are provided, or if any list is empty.</span>
+
+<span class="sd">TypeError</span>
+<span class="sd">    If any argument is not a list or tuple.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; generate_cartesian_product([1, 2], [&#39;a&#39;, &#39;b&#39;])</span>
+<span class="sd">[[1, &#39;a&#39;], [1, &#39;b&#39;], [2, &#39;a&#39;], [2, &#39;b&#39;]]</span>
+
+<span class="sd">&gt;&gt;&gt; generate_cartesian_product([True, False], [&#39;x&#39;, &#39;y&#39;], [1])</span>
+<span class="sd">[[True, &#39;x&#39;, 1], [True, &#39;y&#39;, 1], [False, &#39;x&#39;, 1], [False, &#39;y&#39;, 1]]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+
+    <span class="c1"># Validate input</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">lists</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">lists</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least two lists are required.&quot;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">lst</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lists</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Argument </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> must be a list or tuple.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;List </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2"> is empty; cannot generate combinations.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Generate all combinations and convert tuples to lists</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">combo</span><span class="p">)</span> <span class="k">for</span> <span class="n">combo</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">lists</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="disable_estimator_parallelization">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.disable_estimator_parallelization">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">disable_estimator_parallelization</span><span class="p">(</span><span class="n">estimator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Disable internal parallelization in sklearn estimators to avoid nested parallelization.</span>
+
+<span class="sd">When wrapper-level parallelization (ThreadPoolExecutor) is used, individual</span>
+<span class="sd">estimators should disable internal job parallelism to prevent nested</span>
+<span class="sd">parallelism warnings and avoid thread conflicts.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">estimator : object</span>
+<span class="sd">    A scikit-learn estimator object.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">object</span>
+<span class="sd">    The estimator with internal parallelization disabled if applicable,</span>
+<span class="sd">    otherwise unchanged.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="s1">&#39;n_jobs&#39;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">estimator</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">estimator</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">pass</span>  <span class="c1"># Estimator doesn&#39;t support set_params or n_jobs parameter</span>
+    <span class="k">return</span> <span class="n">estimator</span></div>
+
+
+
+<div class="viewcode-block" id="generate_combination_cascade">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.generate_combination_cascade">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_combination_cascade</span><span class="p">(</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate all combinations of elements from size 1 to n.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">elements : iterable</span>
+<span class="sd">    Input elements to combine.</span>
+
+<span class="sd">n : int</span>
+<span class="sd">    Maximum size of combinations.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">list of list</span>
+<span class="sd">    List of combinations of elements.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">cols</span> <span class="o">+=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">elements</span><span class="p">,</span> <span class="n">i</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">cols</span></div>
+
+
+
+<div class="viewcode-block" id="count_features">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.count_features">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">count_features</span><span class="p">(</span><span class="n">list_features</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Count the total number of features, including interaction terms.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">list_features : iterable of str</span>
+<span class="sd">    List of feature names, possibly including interaction terms.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">int</span>
+<span class="sd">    Total number of features.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+<span class="sd">&gt;&gt;&gt; count_features([&#39;a&#39;, &#39;b&#39;, &#39;a b&#39;])</span>
+<span class="sd">4</span>
+<span class="sd">&gt;&gt;&gt; count_features([&#39;a&#39;, &#39;a b&#39;, &#39;c^2&#39;])</span>
+<span class="sd">5</span>
+<span class="sd">&gt;&gt;&gt; count_features([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;c a&#39;, &#39;c b^2&#39;, &#39;a^3&#39;])</span>
+<span class="sd">11</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+    <span class="n">flattened_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">list_features</span><span class="p">])</span>
+    <span class="n">count_degree_1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">flattened_list</span><span class="p">)</span>
+    <span class="n">count_degree_2</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="s1">&#39;^2&#39;</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">flattened_list</span><span class="p">)</span>
+    <span class="n">count_degree_3</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="s1">&#39;^3&#39;</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">flattened_list</span><span class="p">)</span>
+    <span class="n">final_count</span> <span class="o">=</span> <span class="n">count_degree_1</span> <span class="o">+</span> <span class="n">count_degree_2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">count_degree_3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">final_count</span></div>
+
+
+
+<div class="viewcode-block" id="loadingbar">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.loadingbar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">loadingbar</span><span class="p">(</span>
+    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">total</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a loading bar to indicate progress.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">count : int</span>
+<span class="sd">    Current iteration.</span>
+
+<span class="sd">total : int</span>
+<span class="sd">    Total number of iterations.</span>
+
+<span class="sd">size : int</span>
+<span class="sd">    Length of the loading bar.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+    <span class="n">percent</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
+    <span class="n">filled_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span> <span class="o">*</span> <span class="n">percent</span><span class="p">)</span>
+    <span class="n">bar</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span> <span class="o">*</span> <span class="n">filled_length</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="n">filled_length</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span>\
+        <span class="n">write</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\r</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">bar</span><span class="si">}</span><span class="s2">]&quot;</span>
+            <span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="create_progressive_column_names">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.create_progressive_column_names">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_progressive_column_names</span><span class="p">(</span>
+    <span class="n">serial_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a list of sequential column names.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">serial_name : str</span>
+<span class="sd">    Base name for the columns.</span>
+
+<span class="sd">n : int</span>
+<span class="sd">    Number of columns to generate.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">list of str</span>
+<span class="sd">    List of column names.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">serial_name</span><span class="si">}{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="try_except">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.try_except">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">try_except</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">exc</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exceptions</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Execute a function and return its result or a fallback value on exception.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">func : callable</span>
+<span class="sd">    Function to execute.</span>
+
+<span class="sd">exc : any, optional</span>
+<span class="sd">    Value to return if an exception occurs. Default is None.</span>
+
+<span class="sd">exceptions : exception type or tuple of exception types, optional</span>
+<span class="sd">    Exception types to catch. Default catches Exception.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">any</span>
+<span class="sd">    Result of the function or fallback value.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">TypeError</span>
+<span class="sd">    If `exceptions` is not an exception class or tuple of exception classes.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exceptions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exceptions</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">ex</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">ex</span><span class="p">,</span> <span class="ne">BaseException</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">exceptions</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;exceptions&#39; must be an exception type or tuple of exception types.&quot;</span>
+            <span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">exceptions</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">exceptions</span><span class="p">,</span> <span class="ne">BaseException</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;exceptions&#39; must be an exception type or tuple of exception types.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">exceptions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">exc</span></div>
+
+
+
+<div class="viewcode-block" id="find_all_occurrences">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.find_all_occurrences">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_all_occurrences</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">substring</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Find all starting indices of a substring in a text.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">text : str</span>
+<span class="sd">    Text to search.</span>
+
+<span class="sd">substring : str</span>
+<span class="sd">    Substring to find.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">list of int</span>
+<span class="sd">    List of starting indices where the substring occurs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">substring</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">indices</span></div>
+
+
+
+<div class="viewcode-block" id="reset_string">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.reset_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reset_string</span><span class="p">(</span><span class="n">input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Remove punctuation and convert a string to lowercase.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">input_string : str</span>
+<span class="sd">    Input string.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    Processed string.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="n">punctuation</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;&quot;!()-[]</span><span class="si">{}</span><span class="s1">;:&#39;</span><span class="se">\\</span><span class="s1">, &lt;&gt;./?@#$%^&amp;*_~&#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">input_string</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">punctuation</span><span class="p">:</span>
+            <span class="n">input_string</span> <span class="o">=</span> <span class="n">input_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">input_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="insert_string_piece">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.insert_string_piece">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">insert_string_piece</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">substring</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Insert a substring into a string at a specified index.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">text : str</span>
+<span class="sd">    Original string.</span>
+
+<span class="sd">substring : str</span>
+<span class="sd">    Substring to insert.</span>
+
+<span class="sd">index : int</span>
+<span class="sd">    Index at which to insert the substring.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    Modified string.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If index is less than 0.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">text</span><span class="p">[:</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">substring</span> <span class="o">+</span> <span class="n">text</span><span class="p">[</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+    <span class="k">elif</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;index must be at least 0&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">substring</span> <span class="o">+</span> <span class="n">text</span></div>
+
+
+
+<div class="viewcode-block" id="flatten">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.flatten">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">flatten</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Flatten a nested structure into a single tuple.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">args : Any</span>
+<span class="sd">    The nested structure to flatten.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">tuple</span>
+<span class="sd">    A flattened tuple containing all elements.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">args</span><span class="p">,)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">iter</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">final</span> <span class="o">+=</span> <span class="n">flatten</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">final</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">args</span><span class="p">,)</span></div>
+
+
+
+<div class="viewcode-block" id="process_custom_string">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.process_custom_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_custom_string</span><span class="p">(</span>
+    <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_substring</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">replacement_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">separator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;;&#39;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Process a string by replacing a target substring with elements from a </span>
+<span class="sd">list and formatting the result.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">s : str</span>
+<span class="sd">    The original string.</span>
+
+<span class="sd">target_substring : str</span>
+<span class="sd">    The substring to replace.</span>
+
+<span class="sd">replacement_list : list of str</span>
+<span class="sd">    List of strings to replace the target substring.</span>
+
+<span class="sd">separator : str, default=&#39;;&#39;</span>
+<span class="sd">    Separator used in formatting the result.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    The processed and formatted string.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+
+    <span class="c1"># Replace target_substring with respective strings from the list</span>
+    <span class="k">for</span> <span class="n">replacement</span> <span class="ow">in</span> <span class="n">replacement_list</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">target_substring</span><span class="p">,</span> <span class="n">replacement</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Remove punctuation characters</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">s</span> <span class="k">if</span> <span class="n">char</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">)</span>
+
+    <span class="c1"># Replace all digits with the separator</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">separator</span> <span class="k">if</span> <span class="n">char</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="k">else</span> <span class="n">char</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">s</span><span class="p">)</span>
+
+    <span class="c1"># Replace all remaining non-punctuation characters with the separator,</span>
+    <span class="c1"># except for the replacements</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">replacement_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">replacement_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">replacement_list</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">replacement_list</span><span class="p">[</span><span class="n">replacement_index</span><span class="p">])]</span> <span class="o">==</span>
+                <span class="n">replacement_list</span><span class="p">[</span><span class="n">replacement_index</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">separator</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replacement_list</span><span class="p">[</span><span class="n">replacement_index</span><span class="p">])</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">replacement_list</span><span class="p">[</span><span class="n">replacement_index</span><span class="p">])</span>
+            <span class="n">replacement_index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">separator</span> <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="k">else</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sort_list_by_other_list">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.sort_list_by_other_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sort_list_by_other_list</span><span class="p">(</span><span class="n">list_1</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+                            <span class="n">list_2</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]</span>
+                            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sort one list based on the absolute values of another list.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">list_1 : list</span>
+<span class="sd">    List of elements to sort.</span>
+
+<span class="sd">list_2 : list of int or float</span>
+<span class="sd">    List of values used to determine sort order.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">tuple of list</span>
+<span class="sd">    Sorted list of elements and corresponding sorted values.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="n">combined</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">list_1</span><span class="p">,</span> <span class="n">list_2</span><span class="p">))</span>
+    <span class="n">sorted_combined</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">sorted_elements</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_combined</span><span class="p">]</span>
+    <span class="n">sorted_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sorted_combined</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">sorted_elements</span><span class="p">,</span> <span class="n">sorted_values</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="merge_dicts_with_duplicates">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.merge_dicts_with_duplicates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_dicts_with_duplicates</span><span class="p">(</span>
+    <span class="n">dict1</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">dict2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Merge two dictionaries, renaming duplicate keys from the second dictionary.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">dict1 : dict of str to Any</span>
+<span class="sd">    First dictionary.</span>
+
+<span class="sd">dict2 : dict of str to Any</span>
+<span class="sd">    Second dictionary.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">dict of str to Any</span>
+<span class="sd">    Merged dictionary with unique keys.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="c1"># Start with a copy of the first dictionary</span>
+    <span class="n">merged_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dict1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict2</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">merged_dict</span><span class="p">:</span>
+            <span class="c1"># If the key already exists,</span>
+            <span class="c1"># create a new key with &#39;_duplicate&#39; suffix</span>
+            <span class="n">new_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_duplicate&quot;</span>
+            <span class="c1"># Ensure the new key is unique</span>
+            <span class="k">while</span> <span class="n">new_key</span> <span class="ow">in</span> <span class="n">merged_dict</span><span class="p">:</span>
+                <span class="n">new_key</span> <span class="o">+=</span> <span class="s2">&quot;_duplicate&quot;</span>
+            <span class="n">merged_dict</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">merged_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">merged_dict</span></div>
+
+
+
+<div class="viewcode-block" id="add_inchi_to_dataframe">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.add_inchi_to_dataframe">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_inchi_to_dataframe</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">loc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">smiles_column_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Add an InChI column to a DataFrame by converting SMILES strings.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    Input DataFrame.</span>
+
+<span class="sd">loc : int</span>
+<span class="sd">    Column index to insert the InChI column.</span>
+
+<span class="sd">smiles_column_name : str</span>
+<span class="sd">    Name of the column containing SMILES strings.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pandas.DataFrame</span>
+<span class="sd">    DataFrame with the added InChI column.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+
+    <span class="n">inchi_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToInchi</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+                  <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">df</span><span class="p">[</span><span class="n">smiles_column_name</span><span class="p">]]</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="s1">&#39;INCHI&#39;</span><span class="p">,</span> <span class="n">inchi_list</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="identify_df_duplicates">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.identify_df_duplicates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">identify_df_duplicates</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">keep</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="s1">&#39;last&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;last&#39;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Identify and separate duplicate rows in a DataFrame based on a column.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    Input DataFrame.</span>
+
+<span class="sd">column_name : str</span>
+<span class="sd">    Column to check for duplicates.</span>
+
+<span class="sd">keep : {&#39;first&#39;, &#39;last&#39;}, default=&#39;last&#39;</span>
+<span class="sd">    Which duplicate to keep.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">tuple of pandas.DataFrame</span>
+<span class="sd">    Cleaned DataFrame and DataFrame of removed duplicates.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">KeyError</span>
+<span class="sd">    If `column_name` does not exist in `df`.</span>
+
+<span class="sd">ValueError</span>
+<span class="sd">    If `keep` is not &#39;first&#39; or &#39;last&#39;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">column_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Column &#39;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2">&#39; not found in DataFrame.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">keep</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="s1">&#39;last&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;keep&#39; must be either &#39;first&#39; or &#39;last&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="n">cleaned_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">column_name</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="n">keep</span><span class="p">)</span>
+    <span class="n">duplicates_removed</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">~</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cleaned_df</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">cleaned_df</span><span class="p">,</span> <span class="n">duplicates_removed</span></div>
+
+
+
+<div class="viewcode-block" id="create_structure_files">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.create_structure_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_structure_files</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">structure_column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">folder_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Create PNG structure files for molecules in a DataFrame.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    Input DataFrame.</span>
+
+<span class="sd">structure_column_name : str</span>
+<span class="sd">    Column containing molecular structures.</span>
+
+<span class="sd">folder_name : str</span>
+<span class="sd">    Folder to save the PNG images.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+
+    <span class="c1"># Create the folder, removing it first if it already exists</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">folder_name</span><span class="p">):</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">structure_column_name</span><span class="p">]):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">folder_name</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.png&#39;</span>
+            <span class="n">Draw</span><span class="o">.</span><span class="n">MolToFile</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># If molecule does not get read properly,</span>
+            <span class="c1"># create a placeholder image</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">folder_name</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.png&#39;</span>
+            <span class="n">Draw</span><span class="o">.</span><span class="n">MolToFile</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmarts</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">),</span> <span class="n">filename</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_dataframe">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.prepare_dataframe">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_dataframe</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">dir_name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Add a &#39;MOLFILE&#39; column to a DataFrame with sorted file paths.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    Input DataFrame.</span>
+
+<span class="sd">dir_name : str</span>
+<span class="sd">    Directory containing the files.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pandas.DataFrame</span>
+<span class="sd">    DataFrame with the added &#39;MOLFILE&#39; column.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+    <span class="c1"># Sort list of files based on last modification time in ascending order</span>
+    <span class="n">list_of_files</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">x</span><span class="p">)),</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_name</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">sorted_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">list_of_files</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_name</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">sorted_files</span><span class="p">]</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;MOLFILE&#39;</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_datatable">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.prepare_datatable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_datatable</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">650</span> <span class="o">/</span> <span class="mf">0.75</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataTable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Create a Bokeh DataTable from a DataFrame.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    Input DataFrame.</span>
+
+<span class="sd">height : int, default=500</span>
+<span class="sd">    Height of the DataTable.</span>
+
+<span class="sd">width : int, default=int(650 / 0.75)</span>
+<span class="sd">    Width of the DataTable.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">bokeh.models.DataTable</span>
+<span class="sd">    Bokeh DataTable object.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">KeyError</span>
+<span class="sd">    If required core columns are missing from the DataFrame.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColumnDataSource</span><span class="p">,</span> <span class="n">TableColumn</span>
+
+    <span class="n">required_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">,</span> <span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span> <span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;MOLFILE&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME_SHORT&#39;</span><span class="p">]</span>
+    <span class="n">missing_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">required_columns</span> <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing_columns</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required columns: </span><span class="si">{</span><span class="n">missing_columns</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">ColumnDataSource</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">),</span>
+        <span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">),</span>
+        <span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">),</span>
+        <span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;MOLFILE&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;MOLFILE&#39;</span><span class="p">),</span>
+        <span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;NAME&#39;</span><span class="p">),</span>
+        <span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;NAME_SHORT&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;NAME_SHORT&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="s1">&#39;METADATA&#39;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TableColumn</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="s1">&#39;METADATA&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;METADATA&#39;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">DataTable</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">,</span>
+                     <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_alpha">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.compute_alpha">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_alpha</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compute transparency value based on sample size.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">size : int</span>
+<span class="sd">    Sample size.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">float</span>
+<span class="sd">    Computed alpha value.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If size is negative.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;size&#39; must be a non-negative integer.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.95</span>
+    <span class="k">elif</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">300</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.9</span>
+    <span class="k">elif</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">800</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="k">elif</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">2000</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="k">return</span> <span class="n">alpha</span></div>
+
+
+
+<div class="viewcode-block" id="size_ratio">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.size_ratio">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">size_ratio</span><span class="p">(</span>
+    <span class="n">size1</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">size2</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compute a ratio based on the relative sizes of two values.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">size1 : int</span>
+<span class="sd">    First size.</span>
+
+<span class="sd">size2 : int</span>
+<span class="sd">    Second size.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">float</span>
+<span class="sd">    Computed ratio.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If either size is negative or both sizes are zero.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">size1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">size2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;size1&#39; and &#39;size2&#39; must be non-negative.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">size1</span> <span class="o">+</span> <span class="n">size2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;size1&#39; and &#39;size2&#39; cannot both be zero.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">((</span><span class="n">size1</span> <span class="o">/</span> <span class="p">(</span><span class="n">size1</span> <span class="o">+</span> <span class="n">size2</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="bokeh_plot">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.bokeh_plot">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bokeh_plot</span><span class="p">(</span>
+    <span class="n">p</span><span class="p">:</span> <span class="n">figure</span><span class="p">,</span>
+    <span class="n">classnames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">dict_datatables</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataTable</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a Bokeh plot with associated DataTables.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">p : bokeh.plotting.Figure</span>
+<span class="sd">    Bokeh plot to display.</span>
+
+<span class="sd">classnames : list of str</span>
+<span class="sd">    List of class names.</span>
+
+<span class="sd">dict_datatables : dict of str to DataTable</span>
+<span class="sd">    Mapping of class names to DataTables.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">bokeh.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bp</span>
+
+    <span class="n">tables</span> <span class="o">=</span> <span class="p">[</span><span class="n">dict_datatables</span><span class="p">[</span><span class="n">classname</span><span class="p">]</span> <span class="k">for</span> <span class="n">classname</span> <span class="ow">in</span> <span class="n">classnames</span><span class="p">]</span>
+    <span class="n">bp</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">bp</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">*</span><span class="n">tables</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="create_mask">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.create_mask">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_mask</span><span class="p">(</span>
+    <span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Create a boolean mask for values within a specified range.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">array : numpy.ndarray</span>
+<span class="sd">    Input array.</span>
+
+<span class="sd">lower : float or int</span>
+<span class="sd">    Lower bound.</span>
+
+<span class="sd">upper : float or int</span>
+<span class="sd">    Upper bound.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">numpy.ndarray</span>
+<span class="sd">    Boolean mask array.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">array</span> <span class="o">&lt;=</span> <span class="n">upper</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">array</span> <span class="o">&gt;</span> <span class="n">lower</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="assign_sign">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.assign_sign">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assign_sign</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Return the sign of a number as &#39;+&#39; or &#39;-&#39;.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">x : float or int</span>
+<span class="sd">    Input value.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">str</span>
+<span class="sd">    &#39;+&#39; if x is non-negative, &#39;-&#39; otherwise.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="s1">&#39;+&#39;</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="normalise_iterable">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.normalise_iterable">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalise_iterable</span><span class="p">(</span>
+    <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Normalise values in an iterable so that the maximum absolute value is 1.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">values : iterable of float or int</span>
+<span class="sd">    Iterable of numerical values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">list of float</span>
+<span class="sd">    Normalised values.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+    <span class="n">values_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values_list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">max_abs_weight</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values_list</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_abs_weight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">v</span> <span class="o">/</span> <span class="n">max_abs_weight</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values_list</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">values_list</span></div>
+
+
+
+<span class="c1"># DESCRIPTORS #</span>
+
+
+<div class="viewcode-block" id="dfs_to_excel">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.dfs_to_excel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dfs_to_excel</span><span class="p">(</span><span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">dfs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+                 <span class="n">sheet_names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Write multiple DataFrames to an Excel file, each on a separate sheet.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">file_name : str</span>
+<span class="sd">    Name of the Excel file.</span>
+
+<span class="sd">dfs : iterable of pandas.DataFrame</span>
+<span class="sd">    DataFrames to write.</span>
+
+<span class="sd">sheet_names : iterable of str</span>
+<span class="sd">    Names of the sheets.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">desc_df</span><span class="p">,</span> <span class="n">sheet_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dfs</span><span class="p">,</span> <span class="n">sheet_names</span><span class="p">):</span>
+            <span class="n">desc_df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet_name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.helper</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

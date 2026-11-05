@@ -31,6 +31,7 @@ release = _version_match.group(1)
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
     'myst_parser',
 ]
 
@@ -45,6 +46,7 @@ source_suffix = {
 myst_enable_extensions = [
     'colon_fence',
 ]
+myst_heading_anchors = 3
 
 templates_path = ['_templates']
 exclude_patterns = []

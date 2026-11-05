@@ -6,11 +6,11 @@
 [![Branch Coverage](assets/coverage-branch.svg)](https://github.com/seacunilever/mlchem/blob/master/assets/coverage-branch.svg)
 
 **mlchem** is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
-The library has been tested with Python 3.12, 3.13, and 3.14; all three versions are required to pass in CI.
 
 ## Documentation
 
 Available at [seacunilever.github.io/mlchem](https://seacunilever.github.io/mlchem/).
+Start with the [Quickstart](#quickstart), browse the [API reference](https://seacunilever.github.io/mlchem/modules.html), or read the [architecture guide](https://seacunilever.github.io/mlchem/architecture.html).
 
 ## Features
 
@@ -27,40 +27,6 @@ Available at [seacunilever.github.io/mlchem](https://seacunilever.github.io/mlch
 
 For package responsibilities and the typical data flow, see the [architecture guide](https://seacunilever.github.io/mlchem/architecture.html).
 
-
-## Modules
-
-### chem.visualise/
-
-- **space.py**: Computes and visualises datasets in a lower-dimensional space.
-- **simmaps.py**: Generates "rdkit-like" similarity maps based on atomic importance weights.
-- **drawing.py**: Handles the drawing of molecular structures with many customisable options.
-
-### chem.calculator/
-
-- **tools.py**: Provides numerous tools for chemical calculations.
-- **descriptors.py**: Calculates various descriptors for molecules, including RDKit and Mordred descriptors, atomic descriptors, chemotypes, fingerprints, and some quantum chemistry properties.
-
-### chem.manipulation.py
-
-The `mlchem.chem.manipulation` module offers a variety of tools for creating, converting, manipulating molecular structures, generate new molecules and recognise molecular patterns.
-
-### ml.feature_selection/
-
-- **filters.py**: Provides functionalities for filtering features.
-- **wrappers.py**: Offers simplified interfaces for feature selection.
-
-### ml.modelling/
-
-- **model_interpretation.py**: Provides tools for interpreting machine learning models.
-- **model_evaluation.py**: Contains tools for evaluating machine learning models.
-
-### ml.preprocessing/
-
-- **dimensional_reduction.py**: Provides functionalities for compressing dataframes using various dimensionality reduction techniques.
-- **feature_transformation.py**: Expands features to polynomial features.
-- **scaling.py**: Provides functionalities for scaling dataframes using different scaling techniques.
-- **undersampling.py**: Contains techniques for handling imbalanced datasets.
 
 ## Installation
 
@@ -82,222 +48,56 @@ Then import in Python as:
 import mlchem
 ```
 
-Development installation, to modify the code or contribute with some changes:
+## Quickstart
 
-```bash
-# Clone the repository
-git clone https://github.com/seacunilever/mlchem
-cd mlchem
-
-# (Optional: create a virtual environment)
-python -m venv _venv
-
-# Activate on macOS/Linux:
-source _venv/bin/activate
-
-# Activate on Windows (PowerShell):
-.\_venv\Scripts\Activate.ps1
-
-# Activate on Windows (cmd.exe):
-_venv\Scripts\activate.bat
-
-# Make an editable install of mlchem from the source tree
-pip install -e .
-
-# and install requirements
-pip install -r requirements.txt
-```
-
-## Logging
-
-**mlchem** emits diagnostic logs during pipeline execution (feature selection, model evaluation, data preprocessing) to help users track progress and debug issues. Logs are emitted at the `INFO` level by default and appear on the console.
-
-Logs appear automatically when running mlchem functions:
+This end-to-end example turns SMILES into Morgan fingerprints and evaluates a
+classifier with cross-validated ROC-AUC. The labels are toy values to
+demonstrate the API, not experimental measurements; replace them with a
+validated target for real modeling.
 
 ```python
-from mlchem.ml.feature_selection.wrappers import SequentialForwardSelection
-from mlchem.metrics import get_geometric_S
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
 
-sfs = SequentialForwardSelection(estimator=..., metric=get_geometric_S, ...)
-sfs.fit(X_train, y_train, X_test, y_test)
-# Logs appear on console: e.g., "10:35:55 - mlchem.ml.feature_selection.wrappers - INFO - SFS start: ..."
+from mlchem.chem.calculator.descriptors import get_fingerprint_df
+from mlchem.ml.modelling.model_evaluation import crossval
+
+smiles = [
+    'CCO', 'CCCO', 'CC(C)O', 'CCCCO',
+    'CCN', 'CCCN', 'CC(C)N', 'CCCCN',
+    'c1ccccc1', 'Cc1ccccc1', 'c1ccncc1', 'c1ccoc1',
+]
+y = [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1]
+
+X = get_fingerprint_df(smiles, fp_type='m', radius=2, nBits=256)
+scores = crossval(
+    estimator=RandomForestClassifier(n_estimators=20, random_state=42),
+    X=X,
+    y=y,
+    metric=roc_auc_score,
+    n_fold=3,
+    task_type='classification',
+    shuffle=True,
+    random_state=42,
+    response_method='predict_proba',
+)
+
+print(f"Mean CV ROC-AUC: {scores['cv_mean']:.3f}")
 ```
 
-### Controlling Log Level
-
-Change the logging level to filter output (e.g., show only warnings, suppress info messages):
-
-```python
-sfs = SequentialForwardSelection(..., log_level='WARNING')
-sfs.fit(...)  # Only WARNING+ logs appear
-```
-
-Valid log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`
-
-### Post-Pipeline Inspection and File Logging
-
-Capture logs to memory or file for later inspection without modifying function calls:
-
-```python
-from mlchem.helper import start_logging
-
-# Capture to console + memory
-logs = start_logging(log_level='INFO', to_console=True)
-sfs.fit(X_train, y_train, X_test, y_test)
-print(logs.get_logs())  # View captured logs
-
-# Capture to file + console
-logs = start_logging(log_level='INFO', to_file='pipeline.log')
-sfs.fit(...)
-# Logs written to pipeline.log + displayed on console
-
-# Capture to file only (silent)
-logs = start_logging(to_console=False, to_file='pipeline.log')
-sfs.fit(...)  # Silent; logs only in file
-```
-
-Use this for non-interactive scripts and production environments.
-
-## Compatibility checks (Python 3.12, 3.13, 3.14)
-
-This repository includes a local matrix runner and CI workflow scaffold to
-keep cross-version support visible on every push.
-
-For most local development, running `python -m pytest -vv tests` from repo root is enough. The commands in
-this section are mainly for maintainers, release checks, or contributors who
-want local parity with CI across multiple Python versions.
-
-Prerequisite for all commands below: activate your project virtual environment first.
-
-Warning policy note:
-
-- A narrowly scoped `pytest` warning filter is used for an upstream SHAP
-  `PendingDeprecationWarning` (`shap.plots.colors._colors`) tied to matplotlib
-  colormap API changes.
-- Keep this filter temporary and remove it once SHAP resolves the upstream issue.
-- To periodically audit all warnings explicitly, run:
-
-```bash
-python -m pytest -vv tests -W default
-```
-
-Coverage baseline (canonical: Python 3.12, matches the CI py312 job):
-
-```bash
-python -m pytest -q tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
-python - <<'PY'
-import xml.etree.ElementTree as ET
-root = ET.parse('coverage.xml').getroot()
-line_pct = round(float(root.get('line-rate', 0.0)) * 100)
-branch_pct = round(float(root.get('branch-rate', 0.0)) * 100)
-print(f'line={line_pct}, branch={branch_pct}')
-PY
-python -m anybadge --label "line cov" --value <LINE_PERCENT> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
-python -m anybadge --label "branch cov" --value <BRANCH_PERCENT> --file assets/coverage-branch.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
-```
-
-Note: both badges (`assets/coverage.svg` for line coverage and `assets/coverage-branch.svg` for branch coverage) are refreshed locally by maintainers (not auto-committed by CI) to avoid protected-branch push permissions.
-
-Line coverage measures which executable lines ran; branch coverage measures
-whether each outcome of conditional logic ran. Branch coverage can therefore
-identify untested decisions even when the line containing them was executed.
-
-Current policy:
-
-- Python 3.12, 3.13, and 3.14 are all required to pass in CI.
-
-### Local matrix (default envs under ~/Envs)
-
-The matrix helper expects existing Python environments (for example py312, py313, py314). If you do not use this layout, use the tox entrypoint below instead.
-
-Run all environments in fast mode (default: no dependency reinstall):
-
-From repository root:
-
-```bash
-python scripts/run_local_matrix.py
-```
-
-Run matrix plus local coverage badge refresh (recommended before release/PR merge):
-
-```bash
-python scripts/run_local_matrix.py --refresh-badges
-```
-
-From `scripts/` directory:
-
-```bash
-python run_local_matrix.py
-```
-
-On Windows, if output appears buffered/silent, use unbuffered mode:
-
-```bash
-py -u scripts/run_local_matrix.py
-```
-
-By default, the runner streams live progress (active env/step and pytest output).
-
-Run all environments with full dependency reinstall + tests:
-
-```bash
-python scripts/run_local_matrix.py --full-install -- -vv tests
-```
-
-All selected versions are blocking by default, matching CI. For an exploratory
-local run that treats Python 3.14 failures as warnings:
-
-```bash
-python scripts/run_local_matrix.py --allow-314-failure -- -vv tests
-```
-
-Quiet mode (disable live streaming and print only summary):
-
-```bash
-python scripts/run_local_matrix.py --no-live-output -- -vv tests
-```
-
-### tox entrypoint
-
-You can also run the same idea via tox:
-
-```bash
-python -m pip install tox
-```
-
-```bash
-python -m tox -e py312,py313,py314
-```
-
-The `py314` tox environment blocks on test failures when Python 3.14 is
-available. Tox skips missing interpreters locally; CI installs Python 3.14 and
-requires the job to pass.
-
-## Maintainer release refresh flow (local)
-
-Use this when preparing docs and badges without any CI write-back permissions:
-
-1. Update `version=` in `setup.py`.
-2. Regenerate docs locally from `docs/`:
-
-```bash
-make clean
-make html
-```
-
-3. Refresh compatibility matrix + badges from repo root:
-
-```bash
-python scripts/run_local_matrix.py --refresh-badges
-```
-
-4. Commit the resulting docs and badge changes in your PR.
+See the [`get_fingerprint_df` API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df)
+for fingerprint options and the
+[`crossval` API](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.crossval)
+for splitters, explicit folds, and response methods.
 
 ## Usage
 
-Here's some basic examples of how to use **mlchem**:
+Here are some basic examples of how to use **mlchem**:
 
-### calculate rdkit descriptors for two molecules
+### Calculate RDKit descriptors
+
+See the [`get_rdkitDesc` API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_rdkitDesc).
+
 ```python
 from mlchem.chem.manipulation import create_molecule
 from mlchem.chem.calculator import descriptors
@@ -306,7 +106,12 @@ mol2 = create_molecule('CCCCCN')
 desc_df = descriptors.get_rdkitDesc([mol1, mol2],include_3D=True)
 ```
 
-### calculate fingerprints
+### Calculate fingerprints
+
+See the [`get_fingerprint_df` API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df)
+and the single-molecule
+[`get_fingerprint` API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint).
+
 ```python
 from mlchem.chem.calculator import descriptors
 
@@ -319,7 +124,10 @@ fp_df = descriptors.get_fingerprint_df(smiles_list, fp_type='m', radius=2, nBits
 fp, bit_info = descriptors.get_fingerprint('CCO', fp_type='m', radius=2, nBits=2048, include_bit_info=True)
 ```
 
-### calculate chemotypes faster on larger datasets
+### Calculate chemotypes at scale
+
+See the [`get_chemotypes` API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_chemotypes).
+
 ```python
 from mlchem.chem.calculator import descriptors
 
@@ -335,7 +143,13 @@ Performance note: since v1.1.0, chemotype execution reuses per-molecule rule res
 and avoids repeated molecule preparation. This is especially important for
 large rule dictionaries and medium-to-large training sets.
 
-### control ML verbosity in notebooks and development runs
+### Control ML Verbosity
+
+See the
+[`SequentialForwardSelection` API](https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection)
+and
+[`CombinatorialSelection` API](https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection).
+
 ```python
 import logging
 from sklearn.linear_model import LogisticRegression
@@ -365,7 +179,11 @@ cs = CombinatorialSelection(
 )
 ```
 
-### Undersampling
+### Balance an imbalanced training set
+
+See the
+[`undersample` API](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.undersampling.undersample)
+for input requirements and examples.
 
 The `class_column` must exist in `train_set`. It is also required in `test_set` when `add_dropped_to_test=True`; otherwise, the test-set target column is not accessed. Invalid target proportions and non-binary training labels raise `ValueError`; missing required columns raise `KeyError` with the missing column names.
 
@@ -381,7 +199,12 @@ train_balanced, test_updated = undersample(
 )
 ```
 
-### Stress-test your models with y-scrambling
+### Stress-Test Models with Y-Scrambling
+
+See the
+[`y_scrambling` API](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.y_scrambling)
+for split, metric, and response-method options.
+
 ```python
 from mlchem.ml.modelling.model_evaluation import y_scrambling
 
@@ -403,7 +226,12 @@ Returned diagnostics include:
 - `probability_better`
 - `safety_margin_ratio`
 
-### cross-validation-centric majority voting
+### Cross-Validation Majority Voting
+
+See
+[`MajorityVote.evaluate_cv`](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv)
+for soft-vote probabilities, fold definitions, and reliability ranking.
+
 ```python
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -457,33 +285,236 @@ fit_report = mv.fit(return_prediction_dataframes=True)
 
 `fit()` is the final consensus step after model selection.
 
-### pattern recognition
+### Capture pipeline logs
+
+Library messages are emitted at `INFO` level by default. Configure a selector's
+`log_level` as shown above, or capture logs from an entire pipeline in memory
+or a file:
+
+```python
+from mlchem.helper import start_logging
+
+logs = start_logging(log_level='INFO', to_console=True)
+sfs.fit(X_train, y_train, X_test, y_test)
+print(logs.get_logs())
+
+# To log to a file instead:
+# logs = start_logging(log_level='INFO', to_file='pipeline.log')
+# sfs.fit(X_train, y_train, X_test, y_test)
+```
+
+### Visual examples
+
+#### Pattern recognition
+
+See the [molecule manipulation API](https://seacunilever.github.io/mlchem/mlchem.chem.html#module-mlchem.chem.manipulation)
+for pattern-recognition utilities.
+
 ![image](assets/figure2.png)
 
-### de novo molecule generation and cleaning
+#### De novo molecule generation and cleaning
+
+See the [molecule manipulation API](https://seacunilever.github.io/mlchem/mlchem.chem.html#module-mlchem.chem.manipulation)
+for molecule creation and generation utilities.
+
 ![image](assets/figure3.png)
 
-### show pre-defined colour palette
+#### Predefined colour palette
+
+See the [drawing API](https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.drawing)
+for drawing and palette options.
+
 ![image](assets/figure4.png)
 
 
 More examples in the [examples](https://github.com/seacunilever/mlchem/tree/master/examples) folder.
 
-## Building the documentation
+## Modules
 
-The documentation is built with [Sphinx](https://www.sphinx-doc.org/) using the `autodoc` and [`myst-parser`](https://myst-parser.readthedocs.io/) extensions. Source files live under `docs/source/`, build output lands in `docs/build/html/`, and a small post-build script (`docs/_publish.py`) mirrors that build into `docs/` so GitHub Pages always serves the latest version.
+Browse the API by package:
+
+### chem.visualise/
+
+- **[space.py API](https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.space)**:
+  Computes and visualises datasets in a lower-dimensional space.
+- **[simmaps.py API](https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.simmaps)**:
+  Generates "rdkit-like" similarity maps based on atomic importance weights.
+- **[drawing.py API](https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.drawing)**:
+  Handles the drawing of molecular structures with many customisable options.
+
+### chem.calculator/
+
+- **[tools.py API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#module-mlchem.chem.calculator.tools)**:
+  Provides tools for chemical calculations.
+- **[descriptors.py API](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#module-mlchem.chem.calculator.descriptors)**:
+  Calculates RDKit and Mordred descriptors, chemotypes, fingerprints, and
+  other molecular features. Start with
+  [`get_fingerprint_df`](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df)
+  or
+  [`get_rdkitDesc`](https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_rdkitDesc).
+
+### chem.manipulation.py
+
+The [`mlchem.chem.manipulation` API](https://seacunilever.github.io/mlchem/mlchem.chem.html#module-mlchem.chem.manipulation)
+provides molecule creation, conversion, manipulation, and pattern-recognition
+utilities. See
+[`create_molecule`](https://seacunilever.github.io/mlchem/mlchem.chem.html#mlchem.chem.manipulation.create_molecule)
+to get started.
+
+### ml.feature_selection/
+
+- **[filters.py API](https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#module-mlchem.ml.feature_selection.filters)**:
+  Provides filter-based feature selection.
+- **[wrappers.py API](https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#module-mlchem.ml.feature_selection.wrappers)**:
+  Includes
+  [`SequentialForwardSelection`](https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection)
+  and
+  [`CombinatorialSelection`](https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection).
+
+### ml.modelling/
+
+- **[model_interpretation.py API](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#module-mlchem.ml.modelling.model_interpretation)**:
+  Provides tools for interpreting machine learning models.
+- **[model_evaluation.py API](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#module-mlchem.ml.modelling.model_evaluation)**:
+  Includes
+  [`crossval`](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.crossval),
+  [`y_scrambling`](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.y_scrambling),
+  and
+  [`MajorityVote.evaluate_cv`](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv).
+
+### ml.preprocessing/
+
+- **[dimensional_reduction.py API](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.dimensional_reduction)**:
+  Compresses dataframes using dimensionality-reduction techniques.
+- **[feature_transformation.py API](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.feature_transformation)**:
+  Expands features with
+  [`polynomial_expansion`](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.feature_transformation.polynomial_expansion).
+- **[scaling.py API](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.scaling)**:
+  Scales dataframes with standard, min-max, and robust scaling, including
+  [`scale_df_standard`](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.scaling.scale_df_standard).
+- **[undersampling.py API](https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.undersampling)**:
+  Handles imbalanced datasets.
+
+## Development setup
+
+Clone the repository, create and activate a virtual environment, then install
+the package in editable mode with its requirements:
+
+```bash
+git clone https://github.com/seacunilever/mlchem
+cd mlchem
+python -m venv _venv
+
+# Activate on macOS/Linux:
+source _venv/bin/activate
+
+# Activate on Windows (PowerShell):
+.\_venv\Scripts\Activate.ps1
+
+# Activate on Windows (cmd.exe):
+_venv\Scripts\activate.bat
+
+pip install -r requirements.txt
+pip install -e .
+```
+
+## Contributing
+
+We welcome contributions to **mlchem**. Please consult the
+[contribution guide](https://github.com/seacunilever/mlchem/blob/master/CONTRIBUTING.md)
+for how to propose changes, report bugs, and submit pull requests.
+
+## Testing and Maintainer Guide
+
+Python 3.12, 3.13, and 3.14 are supported and all are required to pass in CI.
+For routine development, run the tests from the repository root:
+
+```bash
+python -m pytest -vv tests
+```
+
+Activate the project virtual environment before running the commands below.
+The local matrix runner expects existing environments such as `py312`, `py313`,
+and `py314` under `~/Envs`; if you use a different setup, use tox instead.
+
+### Local matrix testing
+
+Run the supported Python versions:
+
+```bash
+python scripts/run_local_matrix.py
+```
+
+Useful options:
+
+- `--refresh-badges` runs the matrix and refreshes the local coverage badges.
+- `--full-install -- -vv tests` reinstalls dependencies before testing.
+- `--no-live-output -- -vv tests` prints only the final summary.
+- `--allow-314-failure -- -vv tests` treats Python 3.14 failures as warnings
+  for exploratory local runs only; normal runs and CI remain blocking.
+
+On Windows, use `py -u scripts/run_local_matrix.py` if output appears buffered.
+Tox is an alternative when the matrix runner's environment layout does not fit:
+
+```bash
+python -m pip install tox
+python -m tox -e py312,py313,py314
+```
+
+Tox skips interpreters that are unavailable locally. CI installs Python 3.14
+and requires it to pass.
+
+### Warning and coverage checks
+
+A narrowly scoped pytest warning filter suppresses an upstream SHAP
+`PendingDeprecationWarning` related to matplotlib colormap API changes. To audit
+all warnings explicitly, run:
+
+```bash
+python -m pytest -vv tests -W default
+```
+
+The canonical coverage baseline uses Python 3.12, matching the CI `py312` job:
+
+```bash
+python -m pytest -q tests --cov=mlchem --cov-config=.coveragerc --cov-branch --cov-report=term --cov-report=xml:coverage.xml
+python - <<'PY'
+import xml.etree.ElementTree as ET
+root = ET.parse('coverage.xml').getroot()
+line_pct = round(float(root.get('line-rate', 0.0)) * 100)
+branch_pct = round(float(root.get('branch-rate', 0.0)) * 100)
+print(f'line={line_pct}, branch={branch_pct}')
+PY
+python -m anybadge --label "line cov" --value <LINE_PERCENT> --file assets/coverage.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+python -m anybadge --label "branch cov" --value <BRANCH_PERCENT> --file assets/coverage-branch.svg --overwrite 50=red 60=orange 70=yellow 80=yellowgreen 90=green
+```
+
+Line coverage measures which executable lines ran; branch coverage also
+measures whether the outcomes of conditional logic were exercised. CI does not
+update the badges; maintainers refresh and commit them locally.
+
+### Release refresh
+
+1. Update `version=` in `setup.py`.
+2. Run the local matrix with `--refresh-badges` as described above.
+3. [Build and publish the documentation](#building-the-documentation).
+4. Commit the code, tests, documentation, and refreshed badges.
+
+## Building the Documentation
+
+The documentation is built with [Sphinx](https://www.sphinx-doc.org/) using `autodoc`, [`myst-parser`](https://myst-parser.readthedocs.io/), and `viewcode`. Source files live under `docs/source/`, build output lands in `docs/build/html/`, and a small post-build script (`docs/_publish.py`) mirrors that build into `docs/` so GitHub Pages always serves the latest version. `viewcode` adds source links to documented modules, classes, and methods.
 
 > Single-source content: `docs/source/welcome.md` `{include}`s this README, so you only edit `README.md` — never duplicate content into the welcome page.
 
-### What is tracked, what is not
+### Tracked and Generated Files
 
 Only the inputs and the published output are tracked in git:
 
 - **Tracked (do edit / commit)**
   - `docs/source/` — Sphinx inputs (`conf.py`, `*.rst`, `welcome.md`, `_static/custom.css`).
   - `docs/Makefile`, `docs/make.bat`, `docs/_publish.py` — build entry points.
-  - `docs/.nojekyll` — tells GitHub Pages to keep `_static/` and `_sources/`.
-  - `docs/*.html`, `docs/_static/`, `docs/_sources/`, `docs/_images/`, `docs/objects.inv`, `docs/searchindex.js` — the **published mirror** that GitHub Pages serves; updated automatically by `make html` via `_publish.py`.
+  - `docs/.nojekyll` — tells GitHub Pages to keep `_static/`, `_sources/`, and `_modules/`.
+  - `docs/*.html`, `docs/_static/`, `docs/_sources/`, `docs/_images/`, `docs/_modules/`, `docs/objects.inv`, `docs/searchindex.js` — the **published mirror** that GitHub Pages serves; updated automatically by `make html` via `_publish.py`.
 - **Not tracked (regenerated on every build, ignored via `.gitignore`)**
   - `docs/build/` — Sphinx scratch output, including `build/html/.doctrees/` and `build/html/.buildinfo` incremental-build caches.
   - `docs/*warnings*.{log,txt}` — ad-hoc diagnostic logs.
@@ -496,14 +527,11 @@ The documentation toolchain is part of `requirements.txt`. If you only want the 
 pip install sphinx myst-parser
 ```
 
-### Build & publish
+### Build and Publish
 
-Run the commands from the `docs/` directory (NOT from `docs/source/` — `source` is the value of `SOURCEDIR` inside the `Makefile` / `make.bat`, not the working directory):
+Run these commands from the `docs/` directory, not `docs/source/`:
 
 ```bash
-# from the repository root
-cd docs
-
 # wipe previous build artefacts (clears docs/build/)
 make clean
 
@@ -513,11 +541,13 @@ make html
 
 `make html` runs Sphinx and then invokes `_publish.py`, which:
 
-1. removes every stale published asset at the root of `docs/` (everything except `source/`, `build/`, `Makefile`, `make.bat`, `_publish.py`, `.nojekyll`, `.gitignore`);
-2. copies the freshly built site from `docs/build/html/` into `docs/`;
-3. ensures the `.nojekyll` marker is present so GitHub Pages keeps `_static/` and `_sources/`.
+1. updates changed files and removes stale published assets at the root of `docs/` (everything except `source/`, `build/`, `Makefile`, `make.bat`, `_publish.py`, `.nojekyll`, `.gitignore`);
+2. ensures the `.nojekyll` marker is present so GitHub Pages keeps `_static/`, `_sources/`, and `_modules/`.
 
-Then commit the regenerated files at the root of `docs/` — that is what gets published. `docs/build/` stays local.
+Unchanged files are left in place, avoiding unnecessary replacement of files
+that may be open on Windows. If a changed file is locked, close the application
+using it and rerun `make html`. Commit the regenerated files at the root of
+`docs/`; `docs/build/` stays local.
 
 If you ever build with a raw `sphinx-build` invocation, run the mirror step manually:
 
@@ -529,10 +559,6 @@ On Windows the same targets are dispatched through `make.bat`, so the commands w
 
 > Common pitfalls: running `make html` from `docs/source/` (no `Makefile` there → "no rule" / "missing Makefile" error), or typing `make build` (the Sphinx target is `html`; `build` is the *output directory*, not a target).
 
-## Contributing
-
-We welcome contributions to **mlchem**. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the [contribution guide](https://github.com/seacunilever/mlchem/blob/master/CONTRIBUTING.md) on how to properly propose and submit changes.
-
 ## Third-Party Dependencies
 
 This project uses the [SELFIES](https://github.com/aspuru-guzik-group/selfies) Python package for molecular string representations.  
@@ -543,9 +569,6 @@ This project uses and adapts code from the [RDKit](https://www.rdkit.org) chemin
 ## License
 
 This project is licensed under the BSD-3 License.
-
-Note: This project includes components licensed under the Apache License 2.0 (e.g., the SELFIES package), as well as source code taken and adapted from RDKit library.
-
 
 ## Acknowledgements
 

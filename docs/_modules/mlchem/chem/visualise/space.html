@@ -1,0 +1,772 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.chem.visualise.space</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<div class="viewcode-block" id="ChemicalSpace">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChemicalSpace</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A module to compute and visualise datasets in a compressed embedded space.</span>
+
+<span class="sd">This class handles descriptor processing, dimensionality reduction,</span>
+<span class="sd">and preparation of molecular data for interactive visualisation.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">data : pd.DataFrame</span>
+<span class="sd">    A DataFrame with 3 or 4 columns: &#39;SMILES&#39;, &#39;NAME&#39;, &#39;CLASS&#39;,</span>
+<span class="sd">    and optionally &#39;METADATA&#39;.</span>
+<span class="sd">needs_cleaning : bool, optional</span>
+<span class="sd">    Whether the data requires cleaning. Default is False.</span>
+<span class="sd">df_descriptors : pd.DataFrame, optional</span>
+<span class="sd">    A DataFrame with SMILES as index and descriptor columns.</span>
+<span class="sd">metadata_exists : bool, optional</span>
+<span class="sd">    True if a 4th column is present in `data`. Default is False.</span>
+<span class="sd">metadata_categorical : bool, optional</span>
+<span class="sd">    True if the 4th column is categorical. Default is False.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If the input `data` does not have the expected column structure.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="ChemicalSpace.__init__">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                 <span class="n">needs_cleaning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">df_descriptors</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">metadata_exists</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="n">metadata_categorical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Initialise a ChemicalSpace object for visualising molecular datasets</span>
+<span class="sd">in a compressed embedded space.</span>
+
+<span class="sd">This constructor sets up the molecular data, descriptor matrix,</span>
+<span class="sd">and metadata flags. It also validates the structure of the input</span>
+<span class="sd">data and loads default Bokeh visualisation settings.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">data : pd.DataFrame</span>
+<span class="sd">    A DataFrame with either 3 or 4 columns:</span>
+<span class="sd">    - &#39;SMILES&#39;: SMILES strings of the molecules.</span>
+<span class="sd">    - &#39;NAME&#39;: Names or identifiers of the molecules.</span>
+<span class="sd">    - &#39;CLASS&#39;: Class labels for grouping or colouring.</span>
+<span class="sd">    - &#39;METADATA&#39; (optional): Additional metadata for further grouping.</span>
+<span class="sd">needs_cleaning : bool, optional</span>
+<span class="sd">    Whether the data requires cleaning before processing. Default is False.</span>
+<span class="sd">df_descriptors : pd.DataFrame, optional</span>
+<span class="sd">    A DataFrame with SMILES as index and molecular descriptors as columns.</span>
+<span class="sd">metadata_exists : bool, optional</span>
+<span class="sd">    True if a fourth column (&#39;METADATA&#39;) is present in `data`. Default is False.</span>
+<span class="sd">metadata_categorical : bool, optional</span>
+<span class="sd">    True if the metadata column is categorical. Default is False.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If the `data` DataFrame does not have the expected column structure.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">If `df_descriptors` is not provided, a message will be printed to</span>
+<span class="sd">remind the user to supply descriptors before visualisation.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; cs = ChemicalSpace(data=df, df_descriptors=desc_df, metadata_exists=True)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.importables</span><span class="w"> </span><span class="kn">import</span> <span class="n">bokeh_dictionary</span><span class="p">,</span> <span class="n">bokeh_tooltips</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs_cleaning</span> <span class="o">=</span> <span class="n">needs_cleaning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span> <span class="o">=</span> <span class="n">df_descriptors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="o">=</span> <span class="n">metadata_exists</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span> <span class="o">=</span> <span class="n">metadata_categorical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bokeh_dictionary</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span> <span class="o">=</span> <span class="n">bokeh_tooltips</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure data has only 3 &quot;</span>
+                                 <span class="s2">&quot;columns called &#39;SMILES&#39;,&#39;NAME&#39;,&#39;CLASS&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span>
+                <span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">,</span> <span class="s1">&#39;METADATA&#39;</span>
+                    <span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Please make sure data has only 4 &quot;</span>
+                    <span class="s2">&quot;columns called &#39;SMILES&#39;,&#39;NAME&#39;,&#39;CLASS&#39;,&#39;METADATA.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The given data have no descriptors available. &#39;</span>
+                  <span class="s1">&#39;To visualise the chemical space, please provide &#39;</span>
+                  <span class="s1">&#39;a descriptor dataframe or use the &#39;</span>
+                  <span class="s1">&#39;mlchem.chem.Calculator.descriptors.py module.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ChemicalSpace.process">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.process">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">diversity_filter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">collinearity_filter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">standardise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Process the descriptor data by applying diversity and collinearity filters,</span>
+<span class="sd">and optionally standardising the data.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">diversity_filter : float or None</span>
+<span class="sd">    A float between 0 and 1. Higher values apply stricter filtering</span>
+<span class="sd">    to remove less diverse descriptors.</span>
+<span class="sd">collinearity_filter : float or None</span>
+<span class="sd">    A float between 0 and 1. Higher values apply looser filtering</span>
+<span class="sd">    to remove more collinear descriptors.</span>
+<span class="sd">standardise : bool, optional</span>
+<span class="sd">    Whether to standardise the filtered descriptor data. Default is True.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">    Updates the instance with processed descriptor data.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If `diversity_filter` or `collinearity_filter` are outside [0, 1).</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; chem_space = ChemicalSpace(data, df_descriptors)</span>
+<span class="sd">&gt;&gt;&gt; chem_space.process(diversity_filter=0.5, collinearity_filter=0.3)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">filters</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.preprocessing.scaling</span><span class="w"> </span><span class="kn">import</span> <span class="n">scale_df_standard</span>
+
+        <span class="k">if</span> <span class="n">diversity_filter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.</span> <span class="o">&lt;=</span> <span class="n">diversity_filter</span> <span class="o">&lt;</span> <span class="mf">1.</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;diversity_filter&#39; argument must be a float 0 &lt;= x &lt; 1.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">collinearity_filter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.</span> <span class="o">&lt;</span> <span class="n">collinearity_filter</span> <span class="o">&lt;=</span> <span class="mf">1.</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;collinearity_filter&#39; argument must be a float 0 &lt; x &lt;= 1.&quot;</span><span class="p">)</span>
+          
+        <span class="k">if</span> <span class="n">diversity_filter</span><span class="p">:</span>
+          <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Before filtering:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+          <span class="n">df_filtered_1</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">diversity_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span><span class="p">,</span>
+                                                   <span class="n">diversity_filter</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df_filtered_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span>     <span class="c1"># do nothing</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After diversity filter:&quot;</span><span class="p">,</span> <span class="n">df_filtered_1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">collinearity_filter</span><span class="p">:</span>
+            <span class="n">df_filtered_2</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">collinearity_filter</span><span class="p">(</span><span class="n">df_filtered_1</span><span class="p">,</span>
+                                                        <span class="n">collinearity_filter</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df_filtered_2</span> <span class="o">=</span> <span class="n">df_filtered_1</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After collinearity filter:&quot;</span><span class="p">,</span> <span class="n">df_filtered_2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">standardise</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaler</span> <span class="o">=</span> <span class="n">scale_df_standard</span><span class="p">(</span>
+                <span class="n">df_filtered_2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span> <span class="o">=</span> <span class="n">df_filtered_2</span></div>
+
+
+<div class="viewcode-block" id="ChemicalSpace.prepare">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.prepare">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df_compressed</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Prepare the compressed dataframe for visualisation.</span>
+
+<span class="sd">This method adds molecular structure files, names, and metadata</span>
+<span class="sd">to the compressed coordinates.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df_compressed : pd.DataFrame</span>
+<span class="sd">    A DataFrame with two columns [&#39;DIM_1&#39;, &#39;DIM_2&#39;] representing</span>
+<span class="sd">    the compressed coordinates of the molecules.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">    Updates the instance with prepared data for visualisation.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If `df_compressed` does not have exactly two columns named</span>
+<span class="sd">    [&#39;DIM_1&#39;, &#39;DIM_2&#39;].</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If the index of `df_compressed` or `df_processed` is not a</span>
+<span class="sd">    series of SMILES strings.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; chem_space.prepare(df_compressed)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+      <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+      <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">create_structure_files</span><span class="p">,</span>
+                                <span class="n">prepare_dataframe</span><span class="p">)</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span> <span class="o">=</span> <span class="n">df_compressed</span>
+
+      <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">,</span> <span class="s1">&#39;DIM_2&#39;</span><span class="p">]:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df_compressed&#39; must have only 2 columns: [&#39;DIM_1&#39;,&#39;DIM_2&#39;].&quot;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Index of df_compressed must be a series of SMILES strings.&quot;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Index of df_processed must be a series of SMILES strings.&quot;</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+      <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+              <span class="s2">&quot;Index of df_compressed must be a series of SMILES strings.&quot;</span>
+              <span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">columns</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+      <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Index of df_processed must be a series of SMILES strings.&quot;</span><span class="p">)</span>
+
+
+      <span class="c1"># Classes taken from the list of molecules</span>
+      <span class="c1"># retained after descriptor calculation.</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">SMILES</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">SMILES</span>
+              <span class="p">)</span>
+              <span class="p">]</span><span class="o">.</span><span class="n">CLASS</span><span class="o">.</span><span class="n">values</span>
+
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">CLASS</span><span class="o">.</span><span class="n">values</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">classnames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">molfiles</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="p">[]</span>
+
+      <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">):</span>
+          <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">]</span>
+
+          <span class="c1"># Check whether structural files for that dataframe already exist,</span>
+          <span class="c1"># otherwise create them</span>
+          <span class="k">try</span><span class="p">:</span>
+              <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+          <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+              <span class="k">pass</span>
+
+          <span class="c1"># If there are as many structural files as the number of molecules</span>
+          <span class="c1"># for that specific class:</span>
+          <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+              <span class="k">pass</span>
+          <span class="k">else</span><span class="p">:</span>
+              <span class="n">create_structure_files</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                                    <span class="n">structure_column_name</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span>
+                                    <span class="n">folder_name</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+
+          <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+          <span class="n">metadata</span> <span class="o">=</span> <span class="p">[]</span>
+          <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">SMILES</span><span class="p">:</span>
+              <span class="n">temp_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">SMILES</span> <span class="o">==</span> <span class="n">s</span><span class="p">]</span>
+              <span class="n">name</span> <span class="o">=</span> <span class="n">temp_df</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+              <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+              <span class="k">try</span><span class="p">:</span>
+                  <span class="n">metainfo</span> <span class="o">=</span> <span class="n">temp_df</span><span class="o">.</span><span class="n">METADATA</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                  <span class="n">metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metainfo</span><span class="p">)</span>
+              <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                  <span class="k">pass</span>
+          <span class="n">df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+          <span class="n">df_prepared</span> <span class="o">=</span> <span class="n">prepare_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+          <span class="n">df_prepared</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df_prepared</span><span class="p">))</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">molfiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df_prepared</span><span class="o">.</span><span class="n">MOLFILE</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+          <span class="k">try</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+              <span class="n">df_prepared</span><span class="p">[</span><span class="s1">&#39;METADATA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">metadata</span>
+          <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+              <span class="k">pass</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="s1">&#39;MOLFILE&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">molfiles</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="s1">&#39;NAME_SHORT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span> <span class="k">for</span>
+                                    <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="s1">&#39;CLASS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="o">.</span><span class="n">CLASS</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+      <span class="c1"># Update the index of df_compressed</span>
+      <span class="n">new_index</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">MOLFILE</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+          <span class="n">start</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+          <span class="n">end</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+          <span class="n">substring</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+          <span class="k">try</span><span class="p">:</span>
+              <span class="n">new_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">substring</span><span class="p">))</span>
+          <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+              <span class="c1"># Handle non-numeric substrings</span>
+              <span class="n">new_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">substring</span><span class="p">)</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">new_index</span>
+
+      <span class="k">try</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="s1">&#39;METADATA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+          <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ChemicalSpace.update_bokeh_options">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.update_bokeh_options">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_bokeh_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Update the Bokeh plot options.</span>
+
+<span class="sd">This method allows customisation of various Bokeh plot parameters</span>
+<span class="sd">for visualisations. Users can pass keyword arguments to set options</span>
+<span class="sd">such as title properties, legend properties, and axis properties.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">title_location : str, optional</span>
+<span class="sd">    Location of the title. Options: &#39;above&#39;, &#39;below&#39;, &#39;left&#39;, &#39;right&#39;.</span>
+<span class="sd">title_fontsize : str, optional</span>
+<span class="sd">    Font size of the title (e.g., &#39;25px&#39;).</span>
+<span class="sd">title_align : str, optional</span>
+<span class="sd">    Alignment of the title. Options: &#39;left&#39;, &#39;center&#39;, &#39;right&#39;.</span>
+<span class="sd">title_background_fill_colour : str, optional</span>
+<span class="sd">    Background colour of the title.</span>
+<span class="sd">title_text_colour : str, optional</span>
+<span class="sd">    Text colour of the title.</span>
+<span class="sd">legend_location : str, optional</span>
+<span class="sd">    Location of the legend. Options: &#39;top_left&#39;, &#39;top_center&#39;,</span>
+<span class="sd">    &#39;top_right&#39;, &#39;center_right&#39;, &#39;bottom_right&#39;, &#39;bottom_center&#39;,</span>
+<span class="sd">    &#39;bottom_left&#39;, &#39;center_left&#39;, &#39;center&#39;.</span>
+<span class="sd">legend_title : str, optional</span>
+<span class="sd">    Title of the legend.</span>
+<span class="sd">legend_label_text_font : str, optional</span>
+<span class="sd">    Font of the legend labels (e.g., &#39;times&#39;).</span>
+<span class="sd">legend_label_text_font_style : str, optional</span>
+<span class="sd">    Font style of the legend labels (e.g., &#39;italic&#39;).</span>
+<span class="sd">legend_label_text_colour : str, optional</span>
+<span class="sd">    Text colour of the legend labels.</span>
+<span class="sd">legend_border_line_width : int, optional</span>
+<span class="sd">    Line width of the legend border.</span>
+<span class="sd">legend_border_line_colour : str, optional</span>
+<span class="sd">    Line colour of the legend border.</span>
+<span class="sd">legend_border_line_alpha : float, optional</span>
+<span class="sd">    Transparency of the legend border (0 to 1).</span>
+<span class="sd">legend_background_fill_colour : str, optional</span>
+<span class="sd">    Background colour of the legend.</span>
+<span class="sd">legend_background_fill_alpha : float, optional</span>
+<span class="sd">    Transparency of the legend background (0 to 1).</span>
+<span class="sd">xaxis_label : str, optional</span>
+<span class="sd">    Label of the x-axis.</span>
+<span class="sd">xaxis_line_width : int, optional</span>
+<span class="sd">    Line width of the x-axis.</span>
+<span class="sd">xaxis_line_colour : str, optional</span>
+<span class="sd">    Line colour of the x-axis.</span>
+<span class="sd">xaxis_major_label_text_colour : str, optional</span>
+<span class="sd">    Text colour of the x-axis major labels.</span>
+<span class="sd">xaxis_major_label_orientation : str, optional</span>
+<span class="sd">    Orientation of the x-axis major labels. Options: &#39;horizontal&#39;, &#39;vertical&#39;.</span>
+<span class="sd">yaxis_label : str, optional</span>
+<span class="sd">    Label of the y-axis.</span>
+<span class="sd">yaxis_line_width : int, optional</span>
+<span class="sd">    Line width of the y-axis.</span>
+<span class="sd">yaxis_line_colour : str, optional</span>
+<span class="sd">    Line colour of the y-axis.</span>
+<span class="sd">yaxis_major_label_text_colour : str, optional</span>
+<span class="sd">    Text colour of the y-axis major labels.</span>
+<span class="sd">yaxis_major_label_orientation : str, optional</span>
+<span class="sd">    Orientation of the y-axis major labels. Options: &#39;horizontal&#39;, &#39;vertical&#39;.</span>
+<span class="sd">axis_minor_tick_in : int, optional</span>
+<span class="sd">    Length of the minor ticks inward.</span>
+<span class="sd">axis_minor_tick_out : int, optional</span>
+<span class="sd">    Length of the minor ticks outward.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; plot.update_bokeh_options(</span>
+<span class="sd">...     title_location=&#39;above&#39;,</span>
+<span class="sd">...     title_fontsize=&#39;20px&#39;,</span>
+<span class="sd">...     legend_location=&#39;top_right&#39;,</span>
+<span class="sd">...     xaxis_label=&#39;PC1&#39;,</span>
+<span class="sd">...     yaxis_label=&#39;PC2&#39;</span>
+<span class="sd">... )</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ChemicalSpace.reset_bokeh_options">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.reset_bokeh_options">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_bokeh_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Reset Bokeh plot options to their default values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; chem_space.reset_bokeh_options()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.importables</span><span class="w"> </span><span class="kn">import</span> <span class="n">bokeh_dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bokeh_dictionary</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ChemicalSpace.reset_bokeh_tooltips">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.reset_bokeh_tooltips">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_bokeh_tooltips</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Reset Bokeh tooltips to their default values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; chem_space.reset_bokeh_tooltips()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.importables</span><span class="w"> </span><span class="kn">import</span> <span class="n">bokeh_tooltips</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span> <span class="o">=</span> <span class="n">bokeh_tooltips</span></div>
+
+
+<div class="viewcode-block" id="ChemicalSpace.plot">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">colour_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">shape_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+             <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+             <span class="n">title_fontsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+             <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">650</span><span class="p">,</span>
+             <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">650</span><span class="o">/</span><span class="mf">0.75</span><span class="p">),</span>
+             <span class="n">marker_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+             <span class="n">save_html</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a 2D scatter plot of the chemical space using Bokeh.</span>
+
+<span class="sd">This method visualises the compressed chemical space using a scatter plot,</span>
+<span class="sd">with options to customise colours, shapes, size, and layout. It supports</span>
+<span class="sd">categorical metadata and can optionally save the plot as an HTML file.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">colour_list : list, optional</span>
+<span class="sd">    List of colours for the plot markers. Each class will be assigned a</span>
+<span class="sd">    colour. If not provided, defaults to:</span>
+<span class="sd">    [&#39;Blue&#39;, &#39;Orange&#39;, &#39;Red&#39;, &#39;Black&#39;, &#39;Green&#39;, &#39;Cyan&#39;, &#39;Magenta&#39;, &#39;Yellow&#39;].</span>
+<span class="sd">shape_list : list, optional</span>
+<span class="sd">    List of marker shapes. If not provided, defaults to:</span>
+<span class="sd">    [&#39;circle&#39;, &#39;triangle&#39;, &#39;square&#39;, &#39;star&#39;, &#39;diamond&#39;, &#39;cross&#39;, &#39;x&#39;, &#39;asterisk&#39;].</span>
+<span class="sd">filename : str, optional</span>
+<span class="sd">    Name of the file to save the plot as (without extension).</span>
+<span class="sd">title : str, optional</span>
+<span class="sd">    Title of the plot.</span>
+<span class="sd">title_fontsize : int, optional</span>
+<span class="sd">    Font size of the plot title. Default is 25.</span>
+<span class="sd">height : int, optional</span>
+<span class="sd">    Height of the plot in pixels. Default is 650.</span>
+<span class="sd">width : int, optional</span>
+<span class="sd">    Width of the plot in pixels. Default is 866 (650 / 0.75).</span>
+<span class="sd">marker_size : int, optional</span>
+<span class="sd">    Size of the plot markers. Default is 10.</span>
+<span class="sd">save_html : bool, optional</span>
+<span class="sd">    Whether to save the plot as an HTML file. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">    Displays the plot in a Jupyter notebook and optionally saves it as HTML.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; chem_space.plot(</span>
+<span class="sd">...     colour_list=[&#39;blue&#39;, &#39;green&#39;],</span>
+<span class="sd">...     shape_list=[&#39;circle&#39;, &#39;square&#39;],</span>
+<span class="sd">...     filename=&#39;my_plot&#39;,</span>
+<span class="sd">...     title=&#39;Chemical Space&#39;,</span>
+<span class="sd">...     save_html=True</span>
+<span class="sd">... )</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">prepare_datatable</span><span class="p">,</span> <span class="n">compute_alpha</span><span class="p">,</span>
+                                   <span class="n">size_ratio</span><span class="p">,</span> <span class="n">bokeh_plot</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">bokeh.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bp</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">output_notebook</span><span class="p">,</span> <span class="n">reset_output</span>
+        <span class="n">output_notebook</span><span class="p">()</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">HoverTool</span>
+
+        <span class="c1"># TODO: implement other functions using  other modules:</span>
+        <span class="c1"># from bokeh.models import (ColorBar, LinearColorMapper, Div,</span>
+        <span class="c1"># RangeSlider, Spinner, TabPanel, Tabs, NumberEditor,</span>
+        <span class="c1"># NumberFormatter, SelectEditor, StringEditor, StringFormatter)</span>
+        <span class="c1"># from bokeh.palettes import Turbo256, Spectral6, RedBu</span>
+        <span class="c1"># from bokeh.transform import linear_cmap, transform</span>
+
+        <span class="n">reset_output</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker_size</span> <span class="o">=</span> <span class="n">marker_size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span> <span class="o">=</span> <span class="n">colour_list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Blue&#39;</span><span class="p">,</span> <span class="s1">&#39;Orange&#39;</span><span class="p">,</span> <span class="s1">&#39;Red&#39;</span><span class="p">,</span> <span class="s1">&#39;Black&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;Green&#39;</span><span class="p">,</span> <span class="s1">&#39;Cyan&#39;</span><span class="p">,</span> <span class="s1">&#39;Magenta&#39;</span><span class="p">,</span> <span class="s1">&#39;Yellow&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span> <span class="o">=</span> <span class="n">shape_list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;circle&#39;</span><span class="p">,</span> <span class="s1">&#39;triangle&#39;</span><span class="p">,</span> <span class="s1">&#39;square&#39;</span><span class="p">,</span> <span class="s1">&#39;star&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;diamond&#39;</span><span class="p">,</span> <span class="s1">&#39;cross&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;asterisk&#39;</span><span class="p">]</span>
+
+        <span class="n">plot</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                         <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
+                         <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
+                         <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_table_combined</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i2</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span><span class="p">):</span>
+                    <span class="n">data_table</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">METADATA</span> <span class="o">==</span> <span class="n">c2</span><span class="p">)</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">)])</span>
+                    <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;DIM_1&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span>
+                                 <span class="n">source</span><span class="o">=</span><span class="n">data_table</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                                 <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                 <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_size</span><span class="p">,</span>
+                                 <span class="n">marker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span><span class="p">[</span><span class="n">i2</span><span class="p">],</span>
+                                 <span class="n">line_color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span>
+                                 <span class="n">legend_label</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+                                 <span class="n">alpha</span><span class="o">=</span><span class="n">compute_alpha</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span>
+                                 <span class="n">size_ratio</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">)</span><span class="o">-</span><span class="n">size</span><span class="p">)</span>
+                                 <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                <span class="n">data_table</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_table</span>
+                <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;DIM_1&quot;</span><span class="p">,</span>
+                            <span class="n">y</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span>
+                            <span class="n">source</span><span class="o">=</span><span class="n">data_table</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                            <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                            <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">marker_size</span><span class="p">,</span>
+                            <span class="n">line_color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span>
+                            <span class="n">legend_label</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+                            <span class="n">alpha</span><span class="o">=</span><span class="n">compute_alpha</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span>
+                            <span class="n">size_ratio</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">)</span><span class="o">-</span><span class="n">size</span><span class="p">))</span>
+
+        <span class="c1"># Title</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">title_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_location&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_font_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">px&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">title_fontsize</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">align</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_align&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">background_fill_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;title_background_fill_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_text_colour&#39;</span><span class="p">]</span>
+        <span class="c1"># Legend</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_location&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_title&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_font</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_label_text_font&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_font_style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_label_text_font_style&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_label_text_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_border_line_width&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_border_line_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_border_line_alpha&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">background_fill_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_background_fill_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">background_fill_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;legend_background_fill_alpha&#39;</span><span class="p">]</span>
+        <span class="c1"># Axes</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;xaxis_label&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_line_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;xaxis_line_width&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_line_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;xaxis_line_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">major_label_orientation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;xaxis_major_label_orientation&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">major_label_text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;xaxis_major_label_text_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;yaxis_label&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">axis_line_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;yaxis_line_width&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">axis_line_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;yaxis_line_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">major_label_orientation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;yaxis_major_label_orientation&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">major_label_text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+            <span class="s1">&#39;yaxis_major_label_text_colour&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">minor_tick_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;axis_minor_tick_in&#39;</span><span class="p">]</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">minor_tick_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;axis_minor_tick_out&#39;</span><span class="p">]</span>
+
+        <span class="n">hover</span> <span class="o">=</span> <span class="n">HoverTool</span><span class="p">(</span><span class="n">tooltips</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span><span class="p">)</span>
+        <span class="n">plot</span><span class="o">.</span><span class="n">add_tools</span><span class="p">(</span><span class="n">hover</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">save_html</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>     <span class="c1"># save html</span>
+            <span class="n">bp</span><span class="o">.</span><span class="n">output_file</span><span class="p">(</span>
+                <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.html&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Static HTML file&quot;</span>
+                <span class="p">)</span>
+        <span class="n">bokeh_plot</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

@@ -407,6 +407,34 @@ class SequentialForwardSelection:
     [1] Dietterich (1998), doi:10.1162/089976698300017197
     [2] Nadeau & Bengio (2003), doi:10.1023/A:1024068626366
     [3] Bengio & Grandvalet (2004), JMLR 5:1089-1105
+
+    Examples
+    --------
+    Select a compact feature subset using logistic regression and accuracy:
+
+    >>> import pandas as pd
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.metrics import accuracy_score
+    >>> from sklearn.model_selection import train_test_split
+    >>> raw_X, y = make_classification(
+    ...     n_samples=60, n_features=6, n_informative=3,
+    ...     n_redundant=0, random_state=0
+    ... )
+    >>> X = pd.DataFrame(
+    ...     raw_X, columns=[f"feature_{i}" for i in range(raw_X.shape[1])]
+    ... )
+    >>> X_train, X_test, y_train, y_test = train_test_split(
+    ...     X, y, test_size=0.25, random_state=0, stratify=y
+    ... )
+    >>> selector = SequentialForwardSelection(
+    ...     estimator=LogisticRegression(max_iter=1000),
+    ...     estimator_string="logistic_regression",
+    ...     metric=accuracy_score,
+    ...     max_features=3,
+    ...     cv_iter=3,
+    ... )
+    >>> selector.fit(X_train, y_train, X_test, y_test)
     """
 
     def __init__(self,

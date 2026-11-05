@@ -1,0 +1,533 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.chem.calculator.tools &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.calculator.tools</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.chem.calculator.tools</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># STATISTICS &amp; MATH #</span>
+
+
+<div class="viewcode-block" id="shannon_entropy">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.shannon_entropy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">shannon_entropy</span><span class="p">(</span><span class="n">vector</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate Shannon entropy of a vector.</span>
+
+<span class="sd">This function computes the entropy based on the frequency of unique</span>
+<span class="sd">elements in the input array.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">vector : np.ndarray</span>
+<span class="sd">    Input array for which Shannon entropy is calculated.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">float</span>
+<span class="sd">    Shannon entropy of the input vector.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; shannon_entropy(np.array([1, 1, 2, 2, 3, 3]))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">entropy</span>
+
+    <span class="n">values</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="n">counts</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">entropy</span><span class="p">(</span><span class="n">probabilities</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="bernoulli">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.bernoulli">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">bernoulli</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">p</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate the Bernoulli probability of k successes in n trials.</span>
+
+<span class="sd">This uses the binomial distribution formula.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n : int</span>
+<span class="sd">    Number of trials.</span>
+<span class="sd">k : int</span>
+<span class="sd">    Number of successes.</span>
+<span class="sd">p : float</span>
+<span class="sd">    Probability of success on a single trial.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">float</span>
+<span class="sd">    Bernoulli probability of k successes in n trials.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; bernoulli(10, 3, 0.5)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">p</span>
+    <span class="n">combinations</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">comb</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="o">**</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">q</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">combinations</span> <span class="o">*</span> <span class="n">probabilities</span></div>
+
+
+
+<div class="viewcode-block" id="logit_to_proba">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.logit_to_proba">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">logit_to_proba</span><span class="p">(</span><span class="n">logit</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Convert a logit value to probability.</span>
+
+<span class="sd">This applies the logistic (sigmoid) function.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">logit : float</span>
+<span class="sd">    Logit value to be converted.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">float</span>
+<span class="sd">    Corresponding probability.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; logit_to_proba(0)</span>
+<span class="sd">0.5</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="c1"># Numerically stable sigmoid for extreme positive/negative logits.</span>
+    <span class="k">if</span> <span class="n">logit</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">logit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">logit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">z</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="pairwise_euclidean_distance">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.pairwise_euclidean_distance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pairwise_euclidean_distance</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate the pairwise Euclidean distances between rows of a matrix.</span>
+
+<span class="sd">Uses SciPy&#39;s `pdist` and `squareform` functions.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">matrix : np.ndarray</span>
+<span class="sd">    Input 2D array of shape (N, D) where N is the number of points.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">np.ndarray</span>
+<span class="sd">    2D array of pairwise Euclidean distances.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; pairwise_euclidean_distance(np.array([[0, 0], [1, 0], [0, 1]]))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.distance</span><span class="w"> </span><span class="kn">import</span> <span class="n">pdist</span><span class="p">,</span> <span class="n">squareform</span>
+
+    <span class="k">return</span> <span class="n">squareform</span><span class="p">(</span><span class="n">pdist</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="s1">&#39;euclidean&#39;</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># CHEMISTRY &amp; PHYSICS #</span>
+
+
+<div class="viewcode-block" id="calc_logD_HH">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.calc_logD_HH">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_logD_HH</span><span class="p">(</span><span class="n">pH</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">logP</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">pKa</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                 <span class="n">behaviour</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;acid&#39;</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate the distribution coefficient (logD) at a given pH using</span>
+<span class="sd">the Henderson-Hasselbalch equation.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">pH : float</span>
+<span class="sd">    The pH at which to calculate the distribution coefficient.</span>
+<span class="sd">logP : float</span>
+<span class="sd">    The logarithm of the partition coefficient.</span>
+<span class="sd">pKa : float</span>
+<span class="sd">    The acid dissociation constant.</span>
+<span class="sd">behaviour : {&#39;acid&#39;, &#39;base&#39;}</span>
+<span class="sd">    The behaviour of the molecule.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">tuple</span>
+<span class="sd">    A tuple containing:</span>
+<span class="sd">    - Ion-neutral ratio (float)</span>
+<span class="sd">    - Ionised percentage (float)</span>
+<span class="sd">    - logD (float)</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; calc_logD_HH(7.4, 3.0, 4.5, &#39;acid&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="c1"># TODO: move from acid/base dichotomy and use</span>
+    <span class="c1"># protonated/deprotonated forms instead</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">behaviour</span> <span class="o">==</span> <span class="s1">&#39;acid&#39;</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">ion_neutral_ratio</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="n">A</span> <span class="o">*</span> <span class="p">(</span><span class="n">pH</span> <span class="o">-</span> <span class="n">pKa</span><span class="p">))</span>
+    <span class="n">ionised_percentage</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">ion_neutral_ratio</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Cap the ion_neutral_ratio to 5000 to avoid extreme values</span>
+    <span class="c1">#ion_neutral_ratio = min(ion_neutral_ratio, 5000)</span>
+
+    <span class="n">logD</span> <span class="o">=</span> <span class="n">logP</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">ion_neutral_ratio</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ion_neutral_ratio</span><span class="p">,</span> <span class="n">ionised_percentage</span><span class="p">,</span> <span class="n">logD</span></div>
+
+
+
+<div class="viewcode-block" id="calc_centroid">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.calc_centroid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_centroid</span><span class="p">(</span><span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                  <span class="n">masses</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate the centroid of a set of points, optionally weighted by masses.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">coordinates : np.ndarray</span>
+<span class="sd">    A 2D array of shape (N, D) where N is the number of points.</span>
+<span class="sd">masses : Iterable, optional</span>
+<span class="sd">    An iterable of length N representing the masses of each point.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">np.ndarray</span>
+<span class="sd">    The coordinates of the centroid.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If masses are provided and their sum is zero.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; calc_centroid(np.array([[0, 0], [2, 0], [1, 2]]))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">masses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">centroid</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+        <span class="n">total_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">total_mass</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Total mass must be non-zero.&quot;</span><span class="p">)</span>
+        <span class="n">centroid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">masses</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">total_mass</span>
+    <span class="k">return</span> <span class="n">centroid</span></div>
+
+
+
+<div class="viewcode-block" id="calc_gyration_tensor">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.calc_gyration_tensor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_gyration_tensor</span><span class="p">(</span><span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                         <span class="n">masses</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate the gyration tensor of a set of coordinates.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">coordinates : np.ndarray</span>
+<span class="sd">    A 2D array of shape (N, 3) representing spatial coordinates.</span>
+<span class="sd">masses : Iterable, optional</span>
+<span class="sd">    An iterable of length N representing the masses of each point.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">np.ndarray</span>
+<span class="sd">    The 3x3 gyration tensor.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; calc_gyration_tensor(np.random.rand(5, 3))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">masses</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">normed_points</span> <span class="o">=</span> <span class="n">coordinates</span> <span class="o">-</span> <span class="n">center</span>
+        <span class="n">gyration_tensor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,ik-&gt;jk&#39;</span><span class="p">,</span> <span class="n">normed_points</span><span class="p">,</span> <span class="n">normed_points</span><span class="p">)</span>
+        <span class="n">gyration_tensor</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+        <span class="n">total_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
+        <span class="n">center_of_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">masses</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">total_mass</span>
+        <span class="n">shifted_coordinates</span> <span class="o">=</span> <span class="n">coordinates</span> <span class="o">-</span> <span class="n">center_of_mass</span>
+        <span class="n">gyration_tensor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,i,ik-&gt;jk&#39;</span><span class="p">,</span> <span class="n">shifted_coordinates</span><span class="p">,</span>
+                                    <span class="n">masses</span><span class="p">,</span> <span class="n">shifted_coordinates</span><span class="p">)</span>
+        <span class="n">gyration_tensor</span> <span class="o">/=</span> <span class="n">total_mass</span>
+
+    <span class="k">return</span> <span class="n">gyration_tensor</span></div>
+
+
+
+<div class="viewcode-block" id="calc_shape_descriptors_from_gyration_tensor">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.calc_shape_descriptors_from_gyration_tensor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calc_shape_descriptors_from_gyration_tensor</span><span class="p">(</span>
+        <span class="n">gyration_tensor</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate shape descriptors from a 3x3 gyration tensor.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">gyration_tensor : np.ndarray</span>
+<span class="sd">    A 3x3 gyration tensor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">dict</span>
+<span class="sd">    Dictionary containing the calculated shape descriptors.</span>
+
+<span class="sd">    ``moments_of_inertia`` : numpy.ndarray</span>
+<span class="sd">        Principal moments of inertia.</span>
+<span class="sd">    ``principal_axes`` : numpy.ndarray</span>
+<span class="sd">        Principal axes associated with the moments of inertia.</span>
+<span class="sd">    ``asphericity`` : float</span>
+<span class="sd">        Asphericity descriptor.</span>
+<span class="sd">    ``acylindricity`` : float</span>
+<span class="sd">        Acylindricity descriptor.</span>
+<span class="sd">    ``relative_shape_anisotropy`` : float</span>
+<span class="sd">        Relative shape anisotropy descriptor.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; tensor = calc_gyration_tensor(np.random.rand(5, 3))</span>
+<span class="sd">&gt;&gt;&gt; calc_shape_descriptors_from_gyration_tensor(tensor)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">gyration_tensor</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Gyration tensor must be a 3x3 matrix.&quot;</span><span class="p">)</span>
+
+    <span class="n">moments</span><span class="p">,</span> <span class="n">principal_axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">gyration_tensor</span><span class="p">)</span>
+    <span class="n">total_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">moments</span><span class="p">)</span>
+
+    <span class="n">asphericity</span> <span class="o">=</span> <span class="p">((</span><span class="n">moments</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">moments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">moments</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">/</span>
+                   <span class="n">total_moments</span><span class="p">)</span>
+    <span class="n">acylindricity</span> <span class="o">=</span> <span class="p">(</span><span class="n">moments</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">moments</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">total_moments</span>
+    <span class="n">relative_shape_anisotropy</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">moments</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span>
+                                        <span class="p">(</span><span class="n">total_moments</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;moments_of_inertia&#39;</span><span class="p">:</span> <span class="n">moments</span><span class="p">,</span>
+        <span class="s1">&#39;principal_axes&#39;</span><span class="p">:</span> <span class="n">principal_axes</span><span class="p">,</span>
+        <span class="s1">&#39;asphericity&#39;</span><span class="p">:</span> <span class="n">asphericity</span><span class="p">,</span>
+        <span class="s1">&#39;acylindricity&#39;</span><span class="p">:</span> <span class="n">acylindricity</span><span class="p">,</span>
+        <span class="s1">&#39;relative_shape_anisotropy&#39;</span><span class="p">:</span> <span class="n">relative_shape_anisotropy</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="boltzmann_probability">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.tools.boltzmann_probability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">boltzmann_probability</span><span class="p">(</span><span class="n">energy_levels</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+                          <span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">,</span>
+                          <span class="n">energy_unit</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+                              <span class="s1">&#39;eV&#39;</span><span class="p">,</span> <span class="s1">&#39;J&#39;</span><span class="p">,</span> <span class="s1">&#39;cal&#39;</span><span class="p">,</span> <span class="s1">&#39;kJ&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;kcal&#39;</span><span class="p">,</span> <span class="s1">&#39;kJ/mol&#39;</span><span class="p">,</span> <span class="s1">&#39;kcal/mol&#39;</span><span class="p">,</span>
+                              <span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;kcal/mol&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate the Boltzmann probability for a set of energy levels</span>
+<span class="sd">at a given temperature.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">energy_levels : Iterable[float]</span>
+<span class="sd">    A list or array of energy levels.</span>
+<span class="sd">temperature : float or int</span>
+<span class="sd">    Temperature in Kelvin.</span>
+<span class="sd">energy_unit : str, optional</span>
+<span class="sd">    Unit of energy levels. Default is &#39;kcal/mol&#39;.</span>
+<span class="sd">    Supported units: &#39;eV&#39;, &#39;J&#39;, &#39;cal&#39;, &#39;kJ&#39;, &#39;kcal&#39;, &#39;kJ/mol&#39;, &#39;kcal/mol&#39;.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">list[float]</span>
+<span class="sd">    Boltzmann probabilities for the given energy levels.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; boltzmann_probability([0, 1, 2], 298, &#39;kcal/mol&#39;)</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">Exponents are shifted by their maximum (log-sum-exp trick) before calling</span>
+<span class="sd">`math.exp`, so large absolute energy values cannot overflow/underflow the</span>
+<span class="sd">computation - only the relative energy gaps affect the result.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+    <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Temperature must be greater than zero.&quot;</span><span class="p">)</span>
+
+    <span class="n">energy_levels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">energy_levels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">energy_levels</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;energy_levels&#39; must contain at least one value.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Boltzmann constant in different units</span>
+    <span class="n">k_B_values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;eV&#39;</span><span class="p">:</span> <span class="mf">8.617333262145e-5</span><span class="p">,</span>     <span class="c1"># eV/K</span>
+        <span class="s1">&#39;J&#39;</span><span class="p">:</span> <span class="mf">1.380649e-23</span><span class="p">,</span>     <span class="c1"># J/K</span>
+        <span class="s1">&#39;cal&#39;</span><span class="p">:</span> <span class="mf">3.2976230e-24</span><span class="p">,</span>     <span class="c1"># cal/K</span>
+        <span class="s1">&#39;kJ&#39;</span><span class="p">:</span> <span class="mf">1.380649e-26</span><span class="p">,</span>     <span class="c1"># kJ/K</span>
+        <span class="s1">&#39;kcal&#39;</span><span class="p">:</span> <span class="mf">3.2976230e-27</span><span class="p">,</span>     <span class="c1"># kcal/K</span>
+        <span class="s1">&#39;kJ/mol&#39;</span><span class="p">:</span> <span class="mf">8.31446261815324e-3</span><span class="p">,</span>     <span class="c1"># kJ/(mol*K)</span>
+        <span class="s1">&#39;kcal/mol&#39;</span><span class="p">:</span> <span class="mf">1.98720425864083e-3</span>     <span class="c1"># kcal/(mol*K)</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Ensure the provided energy unit is supported</span>
+    <span class="k">if</span> <span class="n">energy_unit</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k_B_values</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported energy unit: </span><span class="si">{</span><span class="n">energy_unit</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Supported units are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">k_B_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">k_B</span> <span class="o">=</span> <span class="n">k_B_values</span><span class="p">[</span><span class="n">energy_unit</span><span class="p">]</span>
+
+    <span class="c1"># Shift exponents by their maximum before exponentiating (log-sum-exp</span>
+    <span class="c1"># trick) so neither very large nor very negative energies can overflow</span>
+    <span class="c1"># or underflow math.exp().</span>
+    <span class="n">exponents</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">E</span> <span class="o">/</span> <span class="p">(</span><span class="n">k_B</span> <span class="o">*</span> <span class="n">temperature</span><span class="p">)</span> <span class="k">for</span> <span class="n">E</span> <span class="ow">in</span> <span class="n">energy_levels</span><span class="p">]</span>
+    <span class="n">max_exponent</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">exponents</span><span class="p">)</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">e</span> <span class="o">-</span> <span class="n">max_exponent</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exponents</span><span class="p">]</span>
+    <span class="n">partition_function</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">partition_function</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Partition function is zero, check the energy levels and temperature.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">w</span> <span class="o">/</span> <span class="n">partition_function</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">]</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.calculator.tools</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

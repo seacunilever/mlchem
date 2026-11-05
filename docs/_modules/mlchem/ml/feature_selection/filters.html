@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.ml.feature_selection.filters &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.filters</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.ml.feature_selection.filters</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">shannon_entropy</span>
+
+
+<div class="viewcode-block" id="collinearity_filter">
+<a class="viewcode-back" href="../../../../mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.filters.collinearity_filter">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">collinearity_filter</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">target_variable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;pearson&#39;</span><span class="p">,</span> <span class="s1">&#39;kendall&#39;</span><span class="p">,</span> <span class="s1">&#39;spearman&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pearson&#39;</span><span class="p">,</span>
+    <span class="n">numeric_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Filter features based on collinearity threshold.</span>
+
+<span class="sd">Returns a subset of DataFrame columns whose squared correlation (R²)</span>
+<span class="sd">values are below the specified threshold. If a target variable is</span>
+<span class="sd">provided, the function retains the feature with the higher correlation</span>
+<span class="sd">to the target when multiple features are collinear.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    The input dataset.</span>
+<span class="sd">threshold : float</span>
+<span class="sd">    The maximum allowed squared correlation between features.</span>
+<span class="sd">target_variable : str, optional</span>
+<span class="sd">    The name of the target variable. If provided, it is used to resolve</span>
+<span class="sd">    collinearity conflicts.</span>
+<span class="sd">method : {&#39;pearson&#39;, &#39;kendall&#39;, &#39;spearman&#39;}, optional</span>
+<span class="sd">    The correlation method to use. Default is &#39;pearson&#39;.</span>
+<span class="sd">numeric_only : bool, optional</span>
+<span class="sd">    Whether to include only numeric columns. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pandas.DataFrame</span>
+<span class="sd">    A DataFrame containing the filtered columns.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="c1"># Calculate the squared correlation matrix</span>
+    <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span><span class="n">numeric_only</span><span class="o">=</span><span class="n">numeric_only</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">columns_to_keep</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">corr_matrix</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="o">==</span> <span class="n">target_variable</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Find columns with correlation above the threshold</span>
+        <span class="n">high_corr_columns</span> <span class="o">=</span> <span class="n">corr_matrix</span><span class="o">.</span><span class="n">index</span><span class="p">[</span>
+            <span class="n">corr_matrix</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">target_variable</span><span class="p">:</span>
+            <span class="c1"># Retain the feature with the highest correlation to the</span>
+            <span class="c1"># target variable</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">col</span> <span class="ow">in</span> <span class="n">columns_to_keep</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">high_corr_columns</span><span class="p">):</span>
+                <span class="n">correlations_with_target</span> <span class="o">=</span> <span class="n">corr_matrix</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+                    <span class="n">high_corr_columns</span><span class="p">,</span> <span class="n">target_variable</span>
+                    <span class="p">]</span>
+                <span class="n">feature_to_keep</span> <span class="o">=</span> <span class="n">correlations_with_target</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+                <span class="n">columns_to_keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span>
+                                   <span class="ow">in</span> <span class="n">columns_to_keep</span>
+                                   <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">high_corr_columns</span>
+                                   <span class="ow">or</span> <span class="n">col</span> <span class="o">==</span> <span class="n">feature_to_keep</span>
+                                   <span class="p">]</span>
+                <span class="k">if</span> <span class="n">feature_to_keep</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">columns_to_keep</span><span class="p">:</span>
+                    <span class="n">columns_to_keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature_to_keep</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">columns_to_keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Retain columns with correlation below the threshold</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">columns_to_keep</span>
+                <span class="k">for</span> <span class="n">col</span>
+                <span class="ow">in</span> <span class="n">high_corr_columns</span>
+                 <span class="p">):</span>
+                <span class="n">columns_to_keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+
+    <span class="c1"># Ensure the target variable is included in the final DataFrame;</span>
+    <span class="c1"># Remove 100% correlation edge case</span>
+    <span class="k">if</span> <span class="n">target_variable</span><span class="p">:</span>
+        <span class="n">columns_to_keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">columns_to_keep</span> 
+                           <span class="k">if</span> <span class="n">corr_matrix</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">col</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">target_variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">columns_to_keep</span><span class="p">:</span>
+            <span class="n">columns_to_keep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_variable</span><span class="p">)</span>
+        
+
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">columns_to_keep</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="diversity_filter">
+<a class="viewcode-back" href="../../../../mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.filters.diversity_filter">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">diversity_filter</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">target_variable</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Filter features based on diversity ratio using Shannon entropy.</span>
+
+<span class="sd">Calculates the diversity ratio of each feature by comparing its</span>
+<span class="sd">Shannon entropy to that of an ideal uniform distribution. Retains</span>
+<span class="sd">features with diversity ratios above the specified threshold.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df : pandas.DataFrame</span>
+<span class="sd">    The input dataset.</span>
+<span class="sd">threshold : float</span>
+<span class="sd">    The minimum diversity ratio required to retain a feature.</span>
+<span class="sd">target_variable : str, optional</span>
+<span class="sd">    The name of the target variable to retain regardless of its</span>
+<span class="sd">    diversity score.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pandas.DataFrame</span>
+<span class="sd">    A DataFrame containing the filtered columns with diversity</span>
+<span class="sd">    higher than the threshold.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="n">diversities</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="o">!=</span> <span class="n">target_variable</span><span class="p">:</span>
+            <span class="n">actual_entropy</span> <span class="o">=</span> <span class="n">shannon_entropy</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+            <span class="n">ideal_entropy</span> <span class="o">=</span> <span class="n">shannon_entropy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">column</span><span class="p">]))</span>
+            <span class="n">diversity</span> <span class="o">=</span> <span class="n">actual_entropy</span> <span class="o">/</span> \
+                <span class="n">ideal_entropy</span> <span class="k">if</span> <span class="n">ideal_entropy</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">diversities</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">diversity</span>
+
+    <span class="c1"># Filter features based on diversity threshold</span>
+    <span class="n">selected_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span> <span class="k">for</span> <span class="n">column</span><span class="p">,</span>
+                         <span class="n">diversity</span> <span class="ow">in</span> <span class="n">diversities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> 
+                         <span class="n">diversity</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">]</span>
+
+    <span class="c1"># Ensure the target variable is included in the final DataFrame</span>
+    <span class="k">if</span> <span class="n">target_variable</span> <span class="ow">and</span> <span class="n">target_variable</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selected_features</span><span class="p">:</span>
+        <span class="n">selected_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target_variable</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">selected_features</span><span class="p">]</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.filters</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

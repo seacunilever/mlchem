@@ -9,5 +9,6 @@ Contents
 .. toctree::
 
    welcome
+   architecture
    modules
    

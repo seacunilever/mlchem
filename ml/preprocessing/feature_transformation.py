@@ -52,6 +52,14 @@ Returns
 -------
 pandas.DataFrame
     DataFrame containing the expanded polynomial features.
+
+Examples
+--------
+>>> import pandas as pd
+>>> features = pd.DataFrame({"size": [1.0, 2.0], "charge": [0.0, 1.0]})
+>>> expanded = polynomial_expansion(features, degree=2)
+>>> expanded.shape
+(2, 5)
 """
 
 

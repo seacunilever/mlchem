@@ -1,0 +1,751 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.ml.preprocessing.dimensional_reduction &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.preprocessing.dimensional_reduction</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.ml.preprocessing.dimensional_reduction</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integral</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+
+<div class="viewcode-block" id="Compressor">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Compressor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A class for compressing dataframes using various dimensionality reduction techniques.</span>
+
+<span class="sd">This class provides a unified interface to apply multiple dimensionality</span>
+<span class="sd">reduction algorithms such as PCA, t-SNE, UMAP, Spectral Embedding, MDS,</span>
+<span class="sd">LLE, and Isomap. It supports optional exclusion of initial columns from</span>
+<span class="sd">compression and allows passing custom parameters to each algorithm.</span>
+
+<span class="sd">Attributes</span>
+<span class="sd">----------</span>
+<span class="sd">dataframe : pandas.DataFrame</span>
+<span class="sd">    The input dataframe to be compressed.</span>
+
+<span class="sd">initial_columns_to_ignore : int, optional (default=0)</span>
+<span class="sd">    Number of initial columns to exclude from compression.</span>
+
+<span class="sd">algorithm : object</span>
+<span class="sd">    The dimensionality reduction algorithm instance used for compression.</span>
+
+<span class="sd">params_ : dict or None</span>
+<span class="sd">    Parameters of the compression algorithm after initialization.</span>
+
+<span class="sd">X_compressed : numpy.ndarray</span>
+<span class="sd">    The compressed feature matrix.</span>
+
+<span class="sd">dataframe_compressed : pandas.DataFrame</span>
+<span class="sd">    The dataframe after applying dimensionality reduction.</span>
+
+<span class="sd">Methods</span>
+<span class="sd">-------</span>
+<span class="sd">compress_PCA(...)</span>
+<span class="sd">    Compress the dataframe using Principal Component Analysis.</span>
+
+<span class="sd">compress_TSNE(...)</span>
+<span class="sd">    Compress the dataframe using t-Distributed Stochastic Neighbor Embedding.</span>
+
+<span class="sd">compress_SE(...)</span>
+<span class="sd">    Compress the dataframe using Spectral Embedding.</span>
+
+<span class="sd">compress_UMAP(...)</span>
+<span class="sd">    Compress the dataframe using Uniform Manifold Approximation and Projection.</span>
+
+<span class="sd">compress_MDS(...)</span>
+<span class="sd">    Compress the dataframe using Multidimensional Scaling.</span>
+
+<span class="sd">compress_LLE(...)</span>
+<span class="sd">    Compress the dataframe using Locally Linear Embedding.</span>
+
+<span class="sd">compress_ISOMAP(...)</span>
+<span class="sd">    Compress the dataframe using Isomap.</span>
+
+<span class="sd">Example</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.calculator.descriptors import get_rdkitDesc</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.preprocessing import scaling</span>
+<span class="sd">&gt;&gt;&gt; df = get_rdkitDesc([&#39;CCCC&#39;, &#39;CCN&#39;, &#39;c1ccccc1&#39;, &#39;CF&#39;, &#39;CCO&#39;, &#39;CCCNC(OCCC)CCO&#39;])</span>
+<span class="sd">&gt;&gt;&gt; df = scaling.scale_df_standard(df, columns_to_preserve=[])[0]</span>
+<span class="sd">&gt;&gt;&gt; c = Compressor(df)</span>
+<span class="sd">&gt;&gt;&gt; c.compress_PCA(n_components_or_variance=0.6)</span>
+<span class="sd">&gt;&gt;&gt; df_pca = c.dataframe_compressed</span>
+<span class="sd">&gt;&gt;&gt; c.compress_TSNE(dataframe=df_pca, random_state=1)</span>
+<span class="sd">&gt;&gt;&gt; compressed_df = c.dataframe_compressed</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Compressor.__init__">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                 <span class="n">initial_columns_to_ignore</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Initialize the Compressor with a dataframe and optional column exclusion.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">dataframe : pandas.DataFrame</span>
+<span class="sd">    The input dataframe to be compressed.</span>
+
+<span class="sd">initial_columns_to_ignore : int, optional (default=0)</span>
+<span class="sd">    Number of initial columns to exclude from compression.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span> <span class="o">=</span> <span class="n">initial_columns_to_ignore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_neighbour_count</span><span class="p">(</span>
+        <span class="n">neighbours_number_or_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sample_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">require_less_than_sample_count</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">neighbours_number_or_fraction</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">neighbours_number_or_fraction</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;&#39;neighbours_number_or_fraction&#39; must be between 0 and 1 &quot;</span>
+                    <span class="s2">&quot;if float.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">neighbours_number_or_fraction</span> <span class="o">*</span> <span class="n">sample_count</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">neighbours_number_or_fraction</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;neighbours_number_or_fraction&#39; must be an int or float.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">require_less_than_sample_count</span> <span class="ow">and</span> <span class="n">neighbours_number_or_fraction</span> <span class="o">&gt;=</span> <span class="n">sample_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;neighbours_number_or_fraction&#39; must be less than the &quot;</span>
+                <span class="s2">&quot;number of samples if int.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">neighbours_number_or_fraction</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Compressor.compress_PCA">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_PCA">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_PCA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">n_components_or_variance</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+                     <span class="n">svd_solver</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;full&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;arpack&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;randomized&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;full&#39;</span><span class="p">,</span>
+                     <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                     <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                     <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using Principal Component Analysis (PCA).</span>
+
+<span class="sd">This method reduces the dimensionality of the dataframe using PCA,</span>
+<span class="sd">either by specifying the number of components or the amount of variance</span>
+<span class="sd">to retain.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components_or_variance : int or float, optional (default=0.8)</span>
+<span class="sd">    Number of components to keep or the amount of variance to retain.</span>
+
+<span class="sd">svd_solver : {&#39;auto&#39;, &#39;full&#39;, &#39;arpack&#39;, &#39;randomized&#39;}, optional (default=&#39;full&#39;)</span>
+<span class="sd">    SVD solver to use for the decomposition.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">random_state : int, optional (default=1)</span>
+<span class="sd">    Random seed for reproducibility.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the PCA constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCA</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span> <span class="k">if</span> <span class="n">dict_params</span> <span class="k">else</span> <span class="n">PCA</span><span class="p">(</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="n">n_components_or_variance</span><span class="p">,</span>
+            <span class="n">svd_solver</span><span class="o">=</span><span class="n">svd_solver</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span>
+                          <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span>
+                                                               <span class="n">X_compressed</span><span class="o">.</span>
+                                                               <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Compressor.compress_TSNE">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_TSNE">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_TSNE</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                      <span class="n">neighbours_number_or_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
+                      <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                      <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                      <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using t-Distributed Stochastic Neighbor Embedding (t-SNE).</span>
+
+<span class="sd">This method applies t-SNE to reduce the dimensionality of the dataframe</span>
+<span class="sd">based on neighborhood probabilities.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components : int, optional (default=2)</span>
+<span class="sd">    Number of dimensions to reduce to.</span>
+
+<span class="sd">neighbours_number_or_fraction : float or int, optional (default=0.9)</span>
+<span class="sd">    Number or fraction of neighbors to consider for perplexity.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">random_state : int, optional (default=1)</span>
+<span class="sd">    Random seed for reproducibility.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the t-SNE constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">TSNE</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_neighbour_count</span><span class="p">(</span>
+                <span class="n">neighbours_number_or_fraction</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+                <span class="n">require_less_than_sample_count</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">TSNE</span><span class="p">(</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">perplexity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span><span class="p">,</span>
+                <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">TSNE</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Compressor.compress_SE">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_SE">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_SE</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">neighbours_number_or_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using Spectral Embedding.</span>
+
+<span class="sd">This method applies Spectral Embedding to reduce the dimensionality</span>
+<span class="sd">based on graph Laplacian eigenmaps.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components : int, optional</span>
+<span class="sd">    Number of dimensions to reduce to. Required when ``dict_params`` is not</span>
+<span class="sd">    provided.</span>
+
+<span class="sd">neighbours_number_or_fraction : float or int, optional</span>
+<span class="sd">    Number or fraction of neighbors to consider for graph construction.</span>
+<span class="sd">    Required when ``dict_params`` is not provided.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">random_state : int, optional (default=1)</span>
+<span class="sd">    Random seed for reproducibility.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the SpectralEmbedding constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">neighbours_number_or_fraction</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;n_components&#39; and &#39;neighbours_number_or_fraction&#39; are &quot;</span>
+                <span class="s2">&quot;required when dict_params is not provided.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpectralEmbedding</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_neighbour_count</span><span class="p">(</span>
+                <span class="n">neighbours_number_or_fraction</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">SpectralEmbedding</span><span class="p">(</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">SpectralEmbedding</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Compressor.compress_UMAP">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_UMAP">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_UMAP</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">neighbours_number_or_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using Uniform Manifold Approximation and Projection (UMAP).</span>
+
+<span class="sd">This method applies UMAP to reduce the dimensionality of the dataframe</span>
+<span class="sd">while preserving local and global structure.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components : int, optional</span>
+<span class="sd">    Number of dimensions to reduce to. Required when ``dict_params`` is not</span>
+<span class="sd">    provided.</span>
+
+<span class="sd">neighbours_number_or_fraction : float or int, optional</span>
+<span class="sd">    Number or fraction of neighbors to consider for local connectivity.</span>
+<span class="sd">    Required when ``dict_params`` is not provided.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">random_state : int, optional (default=1)</span>
+<span class="sd">    Random seed for reproducibility.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the UMAP constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">neighbours_number_or_fraction</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;n_components&#39; and &#39;neighbours_number_or_fraction&#39; are &quot;</span>
+                <span class="s2">&quot;required when dict_params is not provided.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span>
+                <span class="s1">&#39;ignore&#39;</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Tensorflow not installed; ParametricUMAP will be unavailable&#39;</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="ne">ImportWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">umap</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_neighbour_count</span><span class="p">(</span>
+                <span class="n">neighbours_number_or_fraction</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">UMAP</span><span class="p">(</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">UMAP</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Compressor.compress_MDS">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_MDS">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_MDS</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using Multidimensional Scaling (MDS).</span>
+
+<span class="sd">This method applies MDS to reduce the dimensionality of the dataframe</span>
+<span class="sd">based on pairwise distances.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components : int, optional</span>
+<span class="sd">    Number of dimensions to reduce to. Required when ``dict_params`` is not</span>
+<span class="sd">    provided.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">random_state : int, optional (default=1)</span>
+<span class="sd">    Random seed for reproducibility.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the MDS constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;n_components&#39; is required when dict_params is not provided.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">MDS</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">MDS</span><span class="p">(</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">init</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">MDS</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Compressor.compress_LLE">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_LLE">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_LLE</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">neighbours_number_or_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using Locally Linear Embedding (LLE).</span>
+
+<span class="sd">This method applies LLE to reduce the dimensionality of the dataframe</span>
+<span class="sd">by preserving local neighborhood relationships.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components : int, optional</span>
+<span class="sd">    Number of dimensions to reduce to. Required when ``dict_params`` is not</span>
+<span class="sd">    provided.</span>
+
+<span class="sd">neighbours_number_or_fraction : float or int, optional</span>
+<span class="sd">    Number or fraction of neighbors to consider for local reconstruction.</span>
+<span class="sd">    Required when ``dict_params`` is not provided.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">random_state : int, optional (default=1)</span>
+<span class="sd">    Random seed for reproducibility.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the LLE constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">neighbours_number_or_fraction</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;n_components&#39; and &#39;neighbours_number_or_fraction&#39; are &quot;</span>
+                <span class="s2">&quot;required when dict_params is not provided.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocallyLinearEmbedding</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_neighbour_count</span><span class="p">(</span>
+                <span class="n">neighbours_number_or_fraction</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">LocallyLinearEmbedding</span><span class="p">(</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">LocallyLinearEmbedding</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Compressor.compress_ISOMAP">
+<a class="viewcode-back" href="../../../../mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.dimensional_reduction.Compressor.compress_ISOMAP">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress_ISOMAP</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">neighbours_number_or_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dataframe</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dict_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Compress the dataframe using Isomap.</span>
+
+<span class="sd">This method applies Isomap to reduce the dimensionality of the dataframe</span>
+<span class="sd">by preserving geodesic distances between all points.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">n_components : int, optional</span>
+<span class="sd">    Number of dimensions to reduce to. Required when ``dict_params`` is not</span>
+<span class="sd">    provided.</span>
+
+<span class="sd">neighbours_number_or_fraction : float or int, optional</span>
+<span class="sd">    Number or fraction of neighbors to consider for neighborhood </span>
+<span class="sd">    graph construction. Required when ``dict_params`` is not provided.</span>
+
+<span class="sd">dataframe : pandas.DataFrame or None, optional</span>
+<span class="sd">    DataFrame to compress. If None, uses the instance&#39;s dataframe.</span>
+
+<span class="sd">dict_params : dict or None, optional</span>
+<span class="sd">    Dictionary of parameters to pass directly to the Isomap constructor.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">n_components</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">neighbours_number_or_fraction</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;n_components&#39; and &#39;neighbours_number_or_fraction&#39; are &quot;</span>
+                <span class="s2">&quot;required when dict_params is not provided.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">Isomap</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">dataframe</span> <span class="k">if</span> <span class="n">dataframe</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span>
+
+        <span class="k">if</span> <span class="n">dict_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_neighbour_count</span><span class="p">(</span>
+                <span class="n">neighbours_number_or_fraction</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">Isomap</span><span class="p">(</span>
+                <span class="n">n_components</span><span class="o">=</span><span class="n">n_components</span><span class="p">,</span>
+                <span class="n">n_neighbors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_neighbours</span><span class="p">,</span>
+                <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="n">Isomap</span><span class="p">(</span><span class="o">**</span><span class="n">dict_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe_compressed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">],</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_columns_to_ignore</span><span class="p">]),</span>
+             <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                          <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;DIM_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">X_compressed</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.preprocessing.dimensional_reduction</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

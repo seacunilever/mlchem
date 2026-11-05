@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contents &#8212; mlchem 1.2.3 documentation</title>
+    <title>Contents &#8212; mlchem 1.2.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=590429e0"></script>
+    <script src="_static/documentation_options.js?v=928db92d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="welcome.html" title="mlchem"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Contents</a></li> 
       </ul>
     </div>  
@@ -53,6 +53,25 @@
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#documentation">Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#architecture">Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#quickstart">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-rdkit-descriptors">Calculate RDKit descriptors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-fingerprints">Calculate fingerprints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-chemotypes-at-scale">Calculate chemotypes at scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#control-ml-verbosity">Control ML Verbosity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#balance-an-imbalanced-training-set">Balance an imbalanced training set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#stress-test-models-with-y-scrambling">Stress-Test Models with Y-Scrambling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#cross-validation-majority-voting">Cross-Validation Majority Voting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#capture-pipeline-logs">Capture pipeline logs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#visual-examples">Visual examples</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="welcome.html#pattern-recognition">Pattern recognition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="welcome.html#de-novo-molecule-generation-and-cleaning">De novo molecule generation and cleaning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="welcome.html#predefined-colour-palette">Predefined colour palette</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#modules">Modules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#chem-visualise">chem.visualise/</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#chem-calculator">chem.calculator/</a></li>
@@ -62,41 +81,28 @@
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#ml-preprocessing">ml.preprocessing/</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="welcome.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="welcome.html#logging">Logging</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#controlling-log-level">Controlling Log Level</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#post-pipeline-inspection-and-file-logging">Post-Pipeline Inspection and File Logging</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="welcome.html#compatibility-checks-python-3-12-3-13-3-14">Compatibility checks (Python 3.12, 3.13, 3.14)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#local-matrix-default-envs-under-envs">Local matrix (default envs under ~/Envs)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#tox-entrypoint">tox entrypoint</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="welcome.html#maintainer-release-refresh-flow-local">Maintainer release refresh flow (local)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="welcome.html#usage">Usage</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-fingerprints">calculate fingerprints</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-chemotypes-faster-on-larger-datasets">calculate chemotypes faster on larger datasets</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#control-ml-verbosity-in-notebooks-and-development-runs">control ML verbosity in notebooks and development runs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#optional-diagnostics-for-undersampling">optional diagnostics for undersampling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#stress-test-your-models-with-y-scrambling">Stress-test your models with y-scrambling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#cross-validation-centric-majority-voting">cross-validation-centric majority voting</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#pattern-recognition">pattern recognition</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="welcome.html#building-the-documentation">Building the documentation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#what-is-tracked-what-is-not">What is tracked, what is not</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#prerequisites">Prerequisites</a></li>
-<li class="toctree-l3"><a class="reference internal" href="welcome.html#build-publish">Build &amp; publish</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#development-setup">Development setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#contributing">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#testing-and-maintainer-guide">Testing and Maintainer Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#local-matrix-testing">Local matrix testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#warning-and-coverage-checks">Warning and coverage checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#release-refresh">Release refresh</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#building-the-documentation">Building the Documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#tracked-and-generated-files">Tracked and Generated Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#build-and-publish">Build and Publish</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#third-party-dependencies">Third-Party Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#license">License</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#acknowledgements">Acknowledgements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#package-responsibilities">Package responsibilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#shared-utilities">Shared utilities</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html"><strong>mlchem package</strong></a><ul>
@@ -735,6 +741,7 @@
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.start_logging"><code class="docutils literal notranslate"><span class="pre">start_logging()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.suppress_warnings"><code class="docutils literal notranslate"><span class="pre">suppress_warnings()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.try_except"><code class="docutils literal notranslate"><span class="pre">try_except()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.validate_dataframe_columns"><code class="docutils literal notranslate"><span class="pre">validate_dataframe_columns()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.validate_task_type"><code class="docutils literal notranslate"><span class="pre">validate_task_type()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.visualise_colour"><code class="docutils literal notranslate"><span class="pre">visualise_colour()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="mlchem.html#mlchem.helper.visualise_colour_grid"><code class="docutils literal notranslate"><span class="pre">visualise_colour_grid()</span></code></a></li>
@@ -820,7 +827,7 @@
         <li class="right" >
           <a href="welcome.html" title="mlchem"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Contents</a></li> 
       </ul>
     </div>

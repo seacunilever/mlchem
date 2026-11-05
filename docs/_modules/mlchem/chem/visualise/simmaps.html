@@ -1,0 +1,568 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.chem.visualise.simmaps &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.simmaps</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.chem.visualise.simmaps</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.figure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
+
+
+<div class="viewcode-block" id="SimMaps">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.simmaps.SimMaps">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SimMaps</span><span class="p">:</span>
+
+<div class="viewcode-block" id="SimMaps.get_weights_from_model">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.simmaps.SimMaps.get_weights_from_model">[docs]</a>
+	<span class="nd">@staticmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">get_weights_from_model</span><span class="p">(</span>
+		<span class="n">mol_input</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span>
+		<span class="n">estimator_cols</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+		<span class="n">model_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;regression&#39;</span><span class="p">,</span> <span class="s1">&#39;classification&#39;</span><span class="p">],</span>
+		<span class="n">actual_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+		<span class="n">fp_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;ap&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="s1">&#39;rk&#39;</span><span class="p">],</span>
+		<span class="n">normalise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+		<span class="n">return_df</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+		<span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Get atomic importance weights from a predictive model using masked fingerprints.</span>
+
+<span class="sd">This method calculates atomic contributions by iteratively masking each atom</span>
+<span class="sd">in the molecule and evaluating the change in model prediction.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input : rdkit.Chem.rdchem.Mol or str</span>
+<span class="sd">    The input molecule as an RDKit Mol object or a SMILES string.</span>
+<span class="sd">estimator : sklearn.base.BaseEstimator</span>
+<span class="sd">    A trained scikit-learn estimator.</span>
+<span class="sd">estimator_cols : Iterable</span>
+<span class="sd">    Feature names used by the estimator.</span>
+<span class="sd">model_type : {&#39;regression&#39;, &#39;classification&#39;}</span>
+<span class="sd">    Type of model. Must be either &#39;regression&#39; or &#39;classification&#39;.</span>
+<span class="sd">actual_val : float</span>
+<span class="sd">    The actual value predicted by the model. For classification, this is the</span>
+<span class="sd">    probability of class 1; for regression, the continuous target value.</span>
+<span class="sd">fp_type : {&#39;m&#39;, &#39;ap&#39;, &#39;tt&#39;, &#39;rk&#39;}</span>
+<span class="sd">    Type of fingerprint to use:</span>
+<span class="sd">    - &#39;m&#39;: Morgan</span>
+<span class="sd">    - &#39;ap&#39;: Atom Pair</span>
+<span class="sd">    - &#39;tt&#39;: Topological Torsion</span>
+<span class="sd">    - &#39;rk&#39;: RDKit</span>
+<span class="sd">normalise : bool, optional</span>
+<span class="sd">    If True, normalises the weights to the range (-1, 1). Default is False.</span>
+<span class="sd">return_df : bool, optional</span>
+<span class="sd">    If True, returns a pandas DataFrame. Otherwise, returns a NumPy array.</span>
+<span class="sd">**kwargs : dict</span>
+<span class="sd">    Additional fingerprint-specific parameters. See below.</span>
+
+<span class="sd">Fingerprint Parameters</span>
+<span class="sd">----------------------</span>
+<span class="sd">Morgan (&#39;m&#39;):</span>
+<span class="sd">- radius : int, default=2</span>
+<span class="sd">    Radius of the Morgan fingerprint.</span>
+<span class="sd">- fpType : {&#39;count&#39;, &#39;bv&#39;}, default=&#39;bv&#39;</span>
+<span class="sd">    Type of fingerprint: bit vector (&#39;bv&#39;) or count-based.</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">    Atom to mask. -1 means no masking.</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">    Size of the bit vector.</span>
+<span class="sd">- useFeatures : bool, default=False</span>
+<span class="sd">    If True, uses FeatureMorgan; otherwise, ConnectivityMorgan.</span>
+
+<span class="sd">Atom Pair (&#39;ap&#39;):</span>
+<span class="sd">- fpType : {&#39;normal&#39;, &#39;hashed&#39;, &#39;bv&#39;}, default=&#39;normal&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- minLength : int, default=1</span>
+<span class="sd">- maxLength : int, default=30</span>
+<span class="sd">- nBitsPerEntry : int, default=4</span>
+
+<span class="sd">Topological Torsion (&#39;tt&#39;):</span>
+<span class="sd">- fpType : {&#39;normal&#39;, &#39;hashed&#39;, &#39;bv&#39;}, default=&#39;normal&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- targetSize : int, default=4</span>
+<span class="sd">- nBitsPerEntry : int, default=4</span>
+
+<span class="sd">RDKit (&#39;rk&#39;):</span>
+<span class="sd">- fpType : {&#39;&#39;, &#39;bv&#39;}, default=&#39;bv&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- minPath : int, default=1</span>
+<span class="sd">- maxPath : int, default=5</span>
+<span class="sd">- nBitsPerHash : int, default=2</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">Iterable or pandas.DataFrame</span>
+<span class="sd">    Atomic contributions to model prediction. Format depends on `return_df`.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; SimMaps.get_weights_from_model(&quot;CCO&quot;, model, feature_names, &quot;regression&quot;, 0.85, &quot;m&quot;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+		<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem.Draw</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimilarityMaps</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalise_iterable</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_progressive_column_names</span>
+
+		<span class="c1"># Dictionary to map fp_type to the corresponding function</span>
+		<span class="n">fp_function_dict</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetMorganFingerprint</span><span class="p">,</span>
+			<span class="s1">&#39;ap&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetAPFingerprint</span><span class="p">,</span>
+			<span class="s1">&#39;tt&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetTTFingerprint</span><span class="p">,</span>
+			<span class="s1">&#39;rk&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetRDKFingerprint</span>
+		<span class="p">}</span>
+
+		<span class="c1"># Get the appropriate fingerprint function</span>
+		<span class="n">fp_function</span> <span class="o">=</span> <span class="n">fp_function_dict</span><span class="p">[</span><span class="n">fp_type</span><span class="p">]</span>
+		<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">atomId</span><span class="p">,</span> <span class="n">atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol_input</span><span class="o">.</span><span class="n">GetAtoms</span><span class="p">()):</span>
+			<span class="n">probe_fp</span> <span class="o">=</span> <span class="n">fp_function</span><span class="p">(</span>
+				<span class="n">mol</span><span class="o">=</span><span class="n">mol_input</span><span class="p">,</span>
+				<span class="n">atomId</span><span class="o">=</span><span class="n">atomId</span><span class="p">,</span>
+				<span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">ToList</span><span class="p">()</span>
+			<span class="n">fp_names</span> <span class="o">=</span> <span class="n">create_progressive_column_names</span><span class="p">(</span>
+				<span class="n">fp_type</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">probe_fp</span><span class="p">))</span>
+			<span class="n">fp_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">probe_fp</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">fp_names</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+			<span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+				<span class="n">predicted_val</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span>
+					<span class="n">fp_dataframe</span><span class="p">[</span><span class="n">estimator_cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">predicted_val</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+					<span class="n">fp_dataframe</span><span class="p">[</span><span class="n">estimator_cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="n">delta</span> <span class="o">=</span> <span class="n">actual_val</span> <span class="o">-</span> <span class="n">predicted_val</span>
+			<span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">atom</span><span class="o">.</span><span class="n">GetSymbol</span><span class="p">(),</span> <span class="n">atomId</span><span class="p">,</span> <span class="n">predicted_val</span><span class="p">,</span> <span class="n">delta</span><span class="p">))</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+			<span class="n">results</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span>
+				<span class="s1">&#39;Atom_Symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;Atom_Index&#39;</span><span class="p">,</span> <span class="s1">&#39;Predicted_Proba&#39;</span><span class="p">,</span> <span class="s1">&#39;Delta&#39;</span><span class="p">,</span>
+				<span class="p">])</span>
+		<span class="k">if</span> <span class="n">normalise</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+			<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Delta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalise_iterable</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Delta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">df</span> <span class="k">if</span> <span class="n">return_df</span> <span class="k">else</span> <span class="n">df</span><span class="o">.</span><span class="n">Delta</span><span class="o">.</span><span class="n">values</span></div>
+
+
+
+<div class="viewcode-block" id="SimMaps.get_weights_from_fingerprint">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.simmaps.SimMaps.get_weights_from_fingerprint">[docs]</a>
+	<span class="nd">@staticmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">get_weights_from_fingerprint</span><span class="p">(</span>
+		<span class="n">refmol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">probemol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
+		<span class="n">fp_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;ap&#39;</span><span class="p">,</span> <span class="s1">&#39;rk&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+		<span class="n">similarity_metric</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
+			<span class="s1">&#39;Tanimoto&#39;</span><span class="p">,</span> <span class="s1">&#39;Dice&#39;</span><span class="p">,</span> <span class="s1">&#39;Cosine&#39;</span><span class="p">,</span>
+			<span class="s1">&#39;Sokal&#39;</span><span class="p">,</span> <span class="s1">&#39;Russel&#39;</span><span class="p">,</span> <span class="s1">&#39;RogotGoldberg&#39;</span><span class="p">,</span>
+			<span class="s1">&#39;AllBit&#39;</span><span class="p">,</span> <span class="s1">&#39;OnBit&#39;</span><span class="p">,</span> <span class="s1">&#39;Kulczynski&#39;</span><span class="p">,</span>
+			<span class="s1">&#39;McConnaughey&#39;</span><span class="p">,</span> <span class="s1">&#39;Asymmetric&#39;</span><span class="p">,</span>
+			<span class="s1">&#39;BraunBlanquet&#39;</span><span class="p">,</span> <span class="s1">&#39;Tversky&#39;</span>
+			<span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Tanimoto&#39;</span><span class="p">,</span>
+		<span class="n">normalise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+		<span class="n">return_df</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+		<span class="o">**</span><span class="n">kwargs</span>
+			<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Get atomic importance weights based on fingerprint similarity.</span>
+
+<span class="sd">This method calculates atomic contributions by masking atoms in the probe</span>
+<span class="sd">molecule and computing the change in similarity to a reference molecule.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">refmol : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    The reference molecule.</span>
+<span class="sd">probemol : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    The probe molecule whose atoms will be masked.</span>
+<span class="sd">fp_type : {&#39;m&#39;, &#39;ap&#39;, &#39;rk&#39;, &#39;tt&#39;}, default=&#39;m&#39;</span>
+<span class="sd">    Type of fingerprint to use.</span>
+<span class="sd">similarity_metric : str, default=&#39;Tanimoto&#39;</span>
+<span class="sd">    Similarity metric to use. Options include:</span>
+<span class="sd">    &#39;Tanimoto&#39;, &#39;Dice&#39;, &#39;Cosine&#39;, &#39;Sokal&#39;, &#39;Russel&#39;, &#39;RogotGoldberg&#39;,</span>
+<span class="sd">    &#39;AllBit&#39;, &#39;OnBit&#39;, &#39;Kulczynski&#39;, &#39;McConnaughey&#39;, &#39;Asymmetric&#39;,</span>
+<span class="sd">    &#39;BraunBlanquet&#39;, &#39;Tversky&#39;.</span>
+<span class="sd">normalise : bool, optional</span>
+<span class="sd">    If True, normalises the weights to the range (-1, 1). Default is False.</span>
+<span class="sd">return_df : bool, optional</span>
+<span class="sd">    If True, returns a pandas DataFrame. Otherwise, returns a NumPy array.</span>
+<span class="sd">**kwargs : dict</span>
+<span class="sd">    Additional fingerprint-specific parameters. See below.</span>
+
+<span class="sd">Fingerprint Parameters</span>
+<span class="sd">----------------------</span>
+<span class="sd">Morgan (&#39;m&#39;):</span>
+<span class="sd">- radius : int, default=2</span>
+<span class="sd">- fpType : {&#39;count&#39;, &#39;bv&#39;}, default=&#39;bv&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- useFeatures : bool, default=False</span>
+
+<span class="sd">Atom Pair (&#39;ap&#39;):</span>
+<span class="sd">- fpType : {&#39;normal&#39;, &#39;hashed&#39;, &#39;bv&#39;}, default=&#39;normal&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- minLength : int, default=1</span>
+<span class="sd">- maxLength : int, default=30</span>
+<span class="sd">- nBitsPerEntry : int, default=4</span>
+<span class="sd">Topological Torsion (&#39;tt&#39;):</span>
+<span class="sd">- fpType : {&#39;normal&#39;, &#39;hashed&#39;, &#39;bv&#39;}, default=&#39;normal&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- targetSize : int, default=4</span>
+<span class="sd">- nBitsPerEntry : int, default=4</span>
+
+<span class="sd">RDKit (&#39;rk&#39;):</span>
+<span class="sd">- fpType : {&#39;&#39;, &#39;bv&#39;}, default=&#39;bv&#39;</span>
+<span class="sd">- atomId : int, default=-1</span>
+<span class="sd">- nBits : int, default=2048</span>
+<span class="sd">- minPath : int, default=1</span>
+<span class="sd">- maxPath : int, default=5</span>
+<span class="sd">- nBitsPerHash : int, default=2</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">Iterable or pandas.DataFrame</span>
+<span class="sd">    Atomic contributions to similarity. Format depends on `return_df`.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; SimMaps.get_weights_from_fingerprint(refmol, probemol, fp_type=&#39;m&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+		<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.importables</span><span class="w"> </span><span class="kn">import</span> <span class="n">similarity_metric_dictionary</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem.Draw</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimilarityMaps</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalise_iterable</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+		<span class="c1"># Dictionary to map fp_type to the corresponding function</span>
+		<span class="n">fp_function_dict</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetMorganFingerprint</span><span class="p">,</span>
+			<span class="s1">&#39;ap&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetAPFingerprint</span><span class="p">,</span>
+			<span class="s1">&#39;tt&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetTTFingerprint</span><span class="p">,</span>
+			<span class="s1">&#39;rk&#39;</span><span class="p">:</span> <span class="n">SimilarityMaps</span><span class="o">.</span><span class="n">GetRDKFingerprint</span>
+		<span class="p">}</span>
+
+		<span class="c1"># Get the appropriate fingerprint function</span>
+		<span class="n">fp_function</span> <span class="o">=</span> <span class="n">fp_function_dict</span><span class="p">[</span><span class="n">fp_type</span><span class="p">]</span>
+
+		<span class="c1"># Get the similarity metric function</span>
+		<span class="n">metric</span> <span class="o">=</span> <span class="n">similarity_metric_dictionary</span><span class="p">[</span><span class="n">similarity_metric</span><span class="p">]</span>
+
+		<span class="c1"># Calculate the base fingerprints and similarity</span>
+		<span class="n">base_ref_fp</span> <span class="o">=</span> <span class="n">fp_function</span><span class="p">(</span><span class="n">refmol</span><span class="p">,</span> <span class="n">atomId</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="n">base_probe_fp</span> <span class="o">=</span> <span class="n">fp_function</span><span class="p">(</span><span class="n">probemol</span><span class="p">,</span> <span class="n">atomId</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="n">base_similarity</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">base_ref_fp</span><span class="p">,</span> <span class="n">base_probe_fp</span><span class="p">)</span>
+
+		<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+		<span class="c1"># Iterate over atoms in the probe molecule</span>
+		<span class="k">for</span> <span class="n">atomId</span><span class="p">,</span> <span class="n">atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probemol</span><span class="o">.</span><span class="n">GetAtoms</span><span class="p">()):</span>
+			<span class="c1"># Calculate the fingerprint with the current atom masked</span>
+			<span class="n">probe_fp</span> <span class="o">=</span> <span class="n">fp_function</span><span class="p">(</span><span class="n">mol</span><span class="o">=</span><span class="n">probemol</span><span class="p">,</span> <span class="n">atomId</span><span class="o">=</span><span class="n">atomId</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+			<span class="c1"># Calculate the difference in similarity</span>
+			<span class="n">delta</span> <span class="o">=</span> <span class="n">base_similarity</span> <span class="o">-</span> <span class="n">metric</span><span class="p">(</span><span class="n">base_ref_fp</span><span class="p">,</span> <span class="n">probe_fp</span><span class="p">)</span>
+			<span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">atom</span><span class="o">.</span><span class="n">GetSymbol</span><span class="p">(),</span> <span class="n">atomId</span><span class="p">,</span> <span class="n">base_similarity</span><span class="p">,</span> <span class="n">delta</span><span class="p">))</span>
+
+		<span class="c1"># Create a DataFrame from the results</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span>
+			<span class="s1">&#39;Atom_Symbol&#39;</span><span class="p">,</span> <span class="s1">&#39;Atom_Index&#39;</span><span class="p">,</span> <span class="s1">&#39;Predicted_Proba&#39;</span><span class="p">,</span> <span class="s1">&#39;Delta&#39;</span><span class="p">])</span>
+
+		<span class="c1"># Normalise the delta values if required</span>
+		<span class="k">if</span> <span class="n">normalise</span><span class="p">:</span>
+			<span class="n">df</span><span class="p">[</span><span class="s1">&#39;Delta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">normalise_iterable</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Delta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+		<span class="c1"># Return the results as a DataFrame or an iterable</span>
+		<span class="k">return</span> <span class="n">df</span> <span class="k">if</span> <span class="n">return_df</span> <span class="k">else</span> <span class="n">df</span><span class="o">.</span><span class="n">Delta</span><span class="o">.</span><span class="n">values</span></div>
+
+
+
+<div class="viewcode-block" id="SimMaps.get_similarity_map_from_weights">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.simmaps.SimMaps.get_similarity_map_from_weights">[docs]</a>
+	<span class="nd">@staticmethod</span>
+	<span class="k">def</span><span class="w"> </span><span class="nf">get_similarity_map_from_weights</span><span class="p">(</span>
+		<span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">colorMap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+		<span class="n">scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">250</span><span class="p">,</span> <span class="mi">250</span><span class="p">),</span> <span class="n">sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+		<span class="n">coordScale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+		<span class="n">contour_colour</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+		<span class="n">contourLines</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+		<span class="n">contour_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+		<span class="n">dash_negative</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">draw2d</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">draw_molecule</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">legend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+	<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Draw</span><span class="o">.</span><span class="n">rdMolDraw2D</span><span class="o">.</span><span class="n">MolDraw2D</span> <span class="o">|</span> <span class="n">Figure</span><span class="p">:</span>
+<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a similarity map visualisation from atomic weights.</span>
+
+<span class="sd">This method overlays a similarity map on a molecule using atomic weights,</span>
+<span class="sd">with optional contour lines and colour maps.</span>
+
+<span class="sd">Adapted from RDKit (https://www.rdkit.org), originally licensed under the BSD 3-Clause License.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    The molecule to visualise.</span>
+<span class="sd">weights : Iterable</span>
+<span class="sd">    Atomic weights to visualise.</span>
+<span class="sd">colorMap : str or list or matplotlib colormap, optional</span>
+<span class="sd">    Colour map to use. If None, a custom PiWG colour map is used.</span>
+<span class="sd">scale : int, default=-1</span>
+<span class="sd">    Scaling factor. If negative, uses the maximum absolute weight.</span>
+<span class="sd">size : tuple, default=(250, 250)</span>
+<span class="sd">    Size of the output image.</span>
+<span class="sd">sigma : float, optional</span>
+<span class="sd">    Gaussian width. If None, estimated from bond lengths.</span>
+<span class="sd">coordScale : float, default=1.5</span>
+<span class="sd">    Scaling factor for coordinates.</span>
+<span class="sd">step : float, default=0.01</span>
+<span class="sd">    Step size for Gaussian calculation.</span>
+<span class="sd">contour_colour : str or tuple, default=&#39;black&#39;</span>
+<span class="sd">    Colour of contour lines. Can be a string or RGB tuple.</span>
+<span class="sd">contourLines : int or list, default=10</span>
+<span class="sd">    Number of contour lines or specific contour levels.</span>
+<span class="sd">alpha : float, default=0.5</span>
+<span class="sd">    Transparency of contour lines.</span>
+<span class="sd">contour_width : float, default=1</span>
+<span class="sd">    Width of contour lines.</span>
+<span class="sd">resolution : float, default=0.05</span>
+<span class="sd">    Grid resolution for contour plotting.</span>
+<span class="sd">dash_negative : bool, default=True</span>
+<span class="sd">    Whether to use dashed lines for negative weights.</span>
+<span class="sd">draw2d : rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D, optional</span>
+<span class="sd">    RDKit drawing object. Required for rendering.</span>
+<span class="sd">draw_molecule : bool, default=True</span>
+<span class="sd">    If True, draws the molecule on the canvas after contours.</span>
+<span class="sd">    If False, only draws contours; caller is responsible for drawing the molecule.</span>
+<span class="sd">    Useful when integrating with mlchem&#39;s draw_mol() to apply color options first.</span>
+<span class="sd">legend : str, default=&#39;&#39;</span>
+<span class="sd">    Legacy parameter, kept for backwards compatibility but not used.</span>
+<span class="sd">    For gaussian contours, legends are added by the caller (mlchem&#39;s draw_mol)</span>
+<span class="sd">    after rendering to ensure proper alignment with contours.</span>
+<span class="sd">**kwargs : dict</span>
+<span class="sd">    Additional keyword arguments passed to matplotlib drawing.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">rdMolDraw2D.MolDraw2D or matplotlib.figure.Figure</span>
+<span class="sd">    If `draw2d` is provided, returns the modified drawing object.</span>
+<span class="sd">    Otherwise, returns a matplotlib figure.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If `draw2d` is not provided or the molecule has fewer than 2 atoms.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; SimMaps.get_similarity_map_from_weights(mol, weights, draw2d=drawer)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+		<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+		<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Geometry</span>
+		<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">cm</span>
+			<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">colormaps</span>
+			<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+		<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+			<span class="n">cm</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+			<span class="n">cm</span> <span class="o">=</span> <span class="kc">None</span>
+
+		<span class="c1"># Warn if using legacy legend parameter</span>
+		<span class="k">if</span> <span class="n">legend</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+			<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+			<span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+				<span class="s2">&quot;The &#39;legend&#39; parameter is deprecated and kept for backward compatibility only. &quot;</span>
+				<span class="s2">&quot;It has no effect. Legends should be added by the caller using mlchem&#39;s draw_mol() &quot;</span>
+				<span class="s2">&quot;after rendering contours. This parameter will be removed in a future version.&quot;</span><span class="p">,</span>
+				<span class="ne">FutureWarning</span><span class="p">,</span>
+				<span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+			<span class="p">)</span>
+
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contour_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="c1"># Convert string color to a tuple (e.g., &#39;black&#39; to (0, 0, 0))</span>
+			<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mcolors</span>
+			<span class="n">contour_colour_tuple</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">to_rgb</span><span class="p">(</span><span class="n">contour_colour</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">contour_colour_tuple</span> <span class="o">=</span> <span class="n">contour_colour</span>
+
+		<span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+			<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;too few atoms&quot;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="n">draw2d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetNumBonds</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+					<span class="n">bond</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetBondWithIdx</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+					<span class="n">idx1</span> <span class="o">=</span> <span class="n">bond</span><span class="o">.</span><span class="n">GetBeginAtomIdx</span><span class="p">()</span>
+					<span class="n">idx2</span> <span class="o">=</span> <span class="n">bond</span><span class="o">.</span><span class="n">GetEndAtomIdx</span><span class="p">()</span>
+					<span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="p">(</span>
+						<span class="n">mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">()</span><span class="o">.</span><span class="n">GetAtomPosition</span><span class="p">(</span><span class="n">idx1</span><span class="p">)</span> <span class="o">-</span>
+						<span class="n">mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">()</span><span class="o">.</span><span class="n">GetAtomPosition</span><span class="p">(</span><span class="n">idx2</span><span class="p">)</span>
+						<span class="p">)</span><span class="o">.</span><span class="n">Length</span><span class="p">()</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">sigma</span> <span class="o">=</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="p">(</span>
+						<span class="n">mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">()</span><span class="o">.</span><span class="n">GetAtomPosition</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">-</span>
+						<span class="n">mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">()</span><span class="o">.</span><span class="n">GetAtomPosition</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+						<span class="p">)</span><span class="o">.</span><span class="n">Length</span><span class="p">()</span>
+			<span class="n">sigma</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+			<span class="n">sigmas</span> <span class="o">=</span> <span class="p">[</span><span class="n">sigma</span><span class="p">]</span> <span class="o">*</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">()</span>
+			<span class="n">locs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Geometry</span><span class="o">.</span><span class="n">Point2D</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">()</span><span class="o">.</span><span class="n">GetAtomPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+								<span class="n">mol</span><span class="o">.</span><span class="n">GetConformer</span><span class="p">()</span><span class="o">.</span><span class="n">GetAtomPosition</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+								<span class="nb">range</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">())]</span>
+			<span class="n">draw2d</span><span class="o">.</span><span class="n">ClearDrawing</span><span class="p">()</span>
+
+			<span class="n">ps</span> <span class="o">=</span> <span class="n">Draw</span><span class="o">.</span><span class="n">ContourParams</span><span class="p">()</span>
+			<span class="n">ps</span><span class="o">.</span><span class="n">fillGrid</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">ps</span><span class="o">.</span><span class="n">gridResolution</span> <span class="o">=</span> <span class="n">resolution</span>
+			<span class="n">ps</span><span class="o">.</span><span class="n">contourWidth</span> <span class="o">=</span> <span class="n">contour_width</span>
+			<span class="n">ps</span><span class="o">.</span><span class="n">dashNegative</span> <span class="o">=</span> <span class="n">dash_negative</span>
+
+			<span class="k">if</span> <span class="n">colorMap</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">cm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colorMap</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">Blues</span><span class="p">)):</span>
+					<span class="n">clrs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">colorMap</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])]</span>
+				<span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colorMap</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+					<span class="k">if</span> <span class="n">cm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+						<span class="k">raise</span>
+					<span class="ne">ValueError</span><span class="p">(</span>
+						<span class="s2">&quot;cannot provide named colormaps unless &quot;</span>
+						<span class="s2">&quot;matplotlib is installed&quot;</span>
+						<span class="p">)</span>
+					<span class="c1"># cm.get_cmap() deprecated with matplotlib 3.11</span>
+					<span class="c1">#clrs = [tuple(x) for x in cm.get_cmap(colorMap)([0, 0.5, 1])]</span>
+					<span class="n">clrs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">colormaps</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">colorMap</span><span class="p">)([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])]</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">clrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">colorMap</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">colorMap</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">colorMap</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+				<span class="n">ps</span><span class="o">.</span><span class="n">setColourMap</span><span class="p">(</span><span class="n">clrs</span><span class="p">)</span>
+
+			<span class="n">ps</span><span class="o">.</span><span class="n">setContourColour</span><span class="p">(</span><span class="n">contour_colour_tuple</span><span class="p">)</span>
+			<span class="n">Draw</span><span class="o">.</span><span class="n">ContourAndDrawGaussians</span><span class="p">(</span>
+				<span class="n">draw2d</span><span class="p">,</span> <span class="n">locs</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">nContours</span><span class="o">=</span><span class="n">contourLines</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">ps</span>
+				<span class="p">)</span>
+			<span class="n">draw2d</span><span class="o">.</span><span class="n">drawOptions</span><span class="p">()</span><span class="o">.</span><span class="n">clearBackground</span> <span class="o">=</span> <span class="kc">False</span>
+			<span class="k">if</span> <span class="n">draw_molecule</span><span class="p">:</span>
+				<span class="c1"># Draw molecule WITHOUT legend to preserve alignment with contours</span>
+				<span class="c1"># Legend will be added separately by caller if needed</span>
+				<span class="n">draw2d</span><span class="o">.</span><span class="n">DrawMolecule</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+			<span class="k">return</span> <span class="n">draw2d</span>
+		<span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;the draw2d argument must be provided&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.simmaps</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

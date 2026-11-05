@@ -132,6 +132,14 @@ Returns
 -------
 rdkit.Chem.rdchem.Mol or None
     The processed molecule object, or None if only visualisation is requested.
+
+Examples
+--------
+Create a molecule from SMILES and inspect its heavy-atom count:
+
+>>> ethanol = create_molecule("CCO")
+>>> ethanol.GetNumAtoms()
+3
 """
 
     from rdkit.Chem import AllChem, rdDepictor, rdDistGeom, Draw

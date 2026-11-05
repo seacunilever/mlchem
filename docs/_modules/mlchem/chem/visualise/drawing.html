@@ -1,0 +1,1421 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.chem.visualise.drawing &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.drawing</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.chem.visualise.drawing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+
+<div class="viewcode-block" id="MolDrawer">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MolDrawer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Render molecules and image grids with configurable RDKit drawing options.</span>
+
+<span class="sd">`MolDrawer` centralises drawing configuration (`drawing_options`) and provides</span>
+<span class="sd">helpers for:</span>
+
+<span class="sd">- single-molecule rendering (`draw_mol`),</span>
+<span class="sd">- palette preview (`show_palette`),</span>
+<span class="sd">- loading molecules/images (`load_mols`, `load_images`),</span>
+<span class="sd">- and gallery output (`show_images_grid`).</span>
+
+<span class="sd">The class can operate with:</span>
+
+<span class="sd">- mlchem defaults (`MLCHEM_DEFAULTS`),</span>
+<span class="sd">- RDKit defaults (`get_rdkit_defaults`),</span>
+<span class="sd">- and per-instance option overrides (`update_drawing_options`).</span>
+
+<span class="sd">Typical usage:</span>
+
+<span class="sd">&gt;&gt;&gt; from rdkit import Chem</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer(size=[400, 300], legend=&quot;Example&quot;)</span>
+<span class="sd">&gt;&gt;&gt; drawer.update_drawing_options(atomPalette=&#39;cdk&#39;, highlightColour=&#39;tomato&#39;)</span>
+<span class="sd">&gt;&gt;&gt; mol = Chem.MolFromSmiles(&quot;CCO&quot;)</span>
+<span class="sd">&gt;&gt;&gt; image = drawer.draw_mol(mol, highlightAtoms=[1])</span>
+
+<span class="sd">Batch usage:</span>
+
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer(size=[300, 300])</span>
+<span class="sd">&gt;&gt;&gt; drawer.load_mols([Chem.MolFromSmiles(&quot;CCO&quot;), Chem.MolFromSmiles(&quot;c1ccccc1&quot;)])</span>
+<span class="sd">&gt;&gt;&gt; drawer.show_images_grid(n_columns=2)</span>
+
+<span class="sd">Attributes</span>
+<span class="sd">----------</span>
+<span class="sd">mol : rdkit.Chem.rdchem.Mol or None</span>
+<span class="sd">    Default molecule used by `draw_mol` when no molecule is passed.</span>
+<span class="sd">highlightAtoms : Iterable</span>
+<span class="sd">    Default atom indices to highlight when `draw_mol` receives none.</span>
+<span class="sd">size : Iterable</span>
+<span class="sd">    Default canvas size in pixels as `(width, height)`.</span>
+<span class="sd">legend : str</span>
+<span class="sd">    Default legend used by `draw_mol` when none is passed.</span>
+<span class="sd">mol_list : list</span>
+<span class="sd">    Internal list of molecules accumulated via `load_mols`.</span>
+<span class="sd">highlightAtoms_list : list</span>
+<span class="sd">    History of highlight index sets used in drawing calls.</span>
+<span class="sd">size_list : list</span>
+<span class="sd">    History of canvas sizes used in drawing calls.</span>
+<span class="sd">legend_list : list</span>
+<span class="sd">    History of legends used in drawing calls.</span>
+<span class="sd">img_list : list[PIL.Image.Image]</span>
+<span class="sd">    Internal image collection used by `load_images`, `load_mols`, and</span>
+<span class="sd">    `show_images_grid`.</span>
+<span class="sd">colour_dictionary : dict</span>
+<span class="sd">    Named RGB palette imported from `mlchem.importables`.</span>
+<span class="sd">drawing_options : dict</span>
+<span class="sd">    Active drawing configuration (starts as a copy of `MLCHEM_DEFAULTS`).</span>
+
+<span class="sd">Methods</span>
+<span class="sd">-------</span>
+<span class="sd">__init__(...)</span>
+<span class="sd">    Initialise the drawer and instance-level defaults.</span>
+<span class="sd">get_rdkit_defaults(...)</span>
+<span class="sd">    Return RDKit native drawing defaults as a dictionary.</span>
+<span class="sd">show_palette(...)</span>
+<span class="sd">    Visualise or save a colour dictionary.</span>
+<span class="sd">update_drawing_options(...)</span>
+<span class="sd">    Update instance drawing options via keyword arguments.</span>
+<span class="sd">reset_drawing_options(...)</span>
+<span class="sd">    Reset options to mlchem or RDKit defaults.</span>
+<span class="sd">load_images(...)</span>
+<span class="sd">    Add one or more pre-rendered PIL images to the internal image list.</span>
+<span class="sd">load_mols(...)</span>
+<span class="sd">    Add molecules and immediately render/store their images.</span>
+<span class="sd">show_images_grid(...)</span>
+<span class="sd">    Display and optionally save images as a tiled grid.</span>
+<span class="sd">draw_mol(...)</span>
+<span class="sd">    Render a single molecule with highlights, maps, and optional ACS style.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="n">MLCHEM_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
+
+
+    <span class="c1"># colours #</span>
+
+
+    <span class="c1"># Possible values: &#39;avalon&#39;, &#39;cdk&#39;, &#39;bw&#39;,</span>
+    <span class="c1"># or a dictionary like this: {atomic_number:(R,G,B)),}</span>
+    <span class="s1">&#39;atomPalette&#39;</span><span class="p">:</span> <span class="s1">&#39;cdk&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Possible values: any present in &#39;colour_dictionary&#39;</span>
+    <span class="c1"># attribute of the MolDrawer class or any RGB tuple</span>
+    <span class="s1">&#39;backgroundColour&#39;</span><span class="p">:</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Possible values: any present in &#39;colour_dictionary&#39;</span>
+    <span class="c1"># attribute of the MolDrawer class or any RGB tuple</span>
+    <span class="s1">&#39;highlightColour&#39;</span><span class="p">:</span> <span class="s1">&#39;tomato&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The transparency of the highlighting colour</span>
+    <span class="s1">&#39;highlightAlpha&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+
+    <span class="c1"># Colour of the SMARTS query</span>
+    <span class="s1">&#39;queryColour&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The color used for RDKit query annotations</span>
+    <span class="s1">&#39;annotationColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The color used for custom atom notes (from assign_atom_notes)</span>
+    <span class="s1">&#39;atomNoteColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The color used for custom bond notes (from assign_bond_notes)</span>
+    <span class="s1">&#39;bondNoteColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The color used for legend text</span>
+    <span class="s1">&#39;legendColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The color used for symbol text</span>
+    <span class="s1">&#39;symbolColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># The color used for variable attachment points</span>
+    <span class="s1">&#39;variableAttachmentColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Drawing style controls #</span>
+
+    <span class="c1"># Display dummy atoms as dummy attachment points</span>
+    <span class="s1">&#39;dummiesAreAttachments&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Shortcut for set_property(mol, property_type=&#39;atomnote&#39;,</span>
+    <span class="c1">#                           atoms=[],custom_string=&#39;&#39;)</span>
+    <span class="s1">&#39;addAtomIndices&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Display bond indices</span>
+    <span class="s1">&#39;addBondIndices&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Hide all atom labels</span>
+    <span class="s1">&#39;noAtomLabels&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Show explicit methyl</span>
+    <span class="s1">&#39;explicitMethyl&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Include radicals</span>
+    <span class="s1">&#39;includeRadicals&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># If False, simplify drawing of standard query atoms</span>
+    <span class="c1"># (Q, QH, X, XH, A, AH, M, MH) from mol files or CXSMILES</span>
+    <span class="s1">&#39;useComplexQueryAtomSymbols&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Single or double coloured chiral bonds</span>
+    <span class="s1">&#39;singleColourWedgeBonds&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># If True, draw molecules having same scale</span>
+    <span class="s1">&#39;drawMolsSameScale&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Highlighting #</span>
+
+
+    <span class="c1"># Include bonds if highlighted atoms are adjacent</span>
+    <span class="s1">&#39;continuousHighlight&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Atoms are highlighted with small circles</span>
+    <span class="s1">&#39;circleAtoms&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Exclude H from atom circles</span>
+    <span class="s1">&#39;atomHighlightsAreCircles&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Fill bonds</span>
+    <span class="s1">&#39;fillHighlights&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Highlighting width of atoms</span>
+    <span class="s1">&#39;highlightRadius&#39;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+
+    <span class="c1"># Highlighting width of bonds scaling factor</span>
+    <span class="s1">&#39;highlightBondWidthMultiplier&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+
+
+
+    <span class="c1"># Stereochemistry ##</span>
+
+
+    <span class="c1"># Display R,S notations; display, if specified, abs,and,or.</span>
+    <span class="c1"># For abs: (a:atom_number+1), for and, or: &amp;, o</span>
+    <span class="s1">&#39;addStereoAnnotation&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Draw unspecified stereo atoms/bonds as unknown</span>
+    <span class="s1">&#39;unspecifiedStereoIsUnknown&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+
+    <span class="c1"># Fonts and text #</span>
+
+
+    <span class="c1"># Sets the initial font size, which can be scaled based on</span>
+    <span class="c1"># the molecule’s size. All elements are involved</span>
+    <span class="s1">&#39;baseFontSize&#39;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">,</span>
+
+    <span class="c1"># Increase or decrease font size of annotations</span>
+    <span class="s1">&#39;annotationFontScale&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+
+    <span class="c1"># Increase or decrease font size of legends</span>
+    <span class="s1">&#39;legendFontSize&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+
+    <span class="c1"># Set to any positive number to force the base fontsize</span>
+    <span class="c1"># to remain unchanged even if canvas size varies.</span>
+    <span class="s1">&#39;fixedFontSize&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+
+    <span class="c1"># Ensures a minimum font size, preventing labels and notes</span>
+    <span class="c1"># from becoming too small.</span>
+    <span class="s1">&#39;minFontSize&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+
+    <span class="c1"># Set to any number to set a ceiling to the base fontsize.</span>
+    <span class="s1">&#39;maxFontSize&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
+
+    <span class="c1"># Specify the path where the font file is stored</span>
+    <span class="s1">&#39;fontFile&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+
+
+    <span class="c1"># Bond drawing parameters #</span>
+
+
+    <span class="c1"># How distant the additional lines</span>
+    <span class="c1"># of a double/triple bond have to be from the single bond line</span>
+    <span class="s1">&#39;multipleBondOffset&#39;</span><span class="p">:</span> <span class="mf">0.15</span><span class="p">,</span>
+
+    <span class="c1"># Fraction of fontsize. How much buffer space around atoms</span>
+    <span class="s1">&#39;additionalAtomLabelPadding&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+
+    <span class="c1"># How wide bonds are</span>
+    <span class="s1">&#39;bondLineWidth&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+
+    <span class="c1"># Adapt bond witdth to highlight width</span>
+    <span class="s1">&#39;scaleBondWidth&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+
+    <span class="c1"># Adapt hilight width to bond width</span>
+    <span class="s1">&#39;scaleHighlightBondWidth&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># If different from -1, forces molecule to</span>
+    <span class="c1"># have the same scale. The higher the value</span>
+    <span class="c1"># the larger the scale.</span>
+    <span class="s1">&#39;fixedBondLength&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+
+
+    <span class="c1"># Weight and similarity maps parameters #</span>
+
+
+    <span class="c1"># Similarity maps drawing style</span>
+    <span class="c1"># &#39;GC&#39;: Gaussian Contours - smooth gaussian overlay (RDKit-based)</span>
+    <span class="c1">#       Best for continuous properties (electrostatic maps, similarity)</span>
+    <span class="c1"># &#39;C&#39;:  Circle Contours - concentric gradient circles per atom (mlchem-custom)</span>
+    <span class="c1">#       Best for discrete atom properties (SHAP values, per-atom charges)</span>
+    <span class="c1"># Note: mlchem&#39;s circle contours are a custom implementation providing</span>
+    <span class="c1">#       an alternative to RDKit&#39;s gaussian contours, with better atom-level clarity.</span>
+    <span class="s1">&#39;mapStyle&#39;</span><span class="p">:</span> <span class="s1">&#39;GC&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Colour map for similarity maps; default is None.</span>
+    <span class="c1"># A list of 3 tuples/colour names is accepted too.</span>
+    <span class="s1">&#39;colourMap&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+
+    <span class="c1"># Colour of atoms having positive weights (applies to both GC and C styles)</span>
+    <span class="s1">&#39;positiveColour&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Colour of atoms having negative weights (applies to both GC and C styles)</span>
+    <span class="s1">&#39;negativeColour&#39;</span><span class="p">:</span> <span class="s1">&#39;mediumvioletred&#39;</span><span class="p">,</span>
+
+    <span class="c1"># List of atomic weights to visualize via contours.</span>
+    <span class="c1"># Should be a list/array with one value per atom in the molecule.</span>
+    <span class="c1"># If provided with mapStyle=&#39;GC&#39; or mapStyle=&#39;C&#39;, contours will be drawn.</span>
+    <span class="c1"># Example: atomWeights = [0.1, -0.2, 0.3, 0.05, ...]</span>
+    <span class="s1">&#39;atomWeights&#39;</span><span class="p">:</span> <span class="p">[],</span>
+
+    <span class="c1"># Baseline alpha (transparency) of weight color overlays (style: both GC and C)</span>
+    <span class="s1">&#39;weightAlpha&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
+
+    <span class="c1"># Circle radius scale factor (style: circles only)</span>
+    <span class="c1"># Controls how large circles scale based on atomic weight magnitude</span>
+    <span class="s1">&#39;scalingFactor&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+
+    <span class="c1"># Minimum circle radius in pixels (style: circles only)</span>
+    <span class="s1">&#39;minRadius&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+
+    <span class="c1"># Maximum circle radius in pixels (style: circles only)</span>
+    <span class="s1">&#39;maxRadius&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+
+    <span class="c1"># Number of concentrical circles/contour lines per visualization (style: both)</span>
+    <span class="c1"># For circles: number of concentric rings per atom</span>
+    <span class="c1"># For gaussian: number of contour levels</span>
+    <span class="s1">&#39;numContours&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+
+    <span class="c1"># Line width of the gaussian contours (style: gaussian contours only)</span>
+    <span class="s1">&#39;contourWidth&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+
+    <span class="c1"># Resolution (grid step) of gaussian contour calculation (style: gaussian contours only)</span>
+    <span class="c1"># Lower values = higher resolution but slower computation</span>
+    <span class="s1">&#39;mapRes&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+
+    <span class="c1"># Contour line colour (style: gaussian contours only)</span>
+    <span class="s1">&#39;contourColour&#39;</span><span class="p">:</span> <span class="s1">&#39;black&#39;</span><span class="p">,</span>
+
+    <span class="c1"># Whether to display negative weights as dashed lines (style: both)</span>
+    <span class="c1"># True: negative weights shown with dashed contours for clear distinction</span>
+    <span class="s1">&#39;dashNegative&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+
+
+    <span class="c1"># Miscellaneous #</span>
+
+    <span class="c1"># Set to False to have transparent background</span>
+    <span class="s1">&#39;clearBackground&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Set to False to disable kekulisation prior to rendering</span>
+    <span class="s1">&#39;prepareMolsBeforeDrawing&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Rotation angle in degrees</span>
+    <span class="s1">&#39;rotate&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+
+    <span class="c1"># Add or remove extra buffer zone. If value &gt; 0.5,</span>
+    <span class="c1"># molecule flips (unwanted behaviour).</span>
+    <span class="c1"># At the moment, legend does not show when padding &gt; 0.05.</span>
+    <span class="s1">&#39;padding&#39;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span>
+
+    <span class="c1"># Set to True to show H isotopes as D and T rather</span>
+    <span class="c1"># than as 2H and 3H</span>
+    <span class="s1">&#39;atomLabelDeuteriumTritium&#39;</span><span class="p">:</span> <span class="kc">False</span>
+    <span class="p">}</span>
+
+<div class="viewcode-block" id="MolDrawer.get_rdkit_defaults">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.get_rdkit_defaults">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_rdkit_defaults</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve the default RDKit drawing options.</span>
+
+<span class="sd">        This method creates a temporary RDKit drawing context and reads the</span>
+<span class="sd">        values from its drawOptions object. The returned dictionary can be</span>
+<span class="sd">        used to compare or restore RDKit default drawing settings.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[str, object]</span>
+<span class="sd">            Dictionary of RDKit drawing option names and default values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem.Draw</span><span class="w"> </span><span class="kn">import</span> <span class="n">rdMolDraw2D</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="n">rdMolDraw2D</span><span class="o">.</span><span class="n">MolDraw2DCairo</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span><span class="o">.</span><span class="n">drawOptions</span><span class="p">()</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">defaults</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">defaults</span></div>
+
+    
+<div class="viewcode-block" id="MolDrawer.__init__">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">highlightAtoms</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span>
+                 <span class="n">legend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Initialise a `MolDrawer` instance and its default drawing state.</span>
+
+<span class="sd">The constructor stores defaults that are reused by `draw_mol` unless per-call</span>
+<span class="sd">arguments are provided.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol : rdkit.Chem.rdchem.Mol or None, optional</span>
+<span class="sd">    Molecule to keep as instance default. If provided, `draw_mol()` can be</span>
+<span class="sd">    called without passing `mol`.</span>
+<span class="sd">highlightAtoms : Iterable, optional</span>
+<span class="sd">    Default atom indices for highlighting in `draw_mol`.</span>
+<span class="sd">size : Iterable, optional</span>
+<span class="sd">    Default canvas size as `(width, height)` in pixels.</span>
+<span class="sd">legend : str, optional</span>
+<span class="sd">    Default legend text shown under molecules.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from rdkit import Chem</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer(</span>
+<span class="sd">...     mol=Chem.MolFromSmiles(&quot;CCO&quot;),</span>
+<span class="sd">...     highlightAtoms=[1],</span>
+<span class="sd">...     size=[400, 250],</span>
+<span class="sd">...     legend=&quot;Ethanol&quot;,</span>
+<span class="sd">... )</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms</span> <span class="o">=</span> <span class="n">highlightAtoms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legend</span> <span class="o">=</span> <span class="n">legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legend_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.importables</span><span class="w"> </span><span class="kn">import</span> <span class="n">colour_dictionary</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span> <span class="o">=</span> <span class="n">colour_dictionary</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="o">.</span><span class="n">MLCHEM_DEFAULTS</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+
+
+<div class="viewcode-block" id="MolDrawer.show_palette">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.show_palette">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_palette</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">300</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a colour palette as an image.</span>
+
+<span class="sd">If `palette` is not provided, `self.colour_dictionary` is used.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">palette : dict or None, optional</span>
+<span class="sd">    Colour mapping `{name: (r, g, b)}`. When `None`, uses</span>
+<span class="sd">    `self.colour_dictionary`.</span>
+<span class="sd">save : bool, optional</span>
+<span class="sd">    If `True`, write the generated image to `filename`.</span>
+<span class="sd">filename : str, optional</span>
+<span class="sd">    Output path used when `save=True`.</span>
+<span class="sd">size : Iterable, optional</span>
+<span class="sd">    Output size in pixels as `(width, height)`.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">PIL.Image.Image</span>
+<span class="sd">    Palette image.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; drawer.show_palette()</span>
+<span class="sd">&gt;&gt;&gt; drawer.show_palette(save=True, filename=&quot;palette.png&quot;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">visualise_colour_grid</span><span class="p">,</span> <span class="n">convert_size</span>
+
+        <span class="k">if</span> <span class="n">palette</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">palette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span>
+        <span class="n">converted_figsize</span> <span class="o">=</span> <span class="n">convert_size</span><span class="p">(</span><span class="n">pixel_size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">visualise_colour_grid</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">save</span><span class="p">,</span>
+                                     <span class="n">filename</span><span class="p">,</span> <span class="n">converted_figsize</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MolDrawer.update_drawing_options">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.update_drawing_options">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_drawing_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Update instance drawing options used by `draw_mol`.</span>
+
+<span class="sd">The provided keyword arguments are merged into `self.drawing_options`.</span>
+<span class="sd">Unknown keys are kept in the dictionary, but they only affect rendering if</span>
+<span class="sd">they are consumed in `draw_mol` or recognised by RDKit draw options.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">**args : dict</span>
+<span class="sd">    Keyword arguments overriding one or more entries from</span>
+<span class="sd">    `MolDrawer.MLCHEM_DEFAULTS`. Common groups include:</span>
+
+<span class="sd">    - Colours: `atomPalette`, `backgroundColour`, `highlightColour`,</span>
+<span class="sd">      `highlightAlpha`, `queryColour`, `annotationColour`.</span>
+<span class="sd">    - Style/layout: `bondLineWidth`, `baseFontSize`, `padding`, `rotate`.</span>
+<span class="sd">    - Similarity maps: `atomWeights`, `mapStyle`, `colourMap`, `mapRes`,</span>
+<span class="sd">      `numContours`.</span>
+<span class="sd">    - Optional shapes: `shapeTypes`, `shapeSizes`, `shapeColours`,</span>
+<span class="sd">      `shapeCoords`.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">- For a complete list of default option names and values, inspect</span>
+<span class="sd">  `MolDrawer.MLCHEM_DEFAULTS`.</span>
+<span class="sd">- The default `mapRes` in mlchem is `0.05`.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; drawer.update_drawing_options(atomPalette=&#39;avalon&#39;, backgroundColour=&#39;white&#39;)</span>
+
+<span class="sd">&gt;&gt;&gt; options = {&#39;highlightColour&#39;: &#39;orange&#39;, &#39;rotate&#39;: 90}</span>
+<span class="sd">&gt;&gt;&gt; drawer.update_drawing_options(**options)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MolDrawer.reset_drawing_options">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.reset_drawing_options">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_drawing_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;mlchem&#39;</span><span class="p">,</span> <span class="s1">&#39;rdkit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mlchem&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Reset drawing options from a predefined source.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">source : {&#39;mlchem&#39;, &#39;rdkit&#39;}, default=&#39;mlchem&#39;</span>
+<span class="sd">    Reset source:</span>
+
+<span class="sd">    - `&#39;mlchem&#39;`: copy `MolDrawer.MLCHEM_DEFAULTS`.</span>
+<span class="sd">    - `&#39;rdkit&#39;`: use values returned by `get_rdkit_defaults()`.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; drawer.update_drawing_options(atomPalette=&#39;avalon&#39;, rotate=90)</span>
+<span class="sd">&gt;&gt;&gt; drawer.reset_drawing_options(source=&#39;mlchem&#39;)  # Reverts to default mlchem settings</span>
+<span class="sd">&gt;&gt;&gt; drawer.reset_drawing_options(source=&#39;rdkit&#39;)  # Reverts to native RDKit defaults</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">source</span><span class="o">==</span><span class="s1">&#39;mlchem&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="o">.</span><span class="n">MLCHEM_DEFAULTS</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">source</span><span class="o">==</span><span class="s1">&#39;rdkit&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="o">.</span><span class="n">get_rdkit_defaults</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
+
+    
+<div class="viewcode-block" id="MolDrawer.load_images">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.load_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_list</span><span class="p">:</span>
+                    <span class="n">Iterable</span><span class="p">[</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">]</span>
+                    <span class="o">|</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Load one or more images into `self.img_list`.</span>
+
+<span class="sd">The method appends to existing images and flattens nested iterables.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">img_list : PIL.Image.Image or Iterable[PIL.Image.Image]</span>
+<span class="sd">    Single image or iterable of images to append.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from PIL import Image</span>
+<span class="sd">&gt;&gt;&gt; img = Image.open(&quot;example.png&quot;)</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; drawer.load_images(img)</span>
+
+<span class="sd">&gt;&gt;&gt; drawer.load_images([img1, img2, img3])</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img_list</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MolDrawer.load_mols">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.load_mols">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_mols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mols</span><span class="p">:</span>
+                  <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Load molecules and render/store their images.</span>
+
+<span class="sd">Molecules are appended to `self.mol_list`, then each molecule in the full</span>
+<span class="sd">stored list is rendered via a temporary `MolDrawer` and collected in</span>
+<span class="sd">`self.img_list`.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mols : rdkit.Chem.rdchem.Mol or Iterable[rdkit.Chem.rdchem.Mol]</span>
+<span class="sd">    Single molecule or iterable of molecules.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from rdkit import Chem</span>
+<span class="sd">&gt;&gt;&gt; mol1 = Chem.MolFromSmiles(&quot;CCO&quot;)</span>
+<span class="sd">&gt;&gt;&gt; mol2 = Chem.MolFromSmiles(&quot;c1ccccc1&quot;)</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; drawer.load_mols([mol1, mol2])</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mol_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mol_list</span><span class="p">))</span>
+
+        <span class="n">internal_drawer</span> <span class="o">=</span> <span class="n">MolDrawer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">internal_drawer</span><span class="o">.</span><span class="n">draw_mol</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span> <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol_list</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">img_list</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MolDrawer.show_images_grid">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.show_images_grid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_images_grid</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">images</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_columns</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">buffer</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">empty_tile_colour</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span>
+        <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display a set of images as a tiled grid.</span>
+
+<span class="sd">If `images` is `None`, the method uses `self.img_list`. The output is shown</span>
+<span class="sd">with `IPython.display.display` and can optionally be saved.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">images : Iterable[PIL.Image.Image], optional</span>
+<span class="sd">    Images to arrange. If `None`, uses `self.img_list`.</span>
+<span class="sd">n_columns : int, default=4</span>
+<span class="sd">    Number of columns in the grid layout.</span>
+<span class="sd">size : Iterable[int, int], optional</span>
+<span class="sd">    Size of each image in pixels as (width, height). If None, uses the</span>
+<span class="sd">    default size from `self.size`.</span>
+<span class="sd">buffer : int, default=5</span>
+<span class="sd">    Space in pixels between images in the grid.</span>
+<span class="sd">empty_tile_colour : str, default=&#39;white&#39;</span>
+<span class="sd">    Background colour for empty grid tiles. Must be a key in</span>
+<span class="sd">    `self.colour_dictionary`.</span>
+<span class="sd">save : bool, default=False</span>
+<span class="sd">    If True, saves the grid image to a file.</span>
+<span class="sd">filename : str, default=&#39;&#39;</span>
+<span class="sd">    Filename to save the image if `save` is True.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">AssertionError</span>
+<span class="sd">    If `empty_tile_colour` is not in the colour dictionary or if `size`</span>
+<span class="sd">    is not a 2-element iterable.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; drawer.load_images([img1, img2, img3])</span>
+<span class="sd">&gt;&gt;&gt; drawer.show_images_grid(n_columns=2, buffer=10)</span>
+
+<span class="sd">&gt;&gt;&gt; drawer.show_images_grid(save=True, filename=&quot;grid_output.png&quot;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
+
+        <span class="k">assert</span> <span class="n">empty_tile_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="p">(</span>
+            <span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; is not a known colour.</span><span class="se">\n</span><span class="s2">For an extensive list&quot;</span>
+            <span class="s2">&quot;of accepted colours, look at the &#39;colour_dictionary.keys()&#39;&quot;</span>
+            <span class="s2">&quot;attribute of the class.&quot;</span> <span class="o">%</span> <span class="n">empty_tile_colour</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;&#39;size&#39; argument must have lenght == 2.&quot;</span>
+
+        <span class="k">if</span> <span class="n">images</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">img_list</span>
+
+        <span class="n">img_width</span><span class="p">,</span> <span class="n">img_height</span> <span class="o">=</span> <span class="n">size</span>
+
+        <span class="c1"># Calculate the number of rows needed</span>
+        <span class="n">n_images</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+        <span class="n">n_rows</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_images</span> <span class="o">+</span> <span class="n">n_columns</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">n_columns</span>
+
+        <span class="n">grid_width</span> <span class="o">=</span> <span class="n">img_width</span> <span class="o">*</span> <span class="n">n_columns</span> <span class="o">+</span> <span class="n">buffer</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_columns</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">grid_height</span> <span class="o">=</span> <span class="n">img_height</span> <span class="o">*</span> <span class="n">n_rows</span> <span class="o">+</span> <span class="n">buffer</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_rows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">grid_img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;RGB&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">grid_width</span><span class="p">,</span> <span class="n">grid_height</span><span class="p">),</span>
+                             <span class="n">empty_tile_colour</span><span class="p">)</span>
+
+        <span class="c1"># Paste images into grid</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="n">n_columns</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">img_width</span> <span class="o">+</span> <span class="n">buffer</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="n">n_columns</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">img_height</span> <span class="o">+</span> <span class="n">buffer</span><span class="p">)</span>
+            <span class="n">img_resized</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+            <span class="n">grid_img</span><span class="o">.</span><span class="n">paste</span><span class="p">(</span><span class="n">img_resized</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+            <span class="n">grid_img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="n">display</span><span class="p">(</span><span class="n">grid_img</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MolDrawer.draw_mol">
+<a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.draw_mol">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw_mol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">legend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">highlightAtoms</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">ACS1996_mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Render and return a single molecule image.</span>
+
+<span class="sd">The method applies the active `drawing_options`, supports atom highlighting,</span>
+<span class="sd">optional contour visualization of atomic weights (`mapStyle=&#39;GC&#39;` or `&#39;C&#39;` </span>
+<span class="sd">when `atomWeights` are provided), optional custom shape overlays, and ACS 1996 </span>
+<span class="sd">styling.</span>
+
+<span class="sd">**Contour Visualization (Atomic Weights)**</span>
+
+<span class="sd">When `atomWeights` is provided in drawing_options, mlchem can visualize these </span>
+<span class="sd">values using two different contour styles:</span>
+
+<span class="sd">- `mapStyle=&#39;GC&#39;` (Gaussian Contours): Renders smooth gaussian overlays using </span>
+<span class="sd">  RDKit&#39;s ContourAndDrawGaussians. Best for continuous properties like </span>
+<span class="sd">  electrostatic potential or similarity gradients. Contours blend smoothly </span>
+<span class="sd">  across the molecular surface.</span>
+
+<span class="sd">- `mapStyle=&#39;C&#39;` (Circle Contours): Custom mlchem implementation using gradient </span>
+<span class="sd">  circles around atoms. Best for discrete atom-by-atom properties like </span>
+<span class="sd">  per-atom charges or SHAP contributions. Provides clear visual separation </span>
+<span class="sd">  between atoms.</span>
+
+<span class="sd">This extends RDKit&#39;s native gaussian contour support with:</span>
+<span class="sd">- A second visualization style (circle contours)</span>
+<span class="sd">- Seamless integration with all other drawing options</span>
+<span class="sd">- Proper legend handling (solves RDKit&#39;s alignment issues)</span>
+<span class="sd">- Fine-grained color control via atomNoteColour, legendColour, etc.</span>
+<span class="sd">- Automatic 2D coordinate handling</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol : rdkit.Chem.rdchem.Mol, optional</span>
+<span class="sd">    Molecule to draw. If `None`, `self.mol` is used.</span>
+<span class="sd">legend : str, optional</span>
+<span class="sd">    Legend text. If empty, `self.legend` is used.</span>
+<span class="sd">highlightAtoms : Iterable, optional</span>
+<span class="sd">    Atom indices to highlight. If empty, `self.highlightAtoms` is used.</span>
+<span class="sd">size : Iterable[int, int], optional</span>
+<span class="sd">    Canvas size `(width, height)`. If `None`, `self.size` is used.</span>
+<span class="sd">ACS1996_mode : bool, default=False</span>
+<span class="sd">    If `True`, draw using `Draw.DrawMoleculeACS1996`.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">PIL.Image.Image</span>
+<span class="sd">    Rendered molecule image.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">AssertionError</span>
+<span class="sd">    If no molecule is available (`mol is None` and `self.mol is None`).</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If a named colour is unknown.</span>
+<span class="sd">TypeError</span>
+<span class="sd">    If provided colour tuples/palettes are not valid.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; mol = Chem.MolFromSmiles(&quot;CCO&quot;)</span>
+<span class="sd">&gt;&gt;&gt; drawer = MolDrawer()</span>
+<span class="sd">&gt;&gt;&gt; img = drawer.draw_mol(mol, legend=&quot;Ethanol&quot;, highlightAtoms=[1])</span>
+
+<span class="sd">Draw with gaussian contour similarity map (smooth overlay):</span>
+
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import PropManager as PM</span>
+<span class="sd">&gt;&gt;&gt; weights = PM.Mol.get_gasteiger_charges(mol)</span>
+<span class="sd">&gt;&gt;&gt; drawer.update_drawing_options(atomWeights=weights, mapStyle=&#39;GC&#39;)</span>
+<span class="sd">&gt;&gt;&gt; img = drawer.draw_mol(mol, legend=&quot;Gaussian contours&quot;)</span>
+
+<span class="sd">Draw with circle-style weight map (atom-by-atom visualization):</span>
+
+<span class="sd">&gt;&gt;&gt; drawer.update_drawing_options(atomWeights=weights, mapStyle=&#39;C&#39;)</span>
+<span class="sd">&gt;&gt;&gt; img = drawer.draw_mol(mol, legend=&quot;Circle contours&quot;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">rdDepictor</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">make_rgb_transparent</span><span class="p">,</span>
+                                   <span class="n">show_png</span><span class="p">,</span>
+                                   <span class="n">convert_rgb</span><span class="p">,</span>
+                                   <span class="n">create_smooth_gradient_circle</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+        <span class="c1"># Keep track of mols, highlightAtoms, sizes, legends used</span>
+        <span class="k">if</span> <span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;No valid molecule was passed.&quot;</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mol</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetNumConformers</span><span class="p">():</span>
+            <span class="n">rdDepictor</span><span class="o">.</span><span class="n">Compute2DCoords</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">highlightAtoms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">highlightAtoms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">highlightAtoms</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="n">highlightAtoms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">highlightAtoms</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">highlightAtoms</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+            <span class="n">highlightAtoms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">highlightAtoms</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">highlightAtoms</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">legend</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">legend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legend_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">legend</span><span class="p">)</span>
+
+        <span class="n">d2d</span> <span class="o">=</span> <span class="n">Draw</span><span class="o">.</span><span class="n">MolDraw2DCairo</span><span class="p">(</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">dopts</span> <span class="o">=</span> <span class="n">d2d</span><span class="o">.</span><span class="n">drawOptions</span><span class="p">()</span>
+
+        <span class="c1"># apply drawing options #</span>
+
+        <span class="n">atom_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;atomWeights&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">atom_weights</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;mapStyle&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;padding&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.07</span> \
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;scalingFactor&#39;</span><span class="p">]</span>
+
+        <span class="c1">## all options a function is not needed for ##</span>
+
+        <span class="c1"># colour options refusing the &#39;setattr()&#39; method</span>
+
+        <span class="n">COLOUR_OPTIONS</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;backgroundColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setBackgroundColour</span><span class="p">,</span>
+            <span class="s2">&quot;highlightColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setHighlightColour</span><span class="p">,</span>
+            <span class="s2">&quot;queryColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setQueryColour</span><span class="p">,</span>
+            <span class="s2">&quot;annotationColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setAnnotationColour</span><span class="p">,</span>
+            <span class="s2">&quot;atomNoteColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setAtomNoteColour</span><span class="p">,</span>
+            <span class="s2">&quot;bondNoteColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setBondNoteColour</span><span class="p">,</span>
+            <span class="s2">&quot;legendColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setLegendColour</span><span class="p">,</span>
+            <span class="s2">&quot;symbolColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setSymbolColour</span><span class="p">,</span>
+            <span class="s2">&quot;variableAttachmentColour&quot;</span><span class="p">:</span> <span class="n">dopts</span><span class="o">.</span><span class="n">setVariableAttachmentColour</span><span class="p">,</span>
+        <span class="p">}</span>
+
+
+        <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+
+            <span class="k">if</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">COLOUR_OPTIONS</span><span class="p">:</span>     <span class="c1"># </span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dopts</span><span class="p">,</span> <span class="n">option</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">dopts</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Problem encountered with the &#39;</span><span class="si">%s</span><span class="s2">&#39; option. &quot;</span>
+                          <span class="s2">&quot;Please disable it in the original definition&quot;</span>
+                          <span class="s2">&quot; in self.drawing_options attribute.&quot;</span> <span class="o">%</span> <span class="n">option</span><span class="p">)</span>
+
+        <span class="n">background_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;backgroundColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">background_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">background_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Background colour must be a valid string or tuple.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">background_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">background_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">background_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">background_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setBackgroundColour</span><span class="p">(</span><span class="n">background_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not&quot;</span>
+                    <span class="s2">&quot; a valid colour in mlchem.importables.&quot;</span>
+                    <span class="s2">&quot;colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">background_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">background_tuple</span> <span class="o">=</span> <span class="n">background_colour</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setBackgroundColour</span><span class="p">(</span><span class="n">background_tuple</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct &quot;</span>
+                    <span class="s2">&quot;custom palette has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: &quot;</span>
+                    <span class="s2">&quot;(0.7,0.0,0.7)) will set overwrite colour &quot;</span>
+                    <span class="s2">&quot;to purple.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># all other options a function is needed for</span>
+
+        <span class="n">chosen_palette</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;atomPalette&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">chosen_palette</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;avalon&#39;</span><span class="p">,</span> <span class="s1">&#39;cdk&#39;</span><span class="p">,</span> <span class="s1">&#39;bw&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">chosen_palette</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="p">),</span> <span class="p">(</span>
+                <span class="s2">&quot;&#39;atomPalette&#39; property must be one of the following:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;&#39;avalon&#39;, &#39;cdk&#39;, &#39;bw&#39;, or a dict(atomic_number:&quot;</span>
+                <span class="s2">&quot;(R,G,B),)&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">chosen_palette</span> <span class="o">==</span> <span class="s1">&#39;avalon&#39;</span><span class="p">:</span>
+            <span class="n">dopts</span><span class="o">.</span><span class="n">useAvalonAtomPalette</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">chosen_palette</span> <span class="o">==</span> <span class="s1">&#39;cdk&#39;</span><span class="p">:</span>
+            <span class="n">dopts</span><span class="o">.</span><span class="n">useCDKAtomPalette</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">chosen_palette</span> <span class="o">==</span> <span class="s1">&#39;bw&#39;</span><span class="p">:</span>
+            <span class="n">dopts</span><span class="o">.</span><span class="n">useBWAtomPalette</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chosen_palette</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">updateAtomPalette</span><span class="p">(</span><span class="n">chosen_palette</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper palette dictionary was passed. Correct custom&quot;</span>
+                    <span class="s2">&quot; palette has to be: dict(atomic_number:(R,G,B),)&quot;</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">example:</span><span class="se">\n</span><span class="s2">&quot;&quot;dict(6: (0.7,0.0,0.7)) will overwrite&quot;</span>
+                    <span class="s2">&quot; carbon black colour with purple.&quot;</span><span class="p">)</span>
+
+        <span class="n">highlight_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;highlightColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">highlight_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">highlight_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Highlight colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">highlight_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">highlight_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">highlight_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">highlight_colour</span><span class="p">]</span>
+                <span class="n">colour_tuple</span> <span class="o">=</span> <span class="n">make_rgb_transparent</span><span class="p">(</span>
+                    <span class="n">highlight_tuple</span><span class="p">,</span>
+                    <span class="n">background_tuple</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;highlightAlpha&#39;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setHighlightColour</span><span class="p">(</span><span class="n">colour_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid&quot;</span>
+                    <span class="s2">&quot; colour in mlchem.importables.&quot;</span>
+                    <span class="s2">&quot;colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">highlight_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">highlight_tuple</span> <span class="o">=</span> <span class="n">highlight_colour</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setHighlightColour</span><span class="p">(</span><span class="n">highlight_tuple</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. &quot;</span>
+                    <span class="s2">&quot;Correct custom palette has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: &quot;</span>
+                    <span class="s2">&quot;(0.7,0.0,0.7)) will set overwrite colour &quot;</span>
+                    <span class="s2">&quot;to purple.&quot;</span><span class="p">)</span>
+
+        <span class="n">query_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;queryColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">query_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">query_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Query colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">query_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">query_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">query_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setQueryColour</span><span class="p">(</span><span class="n">query_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a &quot;</span>
+                    <span class="s2">&quot;valid colour in mlchem.importables.&quot;</span>
+                    <span class="s2">&quot;colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">query_colour</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">query_tuple</span> <span class="o">=</span> <span class="n">query_colour</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setQueryColour</span><span class="p">(</span><span class="n">query_tuple</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct custom&quot;</span>
+                    <span class="s2">&quot;palette has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) will&quot;</span>
+                    <span class="s2">&quot; set overwrite colour to purple.&quot;</span><span class="p">)</span>
+
+        <span class="n">annotation_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;annotationColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Annotation colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">annotation_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">annotation_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">annotation_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">annotation_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setAnnotationColour</span><span class="p">(</span><span class="n">annotation_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="p">(</span><span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid &quot;</span>
+             <span class="s2">&quot;colour in mlchem.importables.colour_dictionary palette.&quot;</span> <span class="o">%</span>
+             <span class="n">annotation_colour</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">annotation_tuple</span> <span class="o">=</span> <span class="n">annotation_colour</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setAnnotationColour</span><span class="p">(</span><span class="n">annotation_colour</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="p">(</span><span class="s2">&quot;An improper colour tuple was passed. Correct custom palette &quot;</span>
+             <span class="s2">&quot;has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) &quot;</span>
+             <span class="s2">&quot;will set overwrite colour &quot;&quot;to purple.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># process atomNoteColour</span>
+        <span class="n">atom_note_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;atomNoteColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">atom_note_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">atom_note_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Atom note colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">atom_note_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">atom_note_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">atom_note_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">atom_note_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setAtomNoteColour</span><span class="p">(</span><span class="n">atom_note_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid &quot;</span>
+                    <span class="s2">&quot;colour in mlchem.importables.colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">atom_note_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setAtomNoteColour</span><span class="p">(</span><span class="n">atom_note_colour</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct custom palette &quot;</span>
+                    <span class="s2">&quot;has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) &quot;</span>
+                    <span class="s2">&quot;will set atom note colour to purple.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># process bondNoteColour</span>
+        <span class="n">bond_note_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;bondNoteColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">bond_note_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">bond_note_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Bond note colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bond_note_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">bond_note_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">bond_note_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">bond_note_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setBondNoteColour</span><span class="p">(</span><span class="n">bond_note_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid &quot;</span>
+                    <span class="s2">&quot;colour in mlchem.importables.colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">bond_note_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setBondNoteColour</span><span class="p">(</span><span class="n">bond_note_colour</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct custom palette &quot;</span>
+                    <span class="s2">&quot;has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) &quot;</span>
+                    <span class="s2">&quot;will set bond note colour to purple.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># process legendColour</span>
+        <span class="n">legend_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;legendColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">legend_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">legend_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Legend colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">legend_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">legend_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">legend_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">legend_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setLegendColour</span><span class="p">(</span><span class="n">legend_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid &quot;</span>
+                    <span class="s2">&quot;colour in mlchem.importables.colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">legend_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setLegendColour</span><span class="p">(</span><span class="n">legend_colour</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct custom palette &quot;</span>
+                    <span class="s2">&quot;has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) &quot;</span>
+                    <span class="s2">&quot;will set legend colour to purple.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># process symbolColour</span>
+        <span class="n">symbol_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;symbolColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Symbol colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">symbol_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">symbol_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">symbol_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setSymbolColour</span><span class="p">(</span><span class="n">symbol_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid &quot;</span>
+                    <span class="s2">&quot;colour in mlchem.importables.colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">symbol_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setSymbolColour</span><span class="p">(</span><span class="n">symbol_colour</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct custom palette &quot;</span>
+                    <span class="s2">&quot;has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) &quot;</span>
+                    <span class="s2">&quot;will set symbol colour to purple.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># process variableAttachmentColour</span>
+        <span class="n">variable_attachment_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;variableAttachmentColour&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_attachment_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_attachment_colour</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="p">(</span>
+                    <span class="s2">&quot;Variable attachment colour must be a valid string or tuple.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable_attachment_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">variable_attachment_colour</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">variable_attachment_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">variable_attachment_colour</span><span class="p">]</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setVariableAttachmentColour</span><span class="p">(</span><span class="n">variable_attachment_tuple</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour string was passed. &#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid &quot;</span>
+                    <span class="s2">&quot;colour in mlchem.importables.colour_dictionary palette.&quot;</span> <span class="o">%</span>
+                    <span class="n">variable_attachment_colour</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">dopts</span><span class="o">.</span><span class="n">setVariableAttachmentColour</span><span class="p">(</span><span class="n">variable_attachment_colour</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;An improper colour tuple was passed. Correct custom palette &quot;</span>
+                    <span class="s2">&quot;has to be: (R,G,B)</span><span class="se">\n</span><span class="s2">Example: (0.7,0.0,0.7)) &quot;</span>
+                    <span class="s2">&quot;will set variable attachment colour to purple.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ACS1996_mode</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">d2d</span> <span class="o">=</span> <span class="n">Draw</span><span class="o">.</span><span class="n">MolDraw2DCairo</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">Draw</span><span class="o">.</span><span class="n">DrawMoleculeACS1996</span><span class="p">(</span><span class="n">d2d</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="n">legend</span><span class="p">)</span>
+            <span class="n">d2d</span><span class="o">.</span><span class="n">FinishDrawing</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DrawingText</span> <span class="o">=</span> <span class="n">d2d</span><span class="o">.</span><span class="n">GetDrawingText</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">show_png</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DrawingText</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Draw molecule for non-GC styles</span>
+            <span class="c1"># For GC, let SimMaps handle both molecule and contours</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">atom_weights</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;mapStyle&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;GC&#39;</span><span class="p">):</span>
+                <span class="n">d2d</span><span class="o">.</span><span class="n">DrawMolecule</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="n">legend</span><span class="p">,</span> <span class="n">highlightAtoms</span><span class="o">=</span><span class="n">highlightAtoms</span><span class="p">)</span>
+            
+            <span class="c1"># Shapes will be drawn via PIL after rendering for consistent coordinate transformation</span>
+            
+            <span class="k">if</span> <span class="n">atom_weights</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;mapStyle&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span>
+                <span class="n">max_weight</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">atom_weights</span><span class="p">)</span>
+                <span class="n">min_weight</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">atom_weights</span><span class="p">)</span>
+                <span class="n">normalised_weights</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="n">weight</span> <span class="o">/</span> <span class="n">max_weight</span> <span class="k">if</span> <span class="n">weight</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span>
+                     <span class="n">weight</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">min_weight</span><span class="p">))</span> <span class="k">if</span>
+                    <span class="n">max_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">min_weight</span> <span class="k">else</span>
+                    <span class="mi">0</span> <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">atom_weights</span>
+                     <span class="p">]</span>
+
+                <span class="c1"># Get the atomic coordinates</span>
+                <span class="n">atom_coords</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">atom</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">():</span>
+                    <span class="n">d2d</span><span class="o">.</span><span class="n">GetDrawCoords</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">())</span> <span class="k">for</span>
+                    <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetAtoms</span><span class="p">()</span>
+                    <span class="p">}</span>
+
+                <span class="c1"># Create a base image from d2d (now includes shapes for non-GC)</span>
+                <span class="n">molecule_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+                    <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span>
+                        <span class="n">d2d</span><span class="o">.</span><span class="n">GetDrawingText</span><span class="p">()</span>
+                        <span class="p">)</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Draw concentric smooth gradient circles around each atom</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageDraw</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atom</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">GetAtoms</span><span class="p">()):</span>
+                    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">atom_coords</span><span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">()]</span>
+                    <span class="n">weight</span> <span class="o">=</span> <span class="n">atom_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">weight</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">continue</span>     <span class="c1"># Skip fully transparent circles</span>
+
+                    <span class="c1"># Determine color and alpha based on weight</span>
+                    <span class="n">weight_baseline_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;weightAlpha&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">weight</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">weight_neg_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span>\
+                          <span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;negativeColour&#39;</span><span class="p">]</span>
+                        <span class="n">colour</span> <span class="o">=</span> <span class="n">convert_rgb</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">weight_neg_colour</span><span class="p">],</span>
+                            <span class="s1">&#39;denormalise&#39;</span>
+                            <span class="p">)</span>
+                        <span class="n">normalised_alpha</span> <span class="o">=</span> <span class="n">weight_baseline_alpha</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span>
+                            <span class="n">normalised_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                            <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">weight_pos_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span>\
+                          <span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;positiveColour&#39;</span><span class="p">]</span>
+                        <span class="n">colour</span> <span class="o">=</span> <span class="n">convert_rgb</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">weight_pos_colour</span><span class="p">],</span>
+                            <span class="s1">&#39;denormalise&#39;</span>
+                            <span class="p">)</span>
+                        <span class="n">normalised_alpha</span> <span class="o">=</span> <span class="n">weight_baseline_alpha</span> <span class="o">*</span> \
+                            <span class="n">normalised_weights</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                    <span class="c1"># Calculate radius and ensure it is within min and max bounds</span>
+                    <span class="n">weight_scaling_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span>\
+                      <span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;scalingFactor&#39;</span><span class="p">]</span>
+                    <span class="n">weight_min_radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;minRadius&#39;</span><span class="p">]</span>
+                    <span class="n">weight_max_radius</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;maxRadius&#39;</span><span class="p">]</span>
+                    <span class="n">radius</span> <span class="o">=</span> <span class="n">weight_scaling_factor</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+                    <span class="n">radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="n">weight_min_radius</span><span class="p">,</span>
+                        <span class="nb">min</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">weight_max_radius</span><span class="p">)</span>
+                            <span class="p">)</span>
+
+                    <span class="n">weight_num_circles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;numContours&#39;</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">weight_num_circles</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">gradient_circle</span> <span class="o">=</span> <span class="n">create_smooth_gradient_circle</span><span class="p">(</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">radius</span> <span class="o">*</span> <span class="n">j</span><span class="p">),</span>
+                            <span class="n">colour</span><span class="p">,</span>
+                            <span class="n">normalised_alpha</span>
+                            <span class="p">)</span>
+                        <span class="n">molecule_image</span><span class="o">.</span><span class="n">paste</span><span class="p">(</span>
+                            <span class="n">gradient_circle</span><span class="p">,</span>
+                            <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">j</span><span class="p">),</span>
+                                <span class="nb">int</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">radius</span> <span class="o">*</span> <span class="n">j</span><span class="p">)),</span> <span class="n">gradient_circle</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">molecule_image</span>
+
+            <span class="c1"># Draw gaussian contours for GC mapStyle</span>
+            <span class="k">if</span> <span class="n">atom_weights</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;mapStyle&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;GC&#39;</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.visualise.simmaps</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimMaps</span> <span class="k">as</span> <span class="n">SM</span>
+                
+                <span class="n">resolution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;mapRes&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;colourMap&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">map_background_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;backgroundColour&#39;</span><span class="p">]</span>
+                    <span class="n">map_negative_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;negativeColour&#39;</span><span class="p">]</span>
+                    <span class="n">map_positive_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;positiveColour&#39;</span><span class="p">]</span>
+                    
+                    <span class="n">map_background_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">map_background_colour</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_background_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">map_background_colour</span>
+                    <span class="n">map_negative_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">map_negative_colour</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_negative_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">map_negative_colour</span>
+                    <span class="n">map_positive_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">map_positive_colour</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">map_positive_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">map_positive_colour</span>
+                    
+                    <span class="n">colourMap</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">map_negative_tuple</span><span class="p">,</span>
+                        <span class="n">map_background_tuple</span><span class="p">,</span>
+                        <span class="n">map_positive_tuple</span>
+                    <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">colourMap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;colourMap&#39;</span><span class="p">]</span>
+                
+                <span class="n">d2d</span> <span class="o">=</span> <span class="n">SM</span><span class="o">.</span><span class="n">get_similarity_map_from_weights</span><span class="p">(</span>
+                    <span class="n">mol</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span>
+                    <span class="n">weights</span><span class="o">=</span><span class="n">atom_weights</span><span class="p">,</span>
+                    <span class="n">draw2d</span><span class="o">=</span><span class="n">d2d</span><span class="p">,</span>
+                    <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span>
+                    <span class="n">contourLines</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;numContours&#39;</span><span class="p">],</span>
+                    <span class="n">contour_width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;contourWidth&#39;</span><span class="p">],</span>
+                    <span class="n">colorMap</span><span class="o">=</span><span class="n">colourMap</span><span class="p">,</span>
+                    <span class="n">dash_negative</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;dashNegative&#39;</span><span class="p">],</span>
+                    <span class="n">contour_colour</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;contourColour&#39;</span><span class="p">],</span>
+                    <span class="n">draw_molecule</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Always draw molecule + contours for proper rendering</span>
+                    <span class="n">legend</span><span class="o">=</span><span class="n">legend</span><span class="p">)</span>
+
+            <span class="n">d2d</span><span class="o">.</span><span class="n">FinishDrawing</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">DrawingText</span> <span class="o">=</span> <span class="n">d2d</span><span class="o">.</span><span class="n">GetDrawingText</span><span class="p">()</span>
+            
+            <span class="c1"># For GC contours with legend, add legend manually using PIL</span>
+            <span class="c1"># to prevent RDKit from shifting the molecule and breaking contour alignment</span>
+            <span class="k">if</span> <span class="n">atom_weights</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;mapStyle&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;GC&#39;</span> <span class="ow">and</span> <span class="n">legend</span><span class="p">:</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DrawingText</span><span class="p">))</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageDraw</span><span class="p">,</span> <span class="n">ImageFont</span>
+                <span class="n">draw</span> <span class="o">=</span> <span class="n">ImageDraw</span><span class="o">.</span><span class="n">Draw</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+                
+                <span class="c1"># Try to use a reasonable font size based on legendFontSize</span>
+                <span class="n">legend_font_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;legendFontSize&#39;</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># Try to load a default font at the specified size</span>
+                    <span class="n">font</span> <span class="o">=</span> <span class="n">ImageFont</span><span class="o">.</span><span class="n">truetype</span><span class="p">(</span><span class="s2">&quot;arial.ttf&quot;</span><span class="p">,</span> <span class="n">legend_font_size</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+                    <span class="c1"># Fall back to default font if arial is not available</span>
+                    <span class="n">font</span> <span class="o">=</span> <span class="n">ImageFont</span><span class="o">.</span><span class="n">load_default</span><span class="p">()</span>
+                
+                <span class="c1"># Calculate text position (centered at bottom)</span>
+                <span class="n">bbox</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">textbbox</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">legend</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">)</span>
+                <span class="n">text_width</span> <span class="o">=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">text_height</span> <span class="o">=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">-</span> <span class="n">text_width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">-</span> <span class="n">text_height</span> <span class="o">-</span> <span class="mi">10</span>
+                
+                <span class="c1"># Get legend color</span>
+                <span class="n">legend_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawing_options</span><span class="p">[</span><span class="s1">&#39;legendColour&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">legend_colour</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">legend_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_dictionary</span><span class="p">[</span><span class="n">legend_colour</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">legend_tuple</span> <span class="o">=</span> <span class="n">legend_colour</span>
+                <span class="c1"># Convert from 0-1 to 0-255</span>
+                <span class="n">legend_rgb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">legend_tuple</span><span class="p">)</span>
+                
+                <span class="c1"># Draw the legend text</span>
+                <span class="n">draw</span><span class="o">.</span><span class="n">text</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">legend</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">legend_rgb</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">)</span>
+                
+                <span class="c1"># Convert back to PNG bytes</span>
+                <span class="n">buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+                <span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;PNG&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">DrawingText</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+            
+            <span class="k">return</span> <span class="n">show_png</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DrawingText</span><span class="p">)</span></div>
+</div>
+
+        
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.drawing</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

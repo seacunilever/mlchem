@@ -1,0 +1,1218 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.ml.modelling.model_interpretation &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_interpretation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.ml.modelling.model_interpretation</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTML</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+
+<div class="viewcode-block" id="ShapExplainer">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ShapExplainer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A class to generate SHAP (SHapley Additive exPlanations) values for </span>
+<span class="sd">model interpretability.</span>
+
+<span class="sd">This class provides methods to explain the output of machine learning </span>
+<span class="sd">models using SHAP values. It supports both tree-based models and general </span>
+<span class="sd">estimators, and offers a variety of visualisation tools to understand </span>
+<span class="sd">the impact of each feature on model predictions.</span>
+
+<span class="sd">Attributes</span>
+<span class="sd">----------</span>
+<span class="sd">model_type : str</span>
+<span class="sd">    The type of model (&#39;tree&#39; or other).</span>
+
+<span class="sd">data : pandas.DataFrame</span>
+<span class="sd">    The dataset used for generating SHAP values.</span>
+
+<span class="sd">y : array-like</span>
+<span class="sd">    The target values corresponding to the dataset.</span>
+
+<span class="sd">estimator : object</span>
+<span class="sd">    The machine learning model to be explained.</span>
+
+<span class="sd">Methods</span>
+<span class="sd">-------</span>
+<span class="sd">explain()</span>
+<span class="sd">    Generates SHAP values for the model.</span>
+
+<span class="sd">load(base_values, shap_values)</span>
+<span class="sd">    Loads precomputed SHAP values.</span>
+
+<span class="sd">save(path, filename)</span>
+<span class="sd">    Saves the SHAP values to the specified path.</span>
+
+<span class="sd">force_plot()</span>
+<span class="sd">    Generates a force plot to visualise SHAP values.</span>
+
+<span class="sd">force_plot_single(i)</span>
+<span class="sd">    Generates a force plot for a single instance.</span>
+
+<span class="sd">dependence_plot(column)</span>
+<span class="sd">    Generates a dependence plot for a specified feature.</span>
+
+<span class="sd">dependence_plot_all()</span>
+<span class="sd">    Generates dependence plots for all features.</span>
+
+<span class="sd">summary_plot(plot_type=&#39;dot&#39;)</span>
+<span class="sd">    Generates a summary plot of SHAP values.</span>
+
+<span class="sd">waterfall_plot(i)</span>
+<span class="sd">    Generates a waterfall plot for a single instance.</span>
+
+<span class="sd">bar_plot()</span>
+<span class="sd">    Generates a bar plot of SHAP values.</span>
+
+<span class="sd">feature_importance()</span>
+<span class="sd">    Calculates and returns feature importance based on SHAP values.</span>
+
+<span class="sd">decision_plot(interval_lower, interval_upper)</span>
+<span class="sd">    Generates a decision plot for a specified probability interval.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="ShapExplainer.__init__">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+                 <span class="n">y</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">is_tree</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Initialise the ShapExplainer with a model, dataset, and target values.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">estimator : object</span>
+<span class="sd">    The machine learning model to be explained.</span>
+
+<span class="sd">data : pandas.DataFrame</span>
+<span class="sd">    The dataset used for generating SHAP values.</span>
+
+<span class="sd">y : Iterable</span>
+<span class="sd">    The target values corresponding to the dataset.</span>
+
+<span class="sd">is_tree : bool, optional (default=False)</span>
+<span class="sd">    Whether the model is a tree-based model (e.g., XGBoost, LightGBM).</span>
+
+<span class="sd">max_samples : int or None, optional (default=None)</span>
+<span class="sd">    Maximum number of samples to use for background dataset. If None, uses all samples.</span>
+<span class="sd">    Set to the dataset size to avoid subsampling warnings.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span> <span class="o">=</span> <span class="n">is_tree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span> <span class="o">=</span> <span class="n">max_samples</span> <span class="k">if</span> <span class="n">max_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_tree_shap_values_for_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 2D SHAP matrix for tree plots with explicit layout checks.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Empty SHAP values container for tree model.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">values</span>
+            <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid SHAP tensor layout: empty class axis.&quot;</span><span class="p">)</span>
+                <span class="n">class_index</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="k">return</span> <span class="n">values</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">class_index</span><span class="p">]</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Unsupported SHAP layout for tree model. Expected list/tuple or 2D/3D numpy array.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_tree_base_value_for_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a scalar-like base value for tree plots with explicit checks.&quot;&quot;&quot;</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Empty SHAP base values container for tree model.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">base</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">base</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">base</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">flat_base</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">flat_base</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Empty SHAP base values array for tree model.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">flat_base</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">flat_base</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">flat_base</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">base</span>
+
+<div class="viewcode-block" id="ShapExplainer.explain">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.explain">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate SHAP values for the model.</span>
+
+<span class="sd">        This method creates a SHAP explainer based on the model type and</span>
+<span class="sd">        computes the SHAP values for the provided dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">expected_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictive_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span>\
+                <span class="n">predict_proba</span><span class="p">(</span><span class="n">x</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predictive_function</span><span class="p">,</span>
+                                            <span class="n">shap</span><span class="o">.</span><span class="n">maskers</span><span class="o">.</span><span class="n">Independent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">max_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">base_values</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">values</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.load">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.load">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+             <span class="n">base_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+             <span class="n">shap_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Load precomputed SHAP values.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">base_values : numpy.ndarray</span>
+<span class="sd">    The precomputed base values.</span>
+
+<span class="sd">shap_values : numpy.ndarray</span>
+<span class="sd">    The precomputed SHAP values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="n">base_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="n">shap_values</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.save">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Save SHAP values to the specified path.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">path : str</span>
+<span class="sd">    The directory path where the SHAP values will be saved.</span>
+
+<span class="sd">filename : str</span>
+<span class="sd">    The base filename for the saved SHAP values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">joblib</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">/base_values_</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">joblib</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">/shap_values_</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.force_plot">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">force_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTML</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a force plot to visualise SHAP values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">IPython.core.display.HTML</span>
+<span class="sd">    An HTML object containing the SHAP force plot.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;XGB&#39;</span><span class="p">):</span>     <span class="c1"># if XGBoost:</span>
+                <span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span>\
+                    <span class="n">force_plot</span><span class="p">(</span><span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span>
+                               <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                               <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="s1">&#39;logit&#39;</span><span class="p">,</span>
+                               <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">force_plot</span><span class="p">(</span>
+                    <span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree_base_value_for_plot</span><span class="p">(),</span>
+                    <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span>\
+                <span class="n">force_plot</span><span class="p">(</span><span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span>
+                           <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                           <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">HTML</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;div style=&#39;background-colour:white;&#39;&gt;</span><span class="si">{</span><span class="n">shap</span><span class="o">.</span><span class="n">getjs</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">plot</span><span class="o">.</span><span class="n">html</span><span class="p">()</span><span class="si">}</span><span class="s2">&lt;/div&gt;&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.force_plot_single">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.force_plot_single">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">force_plot_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HTML</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a force plot for a single instance.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">i : int</span>
+<span class="sd">    The index of the instance to visualise.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">IPython.core.display.HTML</span>
+<span class="sd">    An HTML object containing the SHAP force plot for the specified instance.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;XGB&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">force_plot</span><span class="p">(</span>
+                    <span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span>
+                    <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
+                    <span class="n">link</span><span class="o">=</span><span class="s1">&#39;logit&#39;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">tree_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">force_plot</span><span class="p">(</span>
+                    <span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree_base_value_for_plot</span><span class="p">(),</span>
+                    <span class="n">shap_values</span><span class="o">=</span><span class="n">tree_values</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
+                    <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">force_plot</span><span class="p">(</span>
+                <span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">HTML</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&lt;div style=&#39;background-colour:White;&#39;&gt;&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shap</span><span class="o">.</span><span class="n">getjs</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">html</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;&lt;/div&gt;&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.dependence_plot">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dependence_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a dependence plot for a specified feature.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">column : int</span>
+<span class="sd">    The index of the feature to visualise.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">dependence_plot</span><span class="p">(</span>
+                <span class="n">column</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">dependence_plot</span><span class="p">(</span>
+                <span class="n">column</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.dependence_plot_all">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.dependence_plot_all">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dependence_plot_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate dependence plots for all features.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="n">tree_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">shap</span><span class="o">.</span><span class="n">dependence_plot</span><span class="p">(</span>
+                    <span class="n">column</span><span class="p">,</span>
+                    <span class="n">tree_values</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">shap</span><span class="o">.</span><span class="n">dependence_plot</span><span class="p">(</span>
+                    <span class="n">column</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.summary_plot">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.summary_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;dot&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;bar&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;violin&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;layered_violin&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;compact_dot&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dot&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a summary plot of SHAP values.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">plot_type : {&#39;dot&#39;, &#39;bar&#39;, &#39;violin&#39;, &#39;layered_violin&#39;, &#39;compact_dot&#39;}, </span>
+<span class="sd">optional (default=&#39;dot&#39;)</span>
+<span class="sd">    The type of plot to generate.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_type</span> <span class="o">=</span> <span class="n">plot_type</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">summary_plot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">plot_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_type</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">summary_plot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">plot_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_type</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.waterfall_plot">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.waterfall_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">waterfall_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a waterfall plot for a single instance.</span>
+
+<span class="sd">Note: Not available for tree-based models.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">i : int</span>
+<span class="sd">    The index of the instance to visualise.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Waterfall plot not available for Tree models.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                    <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
+                    <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.bar_plot">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.bar_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bar_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a bar plot of SHAP values.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">summary_plot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.heatmap">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.heatmap">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">heatmap</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a heatmap of SHAP values.</span>
+
+<span class="sd">This method creates a heatmap to visualise the SHAP values for the model&#39;s</span>
+<span class="sd">predictions. It initialises the SHAP JavaScript visualisation and displays</span>
+<span class="sd">the plot.</span>
+
+<span class="sd">Note</span>
+<span class="sd">----</span>
+<span class="sd">Heatmaps are not available for tree-based models.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Heatmap plot not available for Tree models.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                    <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">,</span>
+                    <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.feature_importance">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.feature_importance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">feature_importance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate and visualise feature importance based on SHAP values.</span>
+
+<span class="sd">This method computes feature importance by summing the absolute SHAP values</span>
+<span class="sd">for each feature. It also calculates the Spearman correlation between each</span>
+<span class="sd">feature and its SHAP values, and derives an overall impact score. The results</span>
+<span class="sd">are visualised using a color-coded bar plot and returned as a DataFrame.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pandas.DataFrame</span>
+<span class="sd">    A DataFrame containing the feature importance weights, correlations,</span>
+<span class="sd">    and overall impact scores for each feature.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">spearmanr</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">importances</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)[:,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span>\
+                    <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+                    <span class="p">]</span> <span class="c1"># abs importance over the total  for each feature</span>
+            <span class="n">correlations</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">spearmanr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">[:,</span><span class="n">i</span><span class="p">],</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+                            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">))]</span>
+            
+            <span class="n">correlations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">correlations</span><span class="p">))</span>
+            <span class="n">overall_impacts</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="o">&gt;=</span><span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="n">w</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">importances</span><span class="p">,</span><span class="n">correlations</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Not supported yet for the model </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="p">[</span><span class="s1">&#39;W&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">importances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="p">[</span><span class="s1">&#39;correlation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">correlations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="p">[</span><span class="s1">&#39;overall_impact&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overall_impacts</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;W&#39;</span><span class="p">,</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">modified_weights</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">feature</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">impact</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">W</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">overall_impact</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">impact</span> <span class="o">&gt;=</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">modified_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">modified_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span>
+        <span class="n">modified_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">modified_weights</span><span class="p">)</span>
+
+        <span class="n">modified_weights_reds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">modified_weights_light_reds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">modified_weights_blues</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">modified_weights_light_blues</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">mw</span><span class="p">,</span><span class="n">imp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">modified_weights</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">overall_impact</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">imp</span> <span class="o">&gt;=</span> <span class="mf">0.1</span><span class="p">:</span>
+                <span class="n">modified_weights_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+                <span class="n">modified_weights_light_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_light_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">imp</span> <span class="o">&lt;</span> <span class="mf">0.1</span><span class="p">:</span>
+                <span class="n">modified_weights_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_light_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+                <span class="n">modified_weights_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_light_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">imp</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">:</span>
+                <span class="n">modified_weights_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_light_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+                <span class="n">modified_weights_light_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="o">-</span><span class="mf">0.1</span> <span class="o">&lt;</span> <span class="n">imp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">modified_weights_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_light_reds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">modified_weights_light_blues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mw</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_red</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">modified_weights_reds</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_light_red</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">modified_weights_light_reds</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_blue</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">modified_weights_blues</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ax_light_blue</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">modified_weights_light_blues</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Descriptors&#39;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Importance&#39;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">feat_importances</span></div>
+
+
+<div class="viewcode-block" id="ShapExplainer.decision_plot">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.ShapExplainer.decision_plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decision_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval_lower</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">interval_upper</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a decision plot for a specified probability interval.</span>
+
+<span class="sd">This method creates a SHAP decision plot to visualise how features contribute</span>
+<span class="sd">to model predictions for samples within a given probability interval. It also</span>
+<span class="sd">prints classification statistics for the selected interval.</span>
+
+<span class="sd">Note</span>
+<span class="sd">----</span>
+<span class="sd">Supported for binary classifiers with predict_proba output. The method</span>
+<span class="sd">handles both tree and non-tree SHAP layouts and selects the positive class</span>
+<span class="sd">contributions when class-wise SHAP values are provided.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">interval_lower : float</span>
+<span class="sd">    The lower bound of the probability interval.</span>
+
+<span class="sd">interval_upper : float</span>
+<span class="sd">    The upper bound of the probability interval.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_mask</span>
+
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_select_binary_class_shap_values</span><span class="p">(</span><span class="n">shap_values_obj</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return a 2D SHAP matrix (n_samples, n_features), preferring class 1 when present.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shap_values_obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shap_values_obj</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Empty SHAP values list.&#39;</span><span class="p">)</span>
+                <span class="n">class_index</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shap_values_obj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">shap_values_obj</span><span class="p">[</span><span class="n">class_index</span><span class="p">])</span>
+
+            <span class="n">shap_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">shap_values_obj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">shap_array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">shap_array</span>
+
+            <span class="k">if</span> <span class="n">shap_array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="c1"># Common variants:</span>
+                <span class="c1"># (n_classes, n_samples, n_features)</span>
+                <span class="k">if</span> <span class="n">shap_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_samples</span><span class="p">:</span>
+                    <span class="n">class_index</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">shap_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+                    <span class="k">return</span> <span class="n">shap_array</span><span class="p">[</span><span class="n">class_index</span><span class="p">]</span>
+
+                <span class="c1"># (n_samples, n_features, n_classes)</span>
+                <span class="k">if</span> <span class="n">shap_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_samples</span><span class="p">:</span>
+                    <span class="n">class_index</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">shap_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+                    <span class="k">return</span> <span class="n">shap_array</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">class_index</span><span class="p">]</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Unsupported SHAP value shape for decision plot: </span><span class="si">{</span><span class="n">shap_array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_select_binary_class_base_value</span><span class="p">(</span><span class="n">base_values_obj</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return a scalar base value compatible with shap.decision_plot.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_values_obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_values_obj</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Empty base values list.&#39;</span><span class="p">)</span>
+                <span class="n">class_index</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">base_values_obj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="n">base_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">base_values_obj</span><span class="p">[</span><span class="n">class_index</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">base_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">base_values_obj</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">base_array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">base_array</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">base_array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">base_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">n_samples</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">base_array</span><span class="p">[</span><span class="n">mask</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">base_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">base_array</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">base_array</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">base_array</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">y_pred_proba</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_pred_proba</span> <span class="o">=</span> <span class="n">y_pred_proba</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">y_pred_proba</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">y_pred_proba</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s1">&#39;Could not compute predictions for decision_plot with the current &#39;</span>
+                    <span class="s1">&#39;estimator/scikit-learn combination. Please raise a ticket in the github&#39;</span> 
+                    <span class="s1">&#39;repository page and rerun explain() before calling decision_plot().&#39;</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">misclassified</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_pred</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">create_mask</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_pred_proba</span><span class="p">),</span>
+            <span class="n">interval_lower</span><span class="p">,</span>
+            <span class="n">interval_upper</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples_in_interval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">)[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">samples_in_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;No samples found in interval &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">interval_lower</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">interval_upper</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">. &#39;</span>
+                    <span class="s1">&#39;Returning empty decision plot output.&#39;</span>
+                <span class="p">),</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">misclassified_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">misclassified</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">misclassified_samples</span> <span class="o">/</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">samples_in_interval</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;Samples in the interval </span><span class="si">{</span><span class="n">interval_lower</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1"> - </span><span class="si">{</span><span class="n">interval_upper</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">: &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">samples_in_interval</span><span class="si">}</span><span class="se">\n</span><span class="s1">Misclassified samples: &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">misclassified_samples</span><span class="si">}</span><span class="se">\n</span><span class="s1">Correctly classified samples: &#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+
+        <span class="n">shap_matrix</span> <span class="o">=</span> <span class="n">_select_binary_class_shap_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)</span>
+        <span class="n">base_scalar</span> <span class="o">=</span> <span class="n">_select_binary_class_base_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+
+        <span class="c1"># SHAP values coming from XGBoost tree explainers are typically in log-odds.</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="s1">&#39;logit&#39;</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;XGB&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;identity&#39;</span>
+
+        <span class="k">return</span> <span class="n">shap</span><span class="o">.</span><span class="n">decision_plot</span><span class="p">(</span>
+            <span class="n">base_scalar</span><span class="p">,</span>
+            <span class="n">shap_matrix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">],</span>
+            <span class="n">features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">],</span>
+            <span class="n">feature_order</span><span class="o">=</span><span class="s1">&#39;hclust&#39;</span><span class="p">,</span>
+            <span class="n">highlight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">misclassified</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">],</span>
+            <span class="n">ignore_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">link</span><span class="o">=</span><span class="n">link</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="DescriptorExplainer">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DescriptorExplainer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A class to perform feature selection and model evaluation using </span>
+<span class="sd">combinatorial selection methods.</span>
+
+<span class="sd">This class provides methods to fit and evaluate machine learning models </span>
+<span class="sd">using combinatorial feature selection. It supports both classification </span>
+<span class="sd">and regression tasks, offering tools to identify the best feature </span>
+<span class="sd">subsets and visualise model performance.</span>
+
+<span class="sd">Attributes</span>
+<span class="sd">----------</span>
+<span class="sd">df_train : pandas.DataFrame</span>
+<span class="sd">    The training dataset.</span>
+
+<span class="sd">df_test : pandas.DataFrame</span>
+<span class="sd">    The testing dataset.</span>
+
+<span class="sd">target_train : pandas.DataFrame</span>
+<span class="sd">    The target values for the training dataset.</span>
+
+<span class="sd">target_test : pandas.DataFrame</span>
+<span class="sd">    The target values for the testing dataset.</span>
+
+<span class="sd">target_name : str</span>
+<span class="sd">    The name of the target variable.</span>
+
+<span class="sd">estimator : object</span>
+<span class="sd">    The machine learning model to be used for feature selection and evaluation.</span>
+
+<span class="sd">metric : callable</span>
+<span class="sd">    The metric function to evaluate the model performance.</span>
+
+<span class="sd">logic : {&#39;lower&#39;, &#39;greater&#39;}</span>
+<span class="sd">    The logic to determine whether to minimise or maximise the metric.</span>
+
+<span class="sd">task_type : {&#39;classification&#39;, &#39;regression&#39;}</span>
+<span class="sd">    The type of task to perform.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="DescriptorExplainer.__init__">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">df_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+            <span class="n">df_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+            <span class="n">target_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+            <span class="n">target_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+            <span class="n">estimator</span><span class="p">,</span>
+            <span class="n">metric</span><span class="p">,</span>
+            <span class="n">logic</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;greater&#39;</span><span class="p">,</span>
+            <span class="n">task_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span> <span class="s1">&#39;regression&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;regression&#39;</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span> <span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;WARNING&#39;</span><span class="p">,</span> <span class="s1">&#39;ERROR&#39;</span><span class="p">,</span> <span class="s1">&#39;CRITICAL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+            <span class="n">cv_splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">cv_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Initialise the DescriptorExplainer with training/testing data, model, </span>
+<span class="sd">and evaluation settings.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">df_train : pandas.DataFrame</span>
+<span class="sd">    The training dataset.</span>
+
+<span class="sd">df_test : pandas.DataFrame</span>
+<span class="sd">    The testing dataset.</span>
+
+<span class="sd">target_train : pandas.DataFrame</span>
+<span class="sd">    The target values for the training dataset.</span>
+
+<span class="sd">target_test : pandas.DataFrame</span>
+<span class="sd">    The target values for the testing dataset.</span>
+
+<span class="sd">estimator : object</span>
+<span class="sd">    The machine learning model to be used.</span>
+
+<span class="sd">metric : callable</span>
+<span class="sd">    The evaluation metric function.</span>
+
+<span class="sd">logic : {&#39;lower&#39;, &#39;greater&#39;}, optional (default=&#39;greater&#39;)</span>
+<span class="sd">    Whether to minimise or maximise the metric.</span>
+
+<span class="sd">task_type : {&#39;classification&#39;, &#39;regression&#39;}, optional (default=&#39;regression&#39;)</span>
+<span class="sd">    The type of task to perform.</span>
+
+<span class="sd">n_jobs : int, optional (default=1)</span>
+<span class="sd">    Number of parallel workers for feature selection stages. -1 uses all available CPUs.</span>
+
+<span class="sd">log_level : int or str or Literal, optional (default=logging.INFO)</span>
+<span class="sd">    Logging level for diagnostics. Can be integer (10, 20, 30, etc.) or string (&#39;DEBUG&#39;, &#39;INFO&#39;, etc.).</span>
+
+<span class="sd">cv_splitter : object, optional</span>
+<span class="sd">    A scikit-learn compatible cross-validation splitter (e.g.</span>
+<span class="sd">    ``GroupKFold(5)``, ``StratifiedGroupKFold(...)``,</span>
+<span class="sd">    ``PredefinedSplit(...)``). Combine with ``groups`` for group-aware</span>
+<span class="sd">    splitters. Takes precedence over the ``cv_iter`` passed to</span>
+<span class="sd">    ``fit_stage_1``/``fit_stage_2``.</span>
+
+<span class="sd">cv_indices : iterable of (array-like, array-like), optional</span>
+<span class="sd">    Explicit, pre-computed ``(train_idx, valid_idx)`` pairs, e.g. a</span>
+<span class="sd">    scaffold-based or UMAP-cluster-based fold manifest generated outside</span>
+<span class="sd">    mlchem. Takes precedence over both ``cv_splitter`` and ``cv_iter``.</span>
+
+<span class="sd">groups : array-like, optional</span>
+<span class="sd">    Group labels (e.g. scaffold IDs) propagated to ``cv_splitter``.</span>
+<span class="sd">    Ignored when ``cv_indices`` is provided.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.feature_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrappers</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">=</span> <span class="n">task_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_train</span> <span class="o">=</span> <span class="n">df_train</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_test</span> <span class="o">=</span> <span class="n">df_test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_train</span> <span class="o">=</span> <span class="n">target_train</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_test</span> <span class="o">=</span> <span class="n">target_test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_train</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logic</span> <span class="o">=</span> <span class="n">logic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">n_jobs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">log_level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CombSelector</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">CombinatorialSelection</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logic</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span><span class="p">,</span>
+            <span class="n">log_level</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_level</span><span class="p">,</span>
+            <span class="n">cv_splitter</span><span class="o">=</span><span class="n">cv_splitter</span><span class="p">,</span>
+            <span class="n">cv_indices</span><span class="o">=</span><span class="n">cv_indices</span><span class="p">,</span>
+            <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DescriptorExplainer.fit_stage_1">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_1">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_stage_1</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">training_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span>
+            <span class="n">cv_train_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">cv_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Perform the first stage of combinatorial feature selection.</span>
+
+<span class="sd">This method evaluates combinations of features using cross-validation</span>
+<span class="sd">and filters subsets based on a training score threshold. Parallelization</span>
+<span class="sd">is controlled by the n_jobs parameter specified during initialization.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">k : int, optional (default=2)</span>
+<span class="sd">    The number of features to combine.</span>
+
+<span class="sd">training_threshold : float, optional (default=1.5)</span>
+<span class="sd">    The threshold for the training score to consider a subset.</span>
+
+<span class="sd">cv_train_ratio : float, optional (default=0.8)</span>
+<span class="sd">    The minimum accepted cv score/train score ratio.</span>
+
+<span class="sd">cv_iter : int, optional (default=5)</span>
+<span class="sd">    The number of cross-validation iterations.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CombSelector</span><span class="o">.</span><span class="n">fit_stage_1</span><span class="p">(</span>
+            <span class="n">train_set</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df_train</span><span class="p">,</span>
+            <span class="n">y_train</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_train</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="n">features</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_train</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+            <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
+            <span class="n">training_threshold</span><span class="o">=</span><span class="n">training_threshold</span><span class="p">,</span>
+            <span class="n">cv_train_ratio</span><span class="o">=</span><span class="n">cv_train_ratio</span><span class="p">,</span>
+            <span class="n">cv_iter</span><span class="o">=</span><span class="n">cv_iter</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DescriptorExplainer.fit_stage_2">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.fit_stage_2">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_stage_2</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">top_n_subsets</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">cv_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Perform the second stage of combinatorial feature selection.</span>
+
+<span class="sd">This method evaluates the top feature subsets from stage 1 using</span>
+<span class="sd">cross-validation to identify the best-performing combinations.</span>
+<span class="sd">Parallelization is controlled by the n_jobs parameter specified </span>
+<span class="sd">during initialization.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">top_n_subsets : int, optional (default=10)</span>
+<span class="sd">    The number of top feature subsets to consider.</span>
+
+<span class="sd">cv_iter : int, optional (default=5)</span>
+<span class="sd">    The number of cross-validation iterations.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CombSelector</span><span class="o">.</span><span class="n">fit_stage_2</span><span class="p">(</span>
+            <span class="n">top_n_subsets</span><span class="o">=</span><span class="n">top_n_subsets</span><span class="p">,</span>
+            <span class="n">cv_iter</span><span class="o">=</span><span class="n">cv_iter</span><span class="p">,</span>
+            <span class="n">n_jobs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DescriptorExplainer.display">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_interpretation.DescriptorExplainer.display">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Display the performance of the model using a selected feature subset.</span>
+
+<span class="sd">This method visualises model performance using the selected feature subset.</span>
+<span class="sd">For regression tasks, it plots true vs. predicted values and prints model</span>
+<span class="sd">coefficients and adjusted R². For classification, it shows a confusion matrix</span>
+<span class="sd">and prints performance metrics.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">subset_index : int</span>
+<span class="sd">    The index of the feature subset to use for evaluation.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">None</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_r2</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">count_features</span><span class="p">,</span> <span class="n">sort_list_by_other_list</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">confusion_matrix</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_2</span><span class="o">.</span>
+                                  <span class="n">feature_subsets</span><span class="p">)[</span><span class="n">subset_index</span><span class="p">]</span>
+        <span class="n">df_fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_train</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">best_features</span><span class="p">]</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">df_fit</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_train</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">coef_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">intercept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">intercept_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">best_features_sorted</span><span class="p">,</span><span class="n">coefs_sorted</span> <span class="o">=</span> <span class="n">sort_list_by_other_list</span><span class="p">(</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">best_features</span><span class="p">,</span><span class="n">coefs</span>
+                                            <span class="p">)</span>
+        
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;regression&#39;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)],</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">y</span><span class="p">)],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;true </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target_train</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;pred </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target_train</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">R2</span> <span class="o">=</span> <span class="n">get_r2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Train R2: </span><span class="si">{</span><span class="n">R2</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">count_features</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_features</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adj Train R2: </span><span class="si">{</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">R2</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">((</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">best_features_sorted</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">coefs_sorted</span><span class="p">,</span> <span class="mi">2</span><span class="p">))),</span>
+                <span class="sa">f</span><span class="s1">&#39;intercept: </span><span class="si">{</span><span class="n">intercept</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;std_y: </span><span class="si">{</span><span class="n">y</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">y_test_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">df_test</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">best_features</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="p">)</span>
+            <span class="n">confmat</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_test</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">y_test_pred</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Train score: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_2</span><span class="o">.</span><span class="n">training_score</span><span class="p">)[</span><span class="n">subset_index</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;CV score: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_2</span><span class="o">.</span><span class="n">cv_score</span><span class="p">)[</span><span class="n">subset_index</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Test score: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_2</span><span class="o">.</span><span class="n">test_score</span><span class="p">)[</span><span class="n">subset_index</span><span class="p">]</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">best_features_sorted</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">coefs_sorted</span><span class="p">,</span> <span class="mi">2</span><span class="p">))),</span>
+                <span class="sa">f</span><span class="s1">&#39;intercept: </span><span class="si">{</span><span class="n">intercept</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">sns</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">confmat</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="n">confmat</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                               <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">annot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Blues&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Predicted&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Actual&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_interpretation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

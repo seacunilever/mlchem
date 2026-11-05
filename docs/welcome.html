@@ -6,18 +6,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem &#8212; mlchem 1.2.3 documentation</title>
+    <title>mlchem &#8212; mlchem 1.2.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=590429e0"></script>
+    <script src="_static/documentation_options.js?v=928db92d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mlchem package" href="modules.html" />
+    <link rel="next" title="Architecture" href="architecture.html" />
     <link rel="prev" title="Contents" href="index.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
@@ -34,12 +34,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="modules.html" title="mlchem package"
+          <a href="architecture.html" title="Architecture"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
@@ -55,11 +55,11 @@
 <a class="reference external" href="https://www.rdkit.org/"><img alt="Static Badge" src="https://img.shields.io/badge/powered_by-RDKit-0626FA?labelColor=black" /></a>
 <a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/assets/coverage.svg"><img alt="Line Coverage" src="_images/coverage.svg" /></a>
 <a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/assets/coverage-branch.svg"><img alt="Branch Coverage" src="_images/coverage-branch.svg" /></a></p>
-<p><strong>mlchem</strong> is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.
-The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
+<p><strong>mlchem</strong> is a Python cheminformatics library designed for the scientific community. It provides a comprehensive set of tools for data handling, molecule manipulation, drawing, machine learning, and plotting.</p>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h2>
-<p>Available at <a class="reference external" href="https://seacunilever.github.io/mlchem/">seacunilever.github.io/mlchem</a>.</p>
+<p>Available at <a class="reference external" href="https://seacunilever.github.io/mlchem/">seacunilever.github.io/mlchem</a>.
+Start with the <a class="reference internal" href="#quickstart">Quickstart</a>, browse the <a class="reference external" href="https://seacunilever.github.io/mlchem/modules.html">API reference</a>, or read the <a class="reference external" href="https://seacunilever.github.io/mlchem/architecture.html">architecture guide</a>.</p>
 </section>
 <section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h2>
@@ -75,51 +75,7 @@ The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
 <section id="architecture">
 <h2>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">¶</a></h2>
 <p><img alt="image" src="_images/figure1.png" /></p>
-</section>
-<section id="modules">
-<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading">¶</a></h2>
-<section id="chem-visualise">
-<h3>chem.visualise/<a class="headerlink" href="#chem-visualise" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><strong>space.py</strong>: Computes and visualises datasets in a lower-dimensional space.</p></li>
-<li><p><strong>simmaps.py</strong>: Generates “rdkit-like” similarity maps based on atomic importance weights.</p></li>
-<li><p><strong>drawing.py</strong>: Handles the drawing of molecular structures with many customisable options.</p></li>
-</ul>
-</section>
-<section id="chem-calculator">
-<h3>chem.calculator/<a class="headerlink" href="#chem-calculator" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><strong>tools.py</strong>: Provides numerous tools for chemical calculations.</p></li>
-<li><p><strong>descriptors.py</strong>: Calculates various descriptors for molecules, including RDKit and Mordred descriptors, atomic descriptors, chemotypes, fingerprints, and some quantum chemistry properties.</p></li>
-</ul>
-</section>
-<section id="chem-manipulation-py">
-<h3>chem.manipulation.py<a class="headerlink" href="#chem-manipulation-py" title="Link to this heading">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">mlchem.chem.manipulation</span></code> module offers a variety of tools for creating, converting, manipulating molecular structures, generate new molecules and recognise molecular patterns.</p>
-</section>
-<section id="ml-feature-selection">
-<h3>ml.feature_selection/<a class="headerlink" href="#ml-feature-selection" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><strong>filters.py</strong>: Provides functionalities for filtering features.</p></li>
-<li><p><strong>wrappers.py</strong>: Offers simplified interfaces for feature selection.</p></li>
-</ul>
-</section>
-<section id="ml-modelling">
-<h3>ml.modelling/<a class="headerlink" href="#ml-modelling" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><strong>model_interpretation.py</strong>: Provides tools for interpreting machine learning models.</p></li>
-<li><p><strong>model_evaluation.py</strong>: Contains tools for evaluating machine learning models.</p></li>
-</ul>
-</section>
-<section id="ml-preprocessing">
-<h3>ml.preprocessing/<a class="headerlink" href="#ml-preprocessing" title="Link to this heading">¶</a></h3>
-<ul class="simple">
-<li><p><strong>dimensional_reduction.py</strong>: Provides functionalities for compressing dataframes using various dimensionality reduction techniques.</p></li>
-<li><p><strong>feature_transformation.py</strong>: Expands features to polynomial features.</p></li>
-<li><p><strong>scaling.py</strong>: Provides functionalities for scaling dataframes using different scaling techniques.</p></li>
-<li><p><strong>undersampling.py</strong>: Contains techniques for handling imbalanced datasets.</p></li>
-</ul>
-</section>
+<p>For package responsibilities and the typical data flow, see the <a class="reference external" href="https://seacunilever.github.io/mlchem/architecture.html">architecture guide</a>.</p>
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
@@ -135,188 +91,53 @@ The library has been tested for python 3.12, 3.13 and 3.14 (experimental).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">mlchem</span>
 </pre></div>
 </div>
-<p>Development installation, to modify the code or contribute with some changes:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the repository</span>
-git<span class="w"> </span>clone<span class="w"> </span>https://github.com/seacunilever/mlchem
-<span class="nb">cd</span><span class="w"> </span>mlchem
-
-<span class="c1"># (Optional: create a virtual environment)</span>
-python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>_venv
-
-<span class="c1"># Activate on macOS/Linux:</span>
-<span class="nb">source</span><span class="w"> </span>_venv/bin/activate
-
-<span class="c1"># Activate on Windows (PowerShell):</span>
-.<span class="se">\_</span>venv<span class="se">\S</span>cripts<span class="se">\A</span>ctivate.ps1
-
-<span class="c1"># Activate on Windows (cmd.exe):</span>
-_venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate.bat
-
-<span class="c1"># Make an editable install of mlchem from the source tree</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
-
-<span class="c1"># and install requirements</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</pre></div>
-</div>
 </section>
-<section id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading">¶</a></h2>
-<p><strong>mlchem</strong> emits diagnostic logs during pipeline execution (feature selection, model evaluation, data preprocessing) to help users track progress and debug issues. Logs are emitted at the <code class="docutils literal notranslate"><span class="pre">INFO</span></code> level by default and appear on the console.</p>
-<p>Logs appear automatically when running mlchem functions:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.feature_selection.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequentialForwardSelection</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h2>
+<p>This end-to-end example turns SMILES into Morgan fingerprints and evaluates a
+classifier with cross-validated ROC-AUC. The labels are toy values to
+demonstrate the API, not experimental measurements; replace them with a
+validated target for real modeling.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">roc_auc_score</span>
 
-<span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="n">estimator</span><span class="o">=...</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-<span class="c1"># Logs appear on console: e.g., &quot;10:35:55 - mlchem.ml.feature_selection.wrappers - INFO - SFS start: ...&quot;</span>
-</pre></div>
-</div>
-<section id="controlling-log-level">
-<h3>Controlling Log Level<a class="headerlink" href="#controlling-log-level" title="Link to this heading">¶</a></h3>
-<p>Change the logging level to filter output (e.g., show only warnings, suppress info messages):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sfs</span> <span class="o">=</span> <span class="n">SequentialForwardSelection</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;WARNING&#39;</span><span class="p">)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Only WARNING+ logs appear</span>
-</pre></div>
-</div>
-<p>Valid log levels: <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>, <code class="docutils literal notranslate"><span class="pre">INFO</span></code>, <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code></p>
-</section>
-<section id="post-pipeline-inspection-and-file-logging">
-<h3>Post-Pipeline Inspection and File Logging<a class="headerlink" href="#post-pipeline-inspection-and-file-logging" title="Link to this heading">¶</a></h3>
-<p>Capture logs to memory or file for later inspection without modifying function calls:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">start_logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_fingerprint_df</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">crossval</span>
 
-<span class="c1"># Capture to console + memory</span>
-<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="n">to_console</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">logs</span><span class="o">.</span><span class="n">get_logs</span><span class="p">())</span>  <span class="c1"># View captured logs</span>
+<span class="n">smiles</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CCCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CC(C)O&#39;</span><span class="p">,</span> <span class="s1">&#39;CCCCO&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;CCN&#39;</span><span class="p">,</span> <span class="s1">&#39;CCCN&#39;</span><span class="p">,</span> <span class="s1">&#39;CC(C)N&#39;</span><span class="p">,</span> <span class="s1">&#39;CCCCN&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;c1ccccc1&#39;</span><span class="p">,</span> <span class="s1">&#39;Cc1ccccc1&#39;</span><span class="p">,</span> <span class="s1">&#39;c1ccncc1&#39;</span><span class="p">,</span> <span class="s1">&#39;c1ccoc1&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
 
-<span class="c1"># Capture to file + console</span>
-<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="c1"># Logs written to pipeline.log + displayed on console</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">get_fingerprint_df</span><span class="p">(</span><span class="n">smiles</span><span class="p">,</span> <span class="n">fp_type</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nBits</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">crossval</span><span class="p">(</span>
+    <span class="n">estimator</span><span class="o">=</span><span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
+    <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">metric</span><span class="o">=</span><span class="n">roc_auc_score</span><span class="p">,</span>
+    <span class="n">n_fold</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">task_type</span><span class="o">=</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span>
+    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+    <span class="n">response_method</span><span class="o">=</span><span class="s1">&#39;predict_proba&#39;</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="c1"># Capture to file only (silent)</span>
-<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">to_console</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;pipeline.log&#39;</span><span class="p">)</span>
-<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># Silent; logs only in file</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean CV ROC-AUC: </span><span class="si">{</span><span class="n">scores</span><span class="p">[</span><span class="s1">&#39;cv_mean&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Use this for non-interactive scripts and production environments.</p>
-</section>
-</section>
-<section id="compatibility-checks-python-3-12-3-13-3-14">
-<h2>Compatibility checks (Python 3.12, 3.13, 3.14)<a class="headerlink" href="#compatibility-checks-python-3-12-3-13-3-14" title="Link to this heading">¶</a></h2>
-<p>This repository includes a local matrix runner and CI workflow scaffold to
-keep cross-version support visible on every push.</p>
-<p>For most local development, running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">-vv</span> <span class="pre">tests</span></code> from repo root is enough. The commands in
-this section are mainly for maintainers, release checks, or contributors who
-want local parity with CI across multiple Python versions.</p>
-<p>Prerequisite for all commands below: activate your project virtual environment first.</p>
-<p>Warning policy note:</p>
-<ul class="simple">
-<li><p>A narrowly scoped <code class="docutils literal notranslate"><span class="pre">pytest</span></code> warning filter is used for an upstream SHAP
-<code class="docutils literal notranslate"><span class="pre">PendingDeprecationWarning</span></code> (<code class="docutils literal notranslate"><span class="pre">shap.plots.colors._colors</span></code>) tied to matplotlib
-colormap API changes.</p></li>
-<li><p>Keep this filter temporary and remove it once SHAP resolves the upstream issue.</p></li>
-<li><p>To periodically audit all warnings explicitly, run:</p></li>
-</ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>tests<span class="w"> </span>-W<span class="w"> </span>default
-</pre></div>
-</div>
-<p>Coverage baseline (canonical: Python 3.12, matches the CI py312 job):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>tests<span class="w"> </span>--cov<span class="o">=</span>mlchem<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc<span class="w"> </span>--cov-branch<span class="w"> </span>--cov-report<span class="o">=</span>term<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml
-python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
-<span class="s">import xml.etree.ElementTree as ET</span>
-<span class="s">root = ET.parse(&#39;coverage.xml&#39;).getroot()</span>
-<span class="s">line_pct = round(float(root.get(&#39;line-rate&#39;, 0.0)) * 100)</span>
-<span class="s">branch_pct = round(float(root.get(&#39;branch-rate&#39;, 0.0)) * 100)</span>
-<span class="s">print(f&#39;line={line_pct}, branch={branch_pct}&#39;)</span>
-<span class="s">PY</span>
-python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;line cov&quot;</span><span class="w"> </span>--value<span class="w"> </span>&lt;LINE_PERCENT&gt;<span class="w"> </span>--file<span class="w"> </span>assets/coverage.svg<span class="w"> </span>--overwrite<span class="w"> </span><span class="nv">50</span><span class="o">=</span>red<span class="w"> </span><span class="nv">60</span><span class="o">=</span>orange<span class="w"> </span><span class="nv">70</span><span class="o">=</span>yellow<span class="w"> </span><span class="nv">80</span><span class="o">=</span>yellowgreen<span class="w"> </span><span class="nv">90</span><span class="o">=</span>green
-python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;branch cov&quot;</span><span class="w"> </span>--value<span class="w"> </span>&lt;BRANCH_PERCENT&gt;<span class="w"> </span>--file<span class="w"> </span>assets/coverage-branch.svg<span class="w"> </span>--overwrite<span class="w"> </span><span class="nv">50</span><span class="o">=</span>red<span class="w"> </span><span class="nv">60</span><span class="o">=</span>orange<span class="w"> </span><span class="nv">70</span><span class="o">=</span>yellow<span class="w"> </span><span class="nv">80</span><span class="o">=</span>yellowgreen<span class="w"> </span><span class="nv">90</span><span class="o">=</span>green
-</pre></div>
-</div>
-<p>Note: both badges (<code class="docutils literal notranslate"><span class="pre">assets/coverage.svg</span></code> for line coverage and <code class="docutils literal notranslate"><span class="pre">assets/coverage-branch.svg</span></code> for branch coverage) are refreshed locally by maintainers (not auto-committed by CI) to avoid protected-branch push permissions.</p>
-<p>Line coverage measures which executable lines ran; branch coverage measures
-whether each outcome of conditional logic ran. Branch coverage can therefore
-identify untested decisions even when the line containing them was executed.</p>
-<p>Current policy:</p>
-<ul class="simple">
-<li><p>Python 3.12 and 3.13 are required to pass.</p></li>
-<li><p>Python 3.14 is currently experimental (reported, not blocking).</p></li>
-</ul>
-<section id="local-matrix-default-envs-under-envs">
-<h3>Local matrix (default envs under ~/Envs)<a class="headerlink" href="#local-matrix-default-envs-under-envs" title="Link to this heading">¶</a></h3>
-<p>The matrix helper expects existing Python environments (for example py312, py313, py314). If you do not use this layout, use the tox entrypoint below instead.</p>
-<p>Run all environments in fast mode (default: no dependency reinstall):</p>
-<p>From repository root:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py
-</pre></div>
-</div>
-<p>Run matrix plus local coverage badge refresh (recommended before release/PR merge):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--refresh-badges
-</pre></div>
-</div>
-<p>From <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>run_local_matrix.py
-</pre></div>
-</div>
-<p>On Windows, if output appears buffered/silent, use unbuffered mode:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>py<span class="w"> </span>-u<span class="w"> </span>scripts/run_local_matrix.py
-</pre></div>
-</div>
-<p>By default, the runner streams live progress (active env/step and pytest output).</p>
-<p>Run all environments with full dependency reinstall + tests:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--full-install<span class="w"> </span>--<span class="w"> </span>-vv<span class="w"> </span>tests
-</pre></div>
-</div>
-<p>Strict mode (make Python 3.14 failures blocking):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--strict-314<span class="w"> </span>--<span class="w"> </span>-vv<span class="w"> </span>tests
-</pre></div>
-</div>
-<p>Quiet mode (disable live streaming and print only summary):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--no-live-output<span class="w"> </span>--<span class="w"> </span>-vv<span class="w"> </span>tests
-</pre></div>
-</div>
-</section>
-<section id="tox-entrypoint">
-<h3>tox entrypoint<a class="headerlink" href="#tox-entrypoint" title="Link to this heading">¶</a></h3>
-<p>You can also run the same idea via tox:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>tox
-</pre></div>
-</div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>py312,py313,py314
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">py314</span></code> tox environment is marked non-blocking during early adoption.</p>
-</section>
-</section>
-<section id="maintainer-release-refresh-flow-local">
-<h2>Maintainer release refresh flow (local)<a class="headerlink" href="#maintainer-release-refresh-flow-local" title="Link to this heading">¶</a></h2>
-<p>Use this when preparing docs and badges without any CI write-back permissions:</p>
-<ol class="arabic simple">
-<li><p>Update <code class="docutils literal notranslate"><span class="pre">version=</span></code> in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.</p></li>
-<li><p>Regenerate docs locally from <code class="docutils literal notranslate"><span class="pre">docs/</span></code>:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>clean
-make<span class="w"> </span>html
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li><p>Refresh compatibility matrix + badges from repo root:</p></li>
-</ol>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py<span class="w"> </span>--refresh-badges
-</pre></div>
-</div>
-<ol class="arabic simple" start="4">
-<li><p>Commit the resulting docs and badge changes in your PR.</p></li>
-</ol>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df"><code class="docutils literal notranslate"><span class="pre">get_fingerprint_df</span></code> API</a>
+for fingerprint options and the
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.crossval"><code class="docutils literal notranslate"><span class="pre">crossval</span></code> API</a>
+for splitters, explicit folds, and response methods.</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<p>Here’s some basic examples of how to use <strong>mlchem</strong>:</p>
-<section id="calculate-rdkit-descriptors-for-two-molecules">
-<h3>calculate rdkit descriptors for two molecules<a class="headerlink" href="#calculate-rdkit-descriptors-for-two-molecules" title="Link to this heading">¶</a></h3>
+<p>Here are some basic examples of how to use <strong>mlchem</strong>:</p>
+<section id="calculate-rdkit-descriptors">
+<h3>Calculate RDKit descriptors<a class="headerlink" href="#calculate-rdkit-descriptors" title="Link to this heading">¶</a></h3>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_rdkitDesc"><code class="docutils literal notranslate"><span class="pre">get_rdkitDesc</span></code> API</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
 <span class="n">mol1</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="s1">&#39;c1ccccc1CCCO&#39;</span><span class="p">)</span>
@@ -326,7 +147,10 @@ make<span class="w"> </span>html
 </div>
 </section>
 <section id="calculate-fingerprints">
-<h3>calculate fingerprints<a class="headerlink" href="#calculate-fingerprints" title="Link to this heading">¶</a></h3>
+<h3>Calculate fingerprints<a class="headerlink" href="#calculate-fingerprints" title="Link to this heading">¶</a></h3>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df"><code class="docutils literal notranslate"><span class="pre">get_fingerprint_df</span></code> API</a>
+and the single-molecule
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint"><code class="docutils literal notranslate"><span class="pre">get_fingerprint</span></code> API</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
 
 <span class="n">smiles_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CCN&#39;</span><span class="p">,</span> <span class="s1">&#39;CCC&#39;</span><span class="p">]</span>
@@ -339,8 +163,9 @@ make<span class="w"> </span>html
 </pre></div>
 </div>
 </section>
-<section id="calculate-chemotypes-faster-on-larger-datasets">
-<h3>calculate chemotypes faster on larger datasets<a class="headerlink" href="#calculate-chemotypes-faster-on-larger-datasets" title="Link to this heading">¶</a></h3>
+<section id="calculate-chemotypes-at-scale">
+<h3>Calculate chemotypes at scale<a class="headerlink" href="#calculate-chemotypes-at-scale" title="Link to this heading">¶</a></h3>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_chemotypes"><code class="docutils literal notranslate"><span class="pre">get_chemotypes</span></code> API</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.calculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">descriptors</span>
 
 <span class="n">smiles_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CCO&#39;</span><span class="p">,</span> <span class="s1">&#39;CCN&#39;</span><span class="p">,</span> <span class="s1">&#39;COCC&#39;</span><span class="p">,</span> <span class="s1">&#39;c1ccccc1O&#39;</span><span class="p">]</span>
@@ -355,8 +180,12 @@ make<span class="w"> </span>html
 and avoids repeated molecule preparation. This is especially important for
 large rule dictionaries and medium-to-large training sets.</p>
 </section>
-<section id="control-ml-verbosity-in-notebooks-and-development-runs">
-<h3>control ML verbosity in notebooks and development runs<a class="headerlink" href="#control-ml-verbosity-in-notebooks-and-development-runs" title="Link to this heading">¶</a></h3>
+<section id="control-ml-verbosity">
+<h3>Control ML Verbosity<a class="headerlink" href="#control-ml-verbosity" title="Link to this heading">¶</a></h3>
+<p>See the
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code> API</a>
+and
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection</span></code> API</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.feature_selection.wrappers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -386,8 +215,12 @@ large rule dictionaries and medium-to-large training sets.</p>
 </pre></div>
 </div>
 </section>
-<section id="optional-diagnostics-for-undersampling">
-<h3>optional diagnostics for undersampling<a class="headerlink" href="#optional-diagnostics-for-undersampling" title="Link to this heading">¶</a></h3>
+<section id="balance-an-imbalanced-training-set">
+<h3>Balance an imbalanced training set<a class="headerlink" href="#balance-an-imbalanced-training-set" title="Link to this heading">¶</a></h3>
+<p>See the
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.undersampling.undersample"><code class="docutils literal notranslate"><span class="pre">undersample</span></code> API</a>
+for input requirements and examples.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">class_column</span></code> must exist in <code class="docutils literal notranslate"><span class="pre">train_set</span></code>. It is also required in <code class="docutils literal notranslate"><span class="pre">test_set</span></code> when <code class="docutils literal notranslate"><span class="pre">add_dropped_to_test=True</span></code>; otherwise, the test-set target column is not accessed. Invalid target proportions and non-binary training labels raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; missing required columns raise <code class="docutils literal notranslate"><span class="pre">KeyError</span></code> with the missing column names.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.preprocessing.undersampling</span><span class="w"> </span><span class="kn">import</span> <span class="n">undersample</span>
 
 <span class="n">train_balanced</span><span class="p">,</span> <span class="n">test_updated</span> <span class="o">=</span> <span class="n">undersample</span><span class="p">(</span>
@@ -400,8 +233,11 @@ large rule dictionaries and medium-to-large training sets.</p>
 </pre></div>
 </div>
 </section>
-<section id="stress-test-your-models-with-y-scrambling">
-<h3>Stress-test your models with y-scrambling<a class="headerlink" href="#stress-test-your-models-with-y-scrambling" title="Link to this heading">¶</a></h3>
+<section id="stress-test-models-with-y-scrambling">
+<h3>Stress-Test Models with Y-Scrambling<a class="headerlink" href="#stress-test-models-with-y-scrambling" title="Link to this heading">¶</a></h3>
+<p>See the
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.y_scrambling"><code class="docutils literal notranslate"><span class="pre">y_scrambling</span></code> API</a>
+for split, metric, and response-method options.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">y_scrambling</span>
 
 <span class="n">y_scrambling</span><span class="p">(</span>
@@ -424,8 +260,11 @@ large rule dictionaries and medium-to-large training sets.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">safety_margin_ratio</span></code></p></li>
 </ul>
 </section>
-<section id="cross-validation-centric-majority-voting">
-<h3>cross-validation-centric majority voting<a class="headerlink" href="#cross-validation-centric-majority-voting" title="Link to this heading">¶</a></h3>
+<section id="cross-validation-majority-voting">
+<h3>Cross-Validation Majority Voting<a class="headerlink" href="#cross-validation-majority-voting" title="Link to this heading">¶</a></h3>
+<p>See
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv"><code class="docutils literal notranslate"><span class="pre">MajorityVote.evaluate_cv</span></code></a>
+for soft-vote probabilities, fold definitions, and reliability ranking.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
@@ -478,36 +317,234 @@ large rule dictionaries and medium-to-large training sets.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">fit()</span></code> is the final consensus step after model selection.</p>
 </section>
+<section id="capture-pipeline-logs">
+<h3>Capture pipeline logs<a class="headerlink" href="#capture-pipeline-logs" title="Link to this heading">¶</a></h3>
+<p>Library messages are emitted at <code class="docutils literal notranslate"><span class="pre">INFO</span></code> level by default. Configure a selector’s
+<code class="docutils literal notranslate"><span class="pre">log_level</span></code> as shown above, or capture logs from an entire pipeline in memory
+or a file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">start_logging</span>
+
+<span class="n">logs</span> <span class="o">=</span> <span class="n">start_logging</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="n">to_console</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">sfs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">logs</span><span class="o">.</span><span class="n">get_logs</span><span class="p">())</span>
+
+<span class="c1"># To log to a file instead:</span>
+<span class="c1"># logs = start_logging(log_level=&#39;INFO&#39;, to_file=&#39;pipeline.log&#39;)</span>
+<span class="c1"># sfs.fit(X_train, y_train, X_test, y_test)</span>
+</pre></div>
+</div>
+</section>
+<section id="visual-examples">
+<h3>Visual examples<a class="headerlink" href="#visual-examples" title="Link to this heading">¶</a></h3>
 <section id="pattern-recognition">
-<h3>pattern recognition<a class="headerlink" href="#pattern-recognition" title="Link to this heading">¶</a></h3>
+<h4>Pattern recognition<a class="headerlink" href="#pattern-recognition" title="Link to this heading">¶</a></h4>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.html#module-mlchem.chem.manipulation">molecule manipulation API</a>
+for pattern-recognition utilities.</p>
 <p><img alt="image" src="_images/figure2.png" /></p>
 </section>
 <section id="de-novo-molecule-generation-and-cleaning">
-<h3>de novo molecule generation and cleaning<a class="headerlink" href="#de-novo-molecule-generation-and-cleaning" title="Link to this heading">¶</a></h3>
+<h4>De novo molecule generation and cleaning<a class="headerlink" href="#de-novo-molecule-generation-and-cleaning" title="Link to this heading">¶</a></h4>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.html#module-mlchem.chem.manipulation">molecule manipulation API</a>
+for molecule creation and generation utilities.</p>
 <p><img alt="image" src="_images/figure3.png" /></p>
 </section>
-<section id="show-pre-defined-colour-palette">
-<h3>show pre-defined colour palette<a class="headerlink" href="#show-pre-defined-colour-palette" title="Link to this heading">¶</a></h3>
+<section id="predefined-colour-palette">
+<h4>Predefined colour palette<a class="headerlink" href="#predefined-colour-palette" title="Link to this heading">¶</a></h4>
+<p>See the <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.drawing">drawing API</a>
+for drawing and palette options.</p>
 <p><img alt="image" src="_images/figure4.png" /></p>
 <p>More examples in the <a class="reference external" href="https://github.com/seacunilever/mlchem/tree/master/examples">examples</a> folder.</p>
 </section>
 </section>
+</section>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Link to this heading">¶</a></h2>
+<p>Browse the API by package:</p>
+<section id="chem-visualise">
+<h3>chem.visualise/<a class="headerlink" href="#chem-visualise" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.space">space.py API</a></strong>:
+Computes and visualises datasets in a lower-dimensional space.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.simmaps">simmaps.py API</a></strong>:
+Generates “rdkit-like” similarity maps based on atomic importance weights.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.visualise.html#module-mlchem.chem.visualise.drawing">drawing.py API</a></strong>:
+Handles the drawing of molecular structures with many customisable options.</p></li>
+</ul>
+</section>
+<section id="chem-calculator">
+<h3>chem.calculator/<a class="headerlink" href="#chem-calculator" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#module-mlchem.chem.calculator.tools">tools.py API</a></strong>:
+Provides tools for chemical calculations.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#module-mlchem.chem.calculator.descriptors">descriptors.py API</a></strong>:
+Calculates RDKit and Mordred descriptors, chemotypes, fingerprints, and
+other molecular features. Start with
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df"><code class="docutils literal notranslate"><span class="pre">get_fingerprint_df</span></code></a>
+or
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_rdkitDesc"><code class="docutils literal notranslate"><span class="pre">get_rdkitDesc</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="chem-manipulation-py">
+<h3>chem.manipulation.py<a class="headerlink" href="#chem-manipulation-py" title="Link to this heading">¶</a></h3>
+<p>The <a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.html#module-mlchem.chem.manipulation"><code class="docutils literal notranslate"><span class="pre">mlchem.chem.manipulation</span></code> API</a>
+provides molecule creation, conversion, manipulation, and pattern-recognition
+utilities. See
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.chem.html#mlchem.chem.manipulation.create_molecule"><code class="docutils literal notranslate"><span class="pre">create_molecule</span></code></a>
+to get started.</p>
+</section>
+<section id="ml-feature-selection">
+<h3>ml.feature_selection/<a class="headerlink" href="#ml-feature-selection" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#module-mlchem.ml.feature_selection.filters">filters.py API</a></strong>:
+Provides filter-based feature selection.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#module-mlchem.ml.feature_selection.wrappers">wrappers.py API</a></strong>:
+Includes
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a>
+and
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.feature_selection.html#mlchem.ml.feature_selection.wrappers.CombinatorialSelection"><code class="docutils literal notranslate"><span class="pre">CombinatorialSelection</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="ml-modelling">
+<h3>ml.modelling/<a class="headerlink" href="#ml-modelling" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#module-mlchem.ml.modelling.model_interpretation">model_interpretation.py API</a></strong>:
+Provides tools for interpreting machine learning models.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#module-mlchem.ml.modelling.model_evaluation">model_evaluation.py API</a></strong>:
+Includes
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.crossval"><code class="docutils literal notranslate"><span class="pre">crossval</span></code></a>,
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.y_scrambling"><code class="docutils literal notranslate"><span class="pre">y_scrambling</span></code></a>,
+and
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv"><code class="docutils literal notranslate"><span class="pre">MajorityVote.evaluate_cv</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="ml-preprocessing">
+<h3>ml.preprocessing/<a class="headerlink" href="#ml-preprocessing" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.dimensional_reduction">dimensional_reduction.py API</a></strong>:
+Compresses dataframes using dimensionality-reduction techniques.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.feature_transformation">feature_transformation.py API</a></strong>:
+Expands features with
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.feature_transformation.polynomial_expansion"><code class="docutils literal notranslate"><span class="pre">polynomial_expansion</span></code></a>.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.scaling">scaling.py API</a></strong>:
+Scales dataframes with standard, min-max, and robust scaling, including
+<a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#mlchem.ml.preprocessing.scaling.scale_df_standard"><code class="docutils literal notranslate"><span class="pre">scale_df_standard</span></code></a>.</p></li>
+<li><p><strong><a class="reference external" href="https://seacunilever.github.io/mlchem/mlchem.ml.preprocessing.html#module-mlchem.ml.preprocessing.undersampling">undersampling.py API</a></strong>:
+Handles imbalanced datasets.</p></li>
+</ul>
+</section>
+</section>
+<section id="development-setup">
+<h2>Development setup<a class="headerlink" href="#development-setup" title="Link to this heading">¶</a></h2>
+<p>Clone the repository, create and activate a virtual environment, then install
+the package in editable mode with its requirements:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/seacunilever/mlchem
+<span class="nb">cd</span><span class="w"> </span>mlchem
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>_venv
+
+<span class="c1"># Activate on macOS/Linux:</span>
+<span class="nb">source</span><span class="w"> </span>_venv/bin/activate
+
+<span class="c1"># Activate on Windows (PowerShell):</span>
+.<span class="se">\_</span>venv<span class="se">\S</span>cripts<span class="se">\A</span>ctivate.ps1
+
+<span class="c1"># Activate on Windows (cmd.exe):</span>
+_venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate.bat
+
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
+<p>We welcome contributions to <strong>mlchem</strong>. Please consult the
+<a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/CONTRIBUTING.md">contribution guide</a>
+for how to propose changes, report bugs, and submit pull requests.</p>
+</section>
+<section id="testing-and-maintainer-guide">
+<h2>Testing and Maintainer Guide<a class="headerlink" href="#testing-and-maintainer-guide" title="Link to this heading">¶</a></h2>
+<p>Python 3.12, 3.13, and 3.14 are supported and all are required to pass in CI.
+For routine development, run the tests from the repository root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>tests
+</pre></div>
+</div>
+<p>Activate the project virtual environment before running the commands below.
+The local matrix runner expects existing environments such as <code class="docutils literal notranslate"><span class="pre">py312</span></code>, <code class="docutils literal notranslate"><span class="pre">py313</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">py314</span></code> under <code class="docutils literal notranslate"><span class="pre">~/Envs</span></code>; if you use a different setup, use tox instead.</p>
+<section id="local-matrix-testing">
+<h3>Local matrix testing<a class="headerlink" href="#local-matrix-testing" title="Link to this heading">¶</a></h3>
+<p>Run the supported Python versions:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>scripts/run_local_matrix.py
+</pre></div>
+</div>
+<p>Useful options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--refresh-badges</span></code> runs the matrix and refreshes the local coverage badges.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--full-install</span> <span class="pre">--</span> <span class="pre">-vv</span> <span class="pre">tests</span></code> reinstalls dependencies before testing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--no-live-output</span> <span class="pre">--</span> <span class="pre">-vv</span> <span class="pre">tests</span></code> prints only the final summary.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--allow-314-failure</span> <span class="pre">--</span> <span class="pre">-vv</span> <span class="pre">tests</span></code> treats Python 3.14 failures as warnings
+for exploratory local runs only; normal runs and CI remain blocking.</p></li>
+</ul>
+<p>On Windows, use <code class="docutils literal notranslate"><span class="pre">py</span> <span class="pre">-u</span> <span class="pre">scripts/run_local_matrix.py</span></code> if output appears buffered.
+Tox is an alternative when the matrix runner’s environment layout does not fit:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>tox
+python<span class="w"> </span>-m<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>py312,py313,py314
+</pre></div>
+</div>
+<p>Tox skips interpreters that are unavailable locally. CI installs Python 3.14
+and requires it to pass.</p>
+</section>
+<section id="warning-and-coverage-checks">
+<h3>Warning and coverage checks<a class="headerlink" href="#warning-and-coverage-checks" title="Link to this heading">¶</a></h3>
+<p>A narrowly scoped pytest warning filter suppresses an upstream SHAP
+<code class="docutils literal notranslate"><span class="pre">PendingDeprecationWarning</span></code> related to matplotlib colormap API changes. To audit
+all warnings explicitly, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-vv<span class="w"> </span>tests<span class="w"> </span>-W<span class="w"> </span>default
+</pre></div>
+</div>
+<p>The canonical coverage baseline uses Python 3.12, matching the CI <code class="docutils literal notranslate"><span class="pre">py312</span></code> job:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>tests<span class="w"> </span>--cov<span class="o">=</span>mlchem<span class="w"> </span>--cov-config<span class="o">=</span>.coveragerc<span class="w"> </span>--cov-branch<span class="w"> </span>--cov-report<span class="o">=</span>term<span class="w"> </span>--cov-report<span class="o">=</span>xml:coverage.xml
+python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+<span class="s">import xml.etree.ElementTree as ET</span>
+<span class="s">root = ET.parse(&#39;coverage.xml&#39;).getroot()</span>
+<span class="s">line_pct = round(float(root.get(&#39;line-rate&#39;, 0.0)) * 100)</span>
+<span class="s">branch_pct = round(float(root.get(&#39;branch-rate&#39;, 0.0)) * 100)</span>
+<span class="s">print(f&#39;line={line_pct}, branch={branch_pct}&#39;)</span>
+<span class="s">PY</span>
+python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;line cov&quot;</span><span class="w"> </span>--value<span class="w"> </span>&lt;LINE_PERCENT&gt;<span class="w"> </span>--file<span class="w"> </span>assets/coverage.svg<span class="w"> </span>--overwrite<span class="w"> </span><span class="nv">50</span><span class="o">=</span>red<span class="w"> </span><span class="nv">60</span><span class="o">=</span>orange<span class="w"> </span><span class="nv">70</span><span class="o">=</span>yellow<span class="w"> </span><span class="nv">80</span><span class="o">=</span>yellowgreen<span class="w"> </span><span class="nv">90</span><span class="o">=</span>green
+python<span class="w"> </span>-m<span class="w"> </span>anybadge<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;branch cov&quot;</span><span class="w"> </span>--value<span class="w"> </span>&lt;BRANCH_PERCENT&gt;<span class="w"> </span>--file<span class="w"> </span>assets/coverage-branch.svg<span class="w"> </span>--overwrite<span class="w"> </span><span class="nv">50</span><span class="o">=</span>red<span class="w"> </span><span class="nv">60</span><span class="o">=</span>orange<span class="w"> </span><span class="nv">70</span><span class="o">=</span>yellow<span class="w"> </span><span class="nv">80</span><span class="o">=</span>yellowgreen<span class="w"> </span><span class="nv">90</span><span class="o">=</span>green
+</pre></div>
+</div>
+<p>Line coverage measures which executable lines ran; branch coverage also
+measures whether the outcomes of conditional logic were exercised. CI does not
+update the badges; maintainers refresh and commit them locally.</p>
+</section>
+<section id="release-refresh">
+<h3>Release refresh<a class="headerlink" href="#release-refresh" title="Link to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">version=</span></code> in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.</p></li>
+<li><p>Run the local matrix with <code class="docutils literal notranslate"><span class="pre">--refresh-badges</span></code> as described above.</p></li>
+<li><p><a class="reference internal" href="#building-the-documentation">Build and publish the documentation</a>.</p></li>
+<li><p>Commit the code, tests, documentation, and refreshed badges.</p></li>
+</ol>
+</section>
+</section>
 <section id="building-the-documentation">
-<h2>Building the documentation<a class="headerlink" href="#building-the-documentation" title="Link to this heading">¶</a></h2>
-<p>The documentation is built with <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> using the <code class="docutils literal notranslate"><span class="pre">autodoc</span></code> and <a class="reference external" href="https://myst-parser.readthedocs.io/"><code class="docutils literal notranslate"><span class="pre">myst-parser</span></code></a> extensions. Source files live under <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code>, build output lands in <code class="docutils literal notranslate"><span class="pre">docs/build/html/</span></code>, and a small post-build script (<code class="docutils literal notranslate"><span class="pre">docs/_publish.py</span></code>) mirrors that build into <code class="docutils literal notranslate"><span class="pre">docs/</span></code> so GitHub Pages always serves the latest version.</p>
+<h2>Building the Documentation<a class="headerlink" href="#building-the-documentation" title="Link to this heading">¶</a></h2>
+<p>The documentation is built with <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> using <code class="docutils literal notranslate"><span class="pre">autodoc</span></code>, <a class="reference external" href="https://myst-parser.readthedocs.io/"><code class="docutils literal notranslate"><span class="pre">myst-parser</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">viewcode</span></code>. Source files live under <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code>, build output lands in <code class="docutils literal notranslate"><span class="pre">docs/build/html/</span></code>, and a small post-build script (<code class="docutils literal notranslate"><span class="pre">docs/_publish.py</span></code>) mirrors that build into <code class="docutils literal notranslate"><span class="pre">docs/</span></code> so GitHub Pages always serves the latest version. <code class="docutils literal notranslate"><span class="pre">viewcode</span></code> adds source links to documented modules, classes, and methods.</p>
 <blockquote>
 <div><p>Single-source content: <code class="docutils literal notranslate"><span class="pre">docs/source/welcome.md</span></code> <code class="docutils literal notranslate"><span class="pre">{include}</span></code>s this README, so you only edit <code class="docutils literal notranslate"><span class="pre">README.md</span></code> — never duplicate content into the welcome page.</p>
 </div></blockquote>
-<section id="what-is-tracked-what-is-not">
-<h3>What is tracked, what is not<a class="headerlink" href="#what-is-tracked-what-is-not" title="Link to this heading">¶</a></h3>
+<section id="tracked-and-generated-files">
+<h3>Tracked and Generated Files<a class="headerlink" href="#tracked-and-generated-files" title="Link to this heading">¶</a></h3>
 <p>Only the inputs and the published output are tracked in git:</p>
 <ul class="simple">
 <li><p><strong>Tracked (do edit / commit)</strong></p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> — Sphinx inputs (<code class="docutils literal notranslate"><span class="pre">conf.py</span></code>, <code class="docutils literal notranslate"><span class="pre">*.rst</span></code>, <code class="docutils literal notranslate"><span class="pre">welcome.md</span></code>, <code class="docutils literal notranslate"><span class="pre">_static/custom.css</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">docs/Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_publish.py</span></code> — build entry points.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docs/.nojekyll</span></code> — tells GitHub Pages to keep <code class="docutils literal notranslate"><span class="pre">_static/</span></code> and <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">docs/*.html</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_static/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_sources/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_images/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/objects.inv</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/searchindex.js</span></code> — the <strong>published mirror</strong> that GitHub Pages serves; updated automatically by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> via <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/.nojekyll</span></code> — tells GitHub Pages to keep <code class="docutils literal notranslate"><span class="pre">_static/</span></code>, <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>, and <code class="docutils literal notranslate"><span class="pre">_modules/</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs/*.html</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_static/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_sources/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_images/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/_modules/</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/objects.inv</span></code>, <code class="docutils literal notranslate"><span class="pre">docs/searchindex.js</span></code> — the <strong>published mirror</strong> that GitHub Pages serves; updated automatically by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> via <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>.</p></li>
 </ul>
 </li>
 <li><p><strong>Not tracked (regenerated on every build, ignored via <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code>)</strong></p>
@@ -525,13 +562,10 @@ large rule dictionaries and medium-to-large training sets.</p>
 </pre></div>
 </div>
 </section>
-<section id="build-publish">
-<h3>Build &amp; publish<a class="headerlink" href="#build-publish" title="Link to this heading">¶</a></h3>
-<p>Run the commands from the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> directory (NOT from <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code> — <code class="docutils literal notranslate"><span class="pre">source</span></code> is the value of <code class="docutils literal notranslate"><span class="pre">SOURCEDIR</span></code> inside the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> / <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, not the working directory):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># from the repository root</span>
-<span class="nb">cd</span><span class="w"> </span>docs
-
-<span class="c1"># wipe previous build artefacts (clears docs/build/)</span>
+<section id="build-and-publish">
+<h3>Build and Publish<a class="headerlink" href="#build-and-publish" title="Link to this heading">¶</a></h3>
+<p>Run these commands from the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> directory, not <code class="docutils literal notranslate"><span class="pre">docs/source/</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># wipe previous build artefacts (clears docs/build/)</span>
 make<span class="w"> </span>clean
 
 <span class="c1"># build HTML and automatically mirror docs/build/html/ -&gt; docs/</span>
@@ -540,11 +574,13 @@ make<span class="w"> </span>html
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> runs Sphinx and then invokes <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, which:</p>
 <ol class="arabic simple">
-<li><p>removes every stale published asset at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> (everything except <code class="docutils literal notranslate"><span class="pre">source/</span></code>, <code class="docutils literal notranslate"><span class="pre">build/</span></code>, <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code>, <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code>);</p></li>
-<li><p>copies the freshly built site from <code class="docutils literal notranslate"><span class="pre">docs/build/html/</span></code> into <code class="docutils literal notranslate"><span class="pre">docs/</span></code>;</p></li>
-<li><p>ensures the <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code> marker is present so GitHub Pages keeps <code class="docutils literal notranslate"><span class="pre">_static/</span></code> and <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>.</p></li>
+<li><p>updates changed files and removes stale published assets at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> (everything except <code class="docutils literal notranslate"><span class="pre">source/</span></code>, <code class="docutils literal notranslate"><span class="pre">build/</span></code>, <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>, <code class="docutils literal notranslate"><span class="pre">make.bat</span></code>, <code class="docutils literal notranslate"><span class="pre">_publish.py</span></code>, <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code>, <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code>);</p></li>
+<li><p>ensures the <code class="docutils literal notranslate"><span class="pre">.nojekyll</span></code> marker is present so GitHub Pages keeps <code class="docutils literal notranslate"><span class="pre">_static/</span></code>, <code class="docutils literal notranslate"><span class="pre">_sources/</span></code>, and <code class="docutils literal notranslate"><span class="pre">_modules/</span></code>.</p></li>
 </ol>
-<p>Then commit the regenerated files at the root of <code class="docutils literal notranslate"><span class="pre">docs/</span></code> — that is what gets published. <code class="docutils literal notranslate"><span class="pre">docs/build/</span></code> stays local.</p>
+<p>Unchanged files are left in place, avoiding unnecessary replacement of files
+that may be open on Windows. If a changed file is locked, close the application
+using it and rerun <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code>. Commit the regenerated files at the root of
+<code class="docutils literal notranslate"><span class="pre">docs/</span></code>; <code class="docutils literal notranslate"><span class="pre">docs/build/</span></code> stays local.</p>
 <p>If you ever build with a raw <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> invocation, run the mirror step manually:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>publish
 </pre></div>
@@ -555,10 +591,6 @@ make<span class="w"> </span>html
 </div></blockquote>
 </section>
 </section>
-<section id="contributing">
-<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
-<p>We welcome contributions to <strong>mlchem</strong>. Users are free to propose new functionalities, flag new bugs, fix old bugs and issue pull requests. Please consult the <a class="reference external" href="https://github.com/seacunilever/mlchem/blob/master/CONTRIBUTING.md">contribution guide</a> on how to properly propose and submit changes.</p>
-</section>
 <section id="third-party-dependencies">
 <h2>Third-Party Dependencies<a class="headerlink" href="#third-party-dependencies" title="Link to this heading">¶</a></h2>
 <p>This project uses the <a class="reference external" href="https://github.com/aspuru-guzik-group/selfies">SELFIES</a> Python package for molecular string representations.<br />
@@ -568,7 +600,6 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
 <p>This project is licensed under the BSD-3 License.</p>
-<p>Note: This project includes components licensed under the Apache License 2.0 (e.g., the SELFIES package), as well as source code taken and adapted from RDKit library.</p>
 </section>
 <section id="acknowledgements">
 <h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading">¶</a></h2>
@@ -590,6 +621,25 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#documentation">Documentation</a></li>
 <li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#calculate-rdkit-descriptors">Calculate RDKit descriptors</a></li>
+<li><a class="reference internal" href="#calculate-fingerprints">Calculate fingerprints</a></li>
+<li><a class="reference internal" href="#calculate-chemotypes-at-scale">Calculate chemotypes at scale</a></li>
+<li><a class="reference internal" href="#control-ml-verbosity">Control ML Verbosity</a></li>
+<li><a class="reference internal" href="#balance-an-imbalanced-training-set">Balance an imbalanced training set</a></li>
+<li><a class="reference internal" href="#stress-test-models-with-y-scrambling">Stress-Test Models with Y-Scrambling</a></li>
+<li><a class="reference internal" href="#cross-validation-majority-voting">Cross-Validation Majority Voting</a></li>
+<li><a class="reference internal" href="#capture-pipeline-logs">Capture pipeline logs</a></li>
+<li><a class="reference internal" href="#visual-examples">Visual examples</a><ul>
+<li><a class="reference internal" href="#pattern-recognition">Pattern recognition</a></li>
+<li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">De novo molecule generation and cleaning</a></li>
+<li><a class="reference internal" href="#predefined-colour-palette">Predefined colour palette</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#modules">Modules</a><ul>
 <li><a class="reference internal" href="#chem-visualise">chem.visualise/</a></li>
 <li><a class="reference internal" href="#chem-calculator">chem.calculator/</a></li>
@@ -599,38 +649,20 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#ml-preprocessing">ml.preprocessing/</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#logging">Logging</a><ul>
-<li><a class="reference internal" href="#controlling-log-level">Controlling Log Level</a></li>
-<li><a class="reference internal" href="#post-pipeline-inspection-and-file-logging">Post-Pipeline Inspection and File Logging</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#compatibility-checks-python-3-12-3-13-3-14">Compatibility checks (Python 3.12, 3.13, 3.14)</a><ul>
-<li><a class="reference internal" href="#local-matrix-default-envs-under-envs">Local matrix (default envs under ~/Envs)</a></li>
-<li><a class="reference internal" href="#tox-entrypoint">tox entrypoint</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#maintainer-release-refresh-flow-local">Maintainer release refresh flow (local)</a></li>
-<li><a class="reference internal" href="#usage">Usage</a><ul>
-<li><a class="reference internal" href="#calculate-rdkit-descriptors-for-two-molecules">calculate rdkit descriptors for two molecules</a></li>
-<li><a class="reference internal" href="#calculate-fingerprints">calculate fingerprints</a></li>
-<li><a class="reference internal" href="#calculate-chemotypes-faster-on-larger-datasets">calculate chemotypes faster on larger datasets</a></li>
-<li><a class="reference internal" href="#control-ml-verbosity-in-notebooks-and-development-runs">control ML verbosity in notebooks and development runs</a></li>
-<li><a class="reference internal" href="#optional-diagnostics-for-undersampling">optional diagnostics for undersampling</a></li>
-<li><a class="reference internal" href="#stress-test-your-models-with-y-scrambling">Stress-test your models with y-scrambling</a></li>
-<li><a class="reference internal" href="#cross-validation-centric-majority-voting">cross-validation-centric majority voting</a></li>
-<li><a class="reference internal" href="#pattern-recognition">pattern recognition</a></li>
-<li><a class="reference internal" href="#de-novo-molecule-generation-and-cleaning">de novo molecule generation and cleaning</a></li>
-<li><a class="reference internal" href="#show-pre-defined-colour-palette">show pre-defined colour palette</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#building-the-documentation">Building the documentation</a><ul>
-<li><a class="reference internal" href="#what-is-tracked-what-is-not">What is tracked, what is not</a></li>
-<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li><a class="reference internal" href="#build-publish">Build &amp; publish</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#development-setup">Development setup</a></li>
 <li><a class="reference internal" href="#contributing">Contributing</a></li>
+<li><a class="reference internal" href="#testing-and-maintainer-guide">Testing and Maintainer Guide</a><ul>
+<li><a class="reference internal" href="#local-matrix-testing">Local matrix testing</a></li>
+<li><a class="reference internal" href="#warning-and-coverage-checks">Warning and coverage checks</a></li>
+<li><a class="reference internal" href="#release-refresh">Release refresh</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#building-the-documentation">Building the Documentation</a><ul>
+<li><a class="reference internal" href="#tracked-and-generated-files">Tracked and Generated Files</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#build-and-publish">Build and Publish</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#third-party-dependencies">Third-Party Dependencies</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#acknowledgements">Acknowledgements</a></li>
@@ -646,8 +678,8 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="modules.html"
-                          title="next chapter"><strong>mlchem package</strong></a></p>
+    <p class="topless"><a href="architecture.html"
+                          title="next chapter">Architecture</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -680,12 +712,12 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="modules.html" title="mlchem package"
+          <a href="architecture.html" title="Architecture"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Contents"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>

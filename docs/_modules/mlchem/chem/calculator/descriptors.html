@@ -1,0 +1,1419 @@
+
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mlchem.chem.calculator.descriptors &#8212; mlchem 1.2.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
+    
+    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.calculator.descriptors</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mlchem.chem.calculator.descriptors</h1><div class="highlight"><pre>
+<span></span><span class="c1"># mlchem - cheminformatics library</span>
+<span class="c1"># Copyright © 2025 as Unilever Global IP Limited</span>
+
+<span class="c1"># Redistribution and use in source and binary forms, with or without modification,</span>
+<span class="c1"># are permitted under the terms of the BSD-3 License, provided that the following conditions are met:</span>
+
+<span class="c1">#     1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1">#     2. Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#        notice, this list of conditions and the following disclaimer in</span>
+<span class="c1">#        the documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1">#     3. Neither the name of the copyright holder nor the names of its</span>
+<span class="c1">#        contributors may be used to endorse or promote products derived</span>
+<span class="c1">#        from this software without specific prior written permission.</span>
+
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1"># THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span class="c1"># PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS</span>
+<span class="c1"># BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR</span>
+<span class="c1"># CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)</span>
+<span class="c1"># HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,</span>
+<span class="c1"># STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING</span>
+<span class="c1"># IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE</span>
+<span class="c1"># POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="c1"># You should have received a copy of the BSD-3 License along with mlchem.</span>
+<span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
+<span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_ChemotypeExecution</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Private helpers that orchestrate cached chemotype rule execution.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This class is internal to chemotype calculation and is not part of the</span>
+<span class="sd">    public API. The methods are documented to improve editor hover help and</span>
+<span class="sd">    maintainability.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze_cache_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert nested arguments into a stable hashable cache key.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value : Any</span>
+<span class="sd">            Nested input value (dict/list/set/callable/scalar).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Any</span>
+<span class="sd">            A deterministic, hashable representation suitable for cache keys.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; _ChemotypeExecution.freeze_cache_value({&#39;a&#39;: [1, 2]})</span>
+<span class="sd">        ((&#39;a&#39;, (1, 2)),)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">freeze_cache_value</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">freeze_cache_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">freeze_cache_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;__callable__&quot;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;__module__&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span>
+                            <span class="s2">&quot;__qualname__&quot;</span><span class="p">,</span>
+                            <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalise_output</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Normalize chemotype rule outputs to a boolean.</span>
+
+<span class="sd">        Tuple outputs follow legacy semantics where element 0 is the truth</span>
+<span class="sd">        value (for example: ``(True, [atom_ids], smarts)``).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : Any</span>
+<span class="sd">            Rule output as bool-like scalar or tuple.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Normalized boolean result.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; _ChemotypeExecution.normalise_output((True, [0, 1]))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; _ChemotypeExecution.normalise_output(False)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call_rule_with_cache</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+                             <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
+                             <span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+                             <span class="n">rule_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call a chemotype rule once per molecule for a specific arg signature.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : Callable[..., Any]</span>
+<span class="sd">            Chemotype rule function.</span>
+<span class="sd">        mol : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">            Target molecule.</span>
+<span class="sd">        kwargs : dict[str, Any]</span>
+<span class="sd">            Keyword arguments passed to the rule function.</span>
+<span class="sd">        rule_cache : dict[tuple[Any, Any], Any]</span>
+<span class="sd">            Per-molecule cache mapping function/signature to computed result.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Any</span>
+<span class="sd">            Cached or freshly computed rule output.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The method first tries ``func(target=mol, **kwargs)`` and falls back</span>
+<span class="sd">        to ``func(mol, **kwargs)`` for backward compatibility with rule</span>
+<span class="sd">        functions that only accept positional target input.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception</span>
+<span class="sd">            Re-raises exceptions from the rule function if evaluation fails.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Internal use inside get_chemotypes evaluation loop</span>
+<span class="sd">        &gt;&gt;&gt; # _ChemotypeExecution.call_rule_with_cache(rule, mol, {}, cache)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">cache_key</span> <span class="o">=</span> <span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">freeze_cache_value</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">cache_key</span> <span class="ow">in</span> <span class="n">rule_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rule_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">rule_cache</span><span class="p">[</span><span class="n">cache_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_atom_count</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract atom-count semantics from chemotype rule outputs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : Any</span>
+<span class="sd">            Rule output as tuple ``(bool, atom_ids, ...)`` or scalar bool-like.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of matched atoms if available, otherwise 1/0 from bool cast.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; _ChemotypeExecution.to_atom_count((True, [2, 5, 9]))</span>
+<span class="sd">        3</span>
+<span class="sd">        &gt;&gt;&gt; _ChemotypeExecution.to_atom_count(False)</span>
+<span class="sd">        0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_rule</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+                      <span class="n">args</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+                      <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
+                      <span class="n">rule_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+                      <span class="n">abs_rule</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+                      <span class="n">rel_rule</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate one chemotype rule with memoization-aware fast paths.</span>
+
+<span class="sd">        This method optimizes known derived rules</span>
+<span class="sd">        (absolute/relative fraction thresholds) by reusing cached base-pattern</span>
+<span class="sd">        evaluations rather than re-running equivalent pattern checks.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        func : Callable[..., Any]</span>
+<span class="sd">            Rule function to evaluate.</span>
+<span class="sd">        args : dict[str, Any]</span>
+<span class="sd">            Rule argument mapping from the chemotype dictionary.</span>
+<span class="sd">        mol : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">            Molecule to evaluate.</span>
+<span class="sd">        rule_cache : dict[tuple[Any, Any], Any]</span>
+<span class="sd">            Per-molecule cache of previously evaluated rule calls.</span>
+<span class="sd">        abs_rule : Callable[..., Any]</span>
+<span class="sd">            Reference absolute-fraction rule function.</span>
+<span class="sd">        rel_rule : Callable[..., Any]</span>
+<span class="sd">            Reference relative-fraction rule function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Any</span>
+<span class="sd">            Raw rule output (later normalized by ``normalise_output``).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If a derived rule is missing required dictionary keys, for example</span>
+<span class="sd">            ``func``, ``func1``, ``func2``, or ``threshold``.</span>
+<span class="sd">        Exception</span>
+<span class="sd">            Re-raises exceptions from nested rule evaluations.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; # Internal use in get_chemotypes:</span>
+<span class="sd">        &gt;&gt;&gt; # raw = _ChemotypeExecution.evaluate_rule(func, args, mol, cache, abs_rule, rel_rule)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="n">abs_rule</span><span class="p">:</span>
+            <span class="n">hidden_func</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hidden_pattern_function&#39;</span><span class="p">)</span>
+            <span class="n">numerator_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">hidden_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">numerator_kwargs</span><span class="p">[</span><span class="s1">&#39;pattern_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hidden_func</span>
+
+            <span class="n">numerator_result</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">call_rule_with_cache</span><span class="p">(</span>
+                <span class="n">args</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">],</span> <span class="n">mol</span><span class="p">,</span> <span class="n">numerator_kwargs</span><span class="p">,</span> <span class="n">rule_cache</span>
+            <span class="p">)</span>
+            <span class="n">pattern_atoms</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">to_atom_count</span><span class="p">(</span><span class="n">numerator_result</span><span class="p">)</span>
+            <span class="n">total_atoms</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">()</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;threshold&#39;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">total_atoms</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">pattern_atoms</span> <span class="o">/</span> <span class="n">total_atoms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="n">rel_rule</span><span class="p">:</span>
+            <span class="n">hidden_func</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hidden_pattern_function&#39;</span><span class="p">)</span>
+            <span class="n">numerator_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">hidden_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">numerator_kwargs</span><span class="p">[</span><span class="s1">&#39;pattern_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hidden_func</span>
+
+            <span class="n">denominator_result</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">call_rule_with_cache</span><span class="p">(</span>
+                <span class="n">args</span><span class="p">[</span><span class="s1">&#39;func2&#39;</span><span class="p">],</span> <span class="n">mol</span><span class="p">,</span> <span class="p">{},</span> <span class="n">rule_cache</span>
+            <span class="p">)</span>
+            <span class="n">numerator_result</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">call_rule_with_cache</span><span class="p">(</span>
+                <span class="n">args</span><span class="p">[</span><span class="s1">&#39;func1&#39;</span><span class="p">],</span> <span class="n">mol</span><span class="p">,</span> <span class="n">numerator_kwargs</span><span class="p">,</span> <span class="n">rule_cache</span>
+            <span class="p">)</span>
+
+            <span class="n">denominator_atoms</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">to_atom_count</span><span class="p">(</span>
+                <span class="n">denominator_result</span>
+            <span class="p">)</span>
+            <span class="n">numerator_atoms</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">to_atom_count</span><span class="p">(</span><span class="n">numerator_result</span><span class="p">)</span>
+            <span class="n">threshold</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;threshold&#39;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">denominator_atoms</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> \
+                <span class="p">(</span><span class="n">numerator_atoms</span> <span class="o">/</span> <span class="n">denominator_atoms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+
+        <span class="k">return</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">call_rule_with_cache</span><span class="p">(</span>
+            <span class="n">func</span><span class="p">,</span> <span class="n">mol</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">rule_cache</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_fingerprint_generator</span><span class="p">(</span>
+    <span class="n">fp_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;ap&#39;</span><span class="p">,</span> <span class="s1">&#39;rk&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="s1">&#39;mac&#39;</span><span class="p">],</span>
+    <span class="n">radius</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">nBits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">include_chirality</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an RDKit fingerprint generator for supported fingerprint types.&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">rdFingerprintGenerator</span>
+
+    <span class="k">if</span> <span class="n">fp_type</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rdFingerprintGenerator</span><span class="o">.</span><span class="n">GetMorganGenerator</span><span class="p">(</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">fpSize</span><span class="o">=</span><span class="n">nBits</span><span class="p">,</span>
+            <span class="n">includeChirality</span><span class="o">=</span><span class="n">include_chirality</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fp_type</span> <span class="o">==</span> <span class="s1">&#39;ap&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rdFingerprintGenerator</span><span class="o">.</span><span class="n">GetAtomPairGenerator</span><span class="p">(</span>
+            <span class="n">maxDistance</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">fpSize</span><span class="o">=</span><span class="n">nBits</span><span class="p">,</span>
+            <span class="n">includeChirality</span><span class="o">=</span><span class="n">include_chirality</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fp_type</span> <span class="o">==</span> <span class="s1">&#39;rk&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rdFingerprintGenerator</span><span class="o">.</span><span class="n">GetRDKitFPGenerator</span><span class="p">(</span>
+            <span class="n">maxPath</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">fpSize</span><span class="o">=</span><span class="n">nBits</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fp_type</span> <span class="o">==</span> <span class="s1">&#39;tt&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rdFingerprintGenerator</span><span class="o">.</span><span class="n">GetTopologicalTorsionGenerator</span><span class="p">(</span>
+            <span class="n">torsionAtomCount</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">fpSize</span><span class="o">=</span><span class="n">nBits</span><span class="p">,</span>
+            <span class="n">includeChirality</span><span class="o">=</span><span class="n">include_chirality</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fp_type</span> <span class="o">==</span> <span class="s1">&#39;mac&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Unsupported fp_type: </span><span class="si">{</span><span class="n">fp_type</span><span class="si">}</span><span class="s2">. &quot;</span>
+        <span class="s2">&quot;Use one of {&#39;m&#39;, &#39;ap&#39;, &#39;rk&#39;, &#39;tt&#39;, &#39;mac&#39;}.&quot;</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_rdkitDesc">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_rdkitDesc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_rdkitDesc</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">],</span>
+                  <span class="n">include_3D</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate RDKit descriptors for a list of molecules.</span>
+
+<span class="sd">This function computes 2D descriptors for each molecule in the input list.</span>
+<span class="sd">If `include_3D` is True, it also calculates 3D descriptors and merges them</span>
+<span class="sd">with the 2D descriptors.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input_list : Iterable[str or rdkit.Chem.rdchem.Mol]</span>
+<span class="sd">    List of molecules in SMILES format or as RDKit Mol objects.</span>
+<span class="sd">include_3D : bool, optional</span>
+<span class="sd">    Whether to include 3D descriptors. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pd.DataFrame</span>
+<span class="sd">    DataFrame containing the descriptors for each molecule.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.calculator.descriptors import get_rdkitDesc</span>
+<span class="sd">&gt;&gt;&gt; descriptor_table = get_rdkitDesc([&quot;CCO&quot;, &quot;c1ccccc1&quot;])</span>
+<span class="sd">&gt;&gt;&gt; descriptor_table.shape[0]</span>
+<span class="sd">2</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Descriptors</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge_dicts_with_duplicates</span>
+
+    <span class="c1"># Define two inner helper functions</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_desc_2d</span><span class="p">(</span><span class="n">mol_input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate 2D descriptors for a single molecule.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Descriptors</span><span class="o">.</span><span class="n">CalcMolDescriptors</span><span class="p">(</span><span class="n">create_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_desc_3d</span><span class="p">(</span><span class="n">mol_input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate 3D descriptors for a single molecule.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem.Descriptors3D</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalcMolDescriptors3D</span>
+
+        <span class="n">mol_input_h</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="o">=</span><span class="n">mol_input</span><span class="p">,</span>
+                                      <span class="n">add_hydrogens</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                      <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                      <span class="n">solid_sticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                      <span class="n">is_3d</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                      <span class="n">optimise</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CalcMolDescriptors3D</span><span class="p">(</span><span class="n">mol_input_h</span><span class="p">)</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">identifiers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mol_input</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="n">mol_input</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mol_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> \
+                <span class="k">else</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading problem with molecule # </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">.&quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">desc_2d</span> <span class="o">=</span> <span class="n">get_desc_2d</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">include_3D</span><span class="p">:</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">merge_dicts_with_duplicates</span><span class="p">(</span><span class="n">desc_2d</span><span class="p">,</span>
+                                                  <span class="n">get_desc_3d</span><span class="p">(</span><span class="n">mol_input</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">desc_2d</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Descriptor calculation problem with molecule # </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">identifiers</span><span class="p">)</span>
+
+    <span class="c1"># Remove Ipc descriptor as it returns innatural values</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s1">&#39;Ipc&#39;</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="get_mordredDesc">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_mordredDesc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mordredDesc</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">],</span>
+                    <span class="n">include_3D</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate Mordred descriptors for a list of molecules.</span>
+
+<span class="sd">This function computes Mordred descriptors for each molecule in the input list.</span>
+<span class="sd">If `include_3D` is True, 3D descriptors are included.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input_list : list or np.ndarray of str or rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    List or array of molecules in SMILES format or as RDKit Mol objects.</span>
+<span class="sd">include_3D : bool, optional</span>
+<span class="sd">    Whether to include 3D descriptors. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pd.DataFrame</span>
+<span class="sd">    DataFrame containing the descriptors for each molecule.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; get_mordredDesc([&quot;CCO&quot;, &quot;c1ccccc1&quot;], include_3D=True)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mordred</span><span class="w"> </span><span class="kn">import</span> <span class="n">Calculator</span><span class="p">,</span> <span class="n">descriptors</span>
+
+    <span class="n">calc</span> <span class="o">=</span> <span class="n">Calculator</span><span class="p">(</span><span class="n">descriptors</span><span class="p">,</span> <span class="n">ignore_3D</span><span class="o">=</span><span class="mi">1</span><span class="o">-</span><span class="n">include_3D</span><span class="p">)</span>
+
+    <span class="c1"># Define inner helper function</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_desc</span><span class="p">(</span><span class="n">mol_input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calc</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate descriptors for a single molecule.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">calculator</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Problem encountered with: </span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">calculator</span><span class="o">.</span><span class="n">descriptors</span><span class="p">)</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">identifiers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mol_input</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="n">mol_input</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mol_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> \
+                <span class="k">else</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading problem with molecule # </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">.&quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_desc</span><span class="p">(</span><span class="n">mol_input</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calc</span><span class="p">))</span>
+        <span class="n">identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+
+    <span class="n">df_desc</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">identifiers</span><span class="p">)</span>
+    <span class="n">df_desc</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">calc</span><span class="o">.</span><span class="n">descriptors</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">df_desc</span></div>
+
+
+
+<div class="viewcode-block" id="get_allDesc">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_allDesc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_allDesc</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">]</span> <span class="o">|</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">],</span>
+                <span class="n">include_3D</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate both Mordred and RDKit descriptors for a list of molecules.</span>
+
+<span class="sd">This function computes both Mordred and RDKit descriptors for each molecule</span>
+<span class="sd">in the input list. If `include_3D` is True, 3D descriptors are included</span>
+<span class="sd">in both sets.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input_list : list or np.ndarray of str or rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    List or array of molecules in SMILES format or as RDKit Mol objects.</span>
+<span class="sd">include_3D : bool, optional</span>
+<span class="sd">    Whether to include 3D descriptors. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pd.DataFrame</span>
+<span class="sd">    DataFrame containing the combined descriptors for each molecule.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; get_allDesc([&quot;CCO&quot;, &quot;c1ccccc1&quot;], include_3D=True)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+    <span class="n">desc_rdkit</span> <span class="o">=</span> <span class="n">get_rdkitDesc</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">,</span> <span class="n">include_3D</span><span class="o">=</span><span class="n">include_3D</span><span class="p">)</span>
+    <span class="n">desc_mordred</span> <span class="o">=</span> <span class="n">get_mordredDesc</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">,</span> <span class="n">include_3D</span><span class="o">=</span><span class="n">include_3D</span><span class="p">)</span>
+    <span class="n">desc_both</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">desc_rdkit</span><span class="p">,</span> <span class="n">desc_mordred</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Remove duplicates when they come from mordred</span>
+    <span class="n">desc_both</span> <span class="o">=</span> <span class="n">desc_both</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="o">~</span><span class="n">desc_both</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="s1">&#39;first&#39;</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">desc_both</span></div>
+
+
+
+<div class="viewcode-block" id="get_atomicDesc">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_atomicDesc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_atomicDesc</span><span class="p">(</span><span class="n">mol_input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
+                  <span class="n">max_atoms</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">pad_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+                  <span class="n">add_hydrogens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                  <span class="n">is_3d</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate descriptors for all atoms in a molecule.</span>
+
+<span class="sd">This function computes a comprehensive set of atomic-level descriptors</span>
+<span class="sd">for all atoms in a molecule. These include properties related to</span>
+<span class="sd">bond types, hybridisation, charges, ring membership, and statistics</span>
+<span class="sd">on neighbouring atoms up to the third order.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input : str or rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    Molecule in SMILES format or as an RDKit Mol object.</span>
+<span class="sd">max_atoms: int, optional</span>
+<span class="sd">    Maximum number of atoms to consider. If None, all atoms are considered.</span>
+<span class="sd">pad_value : float, optional</span>
+<span class="sd">    Value used for padding when the number of atoms is less than `max_atoms`.</span>
+<span class="sd">    Default is 0.0.</span>
+<span class="sd">add_hydrogens : bool, optional</span>
+<span class="sd">    Whether to add hydrogen atoms to the molecule before calculating descriptors.</span>
+<span class="sd">    Default is True.</span>
+<span class="sd">is_3d : bool, optional</span>
+<span class="sd">    Whether to consider the molecule as three-dimensional during calculations.</span>
+<span class="sd">    Default is True.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">In v1.1.4, get_atomicDesc changed arguments and output style: it now</span>
+<span class="sd">calculates descriptors for all atoms in a molecule and returns one row per</span>
+<span class="sd">atom. Use max_atoms and pad_value to cap or pad the output matrix; atom_index</span>
+<span class="sd">is no longer part of the supported calling style.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pd.DataFrame</span>
+<span class="sd">    A DataFrame containing the descriptors for all atoms in the molecule.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">RuntimeError</span>
+<span class="sd">    If the molecule cannot be created from the input.</span>
+
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; get_atomicDesc(mol_input=&quot;CC(=O)O&quot;, max_atoms=30)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;In v1.1.4, get_atomicDesc changed arguments and output style: it now &quot;</span>
+        <span class="s2">&quot;calculates descriptors for all atoms in a molecule and returns one row per &quot;</span>
+        <span class="s2">&quot;atom. Use max_atoms and pad_value to cap or pad the output matrix; atom_index &quot;</span>
+        <span class="s2">&quot;is no longer part of the supported calling style.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">max_atoms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_atoms</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_atoms</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="n">max_atoms</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;max_atoms&#39; must be None or a positive integer.&quot;</span><span class="p">)</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">create_molecule</span><span class="p">,</span>
+                                          <span class="n">PatternRecognition</span> <span class="k">as</span> <span class="n">pr</span><span class="p">,</span>
+                                          <span class="n">PropManager</span> <span class="k">as</span> <span class="n">pm</span><span class="p">)</span>
+    <span class="n">prA</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">Atoms</span>
+    <span class="n">prBn</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">Bonds</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span>
+                <span class="n">mol_input</span><span class="p">,</span>
+                <span class="n">is_3d</span><span class="o">=</span><span class="n">is_3d</span><span class="p">,</span>
+                <span class="n">add_hydrogens</span><span class="o">=</span><span class="n">add_hydrogens</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Error creating molecule from input: </span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="n">mol</span><span class="o">.</span><span class="n">ComputeGasteigerCharges</span><span class="p">()</span>
+
+        <span class="n">atoms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">GetAtoms</span><span class="p">())</span>
+
+        <span class="n">cache</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;mol&quot;</span><span class="p">:</span> <span class="n">mol</span><span class="p">,</span>
+            <span class="s2">&quot;atoms&quot;</span><span class="p">:</span> <span class="n">atoms</span><span class="p">,</span>
+            <span class="s2">&quot;distmat&quot;</span><span class="p">:</span> <span class="n">pm</span><span class="o">.</span><span class="n">Mol</span><span class="o">.</span><span class="n">get_distance_matrix</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">is_3d</span><span class="o">=</span><span class="n">is_3d</span><span class="p">),</span>
+            <span class="s2">&quot;degrees&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">GetTotalDegree</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;valences&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">GetTotalValence</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;formal_charges&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">GetFormalCharge</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;masses&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">GetMass</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;aromatic&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">GetIsAromatic</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;hydrogens&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">a</span><span class="o">.</span><span class="n">GetTotalNumHs</span><span class="p">(</span><span class="n">includeNeighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span>
+                <span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;gasteiger&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">a</span><span class="o">.</span><span class="n">GetDoubleProp</span><span class="p">(</span><span class="s2">&quot;_GasteigerCharge&quot;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span>
+                <span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;ring_sizes&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">prA</span><span class="o">.</span><span class="n">get_ring_size</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">atoms</span><span class="p">],</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">cache</span>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mean_sum</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">arr</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mean_sum_max_min</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+                <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_neighbour_cache</span><span class="p">(</span><span class="n">mol</span><span class="p">):</span>
+
+        <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">GetAtoms</span><span class="p">():</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">atom</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">()</span>
+
+            <span class="n">cache</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="mi">1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">x</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">Atom</span><span class="o">.</span><span class="n">get_neighbours</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+                <span class="p">),</span>
+                <span class="mi">2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">x</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">Atom</span><span class="o">.</span><span class="n">get_neighbours</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+                <span class="p">),</span>
+                <span class="mi">3</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">x</span><span class="o">.</span><span class="n">GetIdx</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pm</span><span class="o">.</span><span class="n">Atom</span><span class="o">.</span><span class="n">get_neighbours</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">cache</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_calc_desc</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span><span class="n">atom_index</span><span class="p">,</span><span class="n">neighbour_cache</span><span class="p">):</span>
+
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;mol&quot;</span><span class="p">]</span>
+        <span class="n">atoms</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;atoms&quot;</span><span class="p">]</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="n">atoms</span><span class="p">[</span><span class="n">atom_index</span><span class="p">]</span>
+
+        <span class="n">neigh1</span> <span class="o">=</span> <span class="n">neighbour_cache</span><span class="p">[</span><span class="n">atom_index</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">neigh2</span> <span class="o">=</span> <span class="n">neighbour_cache</span><span class="p">[</span><span class="n">atom_index</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">neigh3</span> <span class="o">=</span> <span class="n">neighbour_cache</span><span class="p">[</span><span class="n">atom_index</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="n">bonds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">GetBonds</span><span class="p">())</span>
+
+        <span class="n">desc</span> <span class="o">=</span> <span class="p">{</span>
+
+            <span class="c1"># ---------------------------</span>
+            <span class="c1"># atom-level descriptors</span>
+            <span class="c1"># ---------------------------</span>
+
+            <span class="s2">&quot;total_degree&quot;</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">GetTotalDegree</span><span class="p">(),</span>
+            <span class="s2">&quot;total_valence&quot;</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">GetTotalValence</span><span class="p">(),</span>
+            <span class="s2">&quot;formal_charge&quot;</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">GetFormalCharge</span><span class="p">(),</span>
+
+            <span class="s2">&quot;is_SP&quot;</span><span class="p">:</span> <span class="n">prA</span><span class="o">.</span><span class="n">is_SP</span><span class="p">(</span><span class="n">a</span><span class="p">),</span>
+            <span class="s2">&quot;is_SP2&quot;</span><span class="p">:</span> <span class="n">prA</span><span class="o">.</span><span class="n">is_SP2</span><span class="p">(</span><span class="n">a</span><span class="p">),</span>
+            <span class="s2">&quot;is_SP3&quot;</span><span class="p">:</span> <span class="n">prA</span><span class="o">.</span><span class="n">is_SP3</span><span class="p">(</span><span class="n">a</span><span class="p">),</span>
+
+            <span class="s2">&quot;is_aromatic&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">GetIsAromatic</span><span class="p">()),</span>
+            <span class="s2">&quot;H_bonded&quot;</span><span class="p">:</span> <span class="n">a</span><span class="o">.</span><span class="n">GetTotalNumHs</span><span class="p">(</span><span class="n">includeNeighbors</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+
+            <span class="s2">&quot;is_in_ring&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">IsInRing</span><span class="p">()),</span>
+            <span class="s2">&quot;ring_size&quot;</span><span class="p">:</span> <span class="n">prA</span><span class="o">.</span><span class="n">get_ring_size</span><span class="p">(</span><span class="n">a</span><span class="p">),</span>
+
+            <span class="s2">&quot;gasteiger_charge&quot;</span><span class="p">:</span>
+                <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;gasteiger&quot;</span><span class="p">][</span><span class="n">atom_index</span><span class="p">],</span>
+
+            <span class="s2">&quot;average_eucl_dist_in_mol&quot;</span><span class="p">:</span>
+                <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;distmat&quot;</span><span class="p">][</span><span class="n">atom_index</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+        <span class="c1"># ---------------------------</span>
+        <span class="c1"># bond descriptors</span>
+        <span class="c1"># ---------------------------</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;tot_single_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_single_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">)</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;avg_single_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_single_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">])</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;tot_double_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_double_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">)</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;avg_double_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_double_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">])</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;tot_triple_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_triple_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">)</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;avg_triple_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_triple_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">])</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;tot_dative_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_dative_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">)</span>
+
+        <span class="n">desc</span><span class="p">[</span><span class="s2">&quot;avg_dative_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span>
+            <span class="n">prBn</span><span class="o">.</span><span class="n">is_dative_bond</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bonds</span>
+        <span class="p">])</span>
+
+        <span class="c1"># =======================</span>
+        <span class="c1"># neighbour stats helper</span>
+        <span class="c1"># =======================</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_add_stats</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">values1</span><span class="p">,</span> <span class="n">values2</span><span class="p">,</span> <span class="n">values3</span><span class="p">):</span>
+
+            <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">_mean_sum</span><span class="p">(</span><span class="n">values1</span><span class="p">)</span>
+            <span class="n">desc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;avg_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_neighbours&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="n">desc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;tot_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_neighbours&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+
+            <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">_mean_sum</span><span class="p">(</span><span class="n">values2</span><span class="p">)</span>
+            <span class="n">desc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;avg_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_neighbours2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="n">desc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;tot_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_neighbours2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+
+            <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">_mean_sum</span><span class="p">(</span><span class="n">values3</span><span class="p">)</span>
+            <span class="n">desc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;avg_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_neighbours3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="n">desc</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;tot_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_neighbours3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+
+        <span class="c1"># ---------------------------</span>
+        <span class="c1"># cached numeric properties</span>
+        <span class="c1"># ---------------------------</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;deg&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;degrees&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;degrees&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;degrees&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;valences&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;valences&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;valences&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;formal_charge&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;formal_charges&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;formal_charges&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;formal_charges&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;arom&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;aromatic&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;aromatic&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;aromatic&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;mass&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;masses&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;masses&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;masses&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;H_bonded&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;hydrogens&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;hydrogens&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;hydrogens&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">_add_stats</span><span class="p">(</span>
+            <span class="s2">&quot;ring_size&quot;</span><span class="p">,</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;ring_sizes&quot;</span><span class="p">][</span><span class="n">neigh1</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;ring_sizes&quot;</span><span class="p">][</span><span class="n">neigh2</span><span class="p">],</span>
+            <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;ring_sizes&quot;</span><span class="p">][</span><span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ---------------------------</span>
+        <span class="c1"># Gasteiger charge stats</span>
+        <span class="c1"># ---------------------------</span>
+
+        <span class="k">for</span> <span class="n">shell</span><span class="p">,</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">neigh1</span><span class="p">,</span> <span class="n">neigh2</span><span class="p">,</span> <span class="n">neigh3</span><span class="p">]</span>
+        <span class="p">):</span>
+
+            <span class="n">mean_</span><span class="p">,</span> <span class="n">sum_</span><span class="p">,</span> <span class="n">max_</span><span class="p">,</span> <span class="n">min_</span> <span class="o">=</span> <span class="n">_mean_sum_max_min</span><span class="p">(</span>
+                <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;gasteiger&quot;</span><span class="p">][</span><span class="n">idxs</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="n">desc</span><span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;avg_gasteiger_charge_neighbours</span><span class="si">{</span><span class="n">shell</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">mean_</span>
+
+            <span class="n">desc</span><span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;tot_gasteiger_charge_neighbours</span><span class="si">{</span><span class="n">shell</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">sum_</span>
+
+            <span class="n">desc</span><span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;max_gasteiger_charge_neighbours</span><span class="si">{</span><span class="n">shell</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">max_</span>
+
+            <span class="n">desc</span><span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;min_gasteiger_charge_neighbours</span><span class="si">{</span><span class="n">shell</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">min_</span>
+
+        <span class="k">return</span> <span class="n">desc</span>
+
+    <span class="n">cache</span> <span class="o">=</span> <span class="n">_preprocess_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
+    <span class="n">neighbour_cache</span> <span class="o">=</span> <span class="n">_build_neighbour_cache</span><span class="p">(</span><span class="n">cache</span><span class="p">[</span><span class="s2">&quot;mol&quot;</span><span class="p">])</span>
+    <span class="n">atom_count</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="s2">&quot;mol&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">()</span>
+
+
+    <span class="n">atom_indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">atom_count</span> <span class="k">if</span> <span class="n">max_atoms</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">atom_count</span><span class="p">,</span> <span class="n">max_atoms</span><span class="p">))</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_calc_desc</span><span class="p">(</span>
+            <span class="n">cache</span><span class="p">,</span> <span class="n">atom_idx</span><span class="p">,</span> <span class="n">neighbour_cache</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom_idx</span> <span class="ow">in</span> <span class="n">atom_indices</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">max_atoms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">atom_count</span> <span class="o">&lt;</span> <span class="n">max_atoms</span><span class="p">:</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">rows</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">column</span><span class="p">:</span> <span class="n">pad_value</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_atoms</span> <span class="o">-</span> <span class="n">atom_count</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matrix</span></div>
+
+
+
+<div class="viewcode-block" id="get_chemotypes">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_chemotypes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_chemotypes</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">],</span>
+                   <span class="n">chemotype_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Identify chemotypes for a list of molecules.</span>
+
+<span class="sd">This function applies a dictionary of chemotype definitions to each</span>
+<span class="sd">molecule in the input list. Each chemotype is defined by a function</span>
+<span class="sd">and its arguments. If no dictionary is provided, a default one is used.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input_list : list or np.ndarray of str or rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    List or array of molecules in SMILES format or as RDKit Mol objects.</span>
+<span class="sd">chemotype_dict : dict, optional</span>
+<span class="sd">    Dictionary of chemotype definitions. Each entry should be a key</span>
+<span class="sd">    with a tuple of (function, argument_dict). If None, a default</span>
+<span class="sd">    dictionary is used.</span>
+<span class="sd">n_jobs : int, optional</span>
+<span class="sd">    Number of worker threads used to process molecules. Use values</span>
+<span class="sd">    greater than 1 to enable parallel execution. Use -1 to consume</span>
+<span class="sd">    all available CPU cores. Default is 1.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pd.DataFrame</span>
+<span class="sd">    DataFrame containing the identified chemotypes for each molecule.</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If ``n_jobs`` is 0 or less than -1.</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If a chemotype rule does not contain exactly two items</span>
+<span class="sd">    (function, arguments).</span>
+<span class="sd">TypeError</span>
+<span class="sd">    If a chemotype rule function is not callable or its argument payload is</span>
+<span class="sd">    not a dictionary.</span>
+<span class="sd">Exception</span>
+<span class="sd">    Propagates molecule parsing/evaluation exceptions from underlying rule</span>
+<span class="sd">    functions and RDKit utilities.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">- Output row ordering is deterministic and follows ``mol_input_list`` even</span>
+<span class="sd">  when ``n_jobs &gt; 1`` because ``ThreadPoolExecutor.map`` preserves order.</span>
+<span class="sd">- ``n_jobs=-1`` maps to ``os.cpu_count()`` (or 1 if unavailable).</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; get_chemotypes([&quot;CCO&quot;, &quot;c1ccccc1&quot;])</span>
+<span class="sd">&gt;&gt;&gt; get_chemotypes([&quot;CCO&quot;, &quot;CCN&quot;, &quot;COCC&quot;], n_jobs=-1)</span>
+<span class="sd">&gt;&gt;&gt; custom = {&#39;O_rule&#39;: [lambda target: target.HasSubstructMatch(Chem.MolFromSmarts(&#39;[#8]&#39;)), {}]}</span>
+<span class="sd">&gt;&gt;&gt; get_chemotypes([Chem.MolFromSmiles(&quot;CCO&quot;), Chem.MolFromSmiles(&quot;CCC&quot;)], chemotype_dict=custom)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">PatternRecognition</span> <span class="k">as</span> <span class="n">pr</span>
+
+    <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">n_jobs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">n_jobs</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;n_jobs&#39; must be -1 or a positive integer.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">chemotype_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.importables</span><span class="w"> </span><span class="kn">import</span> <span class="n">chemotype_dictionary</span>
+        <span class="n">chemotype_dict</span> <span class="o">=</span> <span class="n">chemotype_dictionary</span>
+
+    <span class="n">abs_rule</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">pattern_abs_fraction_greater_than</span>
+    <span class="n">rel_rule</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">pattern_rel_fraction_greater_than</span>
+
+    <span class="n">mol_input_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">)</span>
+    <span class="n">mol_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">create_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mol_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">mol_input</span> <span class="k">for</span> <span class="n">mol_input</span> <span class="ow">in</span> <span class="n">mol_input_list</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">identify_chemotypes</span><span class="p">(</span><span class="n">mol_input</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
+                            <span class="n">chemotype_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                            <span class="n">abs_rule</span><span class="p">,</span>
+                            <span class="n">rel_rule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Identify chemotypes for one molecule.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mol_input : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">            Molecule to classify.</span>
+<span class="sd">        chemotype_dict : dict</span>
+<span class="sd">            Mapping of chemotype names to ``[function, kwargs]`` entries.</span>
+<span class="sd">        abs_rule : callable</span>
+<span class="sd">            Reference for absolute-fraction optimization path.</span>
+<span class="sd">        rel_rule : callable</span>
+<span class="sd">            Reference for relative-fraction optimization path.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Mapping of chemotype names to boolean presence flags.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">rule_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">chemotype_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;expected 1 function and 1 dictionary of arguments, found &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2"> total elements instead.&quot;</span><span class="p">)</span>
+
+            <span class="n">func</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chemotype rule &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; has a non-callable function.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chemotype rule &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; has non-dict arguments.&quot;</span><span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">evaluate_rule</span><span class="p">(</span>
+                <span class="n">func</span><span class="o">=</span><span class="n">func</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
+                <span class="n">mol</span><span class="o">=</span><span class="n">mol_input</span><span class="p">,</span>
+                <span class="n">rule_cache</span><span class="o">=</span><span class="n">rule_cache</span><span class="p">,</span>
+                <span class="n">abs_rule</span><span class="o">=</span><span class="n">abs_rule</span><span class="p">,</span>
+                <span class="n">rel_rule</span><span class="o">=</span><span class="n">rel_rule</span>
+            <span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_ChemotypeExecution</span><span class="o">.</span><span class="n">normalise_output</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">chemotype_results</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">identify_chemotypes</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">chemotype_dict</span><span class="p">,</span> <span class="n">abs_rule</span><span class="p">,</span> <span class="n">rel_rule</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">mol</span> <span class="ow">in</span> <span class="n">mol_list</span>
+        <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+            <span class="n">chemotype_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">mol</span><span class="p">:</span> <span class="n">identify_chemotypes</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span>
+                                                    <span class="n">chemotype_dict</span><span class="p">,</span>
+                                                    <span class="n">abs_rule</span><span class="p">,</span>
+                                                    <span class="n">rel_rule</span><span class="p">),</span>
+                    <span class="n">mol_list</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">chemotype_results</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">mol_input_list</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_fingerprint">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_fingerprint</span><span class="p">(</span>
+    <span class="n">mol_input</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">fp_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;ap&#39;</span><span class="p">,</span> <span class="s1">&#39;rk&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="s1">&#39;mac&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+    <span class="n">radius</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">nBits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span>
+    <span class="n">include_chirality</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">include_bit_info</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a molecular fingerprint using RDKit.</span>
+
+<span class="sd">This function generates a fingerprint for a molecule using one of</span>
+<span class="sd">several RDKit-supported types. Optionally, bit information can be</span>
+<span class="sd">returned for interpretability.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input : str or rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    Molecule in SMILES format or as an RDKit Mol object.</span>
+<span class="sd">fp_type : {&#39;m&#39;, &#39;ap&#39;, &#39;rk&#39;, &#39;tt&#39;, &#39;mac&#39;}, optional</span>
+<span class="sd">    Type of fingerprint to generate:</span>
+<span class="sd">    - &#39;m&#39;: Morgan</span>
+<span class="sd">    - &#39;ap&#39;: Atom Pair</span>
+<span class="sd">    - &#39;rk&#39;: RDKit</span>
+<span class="sd">    - &#39;tt&#39;: Topological Torsion</span>
+<span class="sd">    - &#39;mac&#39;: MACCS keys</span>
+<span class="sd">    Default is &#39;m&#39;.</span>
+<span class="sd">radius : int, optional</span>
+<span class="sd">    Radius or path length depending on fingerprint type. Default is 2.</span>
+<span class="sd">nBits : int, optional</span>
+<span class="sd">    Size of the fingerprint. Default is 2048.</span>
+<span class="sd">include_chirality : bool, optional</span>
+<span class="sd">    Whether to include chirality. Default is False.</span>
+<span class="sd">include_bit_info : bool, optional</span>
+<span class="sd">    Whether to return bit information. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">tuple or rdkit.DataStructs.cDataStructs.ExplicitBitVect</span>
+<span class="sd">    Fingerprint of the molecule. If `include_bit_info` is True,</span>
+<span class="sd">    returns a tuple (fingerprint, bit_info_dict).</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; get_fingerprint(&quot;CCO&quot;, fp_type=&#39;m&#39;, include_bit_info=True)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">rdFingerprintGenerator</span><span class="p">,</span> <span class="n">AllChem</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mol</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Problem encountered with: </span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="n">fpgen</span> <span class="o">=</span> <span class="n">_build_fingerprint_generator</span><span class="p">(</span><span class="n">fp_type</span><span class="p">,</span>
+                                         <span class="n">radius</span><span class="p">,</span>
+                                         <span class="n">nBits</span><span class="p">,</span>
+                                         <span class="n">include_chirality</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fpgen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">AllChem</span><span class="o">.</span><span class="n">GetMACCSKeysFingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fp</span><span class="p">,</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">fp</span>
+
+    <span class="n">ao</span> <span class="o">=</span> <span class="n">rdFingerprintGenerator</span><span class="o">.</span><span class="n">AdditionalOutput</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+        <span class="n">ao</span><span class="o">.</span><span class="n">AllocateBitInfoMap</span><span class="p">()</span>
+
+    <span class="n">fp</span> <span class="o">=</span> <span class="n">fpgen</span><span class="o">.</span><span class="n">GetFingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">additionalOutput</span><span class="o">=</span><span class="n">ao</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fp</span><span class="p">,</span> <span class="n">ao</span><span class="o">.</span><span class="n">GetBitInfoMap</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fp</span></div>
+
+
+
+<div class="viewcode-block" id="get_fingerprint_df">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_fingerprint_df">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_fingerprint_df</span><span class="p">(</span>
+    <span class="n">mol_input_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">]</span> <span class="o">|</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">],</span>
+    <span class="n">fp_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;ap&#39;</span><span class="p">,</span> <span class="s1">&#39;rk&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="s1">&#39;mac&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+    <span class="n">radius</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">nBits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">,</span>
+    <span class="n">include_chirality</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">include_bit_info</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Generate a DataFrame of fingerprints for a list of molecules.</span>
+
+<span class="sd">This function computes fingerprints for each molecule in the input list</span>
+<span class="sd">and returns them as a DataFrame. Optionally, bit information can also</span>
+<span class="sd">be returned.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input_list : list or np.ndarray of str or rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    List or array of molecules in SMILES format or as RDKit Mol objects.</span>
+<span class="sd">fp_type : {&#39;m&#39;, &#39;ap&#39;, &#39;rk&#39;, &#39;tt&#39;, &#39;mac&#39;}, optional</span>
+<span class="sd">    Type of fingerprint to generate. Default is &#39;m&#39;.</span>
+<span class="sd">radius : int, optional</span>
+<span class="sd">    Radius or path length depending on fingerprint type. Default is 2.</span>
+<span class="sd">nBits : int, optional</span>
+<span class="sd">    Size of the fingerprint. Default is 2048.</span>
+<span class="sd">include_chirality : bool, optional</span>
+<span class="sd">    Whether to include chirality. Default is False.</span>
+<span class="sd">include_bit_info : bool, optional</span>
+<span class="sd">    Whether to return bit information. Default is False.</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">pd.DataFrame or tuple of (pd.DataFrame, dict)</span>
+<span class="sd">    DataFrame of fingerprints. If `include_bit_info` is True,</span>
+<span class="sd">    also returns a dictionary of bit information.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.calculator.descriptors import get_fingerprint_df</span>
+<span class="sd">&gt;&gt;&gt; fingerprints = get_fingerprint_df(</span>
+<span class="sd">...     [&quot;CCO&quot;, &quot;CCN&quot;], fp_type=&quot;m&quot;, radius=2, nBits=128</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; fingerprints.shape</span>
+<span class="sd">(2, 128)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllChem</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_molecule</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_progressive_column_names</span>
+
+    <span class="n">mol_input_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">)</span>
+    <span class="n">fpgen</span> <span class="o">=</span> <span class="n">_build_fingerprint_generator</span><span class="p">(</span><span class="n">fp_type</span><span class="p">,</span>
+                                         <span class="n">radius</span><span class="p">,</span>
+                                         <span class="n">nBits</span><span class="p">,</span>
+                                         <span class="n">include_chirality</span><span class="p">)</span>
+    <span class="n">n_columns</span> <span class="o">=</span> <span class="mi">167</span> <span class="k">if</span> <span class="n">fp_type</span> <span class="o">==</span> <span class="s1">&#39;mac&#39;</span> <span class="k">else</span> <span class="n">nBits</span>
+    <span class="n">fp_names</span> <span class="o">=</span> <span class="n">create_progressive_column_names</span><span class="p">(</span><span class="n">fp_type</span><span class="p">,</span> <span class="n">n_columns</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">empty_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">fp_names</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">empty_df</span><span class="p">,</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">empty_df</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">identifiers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dict_bit_info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">duplicate_counts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mol_input_list</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="n">m</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading problem with molecule # </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">.&quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mol</span> <span class="o">=</span> <span class="n">create_molecule</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fpgen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fp</span> <span class="o">=</span> <span class="n">AllChem</span><span class="o">.</span><span class="n">GetMACCSKeysFingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+                <span class="n">bit_info</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fp</span> <span class="o">=</span> <span class="n">fpgen</span><span class="o">.</span><span class="n">GetFingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+                <span class="n">bit_info</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+                    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">rdFingerprintGenerator</span>
+                    <span class="n">ao</span> <span class="o">=</span> <span class="n">rdFingerprintGenerator</span><span class="o">.</span><span class="n">AdditionalOutput</span><span class="p">()</span>
+                    <span class="n">ao</span><span class="o">.</span><span class="n">AllocateBitInfoMap</span><span class="p">()</span>
+                    <span class="n">fp</span> <span class="o">=</span> <span class="n">fpgen</span><span class="o">.</span><span class="n">GetFingerprint</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">additionalOutput</span><span class="o">=</span><span class="n">ao</span><span class="p">)</span>
+                    <span class="n">bit_info</span> <span class="o">=</span> <span class="n">ao</span><span class="o">.</span><span class="n">GetBitInfoMap</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calculation problem with molecule # </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">.&quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">ToList</span><span class="p">())</span>
+        <span class="n">identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+            <span class="n">duplicate_count</span> <span class="o">=</span> <span class="n">duplicate_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">duplicate_counts</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">duplicate_count</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">duplicate_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">info_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">info_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">identifier</span><span class="si">}</span><span class="s2">__dup</span><span class="si">{</span><span class="n">duplicate_count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">dict_bit_info</span><span class="p">[</span><span class="n">info_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">bit_info</span>
+
+    <span class="n">fp_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">identifiers</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">fp_names</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">include_bit_info</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fp_dataframe</span><span class="p">,</span> <span class="n">dict_bit_info</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fp_dataframe</span></div>
+
+
+
+<div class="viewcode-block" id="get_EHT_descriptors">
+<a class="viewcode-back" href="../../../../mlchem.chem.calculator.html#mlchem.chem.calculator.descriptors.get_EHT_descriptors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_EHT_descriptors</span><span class="p">(</span><span class="n">mol_input</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
+                        <span class="n">conf_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Calculate quantum chemistry descriptors using Extended Hückel Theory (EHT).</span>
+
+<span class="sd">This function computes various quantum chemistry properties for a</span>
+<span class="sd">3D-embedded molecule using RDKit&#39;s EHT implementation. It includes</span>
+<span class="sd">orbital energies, overlap matrices, and Mulliken charges.</span>
+
+<span class="sd">More information:</span>
+<span class="sd">https://dasher.wustl.edu/chem478/reading/extended-huckel-lowe.pdf</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">mol_input : rdkit.Chem.rdchem.Mol</span>
+<span class="sd">    RDKit Mol object with at least one conformer.</span>
+<span class="sd">conf_id : int, optional</span>
+<span class="sd">    Conformer ID to use. Default is -1 (use the first conformer).</span>
+
+<span class="sd">Returns</span>
+<span class="sd">-------</span>
+<span class="sd">dict</span>
+<span class="sd">    Dictionary containing quantum chemistry descriptors:</span>
+<span class="sd">    - AtomicCharges</span>
+<span class="sd">    - Hamiltonian</span>
+<span class="sd">    - OrbitalEnergies</span>
+<span class="sd">    - OverlapMatrix</span>
+<span class="sd">    - ReducedChargeMatrix</span>
+<span class="sd">    - ReducedOverlapPopulationMatrix</span>
+<span class="sd">    - FermiEnergy</span>
+<span class="sd">    - NumElectrons</span>
+<span class="sd">    - NumOrbitals</span>
+<span class="sd">    - TotalEnergy</span>
+
+<span class="sd">Raises</span>
+<span class="sd">------</span>
+<span class="sd">ValueError</span>
+<span class="sd">    If the molecule has no conformers.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; get_EHT_descriptors(mol_with_conformer)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">rdEHTTools</span>
+
+    <span class="k">if</span> <span class="n">mol_input</span><span class="o">.</span><span class="n">GetNumConformers</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provided molecule has no conformers.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">success</span><span class="p">,</span> <span class="n">res</span> <span class="o">=</span> <span class="n">rdEHTTools</span><span class="o">.</span><span class="n">RunMol</span><span class="p">(</span>
+            <span class="n">mol_input</span><span class="p">,</span>
+            <span class="n">keepOverlapAndHamiltonianMatrices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">confId</span><span class="o">=</span><span class="n">conf_id</span>
+            <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Problem encountered with: </span><span class="si">{</span><span class="n">mol_input</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;EHT calculation failed with the provided molecule.&quot;</span><span class="p">)</span>
+
+    <span class="n">dictionary</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;AtomicCharges&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">GetAtomicCharges</span><span class="p">(),</span>
+        <span class="s1">&#39;Hamiltonian&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">GetHamiltonian</span><span class="p">(),</span>
+        <span class="s1">&#39;OrbitalEnergies&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">GetOrbitalEnergies</span><span class="p">(),</span>
+        <span class="s1">&#39;OverlapMatrix&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">GetOverlapMatrix</span><span class="p">(),</span>
+        <span class="s1">&#39;ReducedChargeMatrix&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">GetReducedChargeMatrix</span><span class="p">(),</span>
+        <span class="s1">&#39;ReducedOverlapPopulationMatrix&#39;</span><span class="p">:</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">GetReducedOverlapPopulationMatrix</span><span class="p">(),</span>
+        <span class="s1">&#39;FermiEnergy&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">fermiEnergy</span><span class="p">,</span>
+        <span class="s1">&#39;NumElectrons&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">numElectrons</span><span class="p">,</span>
+        <span class="s1">&#39;NumOrbitals&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">numOrbitals</span><span class="p">,</span>
+        <span class="s1">&#39;TotalEnergy&#39;</span><span class="p">:</span> <span class="n">res</span><span class="o">.</span><span class="n">totalEnergy</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">dictionary</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mlchem.chem.calculator.descriptors</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Leonardo Contreas.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+  </body>
+</html>

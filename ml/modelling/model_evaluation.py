@@ -431,6 +431,29 @@ dict
     Dictionary with fold-level arrays and summary statistics:
     ``train_scores``, ``train_mean``, ``train_se``,
     ``cv_scores``, ``cv_mean``, ``cv_se``.
+
+Examples
+--------
+Evaluate binary ROC-AUC using predicted probabilities:
+
+>>> from sklearn.datasets import make_classification
+>>> from sklearn.linear_model import LogisticRegression
+>>> from sklearn.metrics import roc_auc_score
+>>> X, y = make_classification(
+...     n_samples=40, n_features=4, n_informative=2,
+...     n_redundant=0, random_state=0
+... )
+>>> scores = crossval(
+...     LogisticRegression(max_iter=1000),
+...     X,
+...     y,
+...     roc_auc_score,
+...     n_fold=4,
+...     shuffle=True,
+...     random_state=0,
+...     response_method="predict_proba",
+... )
+>>> cv_mean = scores["cv_mean"]
 """
 
     from sklearn.model_selection import cross_validate
@@ -557,6 +580,9 @@ def y_scrambling(estimator,
         Multiplier defining ``safety_margin = safety_multiplier * scrambled_std``.
     log_level : int or str, optional
         Logging threshold.
+    response_method : {'predict', 'predict_proba', 'decision_function'}, optional
+        Estimator method used to obtain metric inputs. Defaults to ``predict``.
+        For ROC-AUC, use ``predict_proba`` or ``decision_function``.
 
     Returns
     -------
@@ -572,6 +598,30 @@ def y_scrambling(estimator,
         - ``safety_margin``
         - ``safety_margin_ratio``
         - ``safety_multiplier``
+
+    Examples
+    --------
+    Compare a binary ROC-AUC reference score with a small scrambled-label
+    distribution:
+
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> from sklearn.metrics import roc_auc_score
+    >>> X, y = make_classification(
+    ...     n_samples=40, n_features=4, n_informative=2,
+    ...     n_redundant=0, random_state=0
+    ... )
+    >>> result = y_scrambling(
+    ...     estimator=LogisticRegression(max_iter=1000),
+    ...     train_set=X,
+    ...     y_train=y,
+    ...     metric=roc_auc_score,
+    ...     n_scrambles=10,
+    ...     n_fold=4,
+    ...     plot=False,
+    ...     response_method="predict_proba",
+    ... )
+    >>> reference_score = result["reference_score"]
     """
 
     from sklearn.base import clone
@@ -1216,6 +1266,44 @@ pandas.DataFrame
     ``reliability_mean``, ``reliability_se``,
     ``train_folds``, ``validation_folds``, ``reliability_folds``.
     Results are ranked by ``reliability_mean`` descending.
+
+Examples
+--------
+Rank classifier combinations by cross-validated ROC-AUC. The continuous
+probability option keeps soft-vote scores suitable for ROC-AUC:
+
+>>> import pandas as pd
+>>> from sklearn.datasets import make_classification
+>>> from sklearn.ensemble import RandomForestClassifier
+>>> from sklearn.linear_model import LogisticRegression
+>>> from sklearn.metrics import roc_auc_score
+>>> raw_X, y = make_classification(
+...     n_samples=60, n_features=4, n_informative=2,
+...     n_redundant=0, random_state=0
+... )
+>>> X = pd.DataFrame(raw_X, columns=["f1", "f2", "f3", "f4"])
+>>> columns = X.columns.tolist()
+>>> ensemble = MajorityVote(
+...     train_set=X,
+...     y_train=y,
+...     task_type="classification",
+...     estimator_list=[
+...         LogisticRegression(max_iter=1000),
+...         RandomForestClassifier(n_estimators=20, random_state=0),
+...     ],
+...     column_list=[columns, columns],
+...     estimator_names=["logistic", "forest"],
+... )
+>>> results = ensemble.evaluate_cv(
+...     metric=roc_auc_score,
+...     metric_name="AUC",
+...     cv_iter=3,
+...     n_estimators_max=2,
+...     use_continuous_probabilities=True,
+...     shuffle=True,
+...     random_state=0,
+... )
+>>> results_summary = results[["combination", "validation_mean"]].head()
 """
 
         from sklearn.base import clone

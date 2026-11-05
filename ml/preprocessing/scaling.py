@@ -150,6 +150,17 @@ Returns
 -------
 tuple of pandas.DataFrame and StandardScaler
     The scaled DataFrame and the fitted StandardScaler.
+
+Examples
+--------
+>>> import pandas as pd
+>>> features = pd.DataFrame({
+...     "molecular_weight": [46.07, 60.10, 78.11],
+...     "logp": [-0.1, 0.2, 0.5],
+... })
+>>> scaled, scaler = scale_df_standard(features)
+>>> scaled.shape
+(3, 2)
 """
     scaler = StandardScaler()
     sliced_df, columns_to_scale = _split_scale_columns(
@@ -217,6 +228,14 @@ def scale_df_minmax(
     -------
     tuple of pandas.DataFrame and MinMaxScaler
         The scaled DataFrame and the fitted MinMaxScaler.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> features = pd.DataFrame({"weight": [1.0, 2.0, 3.0]})
+    >>> scaled, scaler = scale_df_minmax(features)
+    >>> scaled.shape
+    (3, 1)
     """
     scaler = MinMaxScaler()
     sliced_df, columns_to_scale = _split_scale_columns(
@@ -284,6 +303,14 @@ Returns
 -------
 tuple of pandas.DataFrame and RobustScaler
     The scaled DataFrame and the fitted RobustScaler.
+
+Examples
+--------
+>>> import pandas as pd
+>>> features = pd.DataFrame({"weight": [1.0, 2.0, 3.0]})
+>>> scaled, scaler = scale_df_robust(features)
+>>> scaled.shape
+(3, 1)
 """
     scaler = RobustScaler()
     sliced_df, columns_to_scale = _split_scale_columns(

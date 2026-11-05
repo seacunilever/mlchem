@@ -120,6 +120,24 @@ Returns
 -------
 tuple of pandas.DataFrame
     The undersampled training set and the updated test set.
+
+Examples
+--------
+The test set does not need a target column unless dropped training rows are
+added to it:
+
+>>> import pandas as pd
+>>> train = pd.DataFrame({
+...     "feature": [1, 2, 3, 4, 5, 6],
+...     "class": [0, 0, 1, 1, 1, 1],
+... })
+>>> test = pd.DataFrame({"feature": [7, 8]})
+>>> balanced, unchanged_test = undersample(
+...     train, test, class_column="class",
+...     desired_proportion_majority=0.5, random_seed=0
+... )
+>>> balanced.shape
+(4, 2)
 """
 
     import random

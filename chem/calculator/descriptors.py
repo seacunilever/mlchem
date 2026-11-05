@@ -343,7 +343,10 @@ pd.DataFrame
 
 Examples
 --------
->>> get_rdkitDesc(["CCO", "c1ccccc1"], include_3D=False)
+>>> from mlchem.chem.calculator.descriptors import get_rdkitDesc
+>>> descriptor_table = get_rdkitDesc(["CCO", "c1ccccc1"])
+>>> descriptor_table.shape[0]
+2
 """
 
 
@@ -1154,7 +1157,12 @@ pd.DataFrame or tuple of (pd.DataFrame, dict)
 
 Examples
 --------
->>> get_fingerprint_df(["CCO", "c1ccccc1"], fp_type='m')
+>>> from mlchem.chem.calculator.descriptors import get_fingerprint_df
+>>> fingerprints = get_fingerprint_df(
+...     ["CCO", "CCN"], fp_type="m", radius=2, nBits=128
+... )
+>>> fingerprints.shape
+(2, 128)
 """
 
     from rdkit.Chem import AllChem
