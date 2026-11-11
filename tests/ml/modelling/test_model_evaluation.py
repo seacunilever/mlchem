@@ -858,6 +858,30 @@ def test_majority_vote_evaluate_cv_classification_outputs_fold_metrics(
     assert all(len(fold_scores) == 4 for fold_scores in results['reliability_folds'])
 
 
+def test_majority_vote_evaluate_cv_reports_progress(majority_vote_classification):
+    mv = majority_vote_classification
+    progress_descriptions = []
+
+    def track_progress(iterable, **kwargs):
+        progress_descriptions.append(kwargs.get('desc'))
+        return iterable
+
+    with patch('mlchem.ml.modelling.model_evaluation.tqdm', track_progress):
+        mv.evaluate_cv(
+            metric=lambda y_true, y_pred: (y_true == y_pred).mean(),
+            metric_name='accuracy',
+            cv_iter=2,
+            n_estimators_max=1,
+        )
+
+    assert 'CV folds' in progress_descriptions
+    assert any(
+        description.startswith('Fitting estimators (fold ')
+        for description in progress_descriptions
+    )
+    assert 'Evaluating combinations' in progress_descriptions
+
+
 def test_majority_vote_evaluate_cv_can_use_continuous_probabilities(
     majority_vote_classification,
 ):

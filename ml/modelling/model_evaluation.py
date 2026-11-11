@@ -1334,7 +1334,10 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
 
         valid_estimators = set(estimator_names)
 
-        for train_idx, valid_idx in resolved_pairs:
+        for fold_number, (train_idx, valid_idx) in enumerate(
+            tqdm(resolved_pairs, desc="CV folds", disable=False),
+            start=1,
+        ):
             y_train_fold = y_all[train_idx]
             y_valid_fold = y_all[valid_idx]
 
@@ -1345,7 +1348,15 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
             fold_data_train_reg = {}
             fold_data_valid_reg = {}
 
-            for i, (estimator, columns) in enumerate(zip(self.estimator_list, self.column_list)):
+            for i, (estimator, columns) in enumerate(
+                tqdm(
+                    zip(self.estimator_list, self.column_list),
+                    total=len(self.estimator_list),
+                    desc=f"Fitting estimators (fold {fold_number}/{len(resolved_pairs)})",
+                    leave=False,
+                    disable=False,
+                )
+            ):
                 estimator_name = estimator_names[i]
                 if estimator_name not in valid_estimators:
                     continue
@@ -1404,7 +1415,9 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
 
         rows = []
 
-        for combination in combinations:
+        for combination in tqdm(
+            combinations, desc="Evaluating combinations", disable=False
+        ):
             if self.task_type == 'classification':
                 strategies = ('hard', 'soft')
             else:
