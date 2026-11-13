@@ -2,6 +2,21 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.5] - 2026-11-13
+
+### Added
+
+- Added optional `background_data` to `ShapExplainer`, allowing foreground samples to be explained against a separate background dataset. Explicit tree backgrounds use interventional perturbation and raw model output; omitting the option preserves the previous behavior.
+- Added progress reporting for cross-validation folds, estimator fitting, and combination evaluation in `MajorityVote.evaluate_cv()`.
+
+### Fixed
+
+- Prevented `MolDrawer` instances from sharing mutable default highlight and canvas-size values; changed the palette-size default to an immutable tuple.
+
+### Docs
+
+- Added usage examples for `mol_from_string()`, `kekulise_smiles()`, and `unkekulise_smiles()`.
+
 ## [1.2.4] - 2026-11-05
 
 ### Added
