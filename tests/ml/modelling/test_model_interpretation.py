@@ -79,6 +79,45 @@ def test_shap_explainer_explain_notree(shap_explainer_notree):
     assert hasattr(shap_explainer_notree, 'base_values')
     assert hasattr(shap_explainer_notree, 'shap_values')
 
+def test_shap_explainer_notree_separates_background_and_foreground(sample_data):
+    X, y = sample_data
+    estimator = LogisticRegression(max_iter=250, random_state=1)
+    estimator.fit(X, y)
+    background = X.iloc[:20]
+    foreground = X.iloc[20:30]
+
+    explainer = ShapExplainer(
+        estimator=estimator,
+        data=foreground,
+        y=y[20:30],
+        background_data=background,
+    )
+    explainer.explain()
+
+    assert explainer.data.index.equals(foreground.index)
+    assert np.array_equal(explainer.explainer.masker.data, background.to_numpy())
+    assert explainer.shap_values.shape[0] == len(foreground)
+
+def test_shap_explainer_tree_separates_background_and_foreground(sample_data):
+    X, y = sample_data
+    estimator = RandomForestClassifier(n_estimators=20, random_state=1)
+    estimator.fit(X, y)
+    background = X.iloc[:20]
+    foreground = X.iloc[20:30]
+
+    explainer = ShapExplainer(
+        estimator=estimator,
+        data=foreground,
+        y=y[20:30],
+        is_tree=True,
+        background_data=background,
+    )
+    explainer.explain()
+
+    assert explainer.data.index.equals(foreground.index)
+    assert np.array_equal(explainer.explainer.data, background.to_numpy())
+    assert explainer.shap_values.shape[0] == len(foreground)
+
 def test_shap_explainer_tree_load(shap_explainer_tree):
     base_values = np.random.rand(100)
     shap_values = np.random.rand(100, 10)

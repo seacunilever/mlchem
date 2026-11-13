@@ -105,7 +105,8 @@ decision_plot(interval_lower, interval_upper)
 
 
     def __init__(self, estimator, data: pd.DataFrame,
-                 y: Iterable, is_tree: bool = False, max_samples: int | None = None) -> None:
+                 y: Iterable, is_tree: bool = False, max_samples: int | None = None,
+                 background_data: pd.DataFrame | None = None) -> None:
         """
 Initialise the ShapExplainer with a model, dataset, and target values.
 
@@ -115,7 +116,7 @@ estimator : object
     The machine learning model to be explained.
 
 data : pandas.DataFrame
-    The dataset used for generating SHAP values.
+    The foreground dataset to explain.
 
 y : Iterable
     The target values corresponding to the dataset.
@@ -124,8 +125,12 @@ is_tree : bool, optional (default=False)
     Whether the model is a tree-based model (e.g., XGBoost, LightGBM).
 
 max_samples : int or None, optional (default=None)
-    Maximum number of samples to use for background dataset. If None, uses all samples.
-    Set to the dataset size to avoid subsampling warnings.
+    Maximum number of background rows used by the masker. If None, uses all
+    rows in the background dataset.
+
+background_data : pandas.DataFrame or None, optional (default=None)
+    Reference rows used for SHAP masking. If None, ``data`` is also used as
+    the background, preserving the previous behavior.
 """
 
 
@@ -133,7 +138,19 @@ max_samples : int or None, optional (default=None)
         self.data = data
         self.y = y
         self.is_tree = is_tree
-        self.max_samples = max_samples if max_samples is not None else len(data)
+        self._background_is_explicit = background_data is not None
+        self.background_data = data if background_data is None else background_data
+        if not data.columns.equals(self.background_data.columns):
+            raise ValueError("Foreground and background data must have identical columns in the same order.")
+        if self.background_data.empty:
+            raise ValueError("Background data must contain at least one row.")
+        if max_samples is not None and max_samples < 1:
+            raise ValueError("max_samples must be positive or None.")
+        self.max_samples = (
+            min(max_samples, len(self.background_data))
+            if max_samples is not None
+            else len(self.background_data)
+        )
 
     def _tree_shap_values_for_plot(self):
         """Return a 2D SHAP matrix for tree plots with explicit layout checks."""
@@ -191,14 +208,22 @@ max_samples : int or None, optional (default=None)
         import shap
 
         if self.is_tree:
-            self.explainer = shap.TreeExplainer(self.estimator)
+            if self._background_is_explicit:
+                self.explainer = shap.TreeExplainer(
+                    self.estimator,
+                    data=self.background_data,
+                    feature_perturbation='interventional',
+                    model_output='raw',
+                )
+            else:
+                self.explainer = shap.TreeExplainer(self.estimator)
             self.base_values = self.explainer.expected_value
             self.shap_values = self.explainer.shap_values(self.data)
         else:
             self.predictive_function = lambda x: self.estimator.\
                 predict_proba(x)[:, 1]
             self.explainer = shap.Explainer(self.predictive_function,
-                                            shap.maskers.Independent(self.data, max_samples=self.max_samples))
+                                            shap.maskers.Independent(self.background_data, max_samples=self.max_samples))
             self.shap_explanation_object = self.explainer(self.data)
             self.base_values = self.shap_explanation_object.base_values
             self.shap_values = self.shap_explanation_object.values
