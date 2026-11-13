@@ -388,8 +388,8 @@ draw_mol(...)
     
     def __init__(self,
                  mol: Chem.rdchem.Mol | None = None,
-                 highlightAtoms: Iterable = [],
-                 size: Iterable = [300, 300],
+                 highlightAtoms: Iterable | None = None,
+                 size: Iterable | None = None,
                  legend: str = '') -> None:
         """
 Initialise a `MolDrawer` instance and its default drawing state.
@@ -402,10 +402,12 @@ Parameters
 mol : rdkit.Chem.rdchem.Mol or None, optional
     Molecule to keep as instance default. If provided, `draw_mol()` can be
     called without passing `mol`.
-highlightAtoms : Iterable, optional
-    Default atom indices for highlighting in `draw_mol`.
-size : Iterable, optional
-    Default canvas size as `(width, height)` in pixels.
+highlightAtoms : Iterable or None, optional
+    Default atom indices for highlighting in `draw_mol`. If `None`, no
+    atoms are highlighted by default.
+size : Iterable or None, optional
+    Default canvas size as `(width, height)` in pixels. If `None`, uses
+    `(300, 300)`.
 legend : str, optional
     Default legend text shown under molecules.
 
@@ -427,9 +429,9 @@ Examples
 
         self.mol = mol
         self.mol_list = []
-        self.highlightAtoms = highlightAtoms
+        self.highlightAtoms = [] if highlightAtoms is None else highlightAtoms
         self.highlightAtoms_list = []
-        self.size = size
+        self.size = [300, 300] if size is None else size
         self.size_list = []
         self.legend = legend
         self.legend_list = []
@@ -445,7 +447,7 @@ Examples
 
     def show_palette(
         self, palette: dict | None = None, save: bool = False,
-        filename: str = '', size: Iterable = [1000, 300]
+        filename: str = '', size: Iterable = (1000, 300)
     ) -> Image.Image:
         """
 Display a colour palette as an image.

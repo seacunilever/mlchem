@@ -170,5 +170,17 @@ def test_draw_mol_numpy_highlight_atoms_is_handled(mol_drawer):
     img = mol_drawer.draw_mol(highlightAtoms=np.array([0, 1]))
     assert isinstance(img, Image.Image)
 
+
+def test_default_mol_drawers_have_independent_mutable_defaults():
+    first = MolDrawer()
+    second = MolDrawer()
+
+    first.highlightAtoms.append(0)
+    first.size[0] = 400
+
+    assert second.highlightAtoms == []
+    assert second.size == [300, 300]
+
+
 if __name__ == "__main__":
     pytest.main()
