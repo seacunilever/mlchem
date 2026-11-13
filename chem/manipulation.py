@@ -73,6 +73,12 @@ Raises
 ------
 ValueError
     If the input string is not a valid InChI or SMILES.
+
+Examples
+--------
+>>> mol = mol_from_string("CCO")
+>>> mol.GetNumAtoms()
+3
 """
 
     mol = Chem.MolFromInchi(mol_input)
@@ -215,6 +221,11 @@ Returns
 -------
 str
     The Kekulé form of the SMILES string.
+
+Examples
+--------
+>>> kekulise_smiles("c1ccccc1")
+'C1=CC=CC=C1'
 """
     return Chem.MolToSmiles(Chem.MolFromSmiles(smiles), kekuleSmiles=True)
 
@@ -232,6 +243,11 @@ Returns
 -------
 str
     The canonical SMILES string.
+
+Examples
+--------
+>>> unkekulise_smiles("C1=CC=CC=C1")
+'c1ccccc1'
 """
     return Chem.MolToSmiles(Chem.MolFromSmiles(smiles), kekuleSmiles=False)
 
