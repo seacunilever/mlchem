@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+from unittest.mock import patch
 from rdkit import Chem
 import numpy as np
 from mlchem.chem.manipulation import (mol_from_string,
@@ -88,6 +89,24 @@ def test_create_molecule():
     # Test with optimization
     mol = create_molecule(smiles, optimise=True)
     assert mol is not None, "Failed to optimise molecule"
+
+
+def test_create_molecule_rejects_unsupported_input_type():
+    with pytest.raises(TypeError, match="'mol_input' argument"):
+        create_molecule(object())  # type: ignore[arg-type]
+
+
+def test_create_molecule_uses_uff_optimizer():
+    from rdkit.Chem import AllChem
+
+    with patch.object(AllChem, 'UFFOptimizeMolecule') as uff_optimize, \
+            patch.object(AllChem, 'MMFFOptimizeMolecule') as mmff_optimize:
+        mol = create_molecule('CCO', is_3d=True, optimiser='UFF')
+
+    assert mol is not None
+    uff_optimize.assert_called_once_with(mol)
+    mmff_optimize.assert_not_called()
+
 
 def test_kekulise_smiles():
     smiles = "c1ccccc1"
