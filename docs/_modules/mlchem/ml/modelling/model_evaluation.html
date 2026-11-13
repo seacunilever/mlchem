@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.4 documentation</title>
+    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>
@@ -1403,7 +1403,10 @@
 
         <span class="n">valid_estimators</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">estimator_names</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">train_idx</span><span class="p">,</span> <span class="n">valid_idx</span> <span class="ow">in</span> <span class="n">resolved_pairs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">fold_number</span><span class="p">,</span> <span class="p">(</span><span class="n">train_idx</span><span class="p">,</span> <span class="n">valid_idx</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="n">tqdm</span><span class="p">(</span><span class="n">resolved_pairs</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;CV folds&quot;</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">):</span>
             <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">y_all</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span>
             <span class="n">y_valid_fold</span> <span class="o">=</span> <span class="n">y_all</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span>
 
@@ -1414,7 +1417,15 @@
             <span class="n">fold_data_train_reg</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">fold_data_valid_reg</span> <span class="o">=</span> <span class="p">{}</span>
 
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_list</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="n">tqdm</span><span class="p">(</span>
+                    <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">column_list</span><span class="p">),</span>
+                    <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator_list</span><span class="p">),</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Fitting estimators (fold </span><span class="si">{</span><span class="n">fold_number</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">resolved_pairs</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                    <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">disable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">):</span>
                 <span class="n">estimator_name</span> <span class="o">=</span> <span class="n">estimator_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">estimator_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_estimators</span><span class="p">:</span>
                     <span class="k">continue</span>
@@ -1473,7 +1484,9 @@
 
         <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+            <span class="n">combinations</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Evaluating combinations&quot;</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
                 <span class="n">strategies</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;hard&#39;</span><span class="p">,</span> <span class="s1">&#39;soft&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1663,7 +1676,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>

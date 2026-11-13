@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.manipulation &#8212; mlchem 1.2.4 documentation</title>
+    <title>mlchem.chem.manipulation &#8212; mlchem 1.2.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../_static/documentation_options.js?v=36f53d34"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation</a></li> 
       </ul>
@@ -119,6 +119,12 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If the input string is not a valid InChI or SMILES.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; mol = mol_from_string(&quot;CCO&quot;)</span>
+<span class="sd">&gt;&gt;&gt; mol.GetNumAtoms()</span>
+<span class="sd">3</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="n">mol</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromInchi</span><span class="p">(</span><span class="n">mol_input</span><span class="p">)</span>
@@ -267,6 +273,11 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    The Kekulé form of the SMILES string.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; kekulise_smiles(&quot;c1ccccc1&quot;)</span>
+<span class="sd">&#39;C1=CC=CC=C1&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">),</span> <span class="n">kekuleSmiles</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
@@ -287,6 +298,11 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    The canonical SMILES string.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; unkekulise_smiles(&quot;C1=CC=CC=C1&quot;)</span>
+<span class="sd">&#39;c1ccccc1&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="n">smiles</span><span class="p">),</span> <span class="n">kekuleSmiles</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -11314,7 +11330,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation</a></li> 
       </ul>

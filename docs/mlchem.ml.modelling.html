@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.ml.modelling package &#8212; mlchem 1.2.4 documentation</title>
+    <title>mlchem.ml.modelling package &#8212; mlchem 1.2.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=928db92d"></script>
+    <script src="_static/documentation_options.js?v=36f53d34"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.ml.feature_selection.html" title="mlchem.ml.feature_selection package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" accesskey="U"><strong>mlchem.ml package</strong></a> &#187;</li>
@@ -793,17 +793,19 @@ the impact of each feature on model predictions.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/mlchem/ml/modelling/model_interpretation.html#ShapExplainer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">estimator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/mlchem/ml/modelling/model_interpretation.html#ShapExplainer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mlchem.ml.modelling.model_interpretation.ShapExplainer.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialise the ShapExplainer with a model, dataset, and target values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>estimator</strong> (<em>object</em>) – The machine learning model to be explained.</p></li>
-<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The dataset used for generating SHAP values.</p></li>
+<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The foreground dataset to explain.</p></li>
 <li><p><strong>y</strong> (<em>Iterable</em>) – The target values corresponding to the dataset.</p></li>
 <li><p><strong>is_tree</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – Whether the model is a tree-based model (e.g., XGBoost, LightGBM).</p></li>
-<li><p><strong>max_samples</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – Maximum number of samples to use for background dataset. If None, uses all samples.
-Set to the dataset size to avoid subsampling warnings.</p></li>
+<li><p><strong>max_samples</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – Maximum number of background rows used by the masker. If None, uses all
+rows in the background dataset.</p></li>
+<li><p><strong>background_data</strong> (<em>pandas.DataFrame</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – Reference rows used for SHAP masking. If None, <code class="docutils literal notranslate"><span class="pre">data</span></code> is also used as
+the background, preserving the previous behavior.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1147,7 +1149,7 @@ the plot.</p>
         <li class="right" >
           <a href="mlchem.ml.feature_selection.html" title="mlchem.ml.feature_selection package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" ><strong>mlchem.ml package</strong></a> &#187;</li>

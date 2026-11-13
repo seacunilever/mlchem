@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.chem package &#8212; mlchem 1.2.4 documentation</title>
+    <title>mlchem.chem package &#8212; mlchem 1.2.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=928db92d"></script>
+    <script src="_static/documentation_options.js?v=36f53d34"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.html" title="chem and ml subpackages"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" accesskey="U"><strong>chem and ml subpackages</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>mlchem.chem package</strong></a></li> 
@@ -7783,6 +7783,11 @@ advanced SMARTS syntax that distinguishes them from SMILES.</p>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kekulise_smiles</span><span class="p">(</span><span class="s2">&quot;c1ccccc1&quot;</span><span class="p">)</span>
+<span class="go">&#39;C1=CC=CC=C1&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -7805,6 +7810,12 @@ Raises a ValueError if both conversions fail.</p>
 <dd class="field-even"><p><strong>ValueError</strong> – If the input string is not a valid InChI or SMILES.</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol_from_string</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span><span class="o">.</span><span class="n">GetNumAtoms</span><span class="p">()</span>
+<span class="go">3</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -7877,6 +7888,11 @@ Raises a ValueError if both conversions fail.</p>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">unkekulise_smiles</span><span class="p">(</span><span class="s2">&quot;C1=CC=CC=C1&quot;</span><span class="p">)</span>
+<span class="go">&#39;c1ccccc1&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>
@@ -8292,7 +8308,7 @@ Raises a ValueError if both conversions fail.</p>
         <li class="right" >
           <a href="mlchem.html" title="chem and ml subpackages"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>mlchem.chem package</strong></a></li> 

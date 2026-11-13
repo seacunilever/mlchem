@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.visualise.drawing &#8212; mlchem 1.2.4 documentation</title>
+    <title>mlchem.chem.visualise.drawing &#8212; mlchem 1.2.5 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=928db92d"></script>
+    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.drawing</a></li> 
       </ul>
@@ -439,8 +439,8 @@
 <a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                  <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                 <span class="n">highlightAtoms</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[],</span>
-                 <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span>
+                 <span class="n">highlightAtoms</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">legend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Initialise a `MolDrawer` instance and its default drawing state.</span>
@@ -453,10 +453,12 @@
 <span class="sd">mol : rdkit.Chem.rdchem.Mol or None, optional</span>
 <span class="sd">    Molecule to keep as instance default. If provided, `draw_mol()` can be</span>
 <span class="sd">    called without passing `mol`.</span>
-<span class="sd">highlightAtoms : Iterable, optional</span>
-<span class="sd">    Default atom indices for highlighting in `draw_mol`.</span>
-<span class="sd">size : Iterable, optional</span>
-<span class="sd">    Default canvas size as `(width, height)` in pixels.</span>
+<span class="sd">highlightAtoms : Iterable or None, optional</span>
+<span class="sd">    Default atom indices for highlighting in `draw_mol`. If `None`, no</span>
+<span class="sd">    atoms are highlighted by default.</span>
+<span class="sd">size : Iterable or None, optional</span>
+<span class="sd">    Default canvas size as `(width, height)` in pixels. If `None`, uses</span>
+<span class="sd">    `(300, 300)`.</span>
 <span class="sd">legend : str, optional</span>
 <span class="sd">    Default legend text shown under molecules.</span>
 
@@ -478,9 +480,9 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mol_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms</span> <span class="o">=</span> <span class="n">highlightAtoms</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">highlightAtoms</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">highlightAtoms</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">highlightAtoms_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="p">[</span><span class="mi">300</span><span class="p">,</span> <span class="mi">300</span><span class="p">]</span> <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">size_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">legend</span> <span class="o">=</span> <span class="n">legend</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">legend_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -499,7 +501,7 @@
 <a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.drawing.MolDrawer.show_palette">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">show_palette</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">palette</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">300</span><span class="p">]</span>
+        <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Display a colour palette as an image.</span>
@@ -1408,7 +1410,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.drawing</a></li> 
       </ul>
