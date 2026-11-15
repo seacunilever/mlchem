@@ -34,13 +34,14 @@
 import pytest
 import inspect
 import logging
+from math import comb
 from unittest.mock import patch
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
-from sklearn.metrics import matthews_corrcoef, roc_auc_score
+from sklearn.metrics import accuracy_score, matthews_corrcoef, roc_auc_score
 from sklearn.model_selection import GroupKFold
 from sklearn.model_selection import train_test_split
 from mlchem.ml.feature_selection.wrappers import (SequentialForwardSelection,
@@ -616,6 +617,45 @@ def test_combinatorial_selection_stage_1_max_subsets_none_and_parallel():
     )
 
     assert isinstance(results, pd.DataFrame)
+
+
+def test_combinatorial_selection_medium_search_smoke():
+    n_features = 5
+    max_subset_size = 3
+    expected_subsets = sum(
+        comb(n_features, subset_size)
+        for subset_size in range(1, max_subset_size + 1)
+    )
+    X, y = make_classification(
+        n_samples=40,
+        n_features=n_features,
+        n_informative=3,
+        n_redundant=0,
+        random_state=27,
+    )
+    train_set = pd.DataFrame(
+        X,
+        columns=[f'feature_{index}' for index in range(n_features)],
+    )
+    selector = CombinatorialSelection(
+        estimator=_ParallelAwareEstimator(n_jobs=1),
+        metric=accuracy_score,
+    )
+
+    results = selector.fit_stage_1(
+        train_set=train_set,
+        y_train=y,
+        features=train_set.columns.tolist(),
+        k=max_subset_size,
+        training_threshold=0.0,
+        cv_train_ratio=0.0,
+        cv_iter=2,
+        max_subsets=expected_subsets,
+        n_jobs=1,
+    )
+
+    assert len(selector.feature_subsets) == expected_subsets
+    assert len(results) == expected_subsets
 
 
 def test_combinatorial_selection_invalid_n_jobs_in_stage_1():
