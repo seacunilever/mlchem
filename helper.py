@@ -67,6 +67,13 @@ def convert_size(
     tuple of int or tuple of float
         Converted size in pixels if `size` is provided, or in inches 
         if `pixel_size` is provided.
+
+    Examples
+    --------
+    >>> convert_size(size=(2, 3), dpi=100)
+    (200, 300)
+    >>> convert_size(pixel_size=(200, 300), dpi=100)
+    (2.0, 3.0)
     """
 
     if size and pixel_size:
@@ -94,6 +101,12 @@ def generate_random_rgb() -> tuple[float, float, float]:
     tuple of float
         A tuple of three floats representing an RGB color, with each 
         component in the range [0, 1].
+
+    Examples
+    --------
+    >>> rgb = generate_random_rgb()
+    >>> len(rgb), all(0 <= value <= 1 for value in rgb)
+    (3, True)
     """
 
     import random
@@ -122,6 +135,13 @@ def convert_rgb(
     -------
     tuple of float or tuple of int
         Converted RGB values.
+
+    Examples
+    --------
+    >>> convert_rgb((255, 128, 64), 'normalise')
+    (1.0, 0.5019607843137255, 0.25098039215686274)
+    >>> convert_rgb((1.0, 0.5, 0.25), 'denormalise')
+    (255, 127, 63)
     """
 
     if mode == 'normalise':
@@ -156,6 +176,11 @@ Returns
 -------
 tuple of float
     RGB color after applying transparency.
+
+Examples
+--------
+>>> make_rgb_transparent((1.0, 0.0, 0.0), (1.0, 1.0, 1.0), 0.5)
+(1.0, 0.5, 0.5)
 """
 
     result = [alpha * c1 + (1 - alpha) * c2 for
@@ -178,6 +203,10 @@ rgb_tuple : tuple of float
 Returns
 -------
 None
+
+Examples
+--------
+>>> visualise_colour((1.0, 0.0, 0.0))
 """
 
     import matplotlib.pyplot as plt
@@ -215,6 +244,10 @@ figsize : tuple of int, default=(20, 20)
 Returns
 -------
 None
+
+Examples
+--------
+>>> visualise_colour_grid({'red': (1.0, 0.0, 0.0), 'blue': (0.0, 0.0, 1.0)})
 """
 
     import numpy as np
@@ -262,6 +295,15 @@ Returns
 -------
 Image.Image
     PIL Image object.
+
+Examples
+--------
+>>> from io import BytesIO
+>>> from PIL import Image
+>>> image_data = BytesIO()
+>>> Image.new('RGB', (1, 1), color='red').save(image_data, format='PNG')
+>>> show_png(image_data.getvalue()).size
+(1, 1)
 """
 
     import io
@@ -294,6 +336,11 @@ Returns
 -------
 Image.Image
     PIL Image object containing the gradient circle.
+
+Examples
+--------
+>>> create_smooth_gradient_circle(10, (255, 0, 0), 0.5).size
+(20, 20)
 """
 
     from PIL import ImageDraw
@@ -333,6 +380,11 @@ Raises
 ------
 ValueError
     If level is not a valid logging level name or integer.
+
+Examples
+--------
+>>> coerce_log_level('INFO')
+20
 """
 
     if isinstance(level, int):
@@ -439,16 +491,41 @@ Returns
 -------
 str
     Complete captured log output from in-memory buffer.
+
+Examples
+--------
+>>> import logging
+>>> with LogCapture(to_console=False) as capture:
+...     logging.warning('sample message')
+...     captured = 'sample message' in capture.get_logs()
+>>> captured
+True
 """
         return self.stream.getvalue()
 
     def clear(self) -> None:
-        """Clear captured logs from memory buffer."""
+        """Clear captured logs from memory buffer.
+
+Examples
+--------
+>>> import logging
+>>> with LogCapture(to_console=False) as capture:
+...     logging.warning('old message')
+...     capture.clear()
+...     capture.get_logs()
+''
+"""
         self.stream.truncate(0)
         self.stream.seek(0)
 
     def stop(self) -> None:
-        """Stop capturing logs and remove handlers."""
+        """Stop capturing logs and remove handlers.
+
+Examples
+--------
+>>> capture = LogCapture(to_console=False)
+>>> capture.stop()
+"""
         if self._memory_handler:
             self._root_logger.removeHandler(self._memory_handler)
         if self._console_handler:
@@ -522,6 +599,11 @@ Raises
 ------
 ValueError
     If task_type is not 'classification' or 'regression'.
+
+Examples
+--------
+>>> validate_task_type('classification')
+'classification'
 """
 
     if task_type not in ('classification', 'regression'):
@@ -534,7 +616,13 @@ def validate_dataframe_columns(
     required_columns: Iterable[Any],
     dataframe_name: str = 'dataframe',
 ) -> None:
-    """Raise a clear error when a DataFrame lacks required columns."""
+    """Raise a clear error when a DataFrame lacks required columns.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> validate_dataframe_columns(pd.DataFrame({'feature': [1]}), ['feature'])
+    """
     if not isinstance(dataframe, pd.DataFrame):
         raise TypeError(f"'{dataframe_name}' must be a pandas DataFrame.")
     if isinstance(required_columns, (str, bytes)):
@@ -567,6 +655,11 @@ Raises
 ------
 ValueError
     If n_jobs is not -1 or a positive integer.
+
+Examples
+--------
+>>> resolve_n_jobs(2)
+2
 """
 
     import os
@@ -585,6 +678,15 @@ Suppress all warnings in the current Python session.
 Returns
 -------
 None
+
+Examples
+--------
+>>> import warnings
+>>> with warnings.catch_warnings(record=True) as caught:
+...     suppress_warnings()
+...     warnings.warn('suppressed', UserWarning)
+>>> len(caught)
+0
 """
 
     import warnings
@@ -604,6 +706,11 @@ Returns
 -------
 str
     Path string with forward slashes.
+
+Examples
+--------
+>>> standardise_path('C:\\\\Users\\\\User\\\\Documents')
+'C:/Users/User/Documents'
 """
 
     return path.replace("\\", "/")
@@ -680,6 +787,15 @@ Returns
 object
     The estimator with internal parallelization disabled if applicable,
     otherwise unchanged.
+
+Examples
+--------
+>>> from sklearn.ensemble import RandomForestClassifier
+>>> estimator = disable_estimator_parallelization(
+...     RandomForestClassifier(n_jobs=4)
+... )
+>>> estimator.n_jobs is None
+True
 """
     if hasattr(estimator, 'n_jobs'):
         try:
@@ -711,6 +827,11 @@ Returns
 -------
 list of list
     List of combinations of elements.
+
+Examples
+--------
+>>> generate_combination_cascade(['a', 'b', 'c'], 2)
+[['a'], ['b'], ['c'], ['a', 'b'], ['a', 'c'], ['b', 'c']]
 """
 
     from itertools import combinations
@@ -735,8 +856,8 @@ Returns
 int
     Total number of features.
 
-Example
--------
+Examples
+--------
 >>> count_features(['a', 'b', 'a b'])
 4
 >>> count_features(['a', 'a b', 'c^2'])
@@ -776,6 +897,16 @@ size : int
 Returns
 -------
 None
+
+Examples
+--------
+>>> from contextlib import redirect_stdout
+>>> from io import StringIO
+>>> output = StringIO()
+>>> with redirect_stdout(output):
+...     loadingbar(1, 3, 10)
+>>> '001/003' in output.getvalue()
+True
 """
     import sys
 
@@ -808,6 +939,11 @@ Returns
 -------
 list of str
     List of column names.
+
+Examples
+--------
+>>> create_progressive_column_names('col', 3)
+['col1', 'col2', 'col3']
 """
 
     return [f"{serial_name}{i + 1}" for i in range(n)]
@@ -841,6 +977,13 @@ Raises
 ------
 TypeError
     If `exceptions` is not an exception class or tuple of exception classes.
+
+Examples
+--------
+>>> try_except(lambda: 1 / 0, exc='error')
+'error'
+>>> try_except(lambda: 1 / 1)
+1.0
 """
 
     if isinstance(exceptions, tuple):
@@ -881,6 +1024,11 @@ Returns
 -------
 list of int
     List of starting indices where the substring occurs.
+
+Examples
+--------
+>>> find_all_occurrences('test test test', 'test')
+[0, 5, 10]
 """
 
     indices = []
@@ -907,6 +1055,11 @@ Returns
 -------
 str
     Processed string.
+
+Examples
+--------
+>>> reset_string('Hello, World!')
+'helloworld'
 """
 
     punctuation = '''"!()-[]{};:'\\, <>./?@#$%^&*_~'''
@@ -944,6 +1097,11 @@ Raises
 ------
 ValueError
     If index is less than 0.
+
+Examples
+--------
+>>> insert_string_piece('Hello World', 'Beautiful ', 5)
+'Hello Beautiful World'
 """
 
     if index > 0:
@@ -967,6 +1125,11 @@ Returns
 -------
 tuple
     A flattened tuple containing all elements.
+
+Examples
+--------
+>>> flatten([1, [2, 3], [[4, 5], 6]])
+(1, 2, 3, 4, 5, 6)
 """
 
     if isinstance(args, (str, bytes, bytearray)):
@@ -1010,6 +1173,11 @@ Returns
 -------
 str
     The processed and formatted string.
+
+Examples
+--------
+>>> process_custom_string('Nc1ccccc1N', 'c1ccccc1', ['CYC'])
+';CYC;'
 """
 
     import string
@@ -1063,6 +1231,11 @@ Returns
 -------
 tuple of list
     Sorted list of elements and corresponding sorted values.
+
+Examples
+--------
+>>> sort_list_by_other_list(['apple', 'banana', 'cherry'], [3, -7, 2])
+(['banana', 'apple', 'cherry'], [-7, 3, 2])
 """
 
 
@@ -1094,6 +1267,11 @@ Returns
 -------
 dict of str to Any
     Merged dictionary with unique keys.
+
+Examples
+--------
+>>> merge_dicts_with_duplicates({'a': 1, 'b': 2}, {'b': 3, 'c': 4})
+{'a': 1, 'b': 2, 'b_duplicate': 3, 'c': 4}
 """
 
     # Start with a copy of the first dictionary
@@ -1137,6 +1315,13 @@ Returns
 -------
 pandas.DataFrame
     DataFrame with the added InChI column.
+
+Examples
+--------
+>>> import pandas as pd
+>>> df = add_inchi_to_dataframe(pd.DataFrame({'SMILES': ['CCO']}), 1, 'SMILES')
+>>> df.columns.tolist()
+['SMILES', 'INCHI']
 """
 
     from rdkit import Chem
@@ -1178,6 +1363,14 @@ KeyError
 
 ValueError
     If `keep` is not 'first' or 'last'.
+
+Examples
+--------
+>>> import pandas as pd
+>>> df = pd.DataFrame({'A': [1, 2, 2, 3]})
+>>> cleaned, duplicates = identify_df_duplicates(df, 'A')
+>>> len(cleaned), len(duplicates)
+(3, 1)
 """
 
     if column_name not in df.columns:
@@ -1213,6 +1406,19 @@ folder_name : str
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from pathlib import Path
+>>> from tempfile import TemporaryDirectory
+>>> with TemporaryDirectory() as temp_dir:
+...     output_dir = Path(temp_dir) / 'structures'
+...     create_structure_files(
+...         pd.DataFrame({'SMILES': ['CCO']}), 'SMILES', str(output_dir)
+...     )
+...     len(list(output_dir.iterdir()))
+1
 """
 
 
@@ -1258,6 +1464,17 @@ Returns
 -------
 pandas.DataFrame
     DataFrame with the added 'MOLFILE' column.
+
+Examples
+--------
+>>> import pandas as pd
+>>> from pathlib import Path
+>>> from tempfile import TemporaryDirectory
+>>> with TemporaryDirectory() as temp_dir:
+...     (Path(temp_dir) / 'molecule.sdf').touch()
+...     df = prepare_dataframe(pd.DataFrame({'A': [1], 'B': [2]}), temp_dir)
+...     Path(df.loc[0, 'MOLFILE']).name
+'molecule.sdf'
 """
 
     import os
@@ -1305,6 +1522,17 @@ Raises
 ------
 KeyError
     If required core columns are missing from the DataFrame.
+
+Examples
+--------
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+...     'DIM_1': [1], 'DIM_2': [2], 'SMILES': ['CCO'], 'MOLFILE': ['mol.png'],
+...     'NAME': ['ethanol'], 'NAME_SHORT': ['eth']
+... })
+>>> table = prepare_datatable(df)
+>>> len(table.columns)
+6
 """
 
     from bokeh.models import ColumnDataSource, TableColumn
@@ -1349,6 +1577,11 @@ Raises
 ------
 ValueError
     If size is negative.
+
+Examples
+--------
+>>> compute_alpha(800)
+0.5
 """
 
     if size < 0:
@@ -1391,6 +1624,11 @@ Raises
 ------
 ValueError
     If either size is negative or both sizes are zero.
+
+Examples
+--------
+>>> size_ratio(1, 3)
+0.875
 """
 
     if size1 < 0 or size2 < 0:
@@ -1424,6 +1662,14 @@ dict_datatables : dict of str to DataTable
 Returns
 -------
 None
+
+Examples
+--------
+>>> from bokeh.models import DataTable
+>>> from bokeh.plotting import figure
+>>> plot = figure()
+>>> _ = plot.line([0, 1], [0, 1])
+>>> bokeh_plot(plot, ['sample'], {'sample': DataTable()})
 """
 
     import bokeh.plotting as bp
@@ -1455,6 +1701,11 @@ Returns
 -------
 numpy.ndarray
     Boolean mask array.
+
+Examples
+--------
+>>> create_mask(np.array([1, 2, 3, 4, 5]), 1.9, 4.1)
+array([False,  True,  True,  True, False])
 """
 
     return (array <= upper) & (array > lower)
@@ -1473,6 +1724,11 @@ Returns
 -------
 str
     '+' if x is non-negative, '-' otherwise.
+
+Examples
+--------
+>>> assign_sign(-3)
+'-'
 """
 
     return '+' if x >= 0 else '-'
@@ -1493,6 +1749,11 @@ Returns
 -------
 list of float
     Normalised values.
+
+Examples
+--------
+>>> normalise_iterable([2, 4])
+[0.5, 1.0]
 """
 
     import math
@@ -1531,6 +1792,17 @@ sheet_names : iterable of str
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from pathlib import Path
+>>> from tempfile import TemporaryDirectory
+>>> with TemporaryDirectory() as temp_dir:
+...     output = Path(temp_dir) / 'data.xlsx'
+...     dfs_to_excel(str(output), [pd.DataFrame({'value': [1]})], ['data'])
+...     output.exists()
+True
 """
 
     with pd.ExcelWriter(file_name) as writer:

@@ -70,6 +70,24 @@ Returns
 -------
 pandas.DataFrame
     A DataFrame containing the filtered columns.
+
+Examples
+--------
+Keep one feature from a collinear group and retain the target column:
+
+>>> import pandas as pd
+>>> data = pd.DataFrame({
+...     "feature1": [1, 2, 3, 4, 5],
+...     "feature2": [2, 4, 6, 8, 10],
+...     "feature3": [5, 4, 3, 2, 1],
+...     "feature4": [1, 1, 1, 1, 1],
+...     "target": [1, 0, 1, 0, 1],
+... })
+>>> filtered = collinearity_filter(
+...     data, threshold=0.9, target_variable="target"
+... )
+>>> filtered.columns.tolist()
+['feature1', 'target']
 """
 
 
@@ -152,6 +170,22 @@ Returns
 pandas.DataFrame
     A DataFrame containing the filtered columns with diversity
     higher than the threshold.
+
+Examples
+--------
+Remove a constant feature while preserving the target column:
+
+>>> import pandas as pd
+>>> data = pd.DataFrame({
+...     "varying": [1, 2, 3, 4],
+...     "constant": [0, 0, 0, 0],
+...     "target": [0, 1, 0, 1],
+... })
+>>> filtered = diversity_filter(
+...     data, threshold=0.8, target_variable="target"
+... )
+>>> filtered.columns.tolist()
+['varying', 'target']
 """
 
 

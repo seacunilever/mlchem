@@ -57,6 +57,11 @@ def get_sensitivity(
     -------
     float
         The sensitivity (recall) of the prediction.
+
+    Examples
+    --------
+    >>> float(get_sensitivity([1, 1, 0, 0], [1, 0, 0, 1]))
+    0.5
     """
 
     y_true = np.asarray(y_true).astype(int)
@@ -91,6 +96,11 @@ def get_specificity(
     -------
     float
         The specificity of the prediction.
+
+    Examples
+    --------
+    >>> float(get_specificity([1, 1, 0, 0], [1, 0, 0, 1]))
+    0.5
     """
 
     y_true = np.asarray(y_true).astype(int)
@@ -124,6 +134,11 @@ def get_geometric_S(
     -------
     float
         The geometric mean of sensitivity and specificity.
+
+    Examples
+    --------
+    >>> float(get_geometric_S([1, 1, 0, 0], [1, 0, 0, 1]))
+    0.5
 """
 
 
@@ -158,6 +173,11 @@ def get_mcc(
     -------
     float
         The Matthews Correlation Coefficient.
+
+    Examples
+    --------
+    >>> get_mcc([1, 1, 0, 0], [1, 0, 0, 1])
+    0.0
 """
 
     from sklearn.metrics import matthews_corrcoef
@@ -184,6 +204,11 @@ def get_rmse(
     -------
     float
         The root mean squared error.
+
+    Examples
+    --------
+    >>> get_rmse([0, 1], [1, 0])
+    1.0
 """
 
     from sklearn.metrics import mean_squared_error
@@ -228,6 +253,15 @@ def get_reliability_score_components(
     dict
         Dictionary containing ``performance_score``,
         ``instability_score``, and ``reliability_score``.
+
+    Examples
+    --------
+    >>> scores = get_reliability_score_components(
+    ...     0.8, 0.8, logic="greater",
+    ...     desired_performance_score="train_cv_average",
+    ... )
+    >>> float(scores["reliability_score"])
+    0.8
     """
 
     if logic not in ('lower', 'greater'):
@@ -274,6 +308,11 @@ def rmse_to_std_ratio(
     -------
     float
         The ratio of standard deviation to RMSE.
+
+    Examples
+    --------
+    >>> float(rmse_to_std_ratio([0, 1], [1, 0]))
+    0.5
 """
 
 
@@ -303,6 +342,11 @@ def get_r2(
     -------
     float
         The R-squared value.
+
+    Examples
+    --------
+    >>> float(get_r2([0, 1], [0, 1]))
+    1.0
     """
 
     from scipy.stats import pearsonr
@@ -340,6 +384,14 @@ def DiceSimilarity(
     -------
     float
         The Dice similarity coefficient, ranging from 0 (no similarity) to 1 (identical).
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> DiceSimilarity(fp, fp)
+    1.0
     """
 
 
@@ -368,6 +420,14 @@ def OnBitSimilarity(
     -------
     float
         The OnBit similarity, based on the number of bits set in both fingerprints.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> OnBitSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -395,6 +455,14 @@ def SokalSimilarity(
     -------
     float
         The Sokal similarity coefficient, a normalized measure of bit overlap.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> SokalSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -422,6 +490,14 @@ def AllBitSimilarity(
     -------
     float
         The AllBit similarity, considering both on and off bits in the fingerprints.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> AllBitSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -449,6 +525,14 @@ def CosineSimilarity(
     -------
     float
         The Cosine similarity, measuring the cosine of the angle between two bit vectors.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> CosineSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -476,6 +560,14 @@ def RusselSimilarity(
     -------
     float
         The Cosine similarity, measuring the cosine of the angle between two bit vectors.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> RusselSimilarity(fp, fp)
+    0.125
     """
 
     from rdkit import DataStructs
@@ -511,6 +603,14 @@ def TverskySimilarity(
     -------
     float
         The Tversky similarity between the two fingerprints.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> TverskySimilarity(fp, fp, a=0.5, b=0.5)
+    1.0
 """
 
     from rdkit import DataStructs
@@ -538,6 +638,14 @@ def TanimotoSimilarity(
     -------
     float
         The Tanimoto similarity coefficient, commonly used for chemical structure comparison.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> TanimotoSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -565,6 +673,14 @@ def AsymmetricSimilarity(
     -------
     float
         The Asymmetric similarity, emphasizing features present in the first fingerprint.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> AsymmetricSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -592,6 +708,14 @@ def KulczynskiSimilarity(
     -------
     float
         The Kulczynski similarity, a symmetric measure of bit overlap.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> KulczynskiSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -619,6 +743,14 @@ def OffBitProjSimilarity(
     -------
     float
         The OffBitProj similarity, based on the projection of off bits between fingerprints.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> OffBitProjSimilarity(fp, fp)[0]
+    1.0
     """
 
     from rdkit import DataStructs
@@ -646,6 +778,14 @@ def McConnaugheySimilarity(
     -------
     float
         The McConnaughey similarity, a measure of structural similarity based on bit patterns.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> McConnaugheySimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -673,6 +813,14 @@ def BraunBlanquetSimilarity(
     -------
     float
         The Braun-Blanquet similarity, calculated as the intersection over the maximum bit count.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> BraunBlanquetSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -700,6 +848,14 @@ def RogotGoldbergSimilarity(
     -------
     float
         The Rogot-Goldberg similarity, a weighted measure of bit agreement.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> RogotGoldbergSimilarity(fp, fp)
+    1.0
     """
 
     from rdkit import DataStructs
@@ -731,6 +887,14 @@ def FingerprintSimilarity(
     -------
     float
         The fingerprint similarity between the two fingerprints.
+
+    Examples
+    --------
+    >>> from rdkit import DataStructs
+    >>> fp = DataStructs.ExplicitBitVect(8)
+    >>> _ = fp.SetBit(0)
+    >>> FingerprintSimilarity(fp, fp, metric=TanimotoSimilarity)
+    1.0
     """
 
     from rdkit import DataStructs

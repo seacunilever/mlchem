@@ -184,6 +184,20 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_PCA(n_components_or_variance=2, random_state=1)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
 
         from sklearn.decomposition import PCA
@@ -241,6 +255,21 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_TSNE(
+...     n_components=2, neighbours_number_or_fraction=3, random_state=1)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
         from sklearn.manifold import TSNE
         df = dataframe if dataframe is not None else self.dataframe
@@ -309,6 +338,21 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_SE(
+...     n_components=2, neighbours_number_or_fraction=4, random_state=1)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
 
         if dict_params is None and (
@@ -384,6 +428,21 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_UMAP(
+...     n_components=2, neighbours_number_or_fraction=4, random_state=1)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
 
         if dict_params is None and (
@@ -460,6 +519,20 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_MDS(n_components=2, random_state=1)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
 
         if dict_params is None and n_components is None:
@@ -528,6 +601,21 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_LLE(
+...     n_components=2, neighbours_number_or_fraction=4, random_state=1)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
 
         if dict_params is None and (
@@ -599,6 +687,21 @@ dict_params : dict or None, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from mlchem.ml.preprocessing.dimensional_reduction import Compressor
+>>> df = pd.DataFrame({
+...     "a": [0., 1., 2., 3., 4., 5., 6., 7.],
+...     "b": [1., 3., 2., 5., 4., 7., 6., 9.],
+...     "c": [2., 0., 3., 1., 5., 4., 8., 6.],
+... })
+>>> compressor = Compressor(df)
+>>> compressor.compress_ISOMAP(
+...     n_components=2, neighbours_number_or_fraction=4)
+>>> compressor.dataframe_compressed.shape
+(8, 2)
 """
 
         if dict_params is None and (

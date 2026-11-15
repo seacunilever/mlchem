@@ -354,6 +354,14 @@ Returns
 -------
 str
     Either 'SMARTS' or 'SMILES' indicating the detected format.
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import detect_smarts_vs_smiles
+>>> detect_smarts_vs_smiles("CCO")
+'SMILES'
+>>> detect_smarts_vs_smiles("[#6]")
+'SMARTS'
 """
     # SMARTS-specific characters and patterns
     smarts_indicators = ['$', '[#', '[D', '[v', '[X', '[x', '[!']
@@ -380,6 +388,14 @@ Returns
 -------
 bytes
     Binary representation of the molecule.
+
+Examples
+--------
+>>> from rdkit import Chem
+>>> from mlchem.chem.manipulation import mol_to_binary
+>>> molecule = Chem.MolFromSmiles("CCO")
+>>> isinstance(mol_to_binary(molecule), bytes)
+True
 """
     return mol.ToBinary()
 
@@ -403,6 +419,16 @@ Returns
 -------
 list of bytes
     List of binary image data for the resonance structures.
+
+Examples
+--------
+>>> from contextlib import redirect_stdout
+>>> from io import StringIO
+>>> from mlchem.chem.manipulation import generate_resonance
+>>> with redirect_stdout(StringIO()):
+...     images = generate_resonance("C1=CC=CC=C1", save=False)
+>>> isinstance(images[0], bytes)
+True
 """
 
 
@@ -475,6 +501,14 @@ Returns
 -------
 rdkit.Chem.rdchem.Mol
     The neutralised molecule.
+
+Examples
+--------
+>>> from rdkit import Chem
+>>> from mlchem.chem.manipulation import neutralise_mol
+>>> molecule = Chem.MolFromSmiles("CC(O)[O-]")
+>>> Chem.MolToSmiles(neutralise_mol(molecule))
+'CC(O)O'
 """
 
 
@@ -511,6 +545,15 @@ Returns
 -------
 rdkit.Chem.rdchem.Mol
     The molecule with matching substructures removed.
+
+Examples
+--------
+>>> from rdkit import Chem
+>>> from mlchem.chem.manipulation import remove_smarts_pattern
+>>> molecule = Chem.MolFromSmiles("CCOCO")
+>>> result = remove_smarts_pattern(molecule, "[OD1]")
+>>> Chem.MolToSmiles(result)
+'CCOC'
 """
     pattern = Chem.MolFromSmarts(smarts_string)
     while mol.HasSubstructMatch(pattern):
@@ -2821,6 +2864,14 @@ None
                 Returns
                 -------
                 None
+
+                Examples
+                --------
+                >>> from mlchem.chem.manipulation import MolCleaner
+                >>> cleaner = MolCleaner(["CCO"])
+                >>> cleaner.initialise_smiles()
+                >>> cleaner.smiles
+                ['CCO']
                 """
 
                 smiles_accepted = []
@@ -2920,6 +2971,15 @@ verbose : bool, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import MolCleaner
+>>> cleaner = MolCleaner(["CCO.[Na+]"])
+>>> cleaner.initialise_smiles(canonical=True, kekulise=False)
+>>> cleaner.desalt_smiles(method="largest", dehydrate=False)
+>>> cleaner.smiles
+['CCO']
 """
 
 
@@ -3053,6 +3113,15 @@ kekulise : bool, optional
 Returns
 -------
 None
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import MolCleaner
+>>> cleaner = MolCleaner(["CC(O)[O-]"])
+>>> cleaner.initialise_smiles(canonical=True, kekulise=False)
+>>> cleaner.neutralise_smiles()
+>>> cleaner.smiles
+['CC(O)O']
 """
 
 
@@ -3114,6 +3183,15 @@ with the reason for rejection.
 Returns
 -------
 None
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import MolCleaner
+>>> cleaner = MolCleaner(["CCO", "[CH3-]"])
+>>> cleaner.initialise_smiles(canonical=True, kekulise=False)
+>>> cleaner.remove_carbon_ions()
+>>> cleaner.smiles
+['CCO']
 """
 
 
@@ -3155,6 +3233,15 @@ with the reason for rejection.
 Returns
 -------
 None
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import MolCleaner
+>>> cleaner = MolCleaner(["CCO", "[Na+]"])
+>>> cleaner.initialise_smiles(canonical=True, kekulise=False)
+>>> cleaner.remove_inorganics()
+>>> cleaner.smiles
+['CCO']
 """
 
 
@@ -3197,6 +3284,17 @@ rejection.
 Returns
 -------
 None
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import MolCleaner
+>>> cleaner = MolCleaner(["CC[Na]", "CCO", "[Na+].[Cl-]"])
+>>> cleaner.initialise_smiles(canonical=True, kekulise=False)
+>>> cleaner.remove_organometallics()
+>>> "CC[Na]" not in cleaner.smiles
+True
+>>> "[Cl-].[Na+]" in cleaner.smiles
+True
 """
 
 
@@ -3258,6 +3356,16 @@ logs rejected entries with the reason for rejection.
 Returns
 -------
 None
+
+Examples
+--------
+>>> from mlchem.chem.manipulation import MolCleaner
+>>> cleaner = MolCleaner(["CC.CC"])
+>>> cleaner.initialise_smiles(canonical=True, kekulise=False)
+>>> cleaner.remove_organometallics()
+>>> cleaner.remove_mixtures()
+>>> cleaner.smiles
+[]
 """
 
 

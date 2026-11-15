@@ -549,6 +549,17 @@ class SequentialForwardSelection:
         log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int
             Logging level threshold. Use 'DEBUG' for detailed diagnostics,
             'INFO' for standard output, 'WARNING' to suppress most output.
+
+        Examples
+        --------
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> selector = SequentialForwardSelection(
+        ...     estimator=LogisticRegression(),
+        ...     estimator_string="logreg",
+        ...     metric=accuracy_score,
+        ... )
+        >>> selector.set_log_level("WARNING")
         """
         self.log_level = coerce_log_level(log_level)
         _configure_wrapper_logging(self.log_level)
@@ -588,6 +599,27 @@ class SequentialForwardSelection:
         Returns
         -------
         None
+
+        Examples
+        --------
+        Fit on a small in-memory dataset; no hold-out set is needed:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> X_train = pd.DataFrame({
+        ...     "signal": [0, 0, 0, 0, 1, 1, 1, 1],
+        ...     "noise": [0, 1, 0, 1, 0, 1, 0, 1],
+        ... })
+        >>> y_train = [0, 0, 0, 0, 1, 1, 1, 1]
+        >>> selector = SequentialForwardSelection(
+        ...     estimator=LogisticRegression(max_iter=1000),
+        ...     estimator_string="logreg",
+        ...     metric=accuracy_score,
+        ...     max_features=2,
+        ...     cv_iter=2,
+        ... )
+        >>> selector.fit(X_train, y_train, test_set=None, y_test=None)
         """
 
         if test_set is not None:
@@ -887,6 +919,29 @@ class SequentialForwardSelection:
             Automatic non-parsimony mode also returns ``reliability_score`` and
             ``best_score``. Parsimony modes also return
             ``parsimony_mode`` and ``parsimony_diagnostics``.
+
+        Examples
+        --------
+        Fit the selector before asking it for the reliability-best subset:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> X_train = pd.DataFrame({
+        ...     "signal": [0, 0, 0, 0, 1, 1, 1, 1],
+        ...     "noise": [0, 1, 0, 1, 0, 1, 0, 1],
+        ... })
+        >>> y_train = [0, 0, 0, 0, 1, 1, 1, 1]
+        >>> selector = SequentialForwardSelection(
+        ...     estimator=LogisticRegression(max_iter=1000),
+        ...     estimator_string="logreg",
+        ...     metric=accuracy_score,
+        ...     max_features=2,
+        ...     cv_iter=2,
+        ... )
+        >>> selector.fit(X_train, y_train, test_set=None, y_test=None)
+        >>> best = selector.find_best()
+        >>> best["features"]
         """
 
         if which is None:
@@ -995,6 +1050,28 @@ class SequentialForwardSelection:
         from train/CV scores (according to ``desired_performance_score``) and
         train-vs-CV instability; test scores are not used in this selector.
         The highlighted subset is the one returned by ``find_best()``.
+
+        Examples
+        --------
+        Fit first, then plot the automatically selected subset:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> X_train = pd.DataFrame({
+        ...     "signal": [0, 0, 0, 0, 1, 1, 1, 1],
+        ...     "noise": [0, 1, 0, 1, 0, 1, 0, 1],
+        ... })
+        >>> y_train = [0, 0, 0, 0, 1, 1, 1, 1]
+        >>> selector = SequentialForwardSelection(
+        ...     estimator=LogisticRegression(max_iter=1000),
+        ...     estimator_string="logreg",
+        ...     metric=accuracy_score,
+        ...     max_features=2,
+        ...     cv_iter=2,
+        ... )
+        >>> selector.fit(X_train, y_train, test_set=None, y_test=None)
+        >>> selector.plot(best_feature="auto")
         """
 
         assert best_feature in ('auto', None) or isinstance(best_feature, int), \
@@ -1269,6 +1346,16 @@ class CombinatorialSelection:
         log_level : {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'} or int
             Logging level threshold. Use 'DEBUG' for detailed diagnostics,
             'INFO' for standard output, 'WARNING' to suppress most output.
+
+        Examples
+        --------
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> selector = CombinatorialSelection(
+        ...     estimator=LogisticRegression(),
+        ...     metric=accuracy_score,
+        ... )
+        >>> selector.set_log_level("WARNING")
         """
         self.log_level = coerce_log_level(log_level)
         _configure_wrapper_logging(self.log_level)
@@ -1330,6 +1417,28 @@ class CombinatorialSelection:
 
         Higher `alpha` increases target relevance importance.
         Higher `beta` increases redundancy penalty importance.
+
+        Examples
+        --------
+        Rank two linearly related features against a continuous target:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LinearRegression
+        >>> from sklearn.metrics import mean_squared_error
+        >>> X = pd.DataFrame({
+        ...     "signal": [0, 1, 2, 3],
+        ...     "scaled_signal": [0, 2, 4, 6],
+        ... })
+        >>> y = [0, 1, 2, 3]
+        >>> selector = CombinatorialSelection(
+        ...     estimator=LinearRegression(),
+        ...     metric=mean_squared_error,
+        ...     logic="lower",
+        ...     task_type="regression",
+        ... )
+        >>> ranking = selector.rank_features_by_relevance_redundancy(
+        ...     X, y, relevance_metric="pearson"
+        ... )
         """
 
         if alpha < 0 or beta < 0:
@@ -1499,6 +1608,29 @@ class CombinatorialSelection:
         ``reliability_score``. The score uses the same arithmetic-mean
         performance term and lower-is-better orientation as SFS. The legacy
         ``geometric_mean`` formulation is no longer used.
+
+        Examples
+        --------
+        Evaluate single-feature subsets using two deterministic CV folds:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> train_set = pd.DataFrame({
+        ...     "signal": [0, 0, 0, 0, 1, 1, 1, 1],
+        ...     "signal_copy": [0, 0, 0, 0, 1, 1, 1, 1],
+        ... })
+        >>> y_train = [0, 0, 0, 0, 1, 1, 1, 1]
+        >>> selector = CombinatorialSelection(
+        ...     estimator=LogisticRegression(max_iter=1000),
+        ...     metric=accuracy_score,
+        ... )
+        >>> stage1 = selector.fit_stage_1(
+        ...     train_set, y_train,
+        ...     features=["signal", "signal_copy"],
+        ...     k=1, training_threshold=0.0, cv_train_ratio=0.0,
+        ...     cv_iter=2,
+        ... )
         """
 
 
@@ -1759,6 +1891,30 @@ class CombinatorialSelection:
         pandas.DataFrame
             A DataFrame containing the results of the second stage of
             feature selection.
+
+        Examples
+        --------
+        Stage 2 requires a completed stage-1 search:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> train_set = pd.DataFrame({
+        ...     "signal": [0, 0, 0, 0, 1, 1, 1, 1],
+        ...     "signal_copy": [0, 0, 0, 0, 1, 1, 1, 1],
+        ... })
+        >>> y_train = [0, 0, 0, 0, 1, 1, 1, 1]
+        >>> selector = CombinatorialSelection(
+        ...     estimator=LogisticRegression(max_iter=1000),
+        ...     metric=accuracy_score,
+        ... )
+        >>> selector.fit_stage_1(
+        ...     train_set, y_train,
+        ...     features=["signal", "signal_copy"],
+        ...     k=1, training_threshold=0.0, cv_train_ratio=0.0,
+        ...     cv_iter=2,
+        ... )
+        >>> stage2 = selector.fit_stage_2(top_n_subsets=2, cv_iter=2)
         """
 
         def is_at_least(a: float | int, b: float | int) -> bool:
@@ -2005,8 +2161,22 @@ class CombinatorialSelection:
 
         Notes
         -----
-        - Fits the estimator on the selected subset.
-        - Displays training, cross-validation, and test scores.
+        This deprecated method immediately raises ``DeprecationWarning``.
+        After :meth:`fit_stage_2`, inspect ``df_results_stage2`` directly.
+
+        Examples
+        --------
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.metrics import accuracy_score
+        >>> selector = CombinatorialSelection(
+        ...     estimator=LogisticRegression(),
+        ...     metric=accuracy_score,
+        ... )
+        >>> try:
+        ...     selector.display_best()
+        ... except DeprecationWarning as exc:
+        ...     print(str(exc))
+        display_best() is deprecated and will be removed in a future version. Please use the results DataFrame directly.
         """
         raise DeprecationWarning("display_best() is deprecated and will be removed in a future version."
                                  " Please use the results DataFrame directly.")

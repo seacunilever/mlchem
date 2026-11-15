@@ -369,6 +369,13 @@ draw_mol(...)
         -------
         dict[str, object]
             Dictionary of RDKit drawing option names and default values.
+
+        Examples
+        --------
+        >>> from mlchem.chem.visualise.drawing import MolDrawer
+        >>> defaults = MolDrawer.get_rdkit_defaults()
+        >>> isinstance(defaults, dict)
+        True
         """
         from rdkit.Chem.Draw import rdMolDraw2D
 

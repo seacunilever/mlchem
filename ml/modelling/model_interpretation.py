@@ -383,6 +383,22 @@ or max_samples and is not the automatic categorical fallback.
         Returns
         -------
         None
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+        >>> X = pd.DataFrame({
+        ...     "length": [1.0, 2.0, 3.0, 4.0],
+        ...     "width": [0.0, 1.0, 0.0, 1.0],
+        ... })
+        >>> y = [0, 0, 1, 1]
+        >>> model = LogisticRegression().fit(X, y)
+        >>> explainer = ShapExplainer(model, X, y)
+        >>> explainer.explain()
+        >>> explainer.shap_values.shape
+        (4, 2)
         """
 
         import shap
@@ -445,6 +461,21 @@ shap_values : numpy.ndarray
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> original = ShapExplainer(model, X, y)
+>>> original.explain()
+>>> restored = ShapExplainer(model, X, y)
+>>> restored.load(original.base_values, original.shap_values)
+>>> restored.shap_values.shape
+(4, 2)
 """
 
         self.base_values = base_values
@@ -465,6 +496,22 @@ filename : str
 Returns
 -------
 None
+
+Examples
+--------
+>>> import os
+>>> import tempfile
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> with tempfile.TemporaryDirectory() as temp_dir:
+...     output_dir = os.path.join(temp_dir, "shap")
+...     explainer.save(output_dir, "demo")
 """
 
         import os
@@ -486,6 +533,18 @@ Returns
 -------
 IPython.core.display.HTML
     An HTML object containing the SHAP force plot.
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> html = explainer.force_plot()  # Keep the HTML; display it separately if needed.
 """
 
         import shap
@@ -525,6 +584,18 @@ Returns
 -------
 IPython.core.display.HTML
     An HTML object containing the SHAP force plot for the specified instance.
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> html = explainer.force_plot_single(0)
 """
 
         import shap
@@ -571,6 +642,18 @@ column : int
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.dependence_plot(column=0)
 """
 
         import shap
@@ -597,6 +680,18 @@ Generate dependence plots for all features.
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.dependence_plot_all()
 """
 
         import shap
@@ -635,6 +730,18 @@ optional (default='dot')
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.summary_plot(plot_type="dot")
 """
 
         import shap
@@ -670,6 +777,18 @@ i : int
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.waterfall_plot(0)
 """
 
         import shap
@@ -697,6 +816,18 @@ Generate a bar plot of SHAP values.
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.bar_plot()
 """
 
         import shap
@@ -730,6 +861,18 @@ categorical fallback uses PermutationExplainer and supports this plot.
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.heatmap()
 """
 
         import shap
@@ -765,6 +908,18 @@ Returns
 pandas.DataFrame
     A DataFrame containing the feature importance weights, correlations,
     and overall impact scores for each feature.
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> importance = explainer.feature_importance()
 """
 
 
@@ -900,6 +1055,18 @@ interval_upper : float
 Returns
 -------
 None
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.linear_model import LogisticRegression
+>>> from mlchem.ml.modelling.model_interpretation import ShapExplainer
+>>> X = pd.DataFrame({"length": [1., 2., 3., 4.], "width": [0., 1., 0., 1.]})
+>>> y = [0, 0, 1, 1]
+>>> model = LogisticRegression().fit(X, y)
+>>> explainer = ShapExplainer(model, X, y)
+>>> explainer.explain()
+>>> explainer.decision_plot(interval_lower=0.0, interval_upper=1.0)
 """
 
         import shap
@@ -1182,6 +1349,23 @@ cv_iter : int, optional (default=5)
 Returns
 -------
 None
+
+Examples
+--------
+>>> import numpy as np
+>>> import pandas as pd
+>>> from sklearn.linear_model import LinearRegression
+>>> from mlchem.metrics import get_rmse
+>>> from mlchem.ml.modelling.model_interpretation import DescriptorExplainer
+>>> rng = np.random.RandomState(1)
+>>> X_train = pd.DataFrame(rng.rand(20, 3), columns=["a", "b", "c"])
+>>> y_train = pd.DataFrame(rng.rand(20, 1), columns=["target"])
+>>> X_test = pd.DataFrame(rng.rand(8, 3), columns=X_train.columns)
+>>> y_test = pd.DataFrame(rng.rand(8, 1), columns=["target"])
+>>> selector = DescriptorExplainer(
+...     X_train, X_test, y_train, y_test,
+...     LinearRegression(), get_rmse, logic="lower")
+>>> selector.fit_stage_1(cv_iter=2)
 """
 
         self.df_results_stage_1 = self.CombSelector.fit_stage_1(
@@ -1219,6 +1403,24 @@ cv_iter : int, optional (default=5)
 Returns
 -------
 None
+
+Examples
+--------
+>>> import numpy as np
+>>> import pandas as pd
+>>> from sklearn.linear_model import LinearRegression
+>>> from mlchem.metrics import get_rmse
+>>> from mlchem.ml.modelling.model_interpretation import DescriptorExplainer
+>>> rng = np.random.RandomState(1)
+>>> X_train = pd.DataFrame(rng.rand(20, 3), columns=["a", "b", "c"])
+>>> y_train = pd.DataFrame(rng.rand(20, 1), columns=["target"])
+>>> X_test = pd.DataFrame(rng.rand(8, 3), columns=X_train.columns)
+>>> y_test = pd.DataFrame(rng.rand(8, 1), columns=["target"])
+>>> selector = DescriptorExplainer(
+...     X_train, X_test, y_train, y_test,
+...     LinearRegression(), get_rmse, logic="lower")
+>>> selector.fit_stage_1(cv_iter=2)
+>>> selector.fit_stage_2(top_n_subsets=4, cv_iter=2)
 """
 
         self.df_results_stage_2 = self.CombSelector.fit_stage_2(
@@ -1244,6 +1446,25 @@ subset_index : int
 Returns
 -------
 None
+
+Examples
+--------
+>>> import numpy as np
+>>> import pandas as pd
+>>> from sklearn.linear_model import LinearRegression
+>>> from mlchem.metrics import get_rmse
+>>> from mlchem.ml.modelling.model_interpretation import DescriptorExplainer
+>>> rng = np.random.RandomState(1)
+>>> X_train = pd.DataFrame(rng.rand(20, 3), columns=["a", "b", "c"])
+>>> y_train = pd.DataFrame(rng.rand(20, 1), columns=["target"])
+>>> X_test = pd.DataFrame(rng.rand(8, 3), columns=X_train.columns)
+>>> y_test = pd.DataFrame(rng.rand(8, 1), columns=["target"])
+>>> selector = DescriptorExplainer(
+...     X_train, X_test, y_train, y_test,
+...     LinearRegression(), get_rmse, logic="lower")
+>>> selector.fit_stage_1(cv_iter=2)
+>>> selector.fit_stage_2(top_n_subsets=4, cv_iter=2)
+>>> selector.display(subset_index=0)
 """
 
         from mlchem.metrics import get_r2

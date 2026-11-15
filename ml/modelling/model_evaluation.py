@@ -94,6 +94,19 @@ def validate_cv_indices(
     ValueError
         If folds overlap, contain out-of-range/duplicate indices, are
         empty, or are otherwise inconsistently defined.
+
+    Examples
+    --------
+    Validate two disjoint folds whose validation sets cover all samples:
+
+    >>> import numpy as np
+    >>> folds = [
+    ...     (np.array([2, 3]), np.array([0, 1])),
+    ...     (np.array([0, 1]), np.array([2, 3])),
+    ... ]
+    >>> checked = validate_cv_indices(folds, n_samples=4)
+    >>> len(checked)
+    2
     """
 
     if cv_indices is None:
@@ -238,6 +251,19 @@ def generate_cv_indices(
     -------
     list of (numpy.ndarray, numpy.ndarray)
         Validated ``(train_idx, valid_idx)`` pairs.
+
+    Examples
+    --------
+    Generate reproducible stratified folds from a small labeled dataset:
+
+    >>> import pandas as pd
+    >>> X = pd.DataFrame({"signal": [0, 1, 2, 3, 4, 5]})
+    >>> y = [0, 0, 0, 1, 1, 1]
+    >>> folds = generate_cv_indices(
+    ...     X, y, cv_iter=3, shuffle=True, random_state=0
+    ... )
+    >>> len(folds)
+    3
     """
 
     n_samples = _n_samples(X)
@@ -280,6 +306,16 @@ def summarise_fold_scores(scores: Iterable[float]) -> dict:
     dict
         Dictionary containing the fold scores, the mean and
         standard error of the fold scores.
+
+    Examples
+    --------
+    Summarise three fold scores:
+
+    >>> summary = summarise_fold_scores([0.8, 0.9, 1.0])
+    >>> summary["mean"]
+    0.9
+    >>> round(summary["se"], 3)
+    0.047
     """
     scores_arr = np.asarray(list(scores), dtype=float)
     mean = float(np.mean(scores_arr))
@@ -944,6 +980,29 @@ class MajorityVote:
             ``successful_estimators``, ``failed_estimators``.
             When ``return_prediction_dataframes=True``, returns a dictionary
             containing the fit report and generated prediction DataFrames.
+
+        Examples
+        --------
+        Fit one classifier on the training set and evaluate it on a hold-out set:
+
+        >>> import pandas as pd
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> train_set = pd.DataFrame({"signal": [0, 1, 2, 3]})
+        >>> test_set = pd.DataFrame({"signal": [4, 5]})
+        >>> vote = MajorityVote(
+        ...     train_set=train_set,
+        ...     y_train=[0, 0, 1, 1],
+        ...     task_type="classification",
+        ...     estimator_list=[LogisticRegression(max_iter=1000)],
+        ...     column_list=[["signal"]],
+        ...     test_set=test_set,
+        ...     y_test=[1, 1],
+        ...     estimator_names=["logreg"],
+        ...     n_jobs=1,
+        ... )
+        >>> report = vote.fit(selected_estimators=["logreg"])
+        >>> report["successful_count"]
+        1
         """
         if self.test_set is None or self.y_test is None:
             raise ValueError(
@@ -1553,6 +1612,23 @@ dict of str to list or float
       point is within the domain.
     - ``'threshold'`` (float): threshold used to determine domain
       inclusion.
+
+Examples
+--------
+Calculate leverage for four rows and two features:
+
+>>> import numpy as np
+>>> X = np.array([
+...     [1.0, 0.0],
+...     [1.0, 1.0],
+...     [1.0, 2.0],
+...     [1.0, 3.0],
+... ])
+>>> result = ApplicabilityDomain.leverage(X)
+>>> result["threshold"]
+1.5
+>>> len(result["leverages"])
+4
 """
 
         threshold = 3 * X.shape[1] / X.shape[0]

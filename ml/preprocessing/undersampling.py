@@ -61,6 +61,11 @@ y_train : Iterable
 
 log_level : int or str, default=logging.INFO
     Logging level for output.
+
+Examples
+--------
+>>> from mlchem.ml.preprocessing.undersampling import check_class_balance
+>>> check_class_balance([0, 0, 1, 1, 1])
 """
 
     counts = pd.Series(list(y_train)).value_counts()

@@ -382,6 +382,17 @@ Returns
 -------
 tuple of pandas.DataFrame and scaler
     The transformed DataFrame and the scaler used.
+
+Examples
+--------
+>>> import pandas as pd
+>>> from sklearn.preprocessing import StandardScaler
+>>> train = pd.DataFrame({"signal": [0., 2., 4.]})
+>>> test = pd.DataFrame({"signal": [1., 3.]})
+>>> scaler = StandardScaler().fit(train)
+>>> transformed, _ = transform_df(test, scaler, columns_to_preserve=[])
+>>> transformed["signal"].round(2).tolist()
+[-0.61, 0.61]
 """
     sliced_df, derived_columns_to_scale = _split_scale_columns(
         df=df,
