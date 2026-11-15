@@ -118,6 +118,228 @@ def test_shap_explainer_tree_separates_background_and_foreground(sample_data):
     assert np.array_equal(explainer.explainer.data, background.to_numpy())
     assert explainer.shap_values.shape[0] == len(foreground)
 
+
+@pytest.mark.parametrize(
+    ('is_tree', 'max_samples', 'expected_rows'),
+    [
+        (False, 5, 5),
+        (True, 5, 5),
+        (False, None, 12),
+        (True, None, 12),
+    ],
+)
+def test_shap_explainer_caps_effective_background_rows(
+    is_tree,
+    max_samples,
+    expected_rows,
+):
+    X = pd.DataFrame({
+        'feature_0': np.linspace(-2, 2, 20),
+        'feature_1': np.cos(np.linspace(-2, 2, 20)),
+    })
+    y = np.array([0, 1] * 10)
+    if is_tree:
+        estimator = RandomForestClassifier(n_estimators=3, random_state=0)
+    else:
+        estimator = LogisticRegression(max_iter=250, random_state=0)
+    estimator.fit(X, y)
+
+    explainer = ShapExplainer(
+        estimator=estimator,
+        data=X.iloc[12:16],
+        y=y[12:16],
+        is_tree=is_tree,
+        max_samples=max_samples,
+        background_data=X.iloc[:12],
+    )
+    explainer.explain()
+
+    masker = explainer.explainer.masker
+    assert masker.data.shape[0] == expected_rows
+    assert masker.max_samples == expected_rows
+    assert explainer.explainer_type == (
+        'TreeExplainer' if is_tree else 'PermutationExplainer'
+    )
+    assert explainer.output_scale == (
+        'raw_model_output'
+        if is_tree
+        else 'positive_class_probability'
+    )
+    if is_tree:
+        assert explainer.explainer.data.shape[0] == expected_rows
+
+
+@pytest.mark.parametrize('is_tree', [False, True])
+def test_shap_explainer_background_sampling_is_deterministic(is_tree):
+    X = pd.DataFrame({
+        'feature_0': np.linspace(-2, 2, 20),
+        'feature_1': np.sin(np.linspace(-2, 2, 20)),
+    })
+    y = np.array([0, 1] * 10)
+    if is_tree:
+        estimator = RandomForestClassifier(n_estimators=3, random_state=0)
+    else:
+        estimator = LogisticRegression(max_iter=250, random_state=0)
+    estimator.fit(X, y)
+    explainers = [
+        ShapExplainer(
+            estimator=estimator,
+            data=X.iloc[12:16],
+            y=y[12:16],
+            is_tree=is_tree,
+            max_samples=5,
+            background_data=X.iloc[:12],
+        )
+        for _ in range(2)
+    ]
+
+    for explainer in explainers:
+        explainer.explain()
+
+    assert np.array_equal(
+        explainers[0].explainer.masker.data,
+        explainers[1].explainer.masker.data,
+    )
+
+
+@pytest.mark.parametrize('max_samples', [0, -1, 1.5, True])
+def test_shap_explainer_rejects_invalid_max_samples(max_samples):
+    X = pd.DataFrame({'feature_0': [0.0, 1.0]})
+
+    with pytest.raises(ValueError, match='positive integer or None'):
+        ShapExplainer(
+            estimator=object(),
+            data=X,
+            y=[0, 1],
+            max_samples=max_samples,
+        )
+
+
+def test_shap_explainer_falls_back_for_shap_categorical_error(
+    monkeypatch,
+):
+    import shap
+
+    X = pd.DataFrame({
+        'feature_0': np.linspace(-2, 2, 20),
+        'feature_1': np.cos(np.linspace(-2, 2, 20)),
+    })
+    y = np.array([0, 1] * 10)
+    estimator = RandomForestClassifier(n_estimators=3, random_state=0)
+    estimator.fit(X, y)
+    explainer = ShapExplainer(
+        estimator=estimator,
+        data=X.iloc[12:16],
+        y=y[12:16],
+        is_tree=True,
+        max_samples=5,
+        background_data=X.iloc[:12],
+    )
+
+    def unsupported_categorical_splits(*args, **kwargs):
+        raise NotImplementedError(
+            'Categorical split is not yet supported. You can still use '
+            'TreeExplainer with `feature_perturbation=tree_path_dependent`.'
+        )
+
+    monkeypatch.setattr(
+        shap,
+        'TreeExplainer',
+        unsupported_categorical_splits,
+    )
+    with pytest.warns(UserWarning, match='categorical splits.*PermutationExplainer'):
+        explainer.explain()
+
+    assert explainer.is_tree is True
+    assert explainer.explainer_type == 'PermutationExplainer'
+    assert explainer.output_scale == 'positive_class_probability'
+    assert explainer.explainer.masker.data.shape[0] == 5
+
+    with patch('shap.initjs'), patch('shap.decision_plot') as mock_decision_plot:
+        explainer.decision_plot(0.0, 1.0)
+    assert mock_decision_plot.call_args.kwargs['link'] == 'identity'
+
+
+def test_shap_explainer_reraises_unrelated_tree_errors(monkeypatch):
+    import shap
+
+    X = pd.DataFrame({
+        'feature_0': np.linspace(-2, 2, 20),
+        'feature_1': np.cos(np.linspace(-2, 2, 20)),
+    })
+    y = np.array([0, 1] * 10)
+    estimator = RandomForestClassifier(n_estimators=3, random_state=0)
+    estimator.fit(X, y)
+    explainer = ShapExplainer(
+        estimator=estimator,
+        data=X.iloc[12:16],
+        y=y[12:16],
+        is_tree=True,
+        background_data=X.iloc[:12],
+    )
+
+    def unrelated_tree_error(*args, **kwargs):
+        raise TypeError('unrelated tree explainer error')
+
+    monkeypatch.setattr(shap, 'TreeExplainer', unrelated_tree_error)
+    with pytest.raises(TypeError, match='unrelated tree explainer error'):
+        explainer.explain()
+
+
+def test_shap_explainer_falls_back_for_native_categorical_xgboost():
+    from xgboost import XGBClassifier
+
+    X = pd.DataFrame({
+        'color': pd.Categorical(
+            ['red', 'blue'] * 12,
+            categories=['blue', 'red'],
+        ),
+        'size': np.tile([0.0, 1.0], 12),
+    })
+    y = (X['color'] == 'red').astype(int).to_numpy()
+    estimator = XGBClassifier(
+        enable_categorical=True,
+        tree_method='hist',
+        n_estimators=3,
+        max_depth=3,
+        n_jobs=1,
+        eval_metric='logloss',
+        random_state=0,
+    )
+    estimator.fit(X, y)
+    background = X.iloc[:8]
+    foreground = X.iloc[8:12]
+    explainer = ShapExplainer(
+        estimator=estimator,
+        data=foreground,
+        y=y[8:12],
+        is_tree=True,
+        max_samples=4,
+        background_data=background,
+    )
+
+    with pytest.warns(UserWarning, match='categorical splits.*PermutationExplainer'):
+        explainer.explain()
+
+    assert explainer.is_tree is True
+    assert explainer.explainer_type == 'PermutationExplainer'
+    assert explainer.output_scale == 'positive_class_probability'
+    assert explainer.explainer.masker.data.shape[0] == 4
+    assert explainer.shap_values.shape == (len(foreground), X.shape[1])
+    assert np.array_equal(
+        explainer.shap_explanation_object.data,
+        foreground.to_numpy(),
+    )
+    with patch('shap.initjs'), patch('shap.waterfall_plot') as mock_waterfall:
+        explainer.waterfall_plot(0)
+    mock_waterfall.assert_called_once()
+    plotted_explanation = mock_waterfall.call_args.args[0]
+    assert np.array_equal(
+        plotted_explanation.data,
+        explainer.shap_explanation_object[0].data,
+    )
+
+
 def test_shap_explainer_tree_load(shap_explainer_tree):
     base_values = np.random.rand(100)
     shap_values = np.random.rand(100, 10)
@@ -219,7 +441,7 @@ def test_shap_explainer_notree_summary_plot(mock_summary_plot, mock_initjs, shap
 @patch('shap.initjs')
 @patch('shap.waterfall_plot')
 def test_shap_explainer_tree_waterfall_plot(mock_waterfall_plot, mock_initjs, shap_explainer_tree):
-    with pytest.raises(ValueError, match='Waterfall plot not available for Tree models.'):
+    with pytest.raises(ValueError, match='Waterfall plot not available for TreeExplainer results.'):
         shap_explainer_tree.waterfall_plot(i=0)
 
 @patch('shap.initjs')
@@ -246,7 +468,7 @@ def test_shap_explainer_notree_bar_plot(mock_bar_plot, mock_initjs, shap_explain
 @patch('shap.initjs')
 @patch('shap.plots.heatmap')
 def test_shap_explainer_tree_heatmap(mock_heatmap, mock_initjs, shap_explainer_tree):
-    with pytest.raises(ValueError, match='Heatmap plot not available for Tree models.'):
+    with pytest.raises(ValueError, match='Heatmap plot not available for TreeExplainer results.'):
         shap_explainer_tree.heatmap()
 
 @patch('shap.initjs')

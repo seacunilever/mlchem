@@ -52,17 +52,24 @@ the impact of each feature on model predictions.
 
 Attributes
 ----------
-model_type : str
-    The type of model ('tree' or other).
+is_tree : bool
+    Whether the estimator is tree-based. This describes the model, not the
+    explainer selected; a tree model can fall back to PermutationExplainer.
 
 data : pandas.DataFrame
-    The dataset used for generating SHAP values.
+    The foreground dataset to explain.
 
 y : array-like
     The target values corresponding to the dataset.
 
 estimator : object
     The machine learning model to be explained.
+
+explainer_type : str or None
+    The SHAP explainer actually used after ``explain()``.
+
+output_scale : str or None
+    The units of the SHAP values: raw tree output or positive-class probability.
 
 Methods
 -------
@@ -122,15 +129,23 @@ y : Iterable
     The target values corresponding to the dataset.
 
 is_tree : bool, optional (default=False)
-    Whether the model is a tree-based model (e.g., XGBoost, LightGBM).
+    Whether the estimator is tree-based (e.g., XGBoost, LightGBM). This remains
+    True if unsupported categorical splits require a PermutationExplainer.
 
 max_samples : int or None, optional (default=None)
-    Maximum number of background rows used by the masker. If None, uses all
-    rows in the background dataset.
+    Maximum number of background rows used by the masker. A positive integer
+    selects a deterministic subset; None uses all background rows.
 
 background_data : pandas.DataFrame or None, optional (default=None)
     Reference rows used for SHAP masking. If None, ``data`` is also used as
-    the background, preserving the previous behavior.
+    the background for both tree and non-tree explainers.
+
+Notes
+-----
+Tree models use an interventional TreeExplainer with the selected background.
+Tree-path-dependent TreeExplainer is an explicit alternative that can be
+constructed directly with SHAP; it does not use this class's background_data
+or max_samples and is not the automatic categorical fallback.
 """
 
 
@@ -138,19 +153,181 @@ background_data : pandas.DataFrame or None, optional (default=None)
         self.data = data
         self.y = y
         self.is_tree = is_tree
-        self._background_is_explicit = background_data is not None
         self.background_data = data if background_data is None else background_data
         if not data.columns.equals(self.background_data.columns):
             raise ValueError("Foreground and background data must have identical columns in the same order.")
         if self.background_data.empty:
             raise ValueError("Background data must contain at least one row.")
-        if max_samples is not None and max_samples < 1:
-            raise ValueError("max_samples must be positive or None.")
+        if max_samples is not None and (
+            isinstance(max_samples, (bool, np.bool_))
+            or not isinstance(max_samples, (int, np.integer))
+            or max_samples < 1
+        ):
+            raise ValueError("max_samples must be a positive integer or None.")
         self.max_samples = (
-            min(max_samples, len(self.background_data))
+            min(int(max_samples), len(self.background_data))
             if max_samples is not None
             else len(self.background_data)
         )
+        self._effective_background_data = (
+            self.background_data.sample(n=self.max_samples, random_state=0)
+            if self.max_samples < len(self.background_data)
+            else self.background_data
+        )
+        self._categorical_columns = tuple(
+            column
+            for column in self.data.columns
+            if isinstance(self.data[column].dtype, pd.CategoricalDtype)
+        )
+        self.explainer_type: str | None = None
+        self.output_scale: str | None = None
+
+    @property
+    def _uses_tree_explainer(self) -> bool:
+        if self.explainer_type is None:
+            return self.is_tree
+        return self.explainer_type == 'TreeExplainer'
+
+    @property
+    def _scale_for_current_values(self) -> str:
+        if self.output_scale is not None:
+            return self.output_scale
+        return (
+            'raw_model_output'
+            if self._uses_tree_explainer
+            else 'positive_class_probability'
+        )
+
+    @property
+    def _uses_xgboost_logit_link(self) -> bool:
+        return (
+            type(self.estimator).__module__.startswith('xgboost')
+            and self._scale_for_current_values == 'raw_model_output'
+        )
+
+    def _is_native_categorical_xgboost(self) -> bool:
+        return (
+            type(self.estimator).__module__.startswith('xgboost')
+            and (
+                bool(self._categorical_columns)
+                or getattr(self.estimator, 'enable_categorical', False)
+            )
+        )
+
+    def _is_unsupported_categorical_error(
+        self,
+        error: Exception,
+        explainer_error_type: type[Exception],
+    ) -> bool:
+        message = str(error)
+        if (
+            isinstance(error, NotImplementedError)
+            and message.startswith('Categorical split is not yet supported.')
+        ):
+            return True
+        if (
+            isinstance(error, explainer_error_type)
+            and message.startswith(
+                'Currently TreeExplainer can only handle models with categorical splits'
+            )
+        ):
+            return True
+        # SHAP 0.52's XGBoost C-extension emits this exact TypeError for
+        # object-valued native-categorical backgrounds.
+        return (
+            isinstance(error, TypeError)
+            and self._is_native_categorical_xgboost()
+            and message.startswith(
+                "Cannot cast array data from dtype('O') to dtype('float64')"
+            )
+        )
+
+    def _encode_categorical_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        if not self._categorical_columns:
+            return data
+
+        encoded = data.copy()
+        for column in self._categorical_columns:
+            dtype = self.data[column].dtype
+            categorical = pd.Categorical(
+                data[column],
+                categories=dtype.categories,
+                ordered=dtype.ordered,
+            )
+            unknown_values = (
+                (categorical.codes == -1)
+                & ~pd.isna(data[column]).to_numpy()
+            )
+            if unknown_values.any():
+                raise ValueError(
+                    f"Categorical values in {column!r} are not present in the "
+                    "foreground categories."
+                )
+            encoded[column] = categorical.codes
+        return encoded
+
+    def _restore_categorical_data(self, values: np.ndarray) -> pd.DataFrame:
+        data = pd.DataFrame(values, columns=self.data.columns)
+        for column in self.data.columns:
+            dtype = self.data[column].dtype
+            if isinstance(dtype, pd.CategoricalDtype):
+                raw_codes = pd.to_numeric(data[column], errors='raise').to_numpy(
+                    dtype=float
+                )
+                codes = np.full(raw_codes.shape, -1, dtype=np.intp)
+                finite = np.isfinite(raw_codes)
+                codes[finite] = np.rint(raw_codes[finite]).astype(np.intp)
+                if (
+                    (codes < -1).any()
+                    or (codes >= len(dtype.categories)).any()
+                ):
+                    raise ValueError(
+                        f"Invalid categorical code received for {column!r}."
+                    )
+                data[column] = pd.Categorical.from_codes(
+                    codes,
+                    categories=dtype.categories,
+                    ordered=dtype.ordered,
+                )
+            else:
+                data[column] = data[column].astype(dtype)
+        return data
+
+    def _positive_class_probability(self, values: np.ndarray) -> np.ndarray:
+        if self._categorical_columns:
+            values = self._restore_categorical_data(values)
+        return self.estimator.predict_proba(values)[:, 1]
+
+    def _explain_with_permutation(self, shap) -> None:
+        background = self._encode_categorical_data(
+            self._effective_background_data
+        )
+        foreground = self._encode_categorical_data(self.data)
+        self.predictive_function = self._positive_class_probability
+        masker = shap.maskers.Independent(
+            background,
+            max_samples=self.max_samples,
+        )
+        self.explainer = shap.Explainer(
+            self.predictive_function,
+            masker,
+            algorithm='permutation',
+            seed=0,
+        )
+        explanation = self.explainer(foreground)
+        if self._categorical_columns:
+            self.shap_explanation_object = shap.Explanation(
+                values=explanation.values,
+                base_values=explanation.base_values,
+                data=self.data.to_numpy(),
+                feature_names=list(self.data.columns),
+            )
+        else:
+            self.shap_explanation_object = explanation
+        self.base_values = self.shap_explanation_object.base_values
+        self.shap_values = self.shap_explanation_object.values
+        self.explainer_type = type(self.explainer).__name__
+        self.output_scale = 'positive_class_probability'
 
     def _tree_shap_values_for_plot(self):
         """Return a 2D SHAP matrix for tree plots with explicit layout checks."""
@@ -197,8 +374,11 @@ background_data : pandas.DataFrame or None, optional (default=None)
         """
         Generate SHAP values for the model.
 
-        This method creates a SHAP explainer based on the model type and
-        computes the SHAP values for the provided dataset.
+        Tree models use an interventional TreeExplainer and raw model output.
+        If TreeExplainer raises SHAP's unsupported-categorical-splits error,
+        this method warns and uses PermutationExplainer on positive-class
+        probabilities instead. ``is_tree`` continues to describe the estimator;
+        ``explainer_type`` and ``output_scale`` describe the result.
 
         Returns
         -------
@@ -206,27 +386,47 @@ background_data : pandas.DataFrame or None, optional (default=None)
         """
 
         import shap
+        from shap.utils._exceptions import ExplainerError
 
         if self.is_tree:
-            if self._background_is_explicit:
+            self.explainer_type = None
+            self.output_scale = None
+            masker = shap.maskers.Independent(
+                self._effective_background_data,
+                max_samples=self.max_samples,
+            )
+            try:
                 self.explainer = shap.TreeExplainer(
                     self.estimator,
-                    data=self.background_data,
+                    data=masker,  # type: ignore[arg-type]
                     feature_perturbation='interventional',
                     model_output='raw',
                 )
-            else:
-                self.explainer = shap.TreeExplainer(self.estimator)
-            self.base_values = self.explainer.expected_value
-            self.shap_values = self.explainer.shap_values(self.data)
+                self.base_values = self.explainer.expected_value
+                self.shap_values = self.explainer.shap_values(self.data)
+            except (ExplainerError, NotImplementedError, TypeError) as error:
+                if not self._is_unsupported_categorical_error(
+                    error,
+                    ExplainerError,
+                ):
+                    raise
+                warnings.warn(
+                    'TreeExplainer does not support these categorical splits '
+                    'with an explicit background; falling back to '
+                    'PermutationExplainer, whose SHAP values are in '
+                    'positive-class probability units rather than raw tree '
+                    'output units.',
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self._explain_with_permutation(shap)
+                return
+            self.explainer_type = type(self.explainer).__name__
+            self.output_scale = 'raw_model_output'
         else:
-            self.predictive_function = lambda x: self.estimator.\
-                predict_proba(x)[:, 1]
-            self.explainer = shap.Explainer(self.predictive_function,
-                                            shap.maskers.Independent(self.background_data, max_samples=self.max_samples))
-            self.shap_explanation_object = self.explainer(self.data)
-            self.base_values = self.shap_explanation_object.base_values
-            self.shap_values = self.shap_explanation_object.values
+            self.explainer_type = None
+            self.output_scale = None
+            self._explain_with_permutation(shap)
 
     def load(self,
              base_values: np.ndarray,
@@ -291,8 +491,8 @@ IPython.core.display.HTML
         import shap
         shap.initjs()
 
-        if self.is_tree:
-            if str(self.estimator).startswith('XGB'):     # if XGBoost:
+        if self._uses_tree_explainer:
+            if self._uses_xgboost_logit_link:
                 plot = shap.\
                     force_plot(base_value=self.base_values,
                                shap_values=self.shap_values,
@@ -331,8 +531,8 @@ IPython.core.display.HTML
         shap.initjs()
 
         print(self.data.iloc[i, :])
-        if self.is_tree:
-            if str(self.estimator).startswith('XGB'):
+        if self._uses_tree_explainer:
+            if self._uses_xgboost_logit_link:
                 self.plot = shap.force_plot(
                     base_value=self.base_values,
                     shap_values=self.shap_values[i],
@@ -376,7 +576,7 @@ None
         import shap
         shap.initjs()
 
-        if self.is_tree:
+        if self._uses_tree_explainer:
             self.plot = shap.dependence_plot(
                 column,
                 self._tree_shap_values_for_plot(),
@@ -402,7 +602,7 @@ None
         import shap
         shap.initjs()
 
-        if self.is_tree:
+        if self._uses_tree_explainer:
             tree_values = self._tree_shap_values_for_plot()
             for column in range(self.data.shape[1]):
                 shap.dependence_plot(
@@ -441,7 +641,7 @@ None
         shap.initjs()
 
         self.plot_type = plot_type
-        if self.is_tree:
+        if self._uses_tree_explainer:
             self.plot = shap.summary_plot(
                 self._tree_shap_values_for_plot(),
                 self.data,
@@ -459,7 +659,8 @@ None
         """
 Generate a waterfall plot for a single instance.
 
-Note: Not available for tree-based models.
+Note: Not available for TreeExplainer results. A tree model using the
+categorical fallback uses PermutationExplainer and supports this plot.
 
 Parameters
 ----------
@@ -474,19 +675,20 @@ None
         import shap
         shap.initjs()
 
-        if self.is_tree:
-            raise ValueError('Waterfall plot not available for Tree models.')
+        if self._uses_tree_explainer:
+            raise ValueError(
+                'Waterfall plot not available for TreeExplainer results.'
+            )
+        elif hasattr(self, 'shap_explanation_object'):
+            self.plot = shap.waterfall_plot(
+                self.shap_explanation_object[i]
+            )
         else:
-            try:
-                self.plot = shap.waterfall_plot(
-                    self.shap_values,
-                    instance_order=self.shap_values.sum(1)
-                )
-            except IndexError:
-                self.plot = shap.waterfall_plot(
-                    shap_values=self.shap_explanation_object[i]
-                )
-            return self.plot
+            self.plot = shap.waterfall_plot(
+                self.shap_values,
+                instance_order=self.shap_values.sum(1)
+            )
+        return self.plot
 
     def bar_plot(self) -> None:
         """
@@ -500,17 +702,16 @@ None
         import shap
         shap.initjs()
 
-        if self.is_tree:
+        if self._uses_tree_explainer:
             self.plot = shap.summary_plot(
                 self._tree_shap_values_for_plot(),
                 self.data,
                 plot_type='bar'
             )
+        elif hasattr(self, 'shap_explanation_object'):
+            self.plot = shap.plots.bar(self.shap_explanation_object)
         else:
-            try:
-                self.plot = shap.plots.bar(self.shap_values)
-            except IndexError:
-                self.plot = shap.plots.bar(self.shap_explanation_object)
+            self.plot = shap.plots.bar(self.shap_values)
         return self.plot
 
     def heatmap(self) -> None:
@@ -523,7 +724,8 @@ the plot.
 
 Note
 ----
-Heatmaps are not available for tree-based models.
+Heatmaps are not available for TreeExplainer results. A tree model using the
+categorical fallback uses PermutationExplainer and supports this plot.
 
 Returns
 -------
@@ -533,19 +735,20 @@ None
         import shap
         shap.initjs()
 
-        if self.is_tree:
-            raise ValueError('Heatmap plot not available for Tree models.')
+        if self._uses_tree_explainer:
+            raise ValueError(
+                'Heatmap plot not available for TreeExplainer results.'
+            )
+        elif hasattr(self, 'shap_explanation_object'):
+            self.plot = shap.plots.heatmap(
+                self.shap_explanation_object,
+                instance_order=self.shap_explanation_object.sum(1)
+            )
         else:
-            try:
-                self.plot = shap.plots.heatmap(
-                    self.shap_values,
-                    instance_order=self.shap_values.sum(1)
-                )
-            except IndexError:
-                self.plot = shap.plots.heatmap(
-                    self.shap_explanation_object,
-                    instance_order=self.shap_explanation_object.sum(1)
-                )
+            self.plot = shap.plots.heatmap(
+                self.shap_values,
+                instance_order=self.shap_values.sum(1)
+            )
         return self.plot
 
     def feature_importance(self) -> pd.DataFrame:
@@ -799,8 +1002,8 @@ None
         shap_matrix = _select_binary_class_shap_values(self.shap_values)
         base_scalar = _select_binary_class_base_value(self.base_values, self.mask)
 
-        # SHAP values coming from XGBoost tree explainers are typically in log-odds.
-        link = 'logit' if str(self.estimator).startswith('XGB') else 'identity'
+        # Raw XGBoost tree outputs are margins; permutation outputs are probabilities.
+        link = 'logit' if self._uses_xgboost_logit_link else 'identity'
 
         return shap.decision_plot(
             base_scalar,
