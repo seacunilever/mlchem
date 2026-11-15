@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.modelling.model_interpretation &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.ml.modelling.model_interpretation &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_interpretation</a></li> 
       </ul>
@@ -98,17 +98,24 @@
 
 <span class="sd">Attributes</span>
 <span class="sd">----------</span>
-<span class="sd">model_type : str</span>
-<span class="sd">    The type of model (&#39;tree&#39; or other).</span>
+<span class="sd">is_tree : bool</span>
+<span class="sd">    Whether the estimator is tree-based. This describes the model, not the</span>
+<span class="sd">    explainer selected; a tree model can fall back to PermutationExplainer.</span>
 
 <span class="sd">data : pandas.DataFrame</span>
-<span class="sd">    The dataset used for generating SHAP values.</span>
+<span class="sd">    The foreground dataset to explain.</span>
 
 <span class="sd">y : array-like</span>
 <span class="sd">    The target values corresponding to the dataset.</span>
 
 <span class="sd">estimator : object</span>
 <span class="sd">    The machine learning model to be explained.</span>
+
+<span class="sd">explainer_type : str or None</span>
+<span class="sd">    The SHAP explainer actually used after ``explain()``.</span>
+
+<span class="sd">output_scale : str or None</span>
+<span class="sd">    The units of the SHAP values: raw tree output or positive-class probability.</span>
 
 <span class="sd">Methods</span>
 <span class="sd">-------</span>
@@ -170,15 +177,23 @@
 <span class="sd">    The target values corresponding to the dataset.</span>
 
 <span class="sd">is_tree : bool, optional (default=False)</span>
-<span class="sd">    Whether the model is a tree-based model (e.g., XGBoost, LightGBM).</span>
+<span class="sd">    Whether the estimator is tree-based (e.g., XGBoost, LightGBM). This remains</span>
+<span class="sd">    True if unsupported categorical splits require a PermutationExplainer.</span>
 
 <span class="sd">max_samples : int or None, optional (default=None)</span>
-<span class="sd">    Maximum number of background rows used by the masker. If None, uses all</span>
-<span class="sd">    rows in the background dataset.</span>
+<span class="sd">    Maximum number of background rows used by the masker. A positive integer</span>
+<span class="sd">    selects a deterministic subset; None uses all background rows.</span>
 
 <span class="sd">background_data : pandas.DataFrame or None, optional (default=None)</span>
 <span class="sd">    Reference rows used for SHAP masking. If None, ``data`` is also used as</span>
-<span class="sd">    the background, preserving the previous behavior.</span>
+<span class="sd">    the background for both tree and non-tree explainers.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">Tree models use an interventional TreeExplainer with the selected background.</span>
+<span class="sd">Tree-path-dependent TreeExplainer is an explicit alternative that can be</span>
+<span class="sd">constructed directly with SHAP; it does not use this class&#39;s background_data</span>
+<span class="sd">or max_samples and is not the automatic categorical fallback.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -186,20 +201,182 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span> <span class="o">=</span> <span class="n">is_tree</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_background_is_explicit</span> <span class="o">=</span> <span class="n">background_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span> <span class="o">=</span> <span class="n">data</span> <span class="k">if</span> <span class="n">background_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">background_data</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Foreground and background data must have identical columns in the same order.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Background data must contain at least one row.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">max_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">max_samples</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_samples must be positive or None.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_samples</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_samples</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span>
+            <span class="ow">or</span> <span class="n">max_samples</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_samples must be a positive integer or None.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="nb">min</span><span class="p">(</span><span class="n">max_samples</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">))</span>
+            <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">max_samples</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">max_samples</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">)</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_effective_background_data</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">)</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_data</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_categorical_columns</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">column</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_uses_tree_explainer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span> <span class="o">==</span> <span class="s1">&#39;TreeExplainer&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scale_for_current_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s1">&#39;raw_model_output&#39;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span>
+            <span class="k">else</span> <span class="s1">&#39;positive_class_probability&#39;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_uses_xgboost_logit_link</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;xgboost&#39;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_for_current_values</span> <span class="o">==</span> <span class="s1">&#39;raw_model_output&#39;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_native_categorical_xgboost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;xgboost&#39;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">(</span>
+                <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_categorical_columns</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="s1">&#39;enable_categorical&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_unsupported_categorical_error</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">error</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">,</span>
+        <span class="n">explainer_error_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="ne">Exception</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Categorical split is not yet supported.&#39;</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">explainer_error_type</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s1">&#39;Currently TreeExplainer can only handle models with categorical splits&#39;</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="c1"># SHAP 0.52&#39;s XGBoost C-extension emits this exact TypeError for</span>
+        <span class="c1"># object-valued native-categorical backgrounds.</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_native_categorical_xgboost</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="n">message</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot cast array data from dtype(&#39;O&#39;) to dtype(&#39;float64&#39;)&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_categorical_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical_columns</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="n">encoded</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical_columns</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="n">categorical</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Categorical</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">],</span>
+                <span class="n">categories</span><span class="o">=</span><span class="n">dtype</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
+                <span class="n">ordered</span><span class="o">=</span><span class="n">dtype</span><span class="o">.</span><span class="n">ordered</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">unknown_values</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">categorical</span><span class="o">.</span><span class="n">codes</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="o">&amp;</span> <span class="o">~</span><span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">unknown_values</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Categorical values in </span><span class="si">{</span><span class="n">column</span><span class="si">!r}</span><span class="s2"> are not present in the &quot;</span>
+                    <span class="s2">&quot;foreground categories.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">encoded</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">categorical</span><span class="o">.</span><span class="n">codes</span>
+        <span class="k">return</span> <span class="n">encoded</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_restore_categorical_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">CategoricalDtype</span><span class="p">):</span>
+                <span class="n">raw_codes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+                <span class="p">)</span>
+                <span class="n">codes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">raw_codes</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+                <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">raw_codes</span><span class="p">)</span>
+                <span class="n">codes</span><span class="p">[</span><span class="n">finite</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">raw_codes</span><span class="p">[</span><span class="n">finite</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="n">codes</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+                    <span class="ow">or</span> <span class="p">(</span><span class="n">codes</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dtype</span><span class="o">.</span><span class="n">categories</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Invalid categorical code received for </span><span class="si">{</span><span class="n">column</span><span class="si">!r}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Categorical</span><span class="o">.</span><span class="n">from_codes</span><span class="p">(</span>
+                    <span class="n">codes</span><span class="p">,</span>
+                    <span class="n">categories</span><span class="o">=</span><span class="n">dtype</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
+                    <span class="n">ordered</span><span class="o">=</span><span class="n">dtype</span><span class="o">.</span><span class="n">ordered</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_positive_class_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical_columns</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_restore_categorical_data</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">values</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_explain_with_permutation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shap</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">background</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_categorical_data</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_effective_background_data</span>
+        <span class="p">)</span>
+        <span class="n">foreground</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_categorical_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictive_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_positive_class_probability</span>
+        <span class="n">masker</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">maskers</span><span class="o">.</span><span class="n">Independent</span><span class="p">(</span>
+            <span class="n">background</span><span class="p">,</span>
+            <span class="n">max_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictive_function</span><span class="p">,</span>
+            <span class="n">masker</span><span class="p">,</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;permutation&#39;</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">explanation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">(</span><span class="n">foreground</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_categorical_columns</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">Explanation</span><span class="p">(</span>
+                <span class="n">values</span><span class="o">=</span><span class="n">explanation</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                <span class="n">base_values</span><span class="o">=</span><span class="n">explanation</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span>
+                <span class="n">feature_names</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span> <span class="o">=</span> <span class="n">explanation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">base_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">=</span> <span class="s1">&#39;positive_class_probability&#39;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_tree_shap_values_for_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a 2D SHAP matrix for tree plots with explicit layout checks.&quot;&quot;&quot;</span>
@@ -248,36 +425,75 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate SHAP values for the model.</span>
 
-<span class="sd">        This method creates a SHAP explainer based on the model type and</span>
-<span class="sd">        computes the SHAP values for the provided dataset.</span>
+<span class="sd">        Tree models use an interventional TreeExplainer and raw model output.</span>
+<span class="sd">        If TreeExplainer raises SHAP&#39;s unsupported-categorical-splits error,</span>
+<span class="sd">        this method warns and uses PermutationExplainer on positive-class</span>
+<span class="sd">        probabilities instead. ``is_tree`` continues to describe the estimator;</span>
+<span class="sd">        ``explainer_type`` and ``output_scale`` describe the result.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">        &gt;&gt;&gt; X = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;length&quot;: [1.0, 2.0, 3.0, 4.0],</span>
+<span class="sd">        ...     &quot;width&quot;: [0.0, 1.0, 0.0, 1.0],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">        &gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">        &gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">        &gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">        &gt;&gt;&gt; explainer.shap_values.shape</span>
+<span class="sd">        (4, 2)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">shap.utils._exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExplainerError</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_background_is_explicit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">masker</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">maskers</span><span class="o">.</span><span class="n">Independent</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_effective_background_data</span><span class="p">,</span>
+                <span class="n">max_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span>
-                    <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">masker</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
                     <span class="n">feature_perturbation</span><span class="o">=</span><span class="s1">&#39;interventional&#39;</span><span class="p">,</span>
                     <span class="n">model_output</span><span class="o">=</span><span class="s1">&#39;raw&#39;</span><span class="p">,</span>
                 <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">TreeExplainer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">expected_value</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">expected_value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="o">.</span><span class="n">shap_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">ExplainerError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_unsupported_categorical_error</span><span class="p">(</span>
+                    <span class="n">error</span><span class="p">,</span>
+                    <span class="n">ExplainerError</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s1">&#39;TreeExplainer does not support these categorical splits &#39;</span>
+                    <span class="s1">&#39;with an explicit background; falling back to &#39;</span>
+                    <span class="s1">&#39;PermutationExplainer, whose SHAP values are in &#39;</span>
+                    <span class="s1">&#39;positive-class probability units rather than raw tree &#39;</span>
+                    <span class="s1">&#39;output units.&#39;</span><span class="p">,</span>
+                    <span class="ne">UserWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_explain_with_permutation</span><span class="p">(</span><span class="n">shap</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">=</span> <span class="s1">&#39;raw_model_output&#39;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">predictive_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span>\
-                <span class="n">predict_proba</span><span class="p">(</span><span class="n">x</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">Explainer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predictive_function</span><span class="p">,</span>
-                                            <span class="n">shap</span><span class="o">.</span><span class="n">maskers</span><span class="o">.</span><span class="n">Independent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background_data</span><span class="p">,</span> <span class="n">max_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_samples</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">base_values</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">values</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">explainer_type</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_scale</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_explain_with_permutation</span><span class="p">(</span><span class="n">shap</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ShapExplainer.load">
@@ -299,6 +515,21 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; original = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; original.explain()</span>
+<span class="sd">&gt;&gt;&gt; restored = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; restored.load(original.base_values, original.shap_values)</span>
+<span class="sd">&gt;&gt;&gt; restored.shap_values.shape</span>
+<span class="sd">(4, 2)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">base_values</span> <span class="o">=</span> <span class="n">base_values</span>
@@ -322,6 +553,22 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import os</span>
+<span class="sd">&gt;&gt;&gt; import tempfile</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; with tempfile.TemporaryDirectory() as temp_dir:</span>
+<span class="sd">...     output_dir = os.path.join(temp_dir, &quot;shap&quot;)</span>
+<span class="sd">...     explainer.save(output_dir, &quot;demo&quot;)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -346,13 +593,25 @@
 <span class="sd">-------</span>
 <span class="sd">IPython.core.display.HTML</span>
 <span class="sd">    An HTML object containing the SHAP force plot.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; html = explainer.force_plot()  # Keep the HTML; display it separately if needed.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;XGB&#39;</span><span class="p">):</span>     <span class="c1"># if XGBoost:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_xgboost_logit_link</span><span class="p">:</span>
                 <span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span>\
                     <span class="n">force_plot</span><span class="p">(</span><span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span>
                                <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
@@ -388,14 +647,26 @@
 <span class="sd">-------</span>
 <span class="sd">IPython.core.display.HTML</span>
 <span class="sd">    An HTML object containing the SHAP force plot for the specified instance.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; html = explainer.force_plot_single(0)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;XGB&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_xgboost_logit_link</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">force_plot</span><span class="p">(</span>
                     <span class="n">base_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span>
                     <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
@@ -437,12 +708,24 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.dependence_plot(column=0)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">dependence_plot</span><span class="p">(</span>
                 <span class="n">column</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
@@ -466,12 +749,24 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.dependence_plot_all()</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
             <span class="n">tree_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
                 <span class="n">shap</span><span class="o">.</span><span class="n">dependence_plot</span><span class="p">(</span>
@@ -507,13 +802,25 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.summary_plot(plot_type=&quot;dot&quot;)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_type</span> <span class="o">=</span> <span class="n">plot_type</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">summary_plot</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
@@ -534,7 +841,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Generate a waterfall plot for a single instance.</span>
 
-<span class="sd">Note: Not available for tree-based models.</span>
+<span class="sd">Note: Not available for TreeExplainer results. A tree model using the</span>
+<span class="sd">categorical fallback uses PermutationExplainer and supports this plot.</span>
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
@@ -544,24 +852,37 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.waterfall_plot(0)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Waterfall plot not available for Tree models.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Waterfall plot not available for TreeExplainer results.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;shap_explanation_object&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
-                    <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
-                    <span class="n">shap_values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">waterfall_plot</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
 
 
 <div class="viewcode-block" id="ShapExplainer.bar_plot">
@@ -573,22 +894,33 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.bar_plot()</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">summary_plot</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tree_shap_values_for_plot</span><span class="p">(),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
                 <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span>
             <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;shap_explanation_object&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
 
 
@@ -604,29 +936,43 @@
 
 <span class="sd">Note</span>
 <span class="sd">----</span>
-<span class="sd">Heatmaps are not available for tree-based models.</span>
+<span class="sd">Heatmaps are not available for TreeExplainer results. A tree model using the</span>
+<span class="sd">categorical fallback uses PermutationExplainer and supports this plot.</span>
 
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.heatmap()</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
         <span class="n">shap</span><span class="o">.</span><span class="n">initjs</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_tree</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Heatmap plot not available for Tree models.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_tree_explainer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Heatmap plot not available for TreeExplainer results.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;shap_explanation_object&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">,</span>
+                <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
-                    <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="p">,</span>
-                    <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_explanation_object</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">shap</span><span class="o">.</span><span class="n">plots</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">,</span>
+                <span class="n">instance_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot</span></div>
 
 
@@ -646,6 +992,18 @@
 <span class="sd">pandas.DataFrame</span>
 <span class="sd">    A DataFrame containing the feature importance weights, correlations,</span>
 <span class="sd">    and overall impact scores for each feature.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; importance = explainer.feature_importance()</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -784,6 +1142,18 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import ShapExplainer</span>
+<span class="sd">&gt;&gt;&gt; X = pd.DataFrame({&quot;length&quot;: [1., 2., 3., 4.], &quot;width&quot;: [0., 1., 0., 1.]})</span>
+<span class="sd">&gt;&gt;&gt; y = [0, 0, 1, 1]</span>
+<span class="sd">&gt;&gt;&gt; model = LogisticRegression().fit(X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer = ShapExplainer(model, X, y)</span>
+<span class="sd">&gt;&gt;&gt; explainer.explain()</span>
+<span class="sd">&gt;&gt;&gt; explainer.decision_plot(interval_lower=0.0, interval_upper=1.0)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">import</span><span class="w"> </span><span class="nn">shap</span>
@@ -886,8 +1256,8 @@
         <span class="n">shap_matrix</span> <span class="o">=</span> <span class="n">_select_binary_class_shap_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shap_values</span><span class="p">)</span>
         <span class="n">base_scalar</span> <span class="o">=</span> <span class="n">_select_binary_class_base_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
 
-        <span class="c1"># SHAP values coming from XGBoost tree explainers are typically in log-odds.</span>
-        <span class="n">link</span> <span class="o">=</span> <span class="s1">&#39;logit&#39;</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;XGB&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;identity&#39;</span>
+        <span class="c1"># Raw XGBoost tree outputs are margins; permutation outputs are probabilities.</span>
+        <span class="n">link</span> <span class="o">=</span> <span class="s1">&#39;logit&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_xgboost_logit_link</span> <span class="k">else</span> <span class="s1">&#39;identity&#39;</span>
 
         <span class="k">return</span> <span class="n">shap</span><span class="o">.</span><span class="n">decision_plot</span><span class="p">(</span>
             <span class="n">base_scalar</span><span class="p">,</span>
@@ -1075,6 +1445,23 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import numpy as np</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LinearRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.metrics import get_rmse</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import DescriptorExplainer</span>
+<span class="sd">&gt;&gt;&gt; rng = np.random.RandomState(1)</span>
+<span class="sd">&gt;&gt;&gt; X_train = pd.DataFrame(rng.rand(20, 3), columns=[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</span>
+<span class="sd">&gt;&gt;&gt; y_train = pd.DataFrame(rng.rand(20, 1), columns=[&quot;target&quot;])</span>
+<span class="sd">&gt;&gt;&gt; X_test = pd.DataFrame(rng.rand(8, 3), columns=X_train.columns)</span>
+<span class="sd">&gt;&gt;&gt; y_test = pd.DataFrame(rng.rand(8, 1), columns=[&quot;target&quot;])</span>
+<span class="sd">&gt;&gt;&gt; selector = DescriptorExplainer(</span>
+<span class="sd">...     X_train, X_test, y_train, y_test,</span>
+<span class="sd">...     LinearRegression(), get_rmse, logic=&quot;lower&quot;)</span>
+<span class="sd">&gt;&gt;&gt; selector.fit_stage_1(cv_iter=2)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CombSelector</span><span class="o">.</span><span class="n">fit_stage_1</span><span class="p">(</span>
@@ -1115,6 +1502,24 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import numpy as np</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LinearRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.metrics import get_rmse</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import DescriptorExplainer</span>
+<span class="sd">&gt;&gt;&gt; rng = np.random.RandomState(1)</span>
+<span class="sd">&gt;&gt;&gt; X_train = pd.DataFrame(rng.rand(20, 3), columns=[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</span>
+<span class="sd">&gt;&gt;&gt; y_train = pd.DataFrame(rng.rand(20, 1), columns=[&quot;target&quot;])</span>
+<span class="sd">&gt;&gt;&gt; X_test = pd.DataFrame(rng.rand(8, 3), columns=X_train.columns)</span>
+<span class="sd">&gt;&gt;&gt; y_test = pd.DataFrame(rng.rand(8, 1), columns=[&quot;target&quot;])</span>
+<span class="sd">&gt;&gt;&gt; selector = DescriptorExplainer(</span>
+<span class="sd">...     X_train, X_test, y_train, y_test,</span>
+<span class="sd">...     LinearRegression(), get_rmse, logic=&quot;lower&quot;)</span>
+<span class="sd">&gt;&gt;&gt; selector.fit_stage_1(cv_iter=2)</span>
+<span class="sd">&gt;&gt;&gt; selector.fit_stage_2(top_n_subsets=4, cv_iter=2)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CombSelector</span><span class="o">.</span><span class="n">fit_stage_2</span><span class="p">(</span>
@@ -1143,6 +1548,25 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import numpy as np</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.linear_model import LinearRegression</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.metrics import get_rmse</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.ml.modelling.model_interpretation import DescriptorExplainer</span>
+<span class="sd">&gt;&gt;&gt; rng = np.random.RandomState(1)</span>
+<span class="sd">&gt;&gt;&gt; X_train = pd.DataFrame(rng.rand(20, 3), columns=[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</span>
+<span class="sd">&gt;&gt;&gt; y_train = pd.DataFrame(rng.rand(20, 1), columns=[&quot;target&quot;])</span>
+<span class="sd">&gt;&gt;&gt; X_test = pd.DataFrame(rng.rand(8, 3), columns=X_train.columns)</span>
+<span class="sd">&gt;&gt;&gt; y_test = pd.DataFrame(rng.rand(8, 1), columns=[&quot;target&quot;])</span>
+<span class="sd">&gt;&gt;&gt; selector = DescriptorExplainer(</span>
+<span class="sd">...     X_train, X_test, y_train, y_test,</span>
+<span class="sd">...     LinearRegression(), get_rmse, logic=&quot;lower&quot;)</span>
+<span class="sd">&gt;&gt;&gt; selector.fit_stage_1(cv_iter=2)</span>
+<span class="sd">&gt;&gt;&gt; selector.fit_stage_2(top_n_subsets=4, cv_iter=2)</span>
+<span class="sd">&gt;&gt;&gt; selector.display(subset_index=0)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_r2</span>
@@ -1230,7 +1654,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_interpretation</a></li> 
       </ul>

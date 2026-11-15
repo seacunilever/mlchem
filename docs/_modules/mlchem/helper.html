@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.helper &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.helper &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.helper</a></li> 
       </ul>
@@ -113,6 +113,13 @@
 <span class="sd">    tuple of int or tuple of float</span>
 <span class="sd">        Converted size in pixels if `size` is provided, or in inches </span>
 <span class="sd">        if `pixel_size` is provided.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; convert_size(size=(2, 3), dpi=100)</span>
+<span class="sd">    (200, 300)</span>
+<span class="sd">    &gt;&gt;&gt; convert_size(pixel_size=(200, 300), dpi=100)</span>
+<span class="sd">    (2.0, 3.0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">size</span> <span class="ow">and</span> <span class="n">pixel_size</span><span class="p">:</span>
@@ -143,6 +150,12 @@
 <span class="sd">    tuple of float</span>
 <span class="sd">        A tuple of three floats representing an RGB color, with each </span>
 <span class="sd">        component in the range [0, 1].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; rgb = generate_random_rgb()</span>
+<span class="sd">    &gt;&gt;&gt; len(rgb), all(0 &lt;= value &lt;= 1 for value in rgb)</span>
+<span class="sd">    (3, True)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
@@ -174,6 +187,13 @@
 <span class="sd">    -------</span>
 <span class="sd">    tuple of float or tuple of int</span>
 <span class="sd">        Converted RGB values.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; convert_rgb((255, 128, 64), &#39;normalise&#39;)</span>
+<span class="sd">    (1.0, 0.5019607843137255, 0.25098039215686274)</span>
+<span class="sd">    &gt;&gt;&gt; convert_rgb((1.0, 0.5, 0.25), &#39;denormalise&#39;)</span>
+<span class="sd">    (255, 127, 63)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;normalise&#39;</span><span class="p">:</span>
@@ -211,6 +231,11 @@
 <span class="sd">-------</span>
 <span class="sd">tuple of float</span>
 <span class="sd">    RGB color after applying transparency.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; make_rgb_transparent((1.0, 0.0, 0.0), (1.0, 1.0, 1.0), 0.5)</span>
+<span class="sd">(1.0, 0.5, 0.5)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">c1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">c2</span> <span class="k">for</span>
@@ -236,6 +261,10 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; visualise_colour((1.0, 0.0, 0.0))</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -276,6 +305,10 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; visualise_colour_grid({&#39;red&#39;: (1.0, 0.0, 0.0), &#39;blue&#39;: (0.0, 0.0, 1.0)})</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -326,6 +359,15 @@
 <span class="sd">-------</span>
 <span class="sd">Image.Image</span>
 <span class="sd">    PIL Image object.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from io import BytesIO</span>
+<span class="sd">&gt;&gt;&gt; from PIL import Image</span>
+<span class="sd">&gt;&gt;&gt; image_data = BytesIO()</span>
+<span class="sd">&gt;&gt;&gt; Image.new(&#39;RGB&#39;, (1, 1), color=&#39;red&#39;).save(image_data, format=&#39;PNG&#39;)</span>
+<span class="sd">&gt;&gt;&gt; show_png(image_data.getvalue()).size</span>
+<span class="sd">(1, 1)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
@@ -361,6 +403,11 @@
 <span class="sd">-------</span>
 <span class="sd">Image.Image</span>
 <span class="sd">    PIL Image object containing the gradient circle.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; create_smooth_gradient_circle(10, (255, 0, 0), 0.5).size</span>
+<span class="sd">(20, 20)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageDraw</span>
@@ -403,6 +450,11 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If level is not a valid logging level name or integer.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; coerce_log_level(&#39;INFO&#39;)</span>
+<span class="sd">20</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -517,6 +569,15 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    Complete captured log output from in-memory buffer.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import logging</span>
+<span class="sd">&gt;&gt;&gt; with LogCapture(to_console=False) as capture:</span>
+<span class="sd">...     logging.warning(&#39;sample message&#39;)</span>
+<span class="sd">...     captured = &#39;sample message&#39; in capture.get_logs()</span>
+<span class="sd">&gt;&gt;&gt; captured</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
 
@@ -524,7 +585,17 @@
 <div class="viewcode-block" id="LogCapture.clear">
 <a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture.clear">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear captured logs from memory buffer.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear captured logs from memory buffer.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import logging</span>
+<span class="sd">&gt;&gt;&gt; with LogCapture(to_console=False) as capture:</span>
+<span class="sd">...     logging.warning(&#39;old message&#39;)</span>
+<span class="sd">...     capture.clear()</span>
+<span class="sd">...     capture.get_logs()</span>
+<span class="sd">&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
 
@@ -532,7 +603,13 @@
 <div class="viewcode-block" id="LogCapture.stop">
 <a class="viewcode-back" href="../../mlchem.html#mlchem.helper.LogCapture.stop">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stop capturing logs and remove handlers.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Stop capturing logs and remove handlers.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; capture = LogCapture(to_console=False)</span>
+<span class="sd">&gt;&gt;&gt; capture.stop()</span>
+<span class="sd">&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_root_logger</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_memory_handler</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_console_handler</span><span class="p">:</span>
@@ -613,6 +690,11 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If task_type is not &#39;classification&#39; or &#39;regression&#39;.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; validate_task_type(&#39;classification&#39;)</span>
+<span class="sd">&#39;classification&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">task_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span> <span class="s1">&#39;regression&#39;</span><span class="p">):</span>
@@ -628,7 +710,13 @@
     <span class="n">required_columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
     <span class="n">dataframe_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;dataframe&#39;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise a clear error when a DataFrame lacks required columns.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise a clear error when a DataFrame lacks required columns.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; validate_dataframe_columns(pd.DataFrame({&#39;feature&#39;: [1]}), [&#39;feature&#39;])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">dataframe_name</span><span class="si">}</span><span class="s2">&#39; must be a pandas DataFrame.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">required_columns</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
@@ -664,6 +752,11 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If n_jobs is not -1 or a positive integer.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; resolve_n_jobs(2)</span>
+<span class="sd">2</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -685,6 +778,15 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import warnings</span>
+<span class="sd">&gt;&gt;&gt; with warnings.catch_warnings(record=True) as caught:</span>
+<span class="sd">...     suppress_warnings()</span>
+<span class="sd">...     warnings.warn(&#39;suppressed&#39;, UserWarning)</span>
+<span class="sd">&gt;&gt;&gt; len(caught)</span>
+<span class="sd">0</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
@@ -707,6 +809,11 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    Path string with forward slashes.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; standardise_path(&#39;C:\\\\Users\\\\User\\\\Documents&#39;)</span>
+<span class="sd">&#39;C:/Users/User/Documents&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span></div>
@@ -789,6 +896,15 @@
 <span class="sd">object</span>
 <span class="sd">    The estimator with internal parallelization disabled if applicable,</span>
 <span class="sd">    otherwise unchanged.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.ensemble import RandomForestClassifier</span>
+<span class="sd">&gt;&gt;&gt; estimator = disable_estimator_parallelization(</span>
+<span class="sd">...     RandomForestClassifier(n_jobs=4)</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; estimator.n_jobs is None</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">estimator</span><span class="p">,</span> <span class="s1">&#39;n_jobs&#39;</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -823,6 +939,11 @@
 <span class="sd">-------</span>
 <span class="sd">list of list</span>
 <span class="sd">    List of combinations of elements.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; generate_combination_cascade([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], 2)</span>
+<span class="sd">[[&#39;a&#39;], [&#39;b&#39;], [&#39;c&#39;], [&#39;a&#39;, &#39;b&#39;], [&#39;a&#39;, &#39;c&#39;], [&#39;b&#39;, &#39;c&#39;]]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
@@ -850,8 +971,8 @@
 <span class="sd">int</span>
 <span class="sd">    Total number of features.</span>
 
-<span class="sd">Example</span>
-<span class="sd">-------</span>
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
 <span class="sd">&gt;&gt;&gt; count_features([&#39;a&#39;, &#39;b&#39;, &#39;a b&#39;])</span>
 <span class="sd">4</span>
 <span class="sd">&gt;&gt;&gt; count_features([&#39;a&#39;, &#39;a b&#39;, &#39;c^2&#39;])</span>
@@ -894,6 +1015,16 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from contextlib import redirect_stdout</span>
+<span class="sd">&gt;&gt;&gt; from io import StringIO</span>
+<span class="sd">&gt;&gt;&gt; output = StringIO()</span>
+<span class="sd">&gt;&gt;&gt; with redirect_stdout(output):</span>
+<span class="sd">...     loadingbar(1, 3, 10)</span>
+<span class="sd">&gt;&gt;&gt; &#39;001/003&#39; in output.getvalue()</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
@@ -929,6 +1060,11 @@
 <span class="sd">-------</span>
 <span class="sd">list of str</span>
 <span class="sd">    List of column names.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; create_progressive_column_names(&#39;col&#39;, 3)</span>
+<span class="sd">[&#39;col1&#39;, &#39;col2&#39;, &#39;col3&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">serial_name</span><span class="si">}{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span></div>
@@ -965,6 +1101,13 @@
 <span class="sd">------</span>
 <span class="sd">TypeError</span>
 <span class="sd">    If `exceptions` is not an exception class or tuple of exception classes.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; try_except(lambda: 1 / 0, exc=&#39;error&#39;)</span>
+<span class="sd">&#39;error&#39;</span>
+<span class="sd">&gt;&gt;&gt; try_except(lambda: 1 / 1)</span>
+<span class="sd">1.0</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exceptions</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -1008,6 +1151,11 @@
 <span class="sd">-------</span>
 <span class="sd">list of int</span>
 <span class="sd">    List of starting indices where the substring occurs.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; find_all_occurrences(&#39;test test test&#39;, &#39;test&#39;)</span>
+<span class="sd">[0, 5, 10]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1037,6 +1185,11 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    Processed string.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; reset_string(&#39;Hello, World!&#39;)</span>
+<span class="sd">&#39;helloworld&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="n">punctuation</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;&quot;!()-[]</span><span class="si">{}</span><span class="s1">;:&#39;</span><span class="se">\\</span><span class="s1">, &lt;&gt;./?@#$%^&amp;*_~&#39;&#39;&#39;</span>
@@ -1077,6 +1230,11 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If index is less than 0.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; insert_string_piece(&#39;Hello World&#39;, &#39;Beautiful &#39;, 5)</span>
+<span class="sd">&#39;Hello Beautiful World&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1103,6 +1261,11 @@
 <span class="sd">-------</span>
 <span class="sd">tuple</span>
 <span class="sd">    A flattened tuple containing all elements.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; flatten([1, [2, 3], [[4, 5], 6]])</span>
+<span class="sd">(1, 2, 3, 4, 5, 6)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">)):</span>
@@ -1149,6 +1312,11 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    The processed and formatted string.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; process_custom_string(&#39;Nc1ccccc1N&#39;, &#39;c1ccccc1&#39;, [&#39;CYC&#39;])</span>
+<span class="sd">&#39;;CYC;&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
@@ -1205,6 +1373,11 @@
 <span class="sd">-------</span>
 <span class="sd">tuple of list</span>
 <span class="sd">    Sorted list of elements and corresponding sorted values.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; sort_list_by_other_list([&#39;apple&#39;, &#39;banana&#39;, &#39;cherry&#39;], [3, -7, 2])</span>
+<span class="sd">([&#39;banana&#39;, &#39;apple&#39;, &#39;cherry&#39;], [-7, 3, 2])</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -1239,6 +1412,11 @@
 <span class="sd">-------</span>
 <span class="sd">dict of str to Any</span>
 <span class="sd">    Merged dictionary with unique keys.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; merge_dicts_with_duplicates({&#39;a&#39;: 1, &#39;b&#39;: 2}, {&#39;b&#39;: 3, &#39;c&#39;: 4})</span>
+<span class="sd">{&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;b_duplicate&#39;: 3, &#39;c&#39;: 4}</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="c1"># Start with a copy of the first dictionary</span>
@@ -1285,6 +1463,13 @@
 <span class="sd">-------</span>
 <span class="sd">pandas.DataFrame</span>
 <span class="sd">    DataFrame with the added InChI column.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; df = add_inchi_to_dataframe(pd.DataFrame({&#39;SMILES&#39;: [&#39;CCO&#39;]}), 1, &#39;SMILES&#39;)</span>
+<span class="sd">&gt;&gt;&gt; df.columns.tolist()</span>
+<span class="sd">[&#39;SMILES&#39;, &#39;INCHI&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
@@ -1329,6 +1514,14 @@
 
 <span class="sd">ValueError</span>
 <span class="sd">    If `keep` is not &#39;first&#39; or &#39;last&#39;.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; df = pd.DataFrame({&#39;A&#39;: [1, 2, 2, 3]})</span>
+<span class="sd">&gt;&gt;&gt; cleaned, duplicates = identify_df_duplicates(df, &#39;A&#39;)</span>
+<span class="sd">&gt;&gt;&gt; len(cleaned), len(duplicates)</span>
+<span class="sd">(3, 1)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">column_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
@@ -1367,6 +1560,19 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">&gt;&gt;&gt; from tempfile import TemporaryDirectory</span>
+<span class="sd">&gt;&gt;&gt; with TemporaryDirectory() as temp_dir:</span>
+<span class="sd">...     output_dir = Path(temp_dir) / &#39;structures&#39;</span>
+<span class="sd">...     create_structure_files(</span>
+<span class="sd">...         pd.DataFrame({&#39;SMILES&#39;: [&#39;CCO&#39;]}), &#39;SMILES&#39;, str(output_dir)</span>
+<span class="sd">...     )</span>
+<span class="sd">...     len(list(output_dir.iterdir()))</span>
+<span class="sd">1</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -1415,6 +1621,17 @@
 <span class="sd">-------</span>
 <span class="sd">pandas.DataFrame</span>
 <span class="sd">    DataFrame with the added &#39;MOLFILE&#39; column.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">&gt;&gt;&gt; from tempfile import TemporaryDirectory</span>
+<span class="sd">&gt;&gt;&gt; with TemporaryDirectory() as temp_dir:</span>
+<span class="sd">...     (Path(temp_dir) / &#39;molecule.sdf&#39;).touch()</span>
+<span class="sd">...     df = prepare_dataframe(pd.DataFrame({&#39;A&#39;: [1], &#39;B&#39;: [2]}), temp_dir)</span>
+<span class="sd">...     Path(df.loc[0, &#39;MOLFILE&#39;]).name</span>
+<span class="sd">&#39;molecule.sdf&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -1465,6 +1682,17 @@
 <span class="sd">------</span>
 <span class="sd">KeyError</span>
 <span class="sd">    If required core columns are missing from the DataFrame.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; df = pd.DataFrame({</span>
+<span class="sd">...     &#39;DIM_1&#39;: [1], &#39;DIM_2&#39;: [2], &#39;SMILES&#39;: [&#39;CCO&#39;], &#39;MOLFILE&#39;: [&#39;mol.png&#39;],</span>
+<span class="sd">...     &#39;NAME&#39;: [&#39;ethanol&#39;], &#39;NAME_SHORT&#39;: [&#39;eth&#39;]</span>
+<span class="sd">... })</span>
+<span class="sd">&gt;&gt;&gt; table = prepare_datatable(df)</span>
+<span class="sd">&gt;&gt;&gt; len(table.columns)</span>
+<span class="sd">6</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColumnDataSource</span><span class="p">,</span> <span class="n">TableColumn</span>
@@ -1512,6 +1740,11 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If size is negative.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; compute_alpha(800)</span>
+<span class="sd">0.5</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1557,6 +1790,11 @@
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
 <span class="sd">    If either size is negative or both sizes are zero.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; size_ratio(1, 3)</span>
+<span class="sd">0.875</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">size1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">size2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1593,6 +1831,14 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from bokeh.models import DataTable</span>
+<span class="sd">&gt;&gt;&gt; from bokeh.plotting import figure</span>
+<span class="sd">&gt;&gt;&gt; plot = figure()</span>
+<span class="sd">&gt;&gt;&gt; _ = plot.line([0, 1], [0, 1])</span>
+<span class="sd">&gt;&gt;&gt; bokeh_plot(plot, [&#39;sample&#39;], {&#39;sample&#39;: DataTable()})</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">bokeh.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bp</span>
@@ -1627,6 +1873,11 @@
 <span class="sd">-------</span>
 <span class="sd">numpy.ndarray</span>
 <span class="sd">    Boolean mask array.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; create_mask(np.array([1, 2, 3, 4, 5]), 1.9, 4.1)</span>
+<span class="sd">array([False,  True,  True,  True, False])</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">array</span> <span class="o">&lt;=</span> <span class="n">upper</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">array</span> <span class="o">&gt;</span> <span class="n">lower</span><span class="p">)</span></div>
@@ -1648,6 +1899,11 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    &#39;+&#39; if x is non-negative, &#39;-&#39; otherwise.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; assign_sign(-3)</span>
+<span class="sd">&#39;-&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">return</span> <span class="s1">&#39;+&#39;</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span></div>
@@ -1671,6 +1927,11 @@
 <span class="sd">-------</span>
 <span class="sd">list of float</span>
 <span class="sd">    Normalised values.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; normalise_iterable([2, 4])</span>
+<span class="sd">[0.5, 1.0]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
@@ -1712,6 +1973,17 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from pathlib import Path</span>
+<span class="sd">&gt;&gt;&gt; from tempfile import TemporaryDirectory</span>
+<span class="sd">&gt;&gt;&gt; with TemporaryDirectory() as temp_dir:</span>
+<span class="sd">...     output = Path(temp_dir) / &#39;data.xlsx&#39;</span>
+<span class="sd">...     dfs_to_excel(str(output), [pd.DataFrame({&#39;value&#39;: [1]})], [&#39;data&#39;])</span>
+<span class="sd">...     output.exists()</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
@@ -1749,7 +2021,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.helper</a></li> 
       </ul>

@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.preprocessing.scaling &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.ml.preprocessing.scaling &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.preprocessing.scaling</a></li> 
       </ul>
@@ -437,6 +437,17 @@
 <span class="sd">-------</span>
 <span class="sd">tuple of pandas.DataFrame and scaler</span>
 <span class="sd">    The transformed DataFrame and the scaler used.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; from sklearn.preprocessing import StandardScaler</span>
+<span class="sd">&gt;&gt;&gt; train = pd.DataFrame({&quot;signal&quot;: [0., 2., 4.]})</span>
+<span class="sd">&gt;&gt;&gt; test = pd.DataFrame({&quot;signal&quot;: [1., 3.]})</span>
+<span class="sd">&gt;&gt;&gt; scaler = StandardScaler().fit(train)</span>
+<span class="sd">&gt;&gt;&gt; transformed, _ = transform_df(test, scaler, columns_to_preserve=[])</span>
+<span class="sd">&gt;&gt;&gt; transformed[&quot;signal&quot;].round(2).tolist()</span>
+<span class="sd">[-0.61, 0.61]</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="n">sliced_df</span><span class="p">,</span> <span class="n">derived_columns_to_scale</span> <span class="o">=</span> <span class="n">_split_scale_columns</span><span class="p">(</span>
         <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
@@ -530,7 +541,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.preprocessing.scaling</a></li> 
       </ul>

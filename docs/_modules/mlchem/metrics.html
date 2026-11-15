@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.metrics &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.metrics &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.metrics</a></li> 
       </ul>
@@ -103,6 +103,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The sensitivity (recall) of the prediction.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; float(get_sensitivity([1, 1, 0, 0], [1, 0, 0, 1]))</span>
+<span class="sd">    0.5</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -140,6 +145,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The specificity of the prediction.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; float(get_specificity([1, 1, 0, 0], [1, 0, 0, 1]))</span>
+<span class="sd">    0.5</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -176,6 +186,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The geometric mean of sensitivity and specificity.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; float(get_geometric_S([1, 1, 0, 0], [1, 0, 0, 1]))</span>
+<span class="sd">    0.5</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -213,6 +228,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Matthews Correlation Coefficient.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; get_mcc([1, 1, 0, 0], [1, 0, 0, 1])</span>
+<span class="sd">    0.0</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">matthews_corrcoef</span>
@@ -242,6 +262,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The root mean squared error.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; get_rmse([0, 1], [1, 0])</span>
+<span class="sd">    1.0</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">mean_squared_error</span>
@@ -289,6 +314,15 @@
 <span class="sd">    dict</span>
 <span class="sd">        Dictionary containing ``performance_score``,</span>
 <span class="sd">        ``instability_score``, and ``reliability_score``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; scores = get_reliability_score_components(</span>
+<span class="sd">    ...     0.8, 0.8, logic=&quot;greater&quot;,</span>
+<span class="sd">    ...     desired_performance_score=&quot;train_cv_average&quot;,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; float(scores[&quot;reliability_score&quot;])</span>
+<span class="sd">    0.8</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">logic</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">):</span>
@@ -338,6 +372,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The ratio of standard deviation to RMSE.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; float(rmse_to_std_ratio([0, 1], [1, 0]))</span>
+<span class="sd">    0.5</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -370,6 +409,11 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The R-squared value.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; float(get_r2([0, 1], [0, 1]))</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">pearsonr</span>
@@ -410,6 +454,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Dice similarity coefficient, ranging from 0 (no similarity) to 1 (identical).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; DiceSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 
@@ -441,6 +493,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The OnBit similarity, based on the number of bits set in both fingerprints.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; OnBitSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -471,6 +531,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Sokal similarity coefficient, a normalized measure of bit overlap.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; SokalSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -501,6 +569,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The AllBit similarity, considering both on and off bits in the fingerprints.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; AllBitSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -531,6 +607,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Cosine similarity, measuring the cosine of the angle between two bit vectors.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; CosineSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -561,6 +645,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Cosine similarity, measuring the cosine of the angle between two bit vectors.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; RusselSimilarity(fp, fp)</span>
+<span class="sd">    0.125</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -599,6 +691,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Tversky similarity between the two fingerprints.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; TverskySimilarity(fp, fp, a=0.5, b=0.5)</span>
+<span class="sd">    1.0</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -629,6 +729,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Tanimoto similarity coefficient, commonly used for chemical structure comparison.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; TanimotoSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -659,6 +767,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Asymmetric similarity, emphasizing features present in the first fingerprint.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; AsymmetricSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -689,6 +805,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Kulczynski similarity, a symmetric measure of bit overlap.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; KulczynskiSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -719,6 +843,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The OffBitProj similarity, based on the projection of off bits between fingerprints.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; OffBitProjSimilarity(fp, fp)[0]</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -749,6 +881,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The McConnaughey similarity, a measure of structural similarity based on bit patterns.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; McConnaugheySimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -779,6 +919,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Braun-Blanquet similarity, calculated as the intersection over the maximum bit count.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; BraunBlanquetSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -809,6 +957,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The Rogot-Goldberg similarity, a weighted measure of bit agreement.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; RogotGoldbergSimilarity(fp, fp)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -843,6 +999,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
 <span class="sd">        The fingerprint similarity between the two fingerprints.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from rdkit import DataStructs</span>
+<span class="sd">    &gt;&gt;&gt; fp = DataStructs.ExplicitBitVect(8)</span>
+<span class="sd">    &gt;&gt;&gt; _ = fp.SetBit(0)</span>
+<span class="sd">    &gt;&gt;&gt; FingerprintSimilarity(fp, fp, metric=TanimotoSimilarity)</span>
+<span class="sd">    1.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataStructs</span>
@@ -879,7 +1043,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.metrics</a></li> 
       </ul>

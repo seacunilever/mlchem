@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>
@@ -140,6 +140,19 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If folds overlap, contain out-of-range/duplicate indices, are</span>
 <span class="sd">        empty, or are otherwise inconsistently defined.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Validate two disjoint folds whose validation sets cover all samples:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; folds = [</span>
+<span class="sd">    ...     (np.array([2, 3]), np.array([0, 1])),</span>
+<span class="sd">    ...     (np.array([0, 1]), np.array([2, 3])),</span>
+<span class="sd">    ... ]</span>
+<span class="sd">    &gt;&gt;&gt; checked = validate_cv_indices(folds, n_samples=4)</span>
+<span class="sd">    &gt;&gt;&gt; len(checked)</span>
+<span class="sd">    2</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">cv_indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -287,6 +300,19 @@
 <span class="sd">    -------</span>
 <span class="sd">    list of (numpy.ndarray, numpy.ndarray)</span>
 <span class="sd">        Validated ``(train_idx, valid_idx)`` pairs.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Generate reproducible stratified folds from a small labeled dataset:</span>
+
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; X = pd.DataFrame({&quot;signal&quot;: [0, 1, 2, 3, 4, 5]})</span>
+<span class="sd">    &gt;&gt;&gt; y = [0, 0, 0, 1, 1, 1]</span>
+<span class="sd">    &gt;&gt;&gt; folds = generate_cv_indices(</span>
+<span class="sd">    ...     X, y, cv_iter=3, shuffle=True, random_state=0</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; len(folds)</span>
+<span class="sd">    3</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">n_samples</span> <span class="o">=</span> <span class="n">_n_samples</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -332,6 +358,16 @@
 <span class="sd">    dict</span>
 <span class="sd">        Dictionary containing the fold scores, the mean and</span>
 <span class="sd">        standard error of the fold scores.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Summarise three fold scores:</span>
+
+<span class="sd">    &gt;&gt;&gt; summary = summarise_fold_scores([0.8, 0.9, 1.0])</span>
+<span class="sd">    &gt;&gt;&gt; summary[&quot;mean&quot;]</span>
+<span class="sd">    0.9</span>
+<span class="sd">    &gt;&gt;&gt; round(summary[&quot;se&quot;], 3)</span>
+<span class="sd">    0.047</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">scores_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">mean</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">scores_arr</span><span class="p">))</span>
@@ -1010,6 +1046,29 @@
 <span class="sd">            ``successful_estimators``, ``failed_estimators``.</span>
 <span class="sd">            When ``return_prediction_dataframes=True``, returns a dictionary</span>
 <span class="sd">            containing the fit report and generated prediction DataFrames.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Fit one classifier on the training set and evaluate it on a hold-out set:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; train_set = pd.DataFrame({&quot;signal&quot;: [0, 1, 2, 3]})</span>
+<span class="sd">        &gt;&gt;&gt; test_set = pd.DataFrame({&quot;signal&quot;: [4, 5]})</span>
+<span class="sd">        &gt;&gt;&gt; vote = MajorityVote(</span>
+<span class="sd">        ...     train_set=train_set,</span>
+<span class="sd">        ...     y_train=[0, 0, 1, 1],</span>
+<span class="sd">        ...     task_type=&quot;classification&quot;,</span>
+<span class="sd">        ...     estimator_list=[LogisticRegression(max_iter=1000)],</span>
+<span class="sd">        ...     column_list=[[&quot;signal&quot;]],</span>
+<span class="sd">        ...     test_set=test_set,</span>
+<span class="sd">        ...     y_test=[1, 1],</span>
+<span class="sd">        ...     estimator_names=[&quot;logreg&quot;],</span>
+<span class="sd">        ...     n_jobs=1,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; report = vote.fit(selected_estimators=[&quot;logreg&quot;])</span>
+<span class="sd">        &gt;&gt;&gt; report[&quot;successful_count&quot;]</span>
+<span class="sd">        1</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_set</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1628,6 +1687,23 @@
 <span class="sd">      point is within the domain.</span>
 <span class="sd">    - ``&#39;threshold&#39;`` (float): threshold used to determine domain</span>
 <span class="sd">      inclusion.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">Calculate leverage for four rows and two features:</span>
+
+<span class="sd">&gt;&gt;&gt; import numpy as np</span>
+<span class="sd">&gt;&gt;&gt; X = np.array([</span>
+<span class="sd">...     [1.0, 0.0],</span>
+<span class="sd">...     [1.0, 1.0],</span>
+<span class="sd">...     [1.0, 2.0],</span>
+<span class="sd">...     [1.0, 3.0],</span>
+<span class="sd">... ])</span>
+<span class="sd">&gt;&gt;&gt; result = ApplicabilityDomain.leverage(X)</span>
+<span class="sd">&gt;&gt;&gt; result[&quot;threshold&quot;]</span>
+<span class="sd">1.5</span>
+<span class="sd">&gt;&gt;&gt; len(result[&quot;leverages&quot;])</span>
+<span class="sd">4</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="n">threshold</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1676,7 +1752,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>

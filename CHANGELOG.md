@@ -2,6 +2,27 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.6] - 2026-11-15
+
+### Added
+
+- Made `ShapExplainer` background handling consistent across tree and permutation explainers: `background_data=None` uses `data` as the background, `max_samples=None` keeps all background rows, and a positive `max_samples` deterministically caps rows passed to the masker.
+- Recorded the explainer actually used and its output scale, distinguishing raw TreeExplainer outputs from positive-class probabilities returned by the permutation path.
+- Added usage examples to public function and method docstrings throughout the package.
+
+### Fixed
+
+- Fall back to the permutation explainer for SHAP's unsupported categorical-split errors, including native-categorical XGBoost models; unrelated TreeExplainer errors continue to propagate.
+
+### Docs
+
+- Refreshed generated documentation with the new API examples and clarified output-scale differences and tree-path-dependent SHAP as an explicit alternative.
+
+### Development
+
+- Added contributor issue-triage guidance for feature, refactor, and documentation work.
+- Added a deterministic smoke test for combinatorial feature selection, exercising 25 candidate subsets.
+
 ## [1.2.5] - 2026-11-13
 
 ### Added

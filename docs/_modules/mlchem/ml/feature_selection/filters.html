@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.feature_selection.filters &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.ml.feature_selection.filters &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.filters</a></li> 
       </ul>
@@ -116,6 +116,24 @@
 <span class="sd">-------</span>
 <span class="sd">pandas.DataFrame</span>
 <span class="sd">    A DataFrame containing the filtered columns.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">Keep one feature from a collinear group and retain the target column:</span>
+
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; data = pd.DataFrame({</span>
+<span class="sd">...     &quot;feature1&quot;: [1, 2, 3, 4, 5],</span>
+<span class="sd">...     &quot;feature2&quot;: [2, 4, 6, 8, 10],</span>
+<span class="sd">...     &quot;feature3&quot;: [5, 4, 3, 2, 1],</span>
+<span class="sd">...     &quot;feature4&quot;: [1, 1, 1, 1, 1],</span>
+<span class="sd">...     &quot;target&quot;: [1, 0, 1, 0, 1],</span>
+<span class="sd">... })</span>
+<span class="sd">&gt;&gt;&gt; filtered = collinearity_filter(</span>
+<span class="sd">...     data, threshold=0.9, target_variable=&quot;target&quot;</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; filtered.columns.tolist()</span>
+<span class="sd">[&#39;feature1&#39;, &#39;target&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -201,6 +219,22 @@
 <span class="sd">pandas.DataFrame</span>
 <span class="sd">    A DataFrame containing the filtered columns with diversity</span>
 <span class="sd">    higher than the threshold.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">Remove a constant feature while preserving the target column:</span>
+
+<span class="sd">&gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">&gt;&gt;&gt; data = pd.DataFrame({</span>
+<span class="sd">...     &quot;varying&quot;: [1, 2, 3, 4],</span>
+<span class="sd">...     &quot;constant&quot;: [0, 0, 0, 0],</span>
+<span class="sd">...     &quot;target&quot;: [0, 1, 0, 1],</span>
+<span class="sd">... })</span>
+<span class="sd">&gt;&gt;&gt; filtered = diversity_filter(</span>
+<span class="sd">...     data, threshold=0.8, target_variable=&quot;target&quot;</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; filtered.columns.tolist()</span>
+<span class="sd">[&#39;varying&#39;, &#39;target&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -256,7 +290,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.filters</a></li> 
       </ul>

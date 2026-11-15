@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.manipulation &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.chem.manipulation &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation</a></li> 
       </ul>
@@ -415,6 +415,14 @@
 <span class="sd">-------</span>
 <span class="sd">str</span>
 <span class="sd">    Either &#39;SMARTS&#39; or &#39;SMILES&#39; indicating the detected format.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import detect_smarts_vs_smiles</span>
+<span class="sd">&gt;&gt;&gt; detect_smarts_vs_smiles(&quot;CCO&quot;)</span>
+<span class="sd">&#39;SMILES&#39;</span>
+<span class="sd">&gt;&gt;&gt; detect_smarts_vs_smiles(&quot;[#6]&quot;)</span>
+<span class="sd">&#39;SMARTS&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="c1"># SMARTS-specific characters and patterns</span>
     <span class="n">smarts_indicators</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;$&#39;</span><span class="p">,</span> <span class="s1">&#39;[#&#39;</span><span class="p">,</span> <span class="s1">&#39;[D&#39;</span><span class="p">,</span> <span class="s1">&#39;[v&#39;</span><span class="p">,</span> <span class="s1">&#39;[X&#39;</span><span class="p">,</span> <span class="s1">&#39;[x&#39;</span><span class="p">,</span> <span class="s1">&#39;[!&#39;</span><span class="p">]</span>
@@ -444,6 +452,14 @@
 <span class="sd">-------</span>
 <span class="sd">bytes</span>
 <span class="sd">    Binary representation of the molecule.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from rdkit import Chem</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import mol_to_binary</span>
+<span class="sd">&gt;&gt;&gt; molecule = Chem.MolFromSmiles(&quot;CCO&quot;)</span>
+<span class="sd">&gt;&gt;&gt; isinstance(mol_to_binary(molecule), bytes)</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">mol</span><span class="o">.</span><span class="n">ToBinary</span><span class="p">()</span></div>
 
@@ -470,6 +486,16 @@
 <span class="sd">-------</span>
 <span class="sd">list of bytes</span>
 <span class="sd">    List of binary image data for the resonance structures.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from contextlib import redirect_stdout</span>
+<span class="sd">&gt;&gt;&gt; from io import StringIO</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import generate_resonance</span>
+<span class="sd">&gt;&gt;&gt; with redirect_stdout(StringIO()):</span>
+<span class="sd">...     images = generate_resonance(&quot;C1=CC=CC=C1&quot;, save=False)</span>
+<span class="sd">&gt;&gt;&gt; isinstance(images[0], bytes)</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -545,6 +571,14 @@
 <span class="sd">-------</span>
 <span class="sd">rdkit.Chem.rdchem.Mol</span>
 <span class="sd">    The neutralised molecule.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from rdkit import Chem</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import neutralise_mol</span>
+<span class="sd">&gt;&gt;&gt; molecule = Chem.MolFromSmiles(&quot;CC(O)[O-]&quot;)</span>
+<span class="sd">&gt;&gt;&gt; Chem.MolToSmiles(neutralise_mol(molecule))</span>
+<span class="sd">&#39;CC(O)O&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -584,6 +618,15 @@
 <span class="sd">-------</span>
 <span class="sd">rdkit.Chem.rdchem.Mol</span>
 <span class="sd">    The molecule with matching substructures removed.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from rdkit import Chem</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import remove_smarts_pattern</span>
+<span class="sd">&gt;&gt;&gt; molecule = Chem.MolFromSmiles(&quot;CCOCO&quot;)</span>
+<span class="sd">&gt;&gt;&gt; result = remove_smarts_pattern(molecule, &quot;[OD1]&quot;)</span>
+<span class="sd">&gt;&gt;&gt; Chem.MolToSmiles(result)</span>
+<span class="sd">&#39;CCOC&#39;</span>
 <span class="sd">&quot;&quot;&quot;</span>
     <span class="n">pattern</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmarts</span><span class="p">(</span><span class="n">smarts_string</span><span class="p">)</span>
     <span class="k">while</span> <span class="n">mol</span><span class="o">.</span><span class="n">HasSubstructMatch</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
@@ -3148,6 +3191,14 @@
 <span class="sd">                Returns</span>
 <span class="sd">                -------</span>
 <span class="sd">                None</span>
+
+<span class="sd">                Examples</span>
+<span class="sd">                --------</span>
+<span class="sd">                &gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">                &gt;&gt;&gt; cleaner = MolCleaner([&quot;CCO&quot;])</span>
+<span class="sd">                &gt;&gt;&gt; cleaner.initialise_smiles()</span>
+<span class="sd">                &gt;&gt;&gt; cleaner.smiles</span>
+<span class="sd">                [&#39;CCO&#39;]</span>
 <span class="sd">                &quot;&quot;&quot;</span>
 
                 <span class="n">smiles_accepted</span> <span class="o">=</span> <span class="p">[]</span>
@@ -3250,6 +3301,15 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">&gt;&gt;&gt; cleaner = MolCleaner([&quot;CCO.[Na+]&quot;])</span>
+<span class="sd">&gt;&gt;&gt; cleaner.initialise_smiles(canonical=True, kekulise=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.desalt_smiles(method=&quot;largest&quot;, dehydrate=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.smiles</span>
+<span class="sd">[&#39;CCO&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -3386,6 +3446,15 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">&gt;&gt;&gt; cleaner = MolCleaner([&quot;CC(O)[O-]&quot;])</span>
+<span class="sd">&gt;&gt;&gt; cleaner.initialise_smiles(canonical=True, kekulise=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.neutralise_smiles()</span>
+<span class="sd">&gt;&gt;&gt; cleaner.smiles</span>
+<span class="sd">[&#39;CC(O)O&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -3450,6 +3519,15 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">&gt;&gt;&gt; cleaner = MolCleaner([&quot;CCO&quot;, &quot;[CH3-]&quot;])</span>
+<span class="sd">&gt;&gt;&gt; cleaner.initialise_smiles(canonical=True, kekulise=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.remove_carbon_ions()</span>
+<span class="sd">&gt;&gt;&gt; cleaner.smiles</span>
+<span class="sd">[&#39;CCO&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -3494,6 +3572,15 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">&gt;&gt;&gt; cleaner = MolCleaner([&quot;CCO&quot;, &quot;[Na+]&quot;])</span>
+<span class="sd">&gt;&gt;&gt; cleaner.initialise_smiles(canonical=True, kekulise=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.remove_inorganics()</span>
+<span class="sd">&gt;&gt;&gt; cleaner.smiles</span>
+<span class="sd">[&#39;CCO&#39;]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -3539,6 +3626,17 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">&gt;&gt;&gt; cleaner = MolCleaner([&quot;CC[Na]&quot;, &quot;CCO&quot;, &quot;[Na+].[Cl-]&quot;])</span>
+<span class="sd">&gt;&gt;&gt; cleaner.initialise_smiles(canonical=True, kekulise=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.remove_organometallics()</span>
+<span class="sd">&gt;&gt;&gt; &quot;CC[Na]&quot; not in cleaner.smiles</span>
+<span class="sd">True</span>
+<span class="sd">&gt;&gt;&gt; &quot;[Cl-].[Na+]&quot; in cleaner.smiles</span>
+<span class="sd">True</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -3603,6 +3701,16 @@
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
 <span class="sd">None</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; from mlchem.chem.manipulation import MolCleaner</span>
+<span class="sd">&gt;&gt;&gt; cleaner = MolCleaner([&quot;CC.CC&quot;])</span>
+<span class="sd">&gt;&gt;&gt; cleaner.initialise_smiles(canonical=True, kekulise=False)</span>
+<span class="sd">&gt;&gt;&gt; cleaner.remove_organometallics()</span>
+<span class="sd">&gt;&gt;&gt; cleaner.remove_mixtures()</span>
+<span class="sd">&gt;&gt;&gt; cleaner.smiles</span>
+<span class="sd">[]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -11330,7 +11438,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation</a></li> 
       </ul>

@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.feature_selection.wrappers &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.ml.feature_selection.wrappers &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=36f53d34"></script>
+    <script src="../../../../_static/documentation_options.js?v=010db75e"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.wrappers</a></li> 
       </ul>
@@ -600,6 +600,17 @@
 <span class="sd">        log_level : {&#39;DEBUG&#39;, &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;, &#39;CRITICAL&#39;} or int</span>
 <span class="sd">            Logging level threshold. Use &#39;DEBUG&#39; for detailed diagnostics,</span>
 <span class="sd">            &#39;INFO&#39; for standard output, &#39;WARNING&#39; to suppress most output.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; selector = SequentialForwardSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(),</span>
+<span class="sd">        ...     estimator_string=&quot;logreg&quot;,</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; selector.set_log_level(&quot;WARNING&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">coerce_log_level</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
         <span class="n">_configure_wrapper_logging</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_level</span><span class="p">)</span></div>
@@ -642,6 +653,27 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Fit on a small in-memory dataset; no hold-out set is needed:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; X_train = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;signal&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ...     &quot;noise&quot;: [0, 1, 0, 1, 0, 1, 0, 1],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y_train = [0, 0, 0, 0, 1, 1, 1, 1]</span>
+<span class="sd">        &gt;&gt;&gt; selector = SequentialForwardSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(max_iter=1000),</span>
+<span class="sd">        ...     estimator_string=&quot;logreg&quot;,</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ...     max_features=2,</span>
+<span class="sd">        ...     cv_iter=2,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; selector.fit(X_train, y_train, test_set=None, y_test=None)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">test_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -944,6 +976,29 @@
 <span class="sd">            Automatic non-parsimony mode also returns ``reliability_score`` and</span>
 <span class="sd">            ``best_score``. Parsimony modes also return</span>
 <span class="sd">            ``parsimony_mode`` and ``parsimony_diagnostics``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Fit the selector before asking it for the reliability-best subset:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; X_train = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;signal&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ...     &quot;noise&quot;: [0, 1, 0, 1, 0, 1, 0, 1],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y_train = [0, 0, 0, 0, 1, 1, 1, 1]</span>
+<span class="sd">        &gt;&gt;&gt; selector = SequentialForwardSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(max_iter=1000),</span>
+<span class="sd">        ...     estimator_string=&quot;logreg&quot;,</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ...     max_features=2,</span>
+<span class="sd">        ...     cv_iter=2,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; selector.fit(X_train, y_train, test_set=None, y_test=None)</span>
+<span class="sd">        &gt;&gt;&gt; best = selector.find_best()</span>
+<span class="sd">        &gt;&gt;&gt; best[&quot;features&quot;]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">which</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1055,6 +1110,28 @@
 <span class="sd">        from train/CV scores (according to ``desired_performance_score``) and</span>
 <span class="sd">        train-vs-CV instability; test scores are not used in this selector.</span>
 <span class="sd">        The highlighted subset is the one returned by ``find_best()``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Fit first, then plot the automatically selected subset:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; X_train = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;signal&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ...     &quot;noise&quot;: [0, 1, 0, 1, 0, 1, 0, 1],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y_train = [0, 0, 0, 0, 1, 1, 1, 1]</span>
+<span class="sd">        &gt;&gt;&gt; selector = SequentialForwardSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(max_iter=1000),</span>
+<span class="sd">        ...     estimator_string=&quot;logreg&quot;,</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ...     max_features=2,</span>
+<span class="sd">        ...     cv_iter=2,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; selector.fit(X_train, y_train, test_set=None, y_test=None)</span>
+<span class="sd">        &gt;&gt;&gt; selector.plot(best_feature=&quot;auto&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">assert</span> <span class="n">best_feature</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">best_feature</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> \
@@ -1338,6 +1415,16 @@
 <span class="sd">        log_level : {&#39;DEBUG&#39;, &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;, &#39;CRITICAL&#39;} or int</span>
 <span class="sd">            Logging level threshold. Use &#39;DEBUG&#39; for detailed diagnostics,</span>
 <span class="sd">            &#39;INFO&#39; for standard output, &#39;WARNING&#39; to suppress most output.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; selector = CombinatorialSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(),</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; selector.set_log_level(&quot;WARNING&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">coerce_log_level</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
         <span class="n">_configure_wrapper_logging</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_level</span><span class="p">)</span></div>
@@ -1402,6 +1489,28 @@
 
 <span class="sd">        Higher `alpha` increases target relevance importance.</span>
 <span class="sd">        Higher `beta` increases redundancy penalty importance.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Rank two linearly related features against a continuous target:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LinearRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import mean_squared_error</span>
+<span class="sd">        &gt;&gt;&gt; X = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;signal&quot;: [0, 1, 2, 3],</span>
+<span class="sd">        ...     &quot;scaled_signal&quot;: [0, 2, 4, 6],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y = [0, 1, 2, 3]</span>
+<span class="sd">        &gt;&gt;&gt; selector = CombinatorialSelection(</span>
+<span class="sd">        ...     estimator=LinearRegression(),</span>
+<span class="sd">        ...     metric=mean_squared_error,</span>
+<span class="sd">        ...     logic=&quot;lower&quot;,</span>
+<span class="sd">        ...     task_type=&quot;regression&quot;,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; ranking = selector.rank_features_by_relevance_redundancy(</span>
+<span class="sd">        ...     X, y, relevance_metric=&quot;pearson&quot;</span>
+<span class="sd">        ... )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">beta</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -1574,6 +1683,29 @@
 <span class="sd">        ``reliability_score``. The score uses the same arithmetic-mean</span>
 <span class="sd">        performance term and lower-is-better orientation as SFS. The legacy</span>
 <span class="sd">        ``geometric_mean`` formulation is no longer used.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Evaluate single-feature subsets using two deterministic CV folds:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; train_set = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;signal&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ...     &quot;signal_copy&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y_train = [0, 0, 0, 0, 1, 1, 1, 1]</span>
+<span class="sd">        &gt;&gt;&gt; selector = CombinatorialSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(max_iter=1000),</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; stage1 = selector.fit_stage_1(</span>
+<span class="sd">        ...     train_set, y_train,</span>
+<span class="sd">        ...     features=[&quot;signal&quot;, &quot;signal_copy&quot;],</span>
+<span class="sd">        ...     k=1, training_threshold=0.0, cv_train_ratio=0.0,</span>
+<span class="sd">        ...     cv_iter=2,</span>
+<span class="sd">        ... )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
 
@@ -1837,6 +1969,30 @@
 <span class="sd">        pandas.DataFrame</span>
 <span class="sd">            A DataFrame containing the results of the second stage of</span>
 <span class="sd">            feature selection.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Stage 2 requires a completed stage-1 search:</span>
+
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; train_set = pd.DataFrame({</span>
+<span class="sd">        ...     &quot;signal&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ...     &quot;signal_copy&quot;: [0, 0, 0, 0, 1, 1, 1, 1],</span>
+<span class="sd">        ... })</span>
+<span class="sd">        &gt;&gt;&gt; y_train = [0, 0, 0, 0, 1, 1, 1, 1]</span>
+<span class="sd">        &gt;&gt;&gt; selector = CombinatorialSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(max_iter=1000),</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; selector.fit_stage_1(</span>
+<span class="sd">        ...     train_set, y_train,</span>
+<span class="sd">        ...     features=[&quot;signal&quot;, &quot;signal_copy&quot;],</span>
+<span class="sd">        ...     k=1, training_threshold=0.0, cv_train_ratio=0.0,</span>
+<span class="sd">        ...     cv_iter=2,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; stage2 = selector.fit_stage_2(top_n_subsets=2, cv_iter=2)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">is_at_least</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -2086,8 +2242,22 @@
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        - Fits the estimator on the selected subset.</span>
-<span class="sd">        - Displays training, cross-validation, and test scores.</span>
+<span class="sd">        This deprecated method immediately raises ``DeprecationWarning``.</span>
+<span class="sd">        After :meth:`fit_stage_2`, inspect ``df_results_stage2`` directly.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.linear_model import LogisticRegression</span>
+<span class="sd">        &gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">        &gt;&gt;&gt; selector = CombinatorialSelection(</span>
+<span class="sd">        ...     estimator=LogisticRegression(),</span>
+<span class="sd">        ...     metric=accuracy_score,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     selector.display_best()</span>
+<span class="sd">        ... except DeprecationWarning as exc:</span>
+<span class="sd">        ...     print(str(exc))</span>
+<span class="sd">        display_best() is deprecated and will be removed in a future version. Please use the results DataFrame directly.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">DeprecationWarning</span><span class="p">(</span><span class="s2">&quot;display_best() is deprecated and will be removed in a future version.&quot;</span>
                                  <span class="s2">&quot; Please use the results DataFrame directly.&quot;</span><span class="p">)</span>
@@ -2173,7 +2343,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.wrappers</a></li> 
       </ul>

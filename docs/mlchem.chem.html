@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.chem package &#8212; mlchem 1.2.5 documentation</title>
+    <title>mlchem.chem package &#8212; mlchem 1.2.6 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=36f53d34"></script>
+    <script src="_static/documentation_options.js?v=010db75e"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.html" title="chem and ml subpackages"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" accesskey="U"><strong>chem and ml subpackages</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>mlchem.chem package</strong></a></li> 
@@ -309,6 +309,15 @@ and IDs, and tracks rejected SMILES strings with reasons.</p>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CCO.[Na+]&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">(</span><span class="n">canonical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kekulise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">desalt_smiles</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;largest&quot;</span><span class="p">,</span> <span class="n">dehydrate</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">[&#39;CCO&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -353,6 +362,14 @@ strings with reasons.</p>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CCO&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">[&#39;CCO&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -373,6 +390,15 @@ It updates the SMILES strings and IDs, and tracks rejected SMILES strings with r
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CC(O)[O-]&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">(</span><span class="n">canonical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kekulise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">neutralise_smiles</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">[&#39;CC(O)O&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -407,6 +433,15 @@ with the reason for rejection.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CCO&quot;</span><span class="p">,</span> <span class="s2">&quot;[CH3-]&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">(</span><span class="n">canonical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kekulise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">remove_carbon_ions</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">[&#39;CCO&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -421,6 +456,15 @@ with the reason for rejection.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CCO&quot;</span><span class="p">,</span> <span class="s2">&quot;[Na+]&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">(</span><span class="n">canonical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kekulise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">remove_inorganics</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">[&#39;CCO&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -436,6 +480,16 @@ logs rejected entries with the reason for rejection.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CC.CC&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">(</span><span class="n">canonical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kekulise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">remove_organometallics</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">remove_mixtures</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -451,6 +505,17 @@ rejection.</p>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MolCleaner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">MolCleaner</span><span class="p">([</span><span class="s2">&quot;CC[Na]&quot;</span><span class="p">,</span> <span class="s2">&quot;CCO&quot;</span><span class="p">,</span> <span class="s2">&quot;[Na+].[Cl-]&quot;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">initialise_smiles</span><span class="p">(</span><span class="n">canonical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">kekulise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cleaner</span><span class="o">.</span><span class="n">remove_organometallics</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">&quot;CC[Na]&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">&quot;[Cl-].[Na+]&quot;</span> <span class="ow">in</span> <span class="n">cleaner</span><span class="o">.</span><span class="n">smiles</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -7745,6 +7810,14 @@ advanced SMARTS syntax that distinguishes them from SMILES.</p>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">detect_smarts_vs_smiles</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detect_smarts_vs_smiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">)</span>
+<span class="go">&#39;SMILES&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">detect_smarts_vs_smiles</span><span class="p">(</span><span class="s2">&quot;[#6]&quot;</span><span class="p">)</span>
+<span class="go">&#39;SMARTS&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -7766,6 +7839,16 @@ advanced SMARTS syntax that distinguishes them from SMILES.</p>
 <dd class="field-odd"><p>list of bytes</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">redirect_stdout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_resonance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">redirect_stdout</span><span class="p">(</span><span class="n">StringIO</span><span class="p">()):</span>
+<span class="gp">... </span>    <span class="n">images</span> <span class="o">=</span> <span class="n">generate_resonance</span><span class="p">(</span><span class="s2">&quot;C1=CC=CC=C1&quot;</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">bytes</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -7833,6 +7916,14 @@ Raises a ValueError if both conversions fail.</p>
 <dd class="field-odd"><p>bytes</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">mol_to_binary</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">molecule</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCO&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mol_to_binary</span><span class="p">(</span><span class="n">molecule</span><span class="p">),</span> <span class="nb">bytes</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -7851,6 +7942,14 @@ Raises a ValueError if both conversions fail.</p>
 <dd class="field-odd"><p>rdkit.Chem.rdchem.Mol</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">neutralise_mol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">molecule</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CC(O)[O-]&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">neutralise_mol</span><span class="p">(</span><span class="n">molecule</span><span class="p">))</span>
+<span class="go">&#39;CC(O)O&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -7871,6 +7970,15 @@ Raises a ValueError if both conversions fail.</p>
 <dd class="field-odd"><p>rdkit.Chem.rdchem.Mol</p>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.chem.manipulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">remove_smarts_pattern</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">molecule</span> <span class="o">=</span> <span class="n">Chem</span><span class="o">.</span><span class="n">MolFromSmiles</span><span class="p">(</span><span class="s2">&quot;CCOCO&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">remove_smarts_pattern</span><span class="p">(</span><span class="n">molecule</span><span class="p">,</span> <span class="s2">&quot;[OD1]&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Chem</span><span class="o">.</span><span class="n">MolToSmiles</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="go">&#39;CCOC&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -8308,7 +8416,7 @@ Raises a ValueError if both conversions fail.</p>
         <li class="right" >
           <a href="mlchem.html" title="chem and ml subpackages"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.5 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.6 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><strong>mlchem.chem package</strong></a></li> 
