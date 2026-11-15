@@ -14,6 +14,16 @@ Contributions are welcome in these areas:
 
 Before starting major changes, open an issue to discuss design and API impact.
 
+## Issue triage
+
+Choose the issue category that matches the work:
+
+- **Feature:** Use the Feature request template and describe the user problem, proposed API or workflow, compatibility impact, and acceptance criteria.
+- **Refactor:** Use a blank issue with a `[Refactor]` title. State the behavior and public API that must remain unchanged, the maintenance problem, affected areas, and validation plan. If behavior or API changes are needed, track those separately as a feature or bug.
+- **Documentation:** Use the Documentation template and identify the affected audience, location, and expected improvement.
+
+Check for duplicate issues and agree on scope and acceptance criteria before implementation.
+
 ## Development setup
 
 1. Clone the repository and move into it.
