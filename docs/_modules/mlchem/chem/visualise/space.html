@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.6 documentation</title>
+    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.7 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=010db75e"></script>
+    <script src="../../../../_static/documentation_options.js?v=a5753347"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>
@@ -75,8 +75,13 @@
 <span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
 <span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ChemicalSpace">
@@ -149,8 +154,8 @@
 
 <span class="sd">Notes</span>
 <span class="sd">-----</span>
-<span class="sd">If `df_descriptors` is not provided, a message will be printed to</span>
-<span class="sd">remind the user to supply descriptors before visualisation.</span>
+<span class="sd">If `df_descriptors` is not provided, a warning is logged to remind the</span>
+<span class="sd">user to supply descriptors before visualisation.</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -182,10 +187,11 @@
                     <span class="s2">&quot;columns called &#39;SMILES&#39;,&#39;NAME&#39;,&#39;CLASS&#39;,&#39;METADATA.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;The given data have no descriptors available. &#39;</span>
-                  <span class="s1">&#39;To visualise the chemical space, please provide &#39;</span>
-                  <span class="s1">&#39;a descriptor dataframe or use the &#39;</span>
-                  <span class="s1">&#39;mlchem.chem.Calculator.descriptors.py module.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;The given data have no descriptors available. To visualise &#39;</span>
+                <span class="s1">&#39;the chemical space, provide a descriptor dataframe or use &#39;</span>
+                <span class="s1">&#39;the mlchem.chem.Calculator.descriptors.py module.&#39;</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ChemicalSpace.process">
@@ -193,7 +199,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                 <span class="n">diversity_filter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">collinearity_filter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="n">standardise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+                <span class="n">standardise</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">skip_binary_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Process the descriptor data by applying diversity and collinearity filters,</span>
 <span class="sd">and optionally standardising the data.</span>
@@ -208,6 +215,9 @@
 <span class="sd">    to remove more collinear descriptors.</span>
 <span class="sd">standardise : bool, optional</span>
 <span class="sd">    Whether to standardise the filtered descriptor data. Default is True.</span>
+<span class="sd">skip_binary_columns : bool, optional</span>
+<span class="sd">    Whether binary 0/1 columns are left unchanged during standardisation.</span>
+<span class="sd">    Default is True.</span>
 
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
@@ -222,7 +232,11 @@
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
 <span class="sd">&gt;&gt;&gt; chem_space = ChemicalSpace(data, df_descriptors)</span>
-<span class="sd">&gt;&gt;&gt; chem_space.process(diversity_filter=0.5, collinearity_filter=0.3)</span>
+<span class="sd">&gt;&gt;&gt; chem_space.process(</span>
+<span class="sd">...     diversity_filter=0.5,</span>
+<span class="sd">...     collinearity_filter=0.3,</span>
+<span class="sd">...     skip_binary_columns=False,</span>
+<span class="sd">... )</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -235,24 +249,25 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;collinearity_filter&#39; argument must be a float 0 &lt; x &lt;= 1.&quot;</span><span class="p">)</span>
           
         <span class="k">if</span> <span class="n">diversity_filter</span><span class="p">:</span>
-          <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Before filtering:&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+          <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Before filtering: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
           <span class="n">df_filtered_1</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">diversity_filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span><span class="p">,</span>
                                                    <span class="n">diversity_filter</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">df_filtered_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span>     <span class="c1"># do nothing</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After diversity filter:&quot;</span><span class="p">,</span> <span class="n">df_filtered_1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;After diversity filter: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">df_filtered_1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">collinearity_filter</span><span class="p">:</span>
             <span class="n">df_filtered_2</span> <span class="o">=</span> <span class="n">filters</span><span class="o">.</span><span class="n">collinearity_filter</span><span class="p">(</span><span class="n">df_filtered_1</span><span class="p">,</span>
                                                         <span class="n">collinearity_filter</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">df_filtered_2</span> <span class="o">=</span> <span class="n">df_filtered_1</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;After collinearity filter:&quot;</span><span class="p">,</span> <span class="n">df_filtered_2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;After collinearity filter: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">df_filtered_2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">standardise</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scaler</span> <span class="o">=</span> <span class="n">scale_df_standard</span><span class="p">(</span>
-                <span class="n">df_filtered_2</span><span class="p">)</span>
+                <span class="n">df_filtered_2</span><span class="p">,</span>
+                <span class="n">skip_binary_columns</span><span class="o">=</span><span class="n">skip_binary_columns</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">df_processed</span> <span class="o">=</span> <span class="n">df_filtered_2</span></div>
 
@@ -759,7 +774,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>
