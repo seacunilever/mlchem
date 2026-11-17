@@ -142,7 +142,8 @@ Examples
     def process(self,
                 diversity_filter: float | None,
                 collinearity_filter: float | None,
-                standardise: bool = True):
+                standardise: bool = True,
+                skip_binary_columns: bool = True):
         """
 Process the descriptor data by applying diversity and collinearity filters,
 and optionally standardising the data.
@@ -157,6 +158,8 @@ collinearity_filter : float or None
     to remove more collinear descriptors.
 standardise : bool, optional
     Whether to standardise the filtered descriptor data. Default is True.
+skip_binary_columns : bool, optional
+    Whether to skip binary columns during processing. Default is True.
 
 Returns
 -------
@@ -201,7 +204,8 @@ Examples
 
         if standardise is True:
             self.df_processed, self.scaler = scale_df_standard(
-                df_filtered_2)
+                df_filtered_2,
+                skip_binary_columns=skip_binary_columns)
         else:
             self.df_processed = df_filtered_2
 
