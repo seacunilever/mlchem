@@ -2,6 +2,24 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.7] - 2026-11-17
+
+### Added
+
+- Added `skip_binary_columns` to `ChemicalSpace.process()`. Binary 0/1 columns are left unchanged by default; set it to `False` to standardise them with the other descriptors.
+
+### Changed
+
+- Routed `ChemicalSpace` status and missing-descriptor messages through logging instead of printing directly to the console.
+
+### Fixed
+
+- Replaced the mutable `highlightAtoms` default in `MolDrawer.draw_mol()` with `None`; omitted or empty highlights continue to use the drawer's configured defaults.
+
+### Docs
+
+- Refreshed generated API documentation for the 1.2.7 release and the `ChemicalSpace.process()` option.
+
 ## [1.2.6] - 2026-11-15
 
 ### Added
