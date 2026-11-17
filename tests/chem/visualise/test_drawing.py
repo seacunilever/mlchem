@@ -84,6 +84,13 @@ def test_draw_mol(mol_drawer):
     image = mol_drawer.draw_mol()
     assert isinstance(image, Image.Image)
 
+
+def test_draw_mol_none_highlights_uses_instance_default(mol_drawer):
+    image = mol_drawer.draw_mol(highlightAtoms=None)
+    assert isinstance(image, Image.Image)
+    assert mol_drawer.highlightAtoms_list[-1] == [0, 1]
+
+
 def test_show_images_grid(mol_drawer):
     images = [mol_drawer.draw_mol(create_molecule('CCC')),
               mol_drawer.draw_mol(create_molecule('CCO'))]

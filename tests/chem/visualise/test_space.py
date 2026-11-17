@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+import logging
 from unittest.mock import MagicMock
 import pandas as pd
 import numpy as np
@@ -62,9 +63,80 @@ def chemical_space(sample_data, sample_descriptors):
 
 
 def test_process(chemical_space):
-    chemical_space.process(diversity_filter=0, collinearity_filter=0.9, standardise=True)
+    chemical_space.process(diversity_filter=0.5, collinearity_filter=0.9, standardise=True)
     assert hasattr(chemical_space, 'df_processed')
     assert hasattr(chemical_space, 'scaler')
+
+
+@pytest.mark.parametrize(
+    ('process_kwargs', 'expect_binary_unchanged'),
+    [
+        ({}, True),
+        ({'skip_binary_columns': True}, True),
+        ({'skip_binary_columns': False}, False),
+    ],
+    ids=['default', 'skip-binary', 'scale-binary'],
+)
+def test_process_skip_binary_columns(
+    sample_data,
+    process_kwargs,
+    expect_binary_unchanged,
+):
+    descriptors = pd.DataFrame(
+        {
+            'continuous': [1.0, 2.0, 4.0],
+            'binary': [0, 1, 0],
+        },
+        index=['CCO', 'CCN', 'CCC'],
+    )
+    chemical_space = ChemicalSpace(
+        data=sample_data,
+        df_descriptors=descriptors,
+    )
+
+    chemical_space.process(
+        diversity_filter=None,
+        collinearity_filter=None,
+        **process_kwargs,
+    )
+
+    if expect_binary_unchanged:
+        pd.testing.assert_series_equal(
+            chemical_space.df_processed['binary'],
+            descriptors['binary'],
+        )
+    else:
+        assert not np.allclose(
+            chemical_space.df_processed['binary'],
+            descriptors['binary'],
+        )
+
+
+def test_missing_descriptors_logs_warning(sample_data, caplog):
+    with caplog.at_level(
+        logging.WARNING,
+        logger='mlchem.chem.visualise.space',
+    ):
+        ChemicalSpace(data=sample_data)
+
+    assert 'no descriptors available' in caplog.text
+
+
+def test_process_logs_filter_progress(chemical_space, caplog):
+    with caplog.at_level(
+        logging.INFO,
+        logger='mlchem.chem.visualise.space',
+    ):
+        chemical_space.process(
+            diversity_filter=0.5,
+            collinearity_filter=0.9,
+            standardise=True,
+        )
+
+    assert 'Before filtering:' in caplog.text
+    assert 'After diversity filter:' in caplog.text
+    assert 'After collinearity filter:' in caplog.text
+
 
 @pytest.fixture
 def df_processed(chemical_space):

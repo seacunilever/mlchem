@@ -31,8 +31,13 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
+import logging
+
 import pandas as pd
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
 
 
 class ChemicalSpace:
@@ -101,8 +106,8 @@ ValueError
 
 Notes
 -----
-If `df_descriptors` is not provided, a message will be printed to
-remind the user to supply descriptors before visualisation.
+If `df_descriptors` is not provided, a warning is logged to remind the
+user to supply descriptors before visualisation.
 
 Examples
 --------
@@ -134,10 +139,11 @@ Examples
                     "columns called 'SMILES','NAME','CLASS','METADATA.")
 
         if self.df_descriptors is None:
-            print('The given data have no descriptors available. '
-                  'To visualise the chemical space, please provide '
-                  'a descriptor dataframe or use the '
-                  'mlchem.chem.Calculator.descriptors.py module.\n')
+            logger.warning(
+                'The given data have no descriptors available. To visualise '
+                'the chemical space, provide a descriptor dataframe or use '
+                'the mlchem.chem.Calculator.descriptors.py module.'
+            )
 
     def process(self,
                 diversity_filter: float | None,
@@ -159,7 +165,8 @@ collinearity_filter : float or None
 standardise : bool, optional
     Whether to standardise the filtered descriptor data. Default is True.
 skip_binary_columns : bool, optional
-    Whether to skip binary columns during processing. Default is True.
+    Whether binary 0/1 columns are left unchanged during standardisation.
+    Default is True.
 
 Returns
 -------
@@ -174,7 +181,11 @@ ValueError
 Examples
 --------
 >>> chem_space = ChemicalSpace(data, df_descriptors)
->>> chem_space.process(diversity_filter=0.5, collinearity_filter=0.3)
+>>> chem_space.process(
+...     diversity_filter=0.5,
+...     collinearity_filter=0.3,
+...     skip_binary_columns=False,
+... )
 """
 
 
@@ -187,20 +198,20 @@ Examples
             raise ValueError("'collinearity_filter' argument must be a float 0 < x <= 1.")
           
         if diversity_filter:
-          print("Before filtering:", self.df_descriptors.shape)
+          logger.info("Before filtering: %s", self.df_descriptors.shape)
           df_filtered_1 = filters.diversity_filter(self.df_descriptors,
                                                    diversity_filter)
         else:
             df_filtered_1 = self.df_descriptors     # do nothing
 
-        print("After diversity filter:", df_filtered_1.shape)
+        logger.info("After diversity filter: %s", df_filtered_1.shape)
 
         if collinearity_filter:
             df_filtered_2 = filters.collinearity_filter(df_filtered_1,
                                                         collinearity_filter)
         else:
             df_filtered_2 = df_filtered_1
-        print("After collinearity filter:", df_filtered_2.shape)
+        logger.info("After collinearity filter: %s", df_filtered_2.shape)
 
         if standardise is True:
             self.df_processed, self.scaler = scale_df_standard(

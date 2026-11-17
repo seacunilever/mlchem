@@ -730,7 +730,7 @@ Examples
     def draw_mol(self,
                  mol: Chem.rdchem.Mol = None,
                  legend: str = '',
-                 highlightAtoms: Iterable = [],
+                 highlightAtoms: Iterable | None = None,
                  size: Iterable = None,
                  ACS1996_mode: bool = False
                  ) -> Image.Image:
@@ -770,8 +770,8 @@ mol : rdkit.Chem.rdchem.Mol, optional
     Molecule to draw. If `None`, `self.mol` is used.
 legend : str, optional
     Legend text. If empty, `self.legend` is used.
-highlightAtoms : Iterable, optional
-    Atom indices to highlight. If empty, `self.highlightAtoms` is used.
+highlightAtoms : iterable of int, optional
+    Atom indices to highlight. If `None` or empty, `self.highlightAtoms` is used.
 size : Iterable[int, int], optional
     Canvas size `(width, height)`. If `None`, `self.size` is used.
 ACS1996_mode : bool, default=False
@@ -826,7 +826,7 @@ Draw with circle-style weight map (atom-by-atom visualization):
         if not mol.GetNumConformers():
             rdDepictor.Compute2DCoords(mol)
 
-        if len(highlightAtoms) == 0:
+        if highlightAtoms is None or len(highlightAtoms) == 0:
             highlightAtoms = self.highlightAtoms
         if type(highlightAtoms) == tuple:
             highlightAtoms = list(highlightAtoms)
