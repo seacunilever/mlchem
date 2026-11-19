@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem &#8212; mlchem 1.2.7 documentation</title>
+    <title>mlchem &#8212; mlchem 1.2.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=a5753347"></script>
+    <script src="_static/documentation_options.js?v=4d6f9085"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.8 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
@@ -316,6 +316,27 @@ for soft-vote probabilities, fold definitions, and reliability ranking.</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">fit()</span></code> is the final consensus step after model selection.</p>
+</section>
+<section id="reliability-objectives">
+<h3>Reliability objectives<a class="headerlink" href="#reliability-objectives" title="Link to this heading">¶</a></h3>
+<p>Reliability is <strong>always maximized</strong>, independently of the metric direction.
+For each fold, let <code class="docutils literal notranslate"><span class="pre">p</span></code> be the raw train score, CV score, or their mean
+(selected by <code class="docutils literal notranslate"><span class="pre">desired_performance_score</span></code>), and <code class="docutils literal notranslate"><span class="pre">gap</span> <span class="pre">=</span> <span class="pre">abs(train</span> <span class="pre">-</span> <span class="pre">cv)</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">logic='greater'</span></code>: <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">gap)</span></code> (unchanged).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">logic='lower'</span></code>: <code class="docutils literal notranslate"><span class="pre">-(p</span> <span class="pre">+</span> <span class="pre">gap)</span></code>, an additive loss-plus-instability penalty
+in metric units. No bounded loss range is assumed.</p></li>
+</ul>
+<p>Negative reliability is expected for nonnegative losses such as RMSE:
+at mean RMSE 10, equal train/CV gives -10; train 8 / CV 12 gives -14,
+so the stable candidate ranks higher. Raw train/CV columns still report
+the original metric, not this selection objective.</p>
+<p>SFS selects the highest mean fold reliability (also its parsimony reference);
+its forward additions still optimize raw CV performance. Both combinatorial
+stages rank by mean fold reliability minus its standard error, and stage 2
+uses the first row as <code class="docutils literal notranslate"><span class="pre">best_record</span></code>. Majority-vote CV ranks by mean fold
+reliability. Scores are computed <strong>before</strong> fold aggregation, not from the
+displayed aggregate train/CV values. Existing result-column names are retained.</p>
 </section>
 <section id="capture-pipeline-logs">
 <h3>Capture pipeline logs<a class="headerlink" href="#capture-pipeline-logs" title="Link to this heading">¶</a></h3>
@@ -631,6 +652,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
 <li><a class="reference internal" href="#balance-an-imbalanced-training-set">Balance an imbalanced training set</a></li>
 <li><a class="reference internal" href="#stress-test-models-with-y-scrambling">Stress-Test Models with Y-Scrambling</a></li>
 <li><a class="reference internal" href="#cross-validation-majority-voting">Cross-Validation Majority Voting</a></li>
+<li><a class="reference internal" href="#reliability-objectives">Reliability objectives</a></li>
 <li><a class="reference internal" href="#capture-pipeline-logs">Capture pipeline logs</a></li>
 <li><a class="reference internal" href="#visual-examples">Visual examples</a><ul>
 <li><a class="reference internal" href="#pattern-recognition">Pattern recognition</a></li>
@@ -717,7 +739,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
         <li class="right" >
           <a href="index.html" title="Contents"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.8 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>

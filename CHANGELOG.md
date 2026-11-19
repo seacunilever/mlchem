@@ -2,6 +2,13 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.9] - 2026-11-19
+
+### Fixed
+
+- Fixed lower-is-better reliability to maximize the negative of loss plus the train/CV gap, rather than rewarding instability by dividing a negative loss. Raw metrics, result-column names, higher-is-better scoring, and ranking directions are unchanged; lower-is-better selection results may change.
+- Saved generated ChemicalSpace structure images under portable, class-label-derived folders without clearing unrelated files. Rendering cached plot data continues to use its existing `MOLFILE` paths without generating another structure root.
+
 ## [1.2.8] - 2026-11-19
 
 ### Added

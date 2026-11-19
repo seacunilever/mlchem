@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.metrics &#8212; mlchem 1.2.7 documentation</title>
+    <title>mlchem.metrics &#8212; mlchem 1.2.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../_static/documentation_options.js?v=a5753347"></script>
+    <script src="../../_static/documentation_options.js?v=4d6f9085"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.metrics</a></li> 
       </ul>
@@ -286,15 +286,17 @@
     <span class="n">desired_performance_score</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span><span class="s1">&#39;cv&#39;</span><span class="p">,</span><span class="s1">&#39;train_cv_average&#39;</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calculate the reliability score components from train, CV, and (optionally) test scores.</span>
-<span class="sd">    Reliability score is calculated as the performance score divided by</span>
-<span class="sd">    one plus the instability score. The `desired_performance_score` argument</span>
-<span class="sd">    will decide which score is used as a proxy for overall performance,</span>
-<span class="sd">    i.e., &#39;train&#39; will use the training score, &#39;cv&#39; will use the</span>
-<span class="sd">    cross-validation score, and &#39;train_cv_average&#39; will use the average</span>
-<span class="sd">    of the training and cross-validation scores. Meanwhile, the</span>
-<span class="sd">    instability score captures the variability between train, CV,</span>
-<span class="sd">    and (optionally) test scores.</span>
+<span class="sd">    Calculate performance, train/CV instability, and a maximized objective.</span>
+
+<span class="sd">    Let ``p`` be the raw train score, CV score, or their arithmetic mean,</span>
+<span class="sd">    as selected by ``desired_performance_score``, and let</span>
+<span class="sd">    ``i = abs(train_score - cv_score)``. For ``logic=&#39;greater&#39;``, the</span>
+<span class="sd">    existing objective is unchanged: ``p / (1 + i)``. For ``logic=&#39;lower&#39;``,</span>
+<span class="sd">    the objective is ``-(p + i)``: the negative of loss plus an additive</span>
+<span class="sd">    train/CV gap penalty in the same metric units. This requires no fixed</span>
+<span class="sd">    loss range and penalizes instability even for zero or signed losses.</span>
+<span class="sd">    At fixed instability, reducing loss increases the objective; at fixed</span>
+<span class="sd">    loss, increasing instability decreases it.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -312,8 +314,11 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
-<span class="sd">        Dictionary containing ``performance_score``,</span>
-<span class="sd">        ``instability_score``, and ``reliability_score``.</span>
+<span class="sd">        Dictionary containing ``performance_score`` (``p`` for greater,</span>
+<span class="sd">        ``-p`` for lower), ``instability_score`` (``i``), and</span>
+<span class="sd">        ``reliability_score`` (always maximized). For nonnegative losses,</span>
+<span class="sd">        lower-is-better reliability is nonpositive; closer to zero is</span>
+<span class="sd">        better. It is a selection objective, not raw RMSE or a probability.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -323,6 +328,10 @@
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; float(scores[&quot;reliability_score&quot;])</span>
 <span class="sd">    0.8</span>
+<span class="sd">    &gt;&gt;&gt; get_reliability_score_components(</span>
+<span class="sd">    ...     8.0, 12.0, logic=&quot;lower&quot;, desired_performance_score=&quot;cv&quot;,</span>
+<span class="sd">    ... )[&quot;reliability_score&quot;]</span>
+<span class="sd">    -16.0</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">logic</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">):</span>
@@ -340,8 +349,9 @@
 
     <span class="k">if</span> <span class="n">logic</span> <span class="o">==</span> <span class="s1">&#39;lower&#39;</span><span class="p">:</span>
         <span class="n">performance_score</span> <span class="o">=</span> <span class="o">-</span><span class="n">performance_score</span>   <span class="c1"># transform score internally to maintain &quot;higher is better&quot; behaviour</span>
-
-    <span class="n">reliability_score</span> <span class="o">=</span> <span class="n">performance_score</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">instability_score</span><span class="p">)</span>
+        <span class="n">reliability_score</span> <span class="o">=</span> <span class="n">performance_score</span> <span class="o">-</span> <span class="n">instability_score</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">reliability_score</span> <span class="o">=</span> <span class="n">performance_score</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">instability_score</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s1">&#39;performance_score&#39;</span><span class="p">:</span> <span class="n">performance_score</span><span class="p">,</span>
@@ -1043,7 +1053,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.metrics</a></li> 
       </ul>

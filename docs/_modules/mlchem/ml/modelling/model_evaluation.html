@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.7 documentation</title>
+    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=a5753347"></script>
+    <script src="../../../../_static/documentation_options.js?v=4d6f9085"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>
@@ -1394,6 +1394,12 @@
 <span class="sd">    ``reliability_mean``, ``reliability_se``,</span>
 <span class="sd">    ``train_folds``, ``validation_folds``, ``reliability_folds``.</span>
 <span class="sd">    Results are ranked by ``reliability_mean`` descending.</span>
+<span class="sd">    Train/validation columns contain raw metric values. Reliability is</span>
+<span class="sd">    computed per fold, then averaged: for ``logic=&#39;lower&#39;`` it is the</span>
+<span class="sd">    negative of the selected loss plus ``abs(train - validation)``;</span>
+<span class="sd">    for ``logic=&#39;greater&#39;`` the existing performance divided by</span>
+<span class="sd">    ``1 + abs(train - validation)`` is unchanged. Reliability is always</span>
+<span class="sd">    maximized, is not raw RMSE, and is nonpositive for nonnegative losses.</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -1752,7 +1758,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>

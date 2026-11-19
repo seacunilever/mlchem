@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.ml.feature_selection package &#8212; mlchem 1.2.7 documentation</title>
+    <title>mlchem.ml.feature_selection package &#8212; mlchem 1.2.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=a5753347"></script>
+    <script src="_static/documentation_options.js?v=4d6f9085"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.ml.html" title="mlchem.ml package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" accesskey="U"><strong>mlchem.ml package</strong></a> &#187;</li>
@@ -160,11 +160,14 @@ subsets and ranks the surviving subsets with the same reliability
 score logic used by <a class="reference internal" href="#mlchem.ml.feature_selection.wrappers.SequentialForwardSelection" title="mlchem.ml.feature_selection.wrappers.SequentialForwardSelection"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialForwardSelection</span></code></a>: the
 performance term is controlled by <cite>desired_performance_score</cite>,
 and can correspond to cv_score, train_score or their average.
-Lower-is-better metrics are sign-flipped before the
-reliability score is computed. Results are then ranked by
-<code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>,
-where <code class="docutils literal notranslate"><span class="pre">instability_score</span></code> is the sum of pairwise gaps between the
-available scores.</p>
+On each fold, <code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">abs(train</span> <span class="pre">-</span> <span class="pre">cv)</span></code>. Higher-is-better
+reliability remains <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code>.
+For lower-is-better metrics, <code class="docutils literal notranslate"><span class="pre">performance_score</span></code> is the negative raw
+loss and reliability is <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">-</span> <span class="pre">instability_score</span></code>.
+This additive loss-plus-gap penalty assumes no fixed loss range.
+Both stages rank by <code class="docutils literal notranslate"><span class="pre">Reliability_lower_bound</span></code> (mean fold reliability
+minus its standard error) descending; stage 2 takes the first row as
+<code class="docutils literal notranslate"><span class="pre">best_record</span></code>. Raw train/CV metric columns remain unchanged.</p>
 <section id="public-methods">
 <h4>Public Methods<a class="headerlink" href="#public-methods" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">__init__()</span></code>: Initialise the combinatorial selector.</p>
@@ -591,7 +594,7 @@ over <code class="docutils literal notranslate"><span class="pre">cv_splitter</s
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Reliability combines performance and instability. For each subset:</p>
+<p>Reliability combines performance and instability on each CV fold:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">instability_score</span> <span class="pre">=</span> <span class="pre">|train</span> <span class="pre">-</span> <span class="pre">cv|</span></code></p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">desired_performance_score='train'</span></code>, <code class="docutils literal notranslate"><span class="pre">performance_score</span> <span class="pre">=</span> <span class="pre">train</span></code></p></li>
@@ -601,8 +604,15 @@ over <code class="docutils literal notranslate"><span class="pre">cv_splitter</s
 <li><p>For higher-is-better metrics,
 <code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">instability_score)</span></code></p></li>
 </ul>
-<p>For lower-is-better metrics, performance is sign-oriented internally so the
-same maximization rule can be used.</p>
+<p>For lower-is-better metrics, <code class="docutils literal notranslate"><span class="pre">performance_score</span></code> is negated and
+<code class="docutils literal notranslate"><span class="pre">reliability_score</span> <span class="pre">=</span> <span class="pre">performance_score</span> <span class="pre">-</span> <span class="pre">instability_score</span></code>. Thus the
+maximized objective is the negative of loss plus the train/CV gap, in
+metric units, with no assumed loss range. Nonnegative losses give
+nonpositive objectives; closer to zero is better.</p>
+<p>Raw train/CV metrics are retained separately. Fold reliability scores
+are averaged for subset selection: <code class="docutils literal notranslate"><span class="pre">find_best()</span></code> and the parsimony
+reference maximize this mean. Forward feature additions still optimize
+raw CV performance in the direction specified by <code class="docutils literal notranslate"><span class="pre">logic</span></code>.</p>
 <section id="scientific-rationale">
 <h4>Scientific Rationale<a class="headerlink" href="#scientific-rationale" title="Link to this heading">¶</a></h4>
 <p>The optional parsimony selector prefers the smallest subset whose paired
@@ -949,7 +959,7 @@ The highlighted subset is the one returned by <code class="docutils literal notr
         <li class="right" >
           <a href="mlchem.ml.html" title="mlchem.ml package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" ><strong>mlchem.ml package</strong></a> &#187;</li>

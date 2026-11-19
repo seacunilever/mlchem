@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.feature_selection.wrappers &#8212; mlchem 1.2.7 documentation</title>
+    <title>mlchem.ml.feature_selection.wrappers &#8212; mlchem 1.2.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=a5753347"></script>
+    <script src="../../../../_static/documentation_options.js?v=4d6f9085"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.wrappers</a></li> 
       </ul>
@@ -429,7 +429,7 @@
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-<span class="sd">    Reliability combines performance and instability. For each subset:</span>
+<span class="sd">    Reliability combines performance and instability on each CV fold:</span>
 
 <span class="sd">    - ``instability_score = |train - cv|``</span>
 <span class="sd">    - For ``desired_performance_score=&#39;train&#39;``, ``performance_score = train``</span>
@@ -439,8 +439,16 @@
 <span class="sd">    - For higher-is-better metrics,</span>
 <span class="sd">      ``reliability_score = performance_score / (1 + instability_score)``</span>
 
-<span class="sd">    For lower-is-better metrics, performance is sign-oriented internally so the</span>
-<span class="sd">    same maximization rule can be used.</span>
+<span class="sd">    For lower-is-better metrics, ``performance_score`` is negated and</span>
+<span class="sd">    ``reliability_score = performance_score - instability_score``. Thus the</span>
+<span class="sd">    maximized objective is the negative of loss plus the train/CV gap, in</span>
+<span class="sd">    metric units, with no assumed loss range. Nonnegative losses give</span>
+<span class="sd">    nonpositive objectives; closer to zero is better.</span>
+
+<span class="sd">    Raw train/CV metrics are retained separately. Fold reliability scores</span>
+<span class="sd">    are averaged for subset selection: ``find_best()`` and the parsimony</span>
+<span class="sd">    reference maximize this mean. Forward feature additions still optimize</span>
+<span class="sd">    raw CV performance in the direction specified by ``logic``.</span>
 
 <span class="sd">    Scientific Rationale</span>
 <span class="sd">    --------------------</span>
@@ -1170,7 +1178,7 @@
         <span class="c1"># Plot reliability scores</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_scores</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">reliability_scores</span><span class="p">,</span>
-                 <span class="n">label</span><span class="o">=</span><span class="s1">&#39;reliability score&#39;</span><span class="p">,</span>
+                 <span class="n">label</span><span class="o">=</span><span class="s1">&#39;reliability objective (higher is better)&#39;</span><span class="p">,</span>
                  <span class="n">color</span><span class="o">=</span><span class="n">colours</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
         <span class="c1"># Show the ±1 SE interval of training performance</span>
@@ -1233,7 +1241,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;SFS summary: reliability_score=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reliability_scores</span><span class="p">[</span><span class="n">ind</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;SFS summary: reliability objective (higher is better)=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reliability_scores</span><span class="p">[</span><span class="n">ind</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;± </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">reliability_se</span><span class="p">[</span><span class="n">ind</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
@@ -1251,11 +1259,14 @@
 <span class="sd">    score logic used by :class:`SequentialForwardSelection`: the</span>
 <span class="sd">    performance term is controlled by `desired_performance_score`,</span>
 <span class="sd">    and can correspond to cv_score, train_score or their average.</span>
-<span class="sd">    Lower-is-better metrics are sign-flipped before the</span>
-<span class="sd">    reliability score is computed. Results are then ranked by</span>
-<span class="sd">    ``reliability_score = performance_score / (1 + instability_score)``,</span>
-<span class="sd">    where ``instability_score`` is the sum of pairwise gaps between the</span>
-<span class="sd">    available scores.</span>
+<span class="sd">    On each fold, ``instability_score = abs(train - cv)``. Higher-is-better</span>
+<span class="sd">    reliability remains ``performance_score / (1 + instability_score)``.</span>
+<span class="sd">    For lower-is-better metrics, ``performance_score`` is the negative raw</span>
+<span class="sd">    loss and reliability is ``performance_score - instability_score``.</span>
+<span class="sd">    This additive loss-plus-gap penalty assumes no fixed loss range.</span>
+<span class="sd">    Both stages rank by ``Reliability_lower_bound`` (mean fold reliability</span>
+<span class="sd">    minus its standard error) descending; stage 2 takes the first row as</span>
+<span class="sd">    ``best_record``. Raw train/CV metric columns remain unchanged.</span>
 
 <span class="sd">    Public Methods</span>
 <span class="sd">    --------------</span>
@@ -1883,7 +1894,7 @@
                 <span class="sa">f</span><span class="s2">&quot;Stage 1 accepted subset=</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2"> |&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;train=</span><span class="si">{</span><span class="n">subset_train_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_train_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;cv=</span><span class="si">{</span><span class="n">subset_cv_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_cv_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;reliability=</span><span class="si">{</span><span class="n">subset_reliability_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_reliability_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
+                <span class="sa">f</span><span class="s2">&quot;reliability objective (higher is better)=</span><span class="si">{</span><span class="n">subset_reliability_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_reliability_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">subset_train_mean</span><span class="p">,</span> <span class="n">subset_cv_mean</span><span class="p">,</span>
                     <span class="n">subset_reliability_mean</span><span class="p">,</span> <span class="n">subset_train_se</span><span class="p">,</span>
                     <span class="n">subset_cv_se</span><span class="p">,</span> <span class="n">subset_reliability_se</span><span class="p">)</span>
@@ -2139,7 +2150,7 @@
                 <span class="sa">f</span><span class="s2">&quot;Stage 2 accepted subset=</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2"> |&quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;train=</span><span class="si">{</span><span class="n">subset_train_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_train_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;cv=</span><span class="si">{</span><span class="n">subset_cv_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_cv_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;reliability=</span><span class="si">{</span><span class="n">subset_reliability_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_reliability_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
+                <span class="sa">f</span><span class="s2">&quot;reliability objective (higher is better)=</span><span class="si">{</span><span class="n">subset_reliability_mean</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">subset_reliability_se</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,)</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">subset_train_mean</span><span class="p">,</span> <span class="n">subset_cv_mean</span><span class="p">,</span>
                     <span class="n">subset_reliability_mean</span><span class="p">,</span> <span class="n">subset_train_se</span><span class="p">,</span>
                     <span class="n">subset_cv_se</span><span class="p">,</span> <span class="n">subset_reliability_se</span><span class="p">)</span>
@@ -2211,15 +2222,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Best Features: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_cols</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s1">&#39;Train Score: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;training_score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;Train Score (raw metric): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;training_score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="sa">f</span><span class="s1">&#39;± </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;training_se&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s1">&#39;CV Score: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;cv_score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;CV Score (raw metric): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;cv_score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="sa">f</span><span class="s1">&#39;± </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;cv_se&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s1">&#39;Reliability Score: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;reliability_score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;Reliability Objective (higher is better): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;reliability_score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="sa">f</span><span class="s1">&#39;± </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">best_record</span><span class="p">[</span><span class="s1">&#39;reliability_se&#39;</span><span class="p">]</span><span class="si">:</span><span class="s1">.3f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_results_stage2</span></div>
@@ -2343,7 +2354,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.wrappers</a></li> 
       </ul>

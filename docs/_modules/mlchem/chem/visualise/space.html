@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.7 documentation</title>
+    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=a5753347"></script>
+    <script src="../../../../_static/documentation_options.js?v=4d6f9085"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>
@@ -312,13 +312,21 @@
 <span class="sd">The compressed dataframe&#39;s SMILES index is the alignment key. Its row order</span>
 <span class="sd">and coordinates are preserved; input and processed SMILES must be unique.</span>
 <span class="sd">Class labels must be sortable. Structure images are generated in stable</span>
-<span class="sd">SMILES order within each class and mapped back by SMILES, independent of</span>
-<span class="sd">directory enumeration and file modification times.</span>
+<span class="sd">SMILES order within each class, saved beneath a folder derived from that</span>
+<span class="sd">class label, and mapped back by SMILES, independent of directory enumeration</span>
+<span class="sd">and file modification times. Portable ASCII labels use their names directly;</span>
+<span class="sd">other labels use deterministic encoded folder names, available in</span>
+<span class="sd">``self.class_structure_folders``. The dedicated ``.mlchem_structures`` root</span>
+<span class="sd">keeps generated files separate from existing working-directory folders.</span>
+<span class="sd">``plot()`` renders existing ``MOLFILE`` paths and does not generate images.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
       <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-      <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_structure_files</span>
+      <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+          <span class="n">_class_structure_folder_names</span><span class="p">,</span>
+          <span class="n">create_structure_files</span><span class="p">,</span>
+      <span class="p">)</span>
 
       <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">,</span> <span class="s1">&#39;DIM_2&#39;</span><span class="p">]:</span>
           <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df_compressed&#39; must have only 2 columns: [&#39;DIM_1&#39;,&#39;DIM_2&#39;].&quot;</span><span class="p">)</span>
@@ -386,17 +394,19 @@
       <span class="n">name_by_smiles</span> <span class="o">=</span> <span class="p">{}</span>
       <span class="n">metadata_by_smiles</span> <span class="o">=</span> <span class="p">{}</span>
       <span class="n">structure_root</span> <span class="o">=</span> <span class="s1">&#39;.mlchem_structures&#39;</span>
-      <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">structure_root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+      <span class="n">structure_folder_names</span> <span class="o">=</span> <span class="n">_class_structure_folder_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">class_structure_folders</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">,</span>
+          <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">structure_root</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">structure_folder_names</span><span class="p">),</span>
+      <span class="p">))</span>
 
-      <span class="k">for</span> <span class="n">class_index</span><span class="p">,</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">):</span>
+      <span class="k">for</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">:</span>
           <span class="n">class_rows</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
               <span class="n">prepared</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">class_name</span>
           <span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;mergesort&#39;</span><span class="p">)</span>
           <span class="n">smiles</span> <span class="o">=</span> <span class="n">class_rows</span><span class="o">.</span><span class="n">SMILES</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
           <span class="n">names</span> <span class="o">=</span> <span class="n">class_rows</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-          <span class="n">structure_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-              <span class="n">structure_root</span><span class="p">,</span> <span class="s1">&#39;class_</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">class_index</span>
-          <span class="p">)</span>
+          <span class="n">structure_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_structure_folders</span><span class="p">[</span><span class="n">class_name</span><span class="p">]</span>
           <span class="n">create_structure_files</span><span class="p">(</span>
               <span class="n">df</span><span class="o">=</span><span class="n">class_rows</span><span class="p">[[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">]],</span>
               <span class="n">structure_column_name</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span>
@@ -843,7 +853,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.7 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>
