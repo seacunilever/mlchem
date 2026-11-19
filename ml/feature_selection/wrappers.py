@@ -1903,6 +1903,13 @@ class CombinatorialSelection:
             A DataFrame containing the results of the second stage of
             feature selection.
 
+        Notes
+        -----
+        Stage-1 train/CV floors are based on cross-validation fold means and
+        are re-applied to the corresponding Stage-2 fold means. A full-data
+        training score is not comparable to the fold-training floor because
+        it is measured on a different sample size.
+
         Examples
         --------
         Stage 2 requires a completed stage-1 search:
@@ -1993,20 +2000,22 @@ class CombinatorialSelection:
             x = self.train_set[subset]
             estimator_copy = _clone_for_search(self.estimator, self.n_jobs)
             estimator_copy.fit(x.values, self.y_train)
-            train_score = _score_estimator(
+            full_fit_train_score = _score_estimator(
                 self.metric,
                 estimator_copy,
                 x.values,
                 self.y_train,
                 self.response_method,
             )
-            if not is_at_least(train_score, self.training_threshold_2):
-                self._log(
-                    logging.DEBUG,
-                    f"Stage 2 rejected subset={subset} by train threshold: {train_score:.3f}",
-                )
-                return None
+            self._log(
+                logging.DEBUG,
+                f"Stage 2 full-fit train metric={full_fit_train_score:.3f}; "
+                "fold-mean floors are checked against CV fold means.",
+            )
 
+            # Stage-1 floors are based on CV fold means; compare them below
+            # only with the corresponding Stage-2 fold means, not a full-fit
+            # training score computed on a different sample size.
             cv_result = crossval(
                 estimator_copy,
                 x,
