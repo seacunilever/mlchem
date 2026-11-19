@@ -203,6 +203,149 @@ def test_plot(chemical_space, monkeypatch, tmp_path):
     assert chemical_space.filename == 'test_plot'
 
 
+@pytest.fixture(params=[False, True], ids=['classes', 'categorical-metadata'])
+def plotting_space(request, chemical_space, monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("bokeh.io.output_notebook", lambda: None)
+    show_mock = MagicMock()
+    monkeypatch.setattr("bokeh.plotting.show", show_mock)
+
+    frame = chemical_space.data.iloc[[2, 0, 1]].copy()
+    frame['DIM_1'] = [0.3, 0.1, 0.2]
+    frame['DIM_2'] = [0.6, 0.4, 0.5]
+    frame['MOLFILE'] = ['b.png', 'a1.png', 'a2.png']
+    frame['NAME_SHORT'] = frame.NAME
+    chemical_space.metadata_exists = request.param
+    chemical_space.metadata_categorical = request.param
+    if request.param:
+        frame['METADATA'] = ['z', 'y', 'x']
+        chemical_space.metadata_names = np.unique(frame.METADATA)
+    chemical_space.df_compressed = frame
+    chemical_space.classnames = np.unique(frame.CLASS)
+    return chemical_space, show_mock
+
+
+def assert_plot_groups(space, show_mock, opacities, sizes):
+    from bokeh.models import GlyphRenderer
+
+    show_mock.assert_called_once()
+    plot = show_mock.call_args.args[0].children[0]
+    renderers = [r for r in plot.renderers if isinstance(r, GlyphRenderer)]
+    metadata_groups = space.metadata_names if space.metadata_categorical else [None]
+    assert len(renderers) == len(space.classnames) * len(metadata_groups)
+    for i, classname in enumerate(space.classnames):
+        for j, metadata in enumerate(metadata_groups):
+            renderer = renderers[i * len(metadata_groups) + j]
+            expected = space.df_compressed[space.df_compressed.CLASS == classname]
+            if metadata is not None:
+                expected = expected[expected.METADATA == metadata]
+                assert renderer.glyph.marker == space.shape_list[j]
+            assert list(renderer.data_source.data['SMILES']) == list(expected.SMILES)
+            assert list(renderer.data_source.data['DIM_1']) == list(expected.DIM_1)
+            assert list(renderer.data_source.data['DIM_2']) == list(expected.DIM_2)
+            assert renderer.glyph.fill_alpha == pytest.approx(opacities[i])
+            assert renderer.glyph.line_alpha == pytest.approx(opacities[i])
+            assert renderer.glyph.size == sizes[i]
+            assert renderer.glyph.fill_color == space.colour_list[i]
+
+
+def test_plot_filtered_dataframe_ignores_directory_counts(plotting_space, tmp_path):
+    space, show_mock = plotting_space
+    space.df_compressed = space.df_compressed.iloc[:2].copy()
+    before = space.df_compressed.copy(deep=True)
+    for classname in space.classnames:
+        folder = tmp_path / classname
+        folder.mkdir()
+        for index in range(5):
+            (folder / f'{index}.png').touch()
+
+    space.plot()
+
+    assert_plot_groups(space, show_mock, [0.7125, 0.7125], [10, 10])
+    pd.testing.assert_frame_equal(space.df_compressed, before)
+
+
+@pytest.mark.parametrize('marker_size', [None, 17])
+def test_plot_default_styles_and_scalar_marker_size(plotting_space, marker_size):
+    space, show_mock = plotting_space
+    if marker_size is None:
+        space.plot()
+    else:
+        # All existing parameters remain usable positionally.
+        space.plot(None, None, '', '', 25, 650, 866, marker_size, False)
+
+    expected_size = 10 if marker_size is None else marker_size
+    assert_plot_groups(
+        space, show_mock, [0.95 * (1 - 1 / 3), 0.95 * (1 - 1 / 6)],
+        [expected_size, expected_size],
+    )
+
+
+@pytest.mark.parametrize(
+    'kwargs, opacities, sizes',
+    [
+        ({'opacity_list': [0.0, 1.0]}, [0.0, 1.0], [10, 10]),
+        (
+            {'marker_size_list': [4.5, 20], 'marker_size': 17},
+            [0.95 * (1 - 1 / 3), 0.95 * (1 - 1 / 6)],
+            [4.5, 20],
+        ),
+        (
+            {'opacity_list': [0.2, 0.8], 'marker_size_list': [4.5, 20]},
+            [0.2, 0.8], [4.5, 20],
+        ),
+    ],
+)
+def test_plot_explicit_class_styles(plotting_space, kwargs, opacities, sizes):
+    space, show_mock = plotting_space
+    space.plot(**kwargs)
+    assert_plot_groups(space, show_mock, opacities, sizes)
+
+
+@pytest.mark.parametrize('explicit', [False, True])
+def test_plot_single_class_zero_remainder(plotting_space, explicit):
+    space, show_mock = plotting_space
+    space.df_compressed = space.df_compressed[
+        space.df_compressed.CLASS == 'CLASS_A'
+    ].copy()
+    space.classnames = np.array(['CLASS_A'])
+    kwargs = {'opacity_list': [0.8], 'marker_size_list': [6]} if explicit else {}
+
+    space.plot(**kwargs)
+
+    assert_plot_groups(
+        space, show_mock, [0.8 if explicit else 0.475], [6 if explicit else 10],
+    )
+
+
+@pytest.mark.parametrize('name', ['opacity_list', 'marker_size_list'])
+@pytest.mark.parametrize('values', [[], [0.5], [0.5, 0.5, 0.5]])
+def test_plot_rejects_style_list_length(plotting_space, name, values):
+    space, show_mock = plotting_space
+    with pytest.raises(ValueError, match=name):
+        space.plot(**{name: values})
+    show_mock.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    'name, value',
+    [
+        ('opacity_list', -0.1), ('opacity_list', 1.1),
+        ('opacity_list', float('nan')), ('opacity_list', float('inf')),
+        ('opacity_list', '0.5'), ('opacity_list', None), ('opacity_list', True),
+        ('marker_size_list', 0), ('marker_size_list', -1),
+        ('marker_size_list', float('nan')), ('marker_size_list', float('inf')),
+        ('marker_size_list', '10'), ('marker_size_list', None),
+        ('marker_size_list', True),
+    ],
+)
+def test_plot_rejects_style_values(plotting_space, name, value):
+    space, show_mock = plotting_space
+    with pytest.raises(ValueError, match=name):
+        space.plot(**{name: [0.5, value]})
+    show_mock.assert_not_called()
+
+
 def test_process_invalid_diversity_filter_raises(chemical_space):
     with pytest.raises(ValueError):
         chemical_space.process(diversity_filter=-0.1, collinearity_filter=0.9)

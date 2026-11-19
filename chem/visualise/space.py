@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import logging
+from numbers import Real
 
 import pandas as pd
 import numpy as np
@@ -495,7 +496,9 @@ Examples
              height: int = 650,
              width: int = int(650/0.75),
              marker_size: int = 10,
-             save_html: bool = False) -> None:
+             save_html: bool = False,
+             opacity_list: list[float] | None = None,
+             marker_size_list: list[float] | None = None) -> None:
         """
 Generate a 2D scatter plot of the chemical space using Bokeh.
 
@@ -507,11 +510,13 @@ Parameters
 ----------
 colour_list : list, optional
     List of colours for the plot markers. Each class will be assigned a
-    colour. If not provided, defaults to:
+    colour in ``self.classnames`` order (sorted by ``prepare()``).
+    If not provided, defaults to:
     ['Blue', 'Orange', 'Red', 'Black', 'Green', 'Cyan', 'Magenta', 'Yellow'].
 shape_list : list, optional
     List of marker shapes. If not provided, defaults to:
     ['circle', 'triangle', 'square', 'star', 'diamond', 'cross', 'x', 'asterisk'].
+    With categorical metadata, shapes follow ``self.metadata_names`` order.
 filename : str, optional
     Name of the file to save the plot as (without extension).
 title : str, optional
@@ -523,14 +528,31 @@ height : int, optional
 width : int, optional
     Width of the plot in pixels. Default is 866 (650 / 0.75).
 marker_size : int, optional
-    Size of the plot markers. Default is 10.
+    Size of the plot markers when ``marker_size_list`` is omitted. Default is 10.
 save_html : bool, optional
     Whether to save the plot as an HTML file. Default is False.
+opacity_list : list of float, optional
+    One finite opacity in [0, 1] per class, in ``self.classnames`` order,
+    matching ``colour_list`` in both plotting branches. Explicit values
+    replace automatic opacity, without scaling. If omitted, opacity uses
+    ``compute_alpha(class_count) * size_ratio(class_count, remaining_count)``,
+    with counts taken from ``self.df_compressed``.
+marker_size_list : list of float, optional
+    One finite positive marker size per class, in the same order as
+    ``opacity_list``. Overrides ``marker_size``. With categorical metadata,
+    all metadata subgroups within a class share its opacity and size;
+    these lists do not follow ``shape_list``.
 
 Returns
 -------
 None
     Displays the plot in a Jupyter notebook and optionally saves it as HTML.
+
+Raises
+------
+ValueError
+    If a style list does not contain exactly one value per class, or contains
+    an invalid opacity or marker size.
 
 Examples
 --------
@@ -539,18 +561,50 @@ Examples
 ...     shape_list=['circle', 'square'],
 ...     filename='my_plot',
 ...     title='Chemical Space',
+...     opacity_list=[0.3, 0.9],
+...     marker_size_list=[6, 12],
 ...     save_html=True
 ... )
 """
 
 
-        import os
         from mlchem.helper import (prepare_datatable, compute_alpha,
                                    size_ratio, bokeh_plot)
         import bokeh.plotting as bp
         from bokeh.io import output_notebook, reset_output
-        output_notebook()
         from bokeh.models import HoverTool
+
+        for name, values in (
+                ('opacity_list', opacity_list),
+                ('marker_size_list', marker_size_list)):
+            if values is None:
+                continue
+            if len(values) != len(self.classnames):
+                raise ValueError(
+                    f"'{name}' must contain one value per class "
+                    f"({len(self.classnames)} values in self.classnames order).")
+            if not all(
+                    isinstance(value, Real) and not isinstance(value, bool)
+                    and np.isfinite(value)
+                    and (0 <= value <= 1 if name == 'opacity_list' else value > 0)
+                    for value in values):
+                bounds = 'in [0, 1]' if name == 'opacity_list' else 'positive'
+                raise ValueError(f"'{name}' values must be finite numbers {bounds}.")
+
+        opacities = opacity_list
+        if opacities is None:
+            class_sizes = [
+                len(self.df_compressed[self.df_compressed.CLASS == c])
+                for c in self.classnames
+            ]
+            opacities = [
+                compute_alpha(size) * size_ratio(size, len(self.df_compressed) - size)
+                for size in class_sizes
+            ]
+        marker_sizes = (
+            [marker_size] * len(self.classnames)
+            if marker_size_list is None else marker_size_list
+        )
 
         # TODO: implement other functions using  other modules:
         # from bokeh.models import (ColorBar, LinearColorMapper, Div,
@@ -559,6 +613,7 @@ Examples
         # from bokeh.palettes import Turbo256, Spectral6, RedBu
         # from bokeh.transform import linear_cmap, transform
 
+        output_notebook()
         reset_output()
         
         self.height = height
@@ -588,7 +643,6 @@ Examples
         if self.metadata_exists and self.metadata_categorical:
 
             for i, c in enumerate(self.classnames):
-                size = len(os.listdir(c))
                 for i2, c2 in enumerate(self.metadata_names):
                     data_table = prepare_datatable(
                         self.df_compressed[
@@ -597,18 +651,16 @@ Examples
                     plot.scatter(x="DIM_1", y='DIM_2',
                                  source=data_table.source,
                                  color=self.colour_list[i],
-                                 size=self.marker_size,
+                                 size=marker_sizes[i],
                                  marker=self.shape_list[i2],
                                  line_color='grey',
                                  legend_label=c,
-                                 alpha=compute_alpha(size) *
-                                 size_ratio(size, len(self.df_compressed)-size)
+                                 alpha=opacities[i]
                                  )
                 self.dict_datatables[c] = prepare_datatable(
                     self.df_compressed[self.df_compressed.CLASS == c])
         else:
             for i, c in enumerate(self.classnames):
-                size = len(os.listdir(c))
                 data_table = prepare_datatable(
                     self.df_compressed[self.df_compressed.CLASS == c])
                 self.dict_datatables[c] = data_table
@@ -616,11 +668,10 @@ Examples
                             y='DIM_2',
                             source=data_table.source,
                             color=self.colour_list[i],
-                            size=self.marker_size,
+                            size=marker_sizes[i],
                             line_color='grey',
                             legend_label=c,
-                            alpha=compute_alpha(size) *
-                            size_ratio(size, len(self.df_compressed)-size))
+                            alpha=opacities[i])
 
         # Title
         plot.title_location = self.bokeh_dictionary['title_location']
