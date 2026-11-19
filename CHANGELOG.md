@@ -2,6 +2,21 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.8] - 2026-11-19
+
+### Added
+
+- Added per-class `opacity_list` and `marker_size_list` controls to `ChemicalSpace.plot()`.
+
+### Changed
+
+- Allowed sortable non-string class labels, such as integers, to be displayed in plot legends.
+
+### Fixed
+
+- Calculated automatic plot opacity from the rows in the dataframe being plotted, rather than files in class directories.
+- Aligned coordinates, class labels, names, metadata, and structure images by unique SMILES in `ChemicalSpace.prepare()`, preventing hover images from being associated with the wrong compound when input rows are unsorted. Ambiguous or missing SMILES matches now raise a clear error.
+
 ## [1.2.7] - 2026-11-17
 
 ### Added
