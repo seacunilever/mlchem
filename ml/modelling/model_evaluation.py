@@ -1325,6 +1325,12 @@ pandas.DataFrame
     ``reliability_mean``, ``reliability_se``,
     ``train_folds``, ``validation_folds``, ``reliability_folds``.
     Results are ranked by ``reliability_mean`` descending.
+    Train/validation columns contain raw metric values. Reliability is
+    computed per fold, then averaged: for ``logic='lower'`` it is the
+    negative of the selected loss plus ``abs(train - validation)``;
+    for ``logic='greater'`` the existing performance divided by
+    ``1 + abs(train - validation)`` is unchanged. Reliability is always
+    maximized, is not raw RMSE, and is nonpositive for nonnegative losses.
 
 Examples
 --------

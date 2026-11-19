@@ -383,7 +383,7 @@ class SequentialForwardSelection:
 
     Notes
     -----
-    Reliability combines performance and instability. For each subset:
+    Reliability combines performance and instability on each CV fold:
 
     - ``instability_score = |train - cv|``
     - For ``desired_performance_score='train'``, ``performance_score = train``
@@ -393,8 +393,16 @@ class SequentialForwardSelection:
     - For higher-is-better metrics,
       ``reliability_score = performance_score / (1 + instability_score)``
 
-    For lower-is-better metrics, performance is sign-oriented internally so the
-    same maximization rule can be used.
+    For lower-is-better metrics, ``performance_score`` is negated and
+    ``reliability_score = performance_score - instability_score``. Thus the
+    maximized objective is the negative of loss plus the train/CV gap, in
+    metric units, with no assumed loss range. Nonnegative losses give
+    nonpositive objectives; closer to zero is better.
+
+    Raw train/CV metrics are retained separately. Fold reliability scores
+    are averaged for subset selection: ``find_best()`` and the parsimony
+    reference maximize this mean. Forward feature additions still optimize
+    raw CV performance in the direction specified by ``logic``.
 
     Scientific Rationale
     --------------------
@@ -1110,7 +1118,7 @@ class SequentialForwardSelection:
         # Plot reliability scores
         plt.plot(range(1, len(self.train_scores)+1),
                  self.reliability_scores,
-                 label='reliability score',
+                 label='reliability objective (higher is better)',
                  color=colours[2])
 
         # Show the ±1 SE interval of training performance
@@ -1173,7 +1181,7 @@ class SequentialForwardSelection:
         )
         self._log(
             logging.INFO,
-            f"SFS summary: reliability_score={self.reliability_scores[ind - 1]:.3f} "
+            f"SFS summary: reliability objective (higher is better)={self.reliability_scores[ind - 1]:.3f} "
             f"± {self.reliability_se[ind - 1]:.3f}",
         )
 
@@ -1187,11 +1195,14 @@ class CombinatorialSelection:
     score logic used by :class:`SequentialForwardSelection`: the
     performance term is controlled by `desired_performance_score`,
     and can correspond to cv_score, train_score or their average.
-    Lower-is-better metrics are sign-flipped before the
-    reliability score is computed. Results are then ranked by
-    ``reliability_score = performance_score / (1 + instability_score)``,
-    where ``instability_score`` is the sum of pairwise gaps between the
-    available scores.
+    On each fold, ``instability_score = abs(train - cv)``. Higher-is-better
+    reliability remains ``performance_score / (1 + instability_score)``.
+    For lower-is-better metrics, ``performance_score`` is the negative raw
+    loss and reliability is ``performance_score - instability_score``.
+    This additive loss-plus-gap penalty assumes no fixed loss range.
+    Both stages rank by ``Reliability_lower_bound`` (mean fold reliability
+    minus its standard error) descending; stage 2 takes the first row as
+    ``best_record``. Raw train/CV metric columns remain unchanged.
 
     Public Methods
     --------------
@@ -1808,7 +1819,7 @@ class CombinatorialSelection:
                 f"Stage 1 accepted subset={subset} |"
                 f"train={subset_train_mean:.3f} ± {subset_train_se:.3f} | "
                 f"cv={subset_cv_mean:.3f} ± {subset_cv_se:.3f} | "
-                f"reliability={subset_reliability_mean:.3f} ± {subset_reliability_se:.3f}",)
+                f"reliability objective (higher is better)={subset_reliability_mean:.3f} ± {subset_reliability_se:.3f}",)
             return (subset, subset_train_mean, subset_cv_mean,
                     subset_reliability_mean, subset_train_se,
                     subset_cv_se, subset_reliability_se)
@@ -2061,7 +2072,7 @@ class CombinatorialSelection:
                 f"Stage 2 accepted subset={subset} |"
                 f"train={subset_train_mean:.3f} ± {subset_train_se:.3f} | "
                 f"cv={subset_cv_mean:.3f} ± {subset_cv_se:.3f} | "
-                f"reliability={subset_reliability_mean:.3f} ± {subset_reliability_se:.3f}",)
+                f"reliability objective (higher is better)={subset_reliability_mean:.3f} ± {subset_reliability_se:.3f}",)
             return (subset, subset_train_mean, subset_cv_mean,
                     subset_reliability_mean, subset_train_se,
                     subset_cv_se, subset_reliability_se)
@@ -2133,15 +2144,15 @@ class CombinatorialSelection:
         self._log(logging.INFO, f'Best Features: {self.best_cols}')
         self._log(
             logging.INFO,
-            f'Train Score: {self.best_record['training_score']:.3f}'
+            f'Train Score (raw metric): {self.best_record['training_score']:.3f}'
             f'± {self.best_record['training_se']:.3f}',)
         self._log(
             logging.INFO,
-            f'CV Score: {self.best_record['cv_score']:.3f}'
+            f'CV Score (raw metric): {self.best_record['cv_score']:.3f}'
             f'± {self.best_record['cv_se']:.3f}',)
         self._log(
             logging.INFO,
-            f'Reliability Score: {self.best_record['reliability_score']:.3f}'
+            f'Reliability Objective (higher is better): {self.best_record['reliability_score']:.3f}'
             f'± {self.best_record['reliability_se']:.3f}',)
 
         return self.df_results_stage2

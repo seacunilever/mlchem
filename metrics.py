@@ -225,15 +225,17 @@ def get_reliability_score_components(
     desired_performance_score: Literal['train','cv','train_cv_average']
 ) -> dict[str, float]:
     """
-    Calculate the reliability score components from train, CV, and (optionally) test scores.
-    Reliability score is calculated as the performance score divided by
-    one plus the instability score. The `desired_performance_score` argument
-    will decide which score is used as a proxy for overall performance,
-    i.e., 'train' will use the training score, 'cv' will use the
-    cross-validation score, and 'train_cv_average' will use the average
-    of the training and cross-validation scores. Meanwhile, the
-    instability score captures the variability between train, CV,
-    and (optionally) test scores.
+    Calculate performance, train/CV instability, and a maximized objective.
+
+    Let ``p`` be the raw train score, CV score, or their arithmetic mean,
+    as selected by ``desired_performance_score``, and let
+    ``i = abs(train_score - cv_score)``. For ``logic='greater'``, the
+    existing objective is unchanged: ``p / (1 + i)``. For ``logic='lower'``,
+    the objective is ``-(p + i)``: the negative of loss plus an additive
+    train/CV gap penalty in the same metric units. This requires no fixed
+    loss range and penalizes instability even for zero or signed losses.
+    At fixed instability, reducing loss increases the objective; at fixed
+    loss, increasing instability decreases it.
 
     Parameters
     ----------
@@ -251,8 +253,11 @@ def get_reliability_score_components(
     Returns
     -------
     dict
-        Dictionary containing ``performance_score``,
-        ``instability_score``, and ``reliability_score``.
+        Dictionary containing ``performance_score`` (``p`` for greater,
+        ``-p`` for lower), ``instability_score`` (``i``), and
+        ``reliability_score`` (always maximized). For nonnegative losses,
+        lower-is-better reliability is nonpositive; closer to zero is
+        better. It is a selection objective, not raw RMSE or a probability.
 
     Examples
     --------
@@ -262,6 +267,10 @@ def get_reliability_score_components(
     ... )
     >>> float(scores["reliability_score"])
     0.8
+    >>> get_reliability_score_components(
+    ...     8.0, 12.0, logic="lower", desired_performance_score="cv",
+    ... )["reliability_score"]
+    -16.0
     """
 
     if logic not in ('lower', 'greater'):
@@ -279,8 +288,9 @@ def get_reliability_score_components(
 
     if logic == 'lower':
         performance_score = -performance_score   # transform score internally to maintain "higher is better" behaviour
-
-    reliability_score = performance_score / (1 + instability_score)
+        reliability_score = performance_score - instability_score
+    else:
+        reliability_score = performance_score / (1 + instability_score)
 
     return {
         'performance_score': performance_score,

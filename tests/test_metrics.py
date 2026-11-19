@@ -139,7 +139,7 @@ def test_get_reliability_score_components_greater_logic():
     expected_instability = abs(0.9 - 0.8)
     assert scores['performance_score'] == pytest.approx(expected_performance)
     assert scores['instability_score'] == pytest.approx(expected_instability)
-    assert scores['reliability_score'] == pytest.approx(expected_performance / 
+    assert scores['reliability_score'] == pytest.approx(expected_performance /
                                                         (1 + expected_instability))
 
 
@@ -156,13 +156,63 @@ def test_get_reliability_score_components_lower_logic_inverts_performance():
     expected_instability = abs(0.5 - 0.6)
     assert scores['performance_score'] == pytest.approx(expected_performance)
     assert scores['instability_score'] == pytest.approx(expected_instability)
-    assert scores['reliability_score'] == pytest.approx(expected_performance / 
-                                                        (1 + expected_instability))
+    assert scores['reliability_score'] == pytest.approx(
+        expected_performance - expected_instability)
 
 
 def test_get_reliability_components_rejects_invalid_logic():
     with pytest.raises(ValueError, match="'logic' must be either 'lower' or 'greater'"):
         get_reliability_score_components(0.9, 0.8, logic='best',desired_performance_score='cv')
+
+
+@pytest.mark.parametrize('desired', ['train', 'cv', 'train_cv_average'])
+@pytest.mark.parametrize('logic, score', [('lower', 10.0), ('lower', 0.0),
+                                         ('lower', -10.0), ('greater', 0.8)])
+def test_reliability_equal_train_cv(logic, score, desired):
+    components = get_reliability_score_components(score, score, logic, desired)
+    expected = -score if logic == 'lower' else score
+    assert components['performance_score'] == pytest.approx(expected)
+    assert components['instability_score'] == 0
+    assert components['reliability_score'] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize('desired', ['train', 'cv', 'train_cv_average'])
+@pytest.mark.parametrize('logic, worse, better', [
+    ('lower', (12.0, 14.0), (8.0, 10.0)),
+    ('greater', (0.5, 0.6), (0.7, 0.8)),
+])
+def test_reliability_rewards_performance_at_equal_instability(logic, worse, better, desired):
+    worse_components = get_reliability_score_components(*worse, logic, desired)
+    better_components = get_reliability_score_components(*better, logic, desired)
+    assert better_components['instability_score'] == pytest.approx(
+        worse_components['instability_score'])
+    assert better_components['reliability_score'] > worse_components['reliability_score']
+
+
+@pytest.mark.parametrize('desired, lower_unstable, greater_unstable', [
+    ('train', (10.0, 14.0), (0.8, 0.6)),
+    ('cv', (6.0, 10.0), (0.6, 0.8)),
+    ('train_cv_average', (8.0, 12.0), (0.7, 0.9)),
+])
+@pytest.mark.parametrize('logic', ['lower', 'greater'])
+def test_reliability_penalizes_instability_at_equal_performance(
+    desired, lower_unstable, greater_unstable, logic,
+):
+    score = 10.0 if logic == 'lower' else 0.8
+    unstable = lower_unstable if logic == 'lower' else greater_unstable
+    stable_components = get_reliability_score_components(score, score, logic, desired)
+    unstable_components = get_reliability_score_components(*unstable, logic, desired)
+    assert unstable_components['performance_score'] == pytest.approx(
+        stable_components['performance_score'])
+    assert unstable_components['reliability_score'] < stable_components['reliability_score']
+
+
+@pytest.mark.parametrize('score', [-10.0, 0.0, 10.0, 1000.0])
+def test_lower_reliability_penalty_is_in_loss_units(score):
+    components = get_reliability_score_components(
+        score - 2, score + 2, 'lower', 'train_cv_average')
+    assert components['reliability_score'] == pytest.approx(-score - 4)
+
 
 def test_rmse_to_std_ratio(sample_regression_data):
     y_true, y_pred = sample_regression_data

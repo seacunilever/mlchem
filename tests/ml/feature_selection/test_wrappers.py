@@ -49,7 +49,7 @@ from mlchem.ml.feature_selection.wrappers import (SequentialForwardSelection,
                                                   _orient_scores_to_utility,
                                                   _compute_fold_degradation,
                                                   _select_parsimonious_subset)
-from mlchem.metrics import get_geometric_S
+from mlchem.metrics import get_geometric_S, get_rmse
 import matplotlib.pyplot as plt
 
 
@@ -477,6 +477,66 @@ def test_combinatorial_selection_lower_logic_inverts_performance_score():
     assert winning_row['training_score'] == pytest.approx(0.5)
     assert winning_row['cv_score'] == pytest.approx(0.5)
     assert winning_row['reliability_score'] == pytest.approx(-0.5)
+
+
+@pytest.mark.parametrize('n_jobs', [1, 2])
+def test_sfs_lower_reliability_penalizes_fold_instability(n_jobs):
+    def fake_crossval(estimator, X, *args, **kwargs):
+        train = np.array([10.0, 12.0]) if X.shape[1] == 1 else np.array([8.0, 10.0])
+        cv = np.array([10.0, 12.0]) if X.shape[1] == 1 else np.array([12.0, 14.0])
+        return {'train_scores': train, 'cv_scores': cv,
+                'cv_mean': cv.mean(), 'cv_se': cv.std() / np.sqrt(2)}
+
+    sfs = SequentialForwardSelection(
+        estimator=_FirstColumnRegressor(), estimator_string=None,
+        metric=get_rmse, max_features=2, logic='lower', task_type='regression')
+    with patch('mlchem.ml.feature_selection.wrappers.crossval', side_effect=fake_crossval):
+        sfs.fit(pd.DataFrame({'a': [0.0, 0.0], 'b': [0.0, 0.0]}),
+                np.zeros(2), test_set=None, y_test=None, n_jobs=n_jobs)
+
+    assert sfs.train_scores == pytest.approx([11.0, 9.0])
+    assert sfs.cv_scores == pytest.approx([11.0, 13.0])
+    assert sfs.reliability_scores == pytest.approx([-11.0, -15.0])
+    np.testing.assert_allclose(sfs.reliability_folds, [[-10, -12], [-14, -16]])
+    assert sfs.find_best()['features'] == ['a']
+    best = sfs.find_best(parsimony_mode='best')
+    assert best['best_index'] == 1
+    assert best['parsimony_diagnostics']['reference_index'] == 1
+
+
+@pytest.mark.parametrize('n_jobs', [1, 2])
+def test_combinatorial_lower_reliability_ranks_both_stages_and_best_record(n_jobs):
+    def fake_crossval(estimator, X, *args, **kwargs):
+        stable = list(X.columns) == ['stable']
+        train = np.array([10.0, 12.0]) if stable else np.array([8.0, 10.0])
+        cv = np.array([10.0, 12.0]) if stable else np.array([12.0, 14.0])
+        return {'train_scores': train, 'train_mean': train.mean(),
+                'train_se': train.std() / np.sqrt(2),
+                'cv_scores': cv, 'cv_mean': cv.mean(), 'cv_se': cv.std() / np.sqrt(2)}
+
+    cs = CombinatorialSelection(
+        estimator=_FirstColumnRegressor(), metric=get_rmse,
+        logic='lower', task_type='regression')
+    train_set = pd.DataFrame({'stable': [0.0, 0.0], 'unstable': [0.0, 0.0]})
+    with patch('mlchem.ml.feature_selection.wrappers.crossval', side_effect=fake_crossval):
+        stage1 = cs.fit_stage_1(
+            train_set, np.zeros(2), features=train_set.columns.tolist(),
+            k=1, training_threshold=20.0, cv_train_ratio=0.5, n_jobs=n_jobs)
+        stage2 = cs.fit_stage_2(top_n_subsets=2, n_jobs=n_jobs)
+
+    for results in (stage1, stage2):
+        assert results.iloc[0]['feature_subsets'] == ['stable']
+        assert results.iloc[0]['training_score'] == pytest.approx(11.0)
+        assert results.iloc[0]['cv_score'] == pytest.approx(11.0)
+        assert results.iloc[0]['reliability_score'] == pytest.approx(-11.0)
+        assert results['Reliability_lower_bound'].is_monotonic_decreasing
+        assert results.iloc[0]['Reliability_lower_bound'] == pytest.approx(
+            -11.0 - 1 / np.sqrt(2))
+        unstable = results[results.feature_subsets.apply(lambda subset: subset == ['unstable'])]
+        assert unstable.iloc[0]['reliability_score'] == pytest.approx(-15.0)
+    assert cs.best_cols == ['stable']
+    assert cs.best_record['reliability_score'] == pytest.approx(-11.0)
+
 
 def test_combinatorial_selection_display_best_logs_summary(fitted_cs_stage_2, caplog):
     fitted_cs_stage_2.set_log_level('INFO')

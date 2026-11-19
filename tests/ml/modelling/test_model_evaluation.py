@@ -39,6 +39,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.base import BaseEstimator
+from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
@@ -50,7 +51,7 @@ from mlchem.ml.modelling.model_evaluation import (crossval,
                                                   MajorityVote,
                                                   validate_cv_indices,
                                                   generate_cv_indices)
-from mlchem.metrics import get_geometric_S
+from mlchem.metrics import get_geometric_S, get_rmse
 
 
 class FailingEstimator:
@@ -1010,6 +1011,29 @@ def test_majority_vote_regression_fit_and_predict(majority_vote_regression):
     assert 'test_predictions' in result
     assert not result['train_predictions'].empty
     assert not result['test_predictions'].empty
+
+
+def test_majority_vote_lower_reliability_ranks_stable_equal_rmse_first():
+    train_set = pd.DataFrame({'x': np.zeros(4)})
+    mv = MajorityVote(
+        train_set=train_set, y_train=np.array([-10.0, -10.0, 10.0, 10.0]),
+        task_type='regression',
+        estimator_list=[DummyRegressor(strategy='constant', constant=0.0),
+                        DummyRegressor(strategy='constant', constant=8.0)],
+        column_list=[['x'], ['x']], estimator_names=['stable', 'unstable'])
+    results = mv.evaluate_cv(
+        metric=get_rmse, metric_name='RMSE', logic='lower',
+        n_estimators_max=1,
+        cv_indices=[(np.array([0, 1]), np.array([2, 3])),
+                    (np.array([2, 3]), np.array([0, 1]))])
+
+    assert 'unstable' not in results.iloc[0]['combination']
+    assert 'stable' in results.iloc[0]['combination']
+    assert results['train_mean'].tolist() == pytest.approx([10.0, 10.0])
+    assert results['validation_mean'].tolist() == pytest.approx([10.0, 10.0])
+    assert results['reliability_mean'].tolist() == pytest.approx([-10.0, -26.0])
+    np.testing.assert_allclose(results.iloc[0]['reliability_folds'], [-10.0, -10.0])
+    np.testing.assert_allclose(results.iloc[1]['reliability_folds'], [-26.0, -26.0])
 
 
 def test_majority_vote_evaluate_cv_regression_outputs_fold_metrics(

@@ -285,6 +285,28 @@ fit_report = mv.fit(return_prediction_dataframes=True)
 
 `fit()` is the final consensus step after model selection.
 
+### Reliability objectives
+
+Reliability is **always maximized**, independently of the metric direction.
+For each fold, let `p` be the raw train score, CV score, or their mean
+(selected by `desired_performance_score`), and `gap = abs(train - cv)`:
+
+- `logic='greater'`: `p / (1 + gap)` (unchanged).
+- `logic='lower'`: `-(p + gap)`, an additive loss-plus-instability penalty
+  in metric units. No bounded loss range is assumed.
+
+Negative reliability is expected for nonnegative losses such as RMSE:
+at mean RMSE 10, equal train/CV gives -10; train 8 / CV 12 gives -14,
+so the stable candidate ranks higher. Raw train/CV columns still report
+the original metric, not this selection objective.
+
+SFS selects the highest mean fold reliability (also its parsimony reference);
+its forward additions still optimize raw CV performance. Both combinatorial
+stages rank by mean fold reliability minus its standard error, and stage 2
+uses the first row as `best_record`. Majority-vote CV ranks by mean fold
+reliability. Scores are computed **before** fold aggregation, not from the
+displayed aggregate train/CV values. Existing result-column names are retained.
+
 ### Capture pipeline logs
 
 Library messages are emitted at `INFO` level by default. Configure a selector's
