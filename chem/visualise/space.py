@@ -247,127 +247,145 @@ ValueError
 ValueError
     If the index of `df_compressed` or `df_processed` is not a
     series of SMILES strings.
+ValueError
+    If SMILES keys are duplicated, compressed rows have no processed/data
+    match, or class labels are missing or cannot be sorted.
 
 Examples
 --------
 >>> chem_space.prepare(df_compressed)
+
+The compressed dataframe's SMILES index is the alignment key. Its row order
+and coordinates are preserved; input and processed SMILES must be unique.
+Class labels must be sortable. Structure images are generated in stable
+SMILES order within each class and mapped back by SMILES, independent of
+directory enumeration and file modification times.
 """
 
 
       import os
-      from mlchem.helper import (create_structure_files,
-                                prepare_dataframe)
+      from mlchem.helper import create_structure_files
 
-      self.df_compressed = df_compressed
-
-      if list(self.df_compressed.columns) != ['DIM_1', 'DIM_2']:
+      if list(df_compressed.columns) != ['DIM_1', 'DIM_2']:
           raise ValueError("'df_compressed' must have only 2 columns: ['DIM_1','DIM_2'].")
 
-      if not all(isinstance(item, str) for item in self.df_compressed.index):
+      if not all(isinstance(item, str) for item in df_compressed.index):
           raise ValueError("Index of df_compressed must be a series of SMILES strings.")
-
       if not all(isinstance(item, str) for item in self.df_processed.index):
           raise ValueError("Index of df_processed must be a series of SMILES strings.")
+      if df_compressed.index.has_duplicates:
+          raise ValueError("'df_compressed' must have unique SMILES keys for row alignment.")
+      if self.df_processed.index.has_duplicates:
+          raise ValueError("'df_processed' must have unique SMILES keys for row alignment.")
 
-      try:
-          self.df_compressed.reset_index(inplace=True)
-          self.df_compressed.columns = ['SMILES'] + list(self.df_compressed.columns)[1:]
-      except Exception:
+      missing_processed = df_compressed.index.difference(self.df_processed.index)
+      if not missing_processed.empty:
           raise ValueError(
-              "Index of df_compressed must be a series of SMILES strings."
-              )
+              "Every SMILES in 'df_compressed' must have a matching row in "
+              "'df_processed'; missing: %s." % list(missing_processed)
+          )
+
+      source_rows = self.data[self.data.SMILES.isin(df_compressed.index)]
+      if source_rows.SMILES.duplicated().any():
+          duplicated = source_rows.loc[
+              source_rows.SMILES.duplicated(keep=False), 'SMILES'
+          ].unique()
+          raise ValueError(
+              "Rows in 'data' must have unique SMILES keys for row alignment; "
+              "duplicates: %s." % list(duplicated)
+          )
+      missing_data = df_compressed.index.difference(source_rows.SMILES)
+      if not missing_data.empty:
+          raise ValueError(
+              "Every SMILES in 'df_compressed' must have a matching row in "
+              "'data'; missing: %s." % list(missing_data)
+          )
+      if source_rows.CLASS.isna().any():
+          raise ValueError("'CLASS' labels must not be missing for row alignment.")
+
       try:
-          self.df_processed.reset_index(inplace=True)
-          self.df_processed.columns = ['SMILES'] + list(self.df_processed.columns)[1:]
-      except Exception:
-          raise ValueError("Index of df_processed must be a series of SMILES strings.")
+          self.classes = source_rows.set_index('SMILES').reindex(
+              df_compressed.index
+          ).CLASS.to_numpy()
+          self.classnames = np.unique(self.classes)
+      except TypeError as error:
+          raise ValueError(
+              "'CLASS' labels must be mutually sortable to establish class order."
+          ) from error
 
-
-      # Classes taken from the list of molecules
-      # retained after descriptor calculation.
-      self.classes = self.data[
-          self.data.SMILES.isin(
-              self.df_processed.SMILES
-              )
-              ].CLASS.values
-
-      if len(self.classes) != len(self.df_compressed):
-          self.classes = self.data.CLASS.values
-      self.classnames = np.unique(self.classes)
-      if self.metadata_categorical+self.metadata_exists == 2:
+      if self.metadata_categorical and self.metadata_exists:
           self.metadata_names = np.unique(self.data[self.data.columns[-1]])
 
-      self.df_processed.insert(0, 'CLASS', self.classes)
+      prepared = df_compressed.copy()
+      prepared.index = pd.Index(prepared.index, name='SMILES')
+      prepared = prepared.reset_index()
+      source_by_smiles = source_rows.set_index('SMILES')
+      prepared['CLASS'] = prepared.SMILES.map(source_by_smiles.CLASS)
+      prepared['NAME'] = prepared.SMILES.map(source_by_smiles.NAME)
+      if self.metadata_exists:
+          prepared['METADATA'] = prepared.SMILES.map(source_by_smiles.METADATA)
 
       self.molfiles = []
       self.names = []
       self.metadata = []
+      molfile_by_smiles = {}
+      name_by_smiles = {}
+      metadata_by_smiles = {}
+      structure_root = '.mlchem_structures'
+      os.makedirs(structure_root, exist_ok=True)
 
-      for _, c in enumerate(self.classnames):
-          df = self.df_processed[self.df_processed.CLASS == c]
-
-          # Check whether structural files for that dataframe already exist,
-          # otherwise create them
-          try:
-              os.mkdir(c)
-          except Exception:
-              pass
-
-          # If there are as many structural files as the number of molecules
-          # for that specific class:
-          if len(os.listdir(c)) == len(df):
-              pass
-          else:
-              create_structure_files(df=df,
-                                    structure_column_name='SMILES',
-                                    folder_name=c)
-
-          names = []
-          metadata = []
-          for s in df.SMILES:
-              temp_df = self.data[self.data.SMILES == s]
-              name = temp_df.NAME.values[0]
-              names.append(name)
-              try:
-                  metainfo = temp_df.METADATA.values[0]
-                  metadata.append(metainfo)
-              except Exception:
-                  pass
-          df.insert(1, 'NAME', names)
-          df_prepared = prepare_dataframe(df, c)
-          df_prepared.index = np.arange(0, len(df_prepared))
-          self.molfiles.append(df_prepared.MOLFILE.values)
+      for class_index, class_name in enumerate(self.classnames):
+          class_rows = prepared.loc[
+              prepared.CLASS == class_name
+          ].sort_values('SMILES', kind='mergesort')
+          smiles = class_rows.SMILES.tolist()
+          names = class_rows.NAME.tolist()
+          structure_folder = os.path.join(
+              structure_root, 'class_%d' % class_index
+          )
+          create_structure_files(
+              df=class_rows[['SMILES']],
+              structure_column_name='SMILES',
+              folder_name=structure_folder,
+          )
+          molfiles = [
+              os.path.join(structure_folder, '%d.png' % i).replace(
+                  os.sep, '/'
+              )
+              for i in range(len(smiles))
+          ]
+          molfile_by_smiles.update(zip(smiles, molfiles))
+          name_by_smiles.update(zip(smiles, names))
+          self.molfiles.append(np.asarray(molfiles))
           self.names.append(names)
-          try:
+
+          if self.metadata_exists:
+              metadata = class_rows.METADATA.tolist()
+              metadata_by_smiles.update(zip(smiles, metadata))
               self.metadata.append(metadata)
-              df_prepared['METADATA'] = metadata
-          except Exception:
-              pass
 
-      self.df_compressed['MOLFILE'] = np.hstack(self.molfiles)
-      self.df_compressed['NAME'] = np.hstack(self.names)
-      self.df_compressed['NAME_SHORT'] = [a[:20] for
-                                    a in self.df_compressed.NAME.values]
-      self.df_compressed['CLASS'] = np.hstack(self.df_processed.CLASS.values)
+      prepared['MOLFILE'] = prepared.SMILES.map(molfile_by_smiles)
+      prepared['NAME'] = prepared.SMILES.map(name_by_smiles)
+      prepared['NAME_SHORT'] = prepared.NAME.map(
+          lambda name: name[:20] if isinstance(name, str) else str(name)[:20]
+      )
 
-      # Update the index of df_compressed
-      new_index = []
-      for a in self.df_compressed.MOLFILE.values:
-          start = a.find('/') + 1
-          end = a.find('.')
-          substring = a[start:end]
+      image_indices = []
+      for molfile in prepared.MOLFILE:
+          stem = os.path.splitext(os.path.basename(molfile))[0]
           try:
-              new_index.append(int(substring))
+              image_indices.append(int(stem))
           except ValueError:
-              # Handle non-numeric substrings
-              new_index.append(substring)
+              image_indices.append(stem)
+      prepared.index = image_indices
 
-      self.df_compressed.index = new_index
-
-      try:
-          self.df_compressed['METADATA'] = np.hstack(self.metadata)
-      except Exception:
-          pass
+      if self.metadata_exists:
+          prepared['METADATA'] = prepared.SMILES.map(metadata_by_smiles)
+      df_compressed.drop(columns=list(df_compressed.columns), inplace=True)
+      df_compressed.index = prepared.index
+      for column in prepared.columns:
+          df_compressed[column] = prepared[column].to_numpy()
+      self.df_compressed = df_compressed
 
     def update_bokeh_options(self, **args) -> None:
         """
@@ -654,7 +672,7 @@ Examples
                                  size=marker_sizes[i],
                                  marker=self.shape_list[i2],
                                  line_color='grey',
-                                 legend_label=c,
+                                 legend_label=str(c),
                                  alpha=opacities[i]
                                  )
                 self.dict_datatables[c] = prepare_datatable(
@@ -670,7 +688,7 @@ Examples
                             color=self.colour_list[i],
                             size=marker_sizes[i],
                             line_color='grey',
-                            legend_label=c,
+                            legend_label=str(c),
                             alpha=opacities[i])
 
         # Title

@@ -33,6 +33,8 @@
 
 import pytest
 import logging
+import os
+from pathlib import Path
 from unittest.mock import MagicMock
 import pandas as pd
 import numpy as np
@@ -170,6 +172,178 @@ def test_prepare(chemical_space):
     assert 'MOLFILE' in chemical_space.df_compressed.columns
     assert 'NAME' in chemical_space.df_compressed.columns
     assert 'CLASS' in chemical_space.df_compressed.columns
+
+
+@pytest.mark.parametrize('label_type', ['string', 'integer'])
+@pytest.mark.parametrize('already_sorted', [False, True])
+@pytest.mark.parametrize('categorical_metadata', [False, True])
+def test_prepare_and_plot_keep_structure_rows_aligned(
+    chemical_space,
+    monkeypatch,
+    tmp_path,
+    label_type,
+    already_sorted,
+    categorical_metadata,
+):
+    import shutil
+    from bokeh.models import GlyphRenderer, HoverTool
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("bokeh.io.output_notebook", lambda: None)
+    show_mock = MagicMock()
+    monkeypatch.setattr("bokeh.plotting.show", show_mock)
+
+    smiles = ['NCCO', 'CCO', 'CCN', 'CCOC']
+    names = ['name_ncco', 'name_cco', 'name_ccn', 'name_ccoc']
+    classes = ['B', 'A', 'B', 'A'] if label_type == 'string' else [2, 1, 2, 1]
+    metadata = ['y', 'x', 'x', 'y']
+    order = [1, 3, 2, 0] if already_sorted else [0, 1, 2, 3]
+    data = {
+        'SMILES': [smiles[i] for i in order],
+        'NAME': [names[i] for i in order],
+        'CLASS': [classes[i] for i in order],
+    }
+    if categorical_metadata:
+        data['METADATA'] = [metadata[i] for i in order]
+    chemical_space.data = pd.DataFrame(data)
+    chemical_space.metadata_exists = categorical_metadata
+    chemical_space.metadata_categorical = categorical_metadata
+
+    processed_smiles = list(reversed(chemical_space.data.SMILES.tolist()))
+    chemical_space.df_processed = pd.DataFrame(
+        {'descriptor': range(len(processed_smiles))},
+        index=pd.Index(processed_smiles, name='SMILES'),
+    )
+    compressed_smiles = chemical_space.data.SMILES.tolist()
+    coordinates = {
+        value: (i + 0.1, i + 0.2)
+        for i, value in enumerate(smiles)
+    }
+    compressed = pd.DataFrame(
+        {
+            'DIM_1': [coordinates[value][0] for value in compressed_smiles],
+            'DIM_2': [coordinates[value][1] for value in compressed_smiles],
+        },
+        index=pd.Index(compressed_smiles, name='SMILES'),
+    )
+    original_rows = compressed.index.tolist()
+    original_dim_1 = compressed.DIM_1.tolist()
+    original_dim_2 = compressed.DIM_2.tolist()
+
+    def create_test_structures(df, structure_column_name, folder_name):
+        folder = Path(folder_name)
+        if folder.exists():
+            shutil.rmtree(folder)
+        folder.mkdir(parents=True)
+        for index, value in enumerate(df[structure_column_name]):
+            image_path = folder / f'{index}.png'
+            image_path.write_text(value, encoding='utf-8')
+            timestamp = 1_000_000_000 + len(df) - index
+            os.utime(image_path, (timestamp, timestamp))
+
+    monkeypatch.setattr(
+        'mlchem.helper.create_structure_files', create_test_structures
+    )
+    chemical_space.prepare(compressed)
+    assert chemical_space.df_compressed is compressed
+    assert compressed.SMILES.tolist() == original_rows
+    assert compressed.DIM_1.tolist() == original_dim_1
+    assert compressed.DIM_2.tolist() == original_dim_2
+
+    expected = {
+        smiles[i]: {
+            'NAME': names[i],
+            'CLASS': classes[i],
+            'METADATA': metadata[i],
+            'DIM_1': coordinates[smiles[i]][0],
+            'DIM_2': coordinates[smiles[i]][1],
+        }
+        for i in range(len(smiles))
+    }
+    prepared = chemical_space.df_compressed.set_index('SMILES')
+    for value, row in expected.items():
+        actual = prepared.loc[value]
+        assert actual.NAME == row['NAME']
+        assert actual.CLASS == row['CLASS']
+        assert actual.DIM_1 == row['DIM_1']
+        assert actual.DIM_2 == row['DIM_2']
+        assert Path(actual.MOLFILE).read_text(encoding='utf-8') == value
+        if categorical_metadata:
+            assert actual.METADATA == row['METADATA']
+
+    chemical_space.plot()
+
+    layout = show_mock.call_args.args[0]
+    plot = layout.children[0]
+    renderers = [
+        renderer for renderer in plot.renderers
+        if isinstance(renderer, GlyphRenderer)
+    ]
+    plotted_smiles = set()
+    for renderer in renderers:
+        source = renderer.data_source.data
+        for i, value in enumerate(source['SMILES']):
+            assert source['NAME'][i] == expected[value]['NAME']
+            assert source['CLASS'][i] == expected[value]['CLASS']
+            assert source['DIM_1'][i] == expected[value]['DIM_1']
+            assert source['DIM_2'][i] == expected[value]['DIM_2']
+            assert Path(source['MOLFILE'][i]).read_text(
+                encoding='utf-8'
+            ) == value
+            plotted_smiles.add(value)
+    assert plotted_smiles == set(smiles)
+
+    hover = next(tool for tool in plot.tools if isinstance(tool, HoverTool))
+    assert '@MOLFILE' in hover.tooltips
+    assert '@NAME_SHORT' in hover.tooltips
+
+
+def test_prepare_rejects_ambiguous_smiles_before_generating_structures(
+    chemical_space,
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+    chemical_space.data = pd.DataFrame({
+        'SMILES': ['CCO', 'CCO'],
+        'NAME': ['first', 'second'],
+        'CLASS': ['A', 'A'],
+    })
+    chemical_space.df_processed = pd.DataFrame(
+        {'descriptor': [1]}, index=pd.Index(['CCO'], name='SMILES')
+    )
+    compressed = pd.DataFrame(
+        {'DIM_1': [0.1], 'DIM_2': [0.2]},
+        index=pd.Index(['CCO'], name='SMILES'),
+    )
+    create_mock = MagicMock()
+    monkeypatch.setattr('mlchem.helper.create_structure_files', create_mock)
+
+    with pytest.raises(ValueError, match='unique SMILES keys'):
+        chemical_space.prepare(compressed)
+    create_mock.assert_not_called()
+
+
+def test_prepare_rejects_compressed_smiles_without_processed_key(
+    chemical_space,
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+    chemical_space.df_processed = pd.DataFrame(
+        {'descriptor': [1]}, index=pd.Index(['CCO'], name='SMILES')
+    )
+    compressed = pd.DataFrame(
+        {'DIM_1': [0.1], 'DIM_2': [0.2]},
+        index=pd.Index(['CCC'], name='SMILES'),
+    )
+    create_mock = MagicMock()
+    monkeypatch.setattr('mlchem.helper.create_structure_files', create_mock)
+
+    with pytest.raises(ValueError, match='df_processed'):
+        chemical_space.prepare(compressed)
+    create_mock.assert_not_called()
+
 
 def test_update_bokeh_options(chemical_space):
     new_options = {'title_location': 'below', 'title_fontsize': '20px'}
