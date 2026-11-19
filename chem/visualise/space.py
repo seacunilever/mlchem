@@ -258,13 +258,21 @@ Examples
 The compressed dataframe's SMILES index is the alignment key. Its row order
 and coordinates are preserved; input and processed SMILES must be unique.
 Class labels must be sortable. Structure images are generated in stable
-SMILES order within each class and mapped back by SMILES, independent of
-directory enumeration and file modification times.
+SMILES order within each class, saved beneath a folder derived from that
+class label, and mapped back by SMILES, independent of directory enumeration
+and file modification times. Portable ASCII labels use their names directly;
+other labels use deterministic encoded folder names, available in
+``self.class_structure_folders``. The dedicated ``.mlchem_structures`` root
+keeps generated files separate from existing working-directory folders.
+``plot()`` renders existing ``MOLFILE`` paths and does not generate images.
 """
 
 
       import os
-      from mlchem.helper import create_structure_files
+      from mlchem.helper import (
+          _class_structure_folder_names,
+          create_structure_files,
+      )
 
       if list(df_compressed.columns) != ['DIM_1', 'DIM_2']:
           raise ValueError("'df_compressed' must have only 2 columns: ['DIM_1','DIM_2'].")
@@ -332,17 +340,19 @@ directory enumeration and file modification times.
       name_by_smiles = {}
       metadata_by_smiles = {}
       structure_root = '.mlchem_structures'
-      os.makedirs(structure_root, exist_ok=True)
+      structure_folder_names = _class_structure_folder_names(self.classnames)
+      self.class_structure_folders = dict(zip(
+          self.classnames,
+          (os.path.join(structure_root, name) for name in structure_folder_names),
+      ))
 
-      for class_index, class_name in enumerate(self.classnames):
+      for class_name in self.classnames:
           class_rows = prepared.loc[
               prepared.CLASS == class_name
           ].sort_values('SMILES', kind='mergesort')
           smiles = class_rows.SMILES.tolist()
           names = class_rows.NAME.tolist()
-          structure_folder = os.path.join(
-              structure_root, 'class_%d' % class_index
-          )
+          structure_folder = self.class_structure_folders[class_name]
           create_structure_files(
               df=class_rows[['SMILES']],
               structure_column_name='SMILES',

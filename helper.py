@@ -33,6 +33,8 @@
 
 from typing import Literal, Iterable, Callable, Any
 import logging
+import hashlib
+import re
 import pandas as pd
 import numpy as np
 from PIL import Image
@@ -1384,6 +1386,69 @@ Examples
     return cleaned_df, duplicates_removed
 
 
+_CLASS_FOLDER_PREFIX = '__mlchem_label__'
+
+
+def _class_structure_folder_names(classnames) -> list[str]:
+    """Map class labels to unique, portable ASCII folder components.
+
+    Short, collision-free labels from a conservative ASCII allowlist are
+    kept verbatim. Other labels get a reserved prefix, readable slug, and
+    stable digest so generated names remain distinct from literal labels.
+    """
+    reserved_names = {
+        'CON', 'PRN', 'AUX', 'NUL', 'CONIN$', 'CONOUT$',
+        *(f'COM{i}' for i in range(1, 10)),
+        *(f'LPT{i}' for i in range(1, 10)),
+    }
+
+    def can_use_label_directly(label) -> bool:
+        if not isinstance(label, str):
+            return False
+        if not re.fullmatch(r'[A-Za-z0-9_-][A-Za-z0-9._-]{0,62}', label):
+            return False
+        if label.endswith('.') or label.casefold().startswith(
+            _CLASS_FOLDER_PREFIX.casefold()
+        ):
+            return False
+        return label.split('.', 1)[0].upper() not in reserved_names
+
+    direct_candidates = {}
+    for index, label in enumerate(classnames):
+        if can_use_label_directly(label):
+            direct_candidates.setdefault(label.casefold(), []).append(index)
+
+    direct_indices = {
+        indices[0] for indices in direct_candidates.values()
+        if len(indices) == 1
+    }
+    folder_names = []
+    for index, label in enumerate(classnames):
+        if index in direct_indices:
+            folder_names.append(label)
+            continue
+
+        label_type = type(label)
+        identity = (
+            f'{label_type.__module__}.{label_type.__qualname__}:{label!r}'
+        )
+        digest = hashlib.sha256(
+            identity.encode('utf-8', errors='surrogatepass')
+        ).hexdigest()
+        slug = re.sub(r'[^A-Za-z0-9_-]+', '_', str(label)).strip('_')[:32]
+        folder_names.append(
+            f'{_CLASS_FOLDER_PREFIX}{slug or "value"}__{digest}'
+        )
+
+    normalized_names = [name.casefold() for name in folder_names]
+    if len(set(normalized_names)) != len(normalized_names):
+        raise ValueError(
+            'Class labels do not have unique stable representations for '
+            'structure-folder naming.'
+        )
+    return folder_names
+
+
 def create_structure_files(
     df: pd.DataFrame,
     structure_column_name: str,
@@ -1402,6 +1467,11 @@ structure_column_name : str
 
 folder_name : str
     Folder to save the PNG images.
+
+Notes
+-----
+The folder is created if needed but is not cleared. Existing files not
+replaced by the generated numbered PNGs are preserved.
 
 Returns
 -------
@@ -1423,25 +1493,22 @@ Examples
 
 
     import os
-    import shutil
     from mlchem.chem.manipulation import create_molecule
     from rdkit import Chem
     from rdkit.Chem import Draw
 
-    # Create the folder, removing it first if it already exists
-    if os.path.exists(folder_name):
-        shutil.rmtree(folder_name)
-    os.mkdir(folder_name)
+    # Keep unrelated files in an existing output folder intact.
+    os.makedirs(folder_name, exist_ok=True)
 
     for i, s in enumerate(df[structure_column_name]):
         try:
             mol = create_molecule(s)
-            filename = f'{folder_name}/{i}.png'
+            filename = os.path.join(folder_name, f'{i}.png')
             Draw.MolToFile(mol, filename)
         except Exception:
             # If molecule does not get read properly,
             # create a placeholder image
-            filename = f'{folder_name}/{i}.png'
+            filename = os.path.join(folder_name, f'{i}.png')
             Draw.MolToFile(Chem.MolFromSmarts('*'), filename)
 
 

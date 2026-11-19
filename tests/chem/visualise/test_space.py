@@ -185,7 +185,6 @@ def test_prepare_and_plot_keep_structure_rows_aligned(
     already_sorted,
     categorical_metadata,
 ):
-    import shutil
     from bokeh.models import GlyphRenderer, HoverTool
 
     monkeypatch.chdir(tmp_path)
@@ -232,9 +231,7 @@ def test_prepare_and_plot_keep_structure_rows_aligned(
 
     def create_test_structures(df, structure_column_name, folder_name):
         folder = Path(folder_name)
-        if folder.exists():
-            shutil.rmtree(folder)
-        folder.mkdir(parents=True)
+        folder.mkdir(parents=True, exist_ok=True)
         for index, value in enumerate(df[structure_column_name]):
             image_path = folder / f'{index}.png'
             image_path.write_text(value, encoding='utf-8')
@@ -268,6 +265,13 @@ def test_prepare_and_plot_keep_structure_rows_aligned(
         assert actual.DIM_1 == row['DIM_1']
         assert actual.DIM_2 == row['DIM_2']
         assert Path(actual.MOLFILE).read_text(encoding='utf-8') == value
+        assert Path(actual.MOLFILE).parent == Path(
+            chemical_space.class_structure_folders[row['CLASS']]
+        )
+        if label_type == 'string':
+            assert Path(actual.MOLFILE).parent.name == str(row['CLASS'])
+        else:
+            assert not Path(actual.MOLFILE).parent.name.startswith('class_')
         if categorical_metadata:
             assert actual.METADATA == row['METADATA']
 
@@ -296,6 +300,110 @@ def test_prepare_and_plot_keep_structure_rows_aligned(
     hover = next(tool for tool in plot.tools if isinstance(tool, HoverTool))
     assert '@MOLFILE' in hover.tooltips
     assert '@NAME_SHORT' in hover.tooltips
+
+
+def test_prepare_uses_safe_label_derived_structure_folders(
+    chemical_space,
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+    labels = ['EVAL', 'eval', '../TRAIN']
+    chemical_space.data = pd.DataFrame({
+        'SMILES': ['CCO', 'CCN', 'CCC'],
+        'NAME': ['ethanol', 'ethylamine', 'propane'],
+        'CLASS': labels,
+    })
+    chemical_space.df_processed = pd.DataFrame(
+        {'descriptor': [1, 2, 3]},
+        index=pd.Index(['CCO', 'CCN', 'CCC'], name='SMILES'),
+    )
+    compressed = pd.DataFrame(
+        {'DIM_1': [0.1, 0.2, 0.3], 'DIM_2': [0.4, 0.5, 0.6]},
+        index=pd.Index(['CCO', 'CCN', 'CCC'], name='SMILES'),
+    )
+
+    def create_test_structures(df, structure_column_name, folder_name):
+        folder = Path(folder_name)
+        folder.mkdir(parents=True, exist_ok=True)
+        for index, value in enumerate(df[structure_column_name]):
+            (folder / f'{index}.png').write_text(value, encoding='utf-8')
+
+    monkeypatch.setattr(
+        'mlchem.helper.create_structure_files', create_test_structures
+    )
+    chemical_space.prepare(compressed)
+
+    folders = list(chemical_space.class_structure_folders.values())
+    assert len(set(folders)) == len(labels)
+    structure_root = (tmp_path / '.mlchem_structures').resolve()
+    assert all(Path(folder).resolve().is_relative_to(structure_root)
+               for folder in folders)
+    folder_names = [Path(folder).name for folder in folders]
+    assert all(name.isascii() and len(name) <= 255 for name in folder_names)
+    assert not any(
+        any(character in '<>:"/\\|?*' for character in name)
+        or name.endswith(('.', ' '))
+        for name in folder_names
+    )
+    assert len({name.casefold() for name in folder_names}) == len(folder_names)
+    assert 'EVAL' not in [Path(folder).name for folder in folders]
+    assert all(not Path(folder).name.startswith('class_') for folder in folders)
+    assert not (tmp_path / 'TRAIN').exists()
+
+    prepared = chemical_space.df_compressed.set_index('SMILES')
+    for smiles, class_label in zip(['CCO', 'CCN', 'CCC'], labels):
+        molfile = prepared.loc[smiles, 'MOLFILE']
+        assert Path(molfile).parent == Path(
+            chemical_space.class_structure_folders[class_label]
+        )
+        assert Path(molfile).read_text(encoding='utf-8') == smiles
+
+
+def test_plot_cached_molfiles_does_not_generate_structure_root(
+    chemical_space,
+    monkeypatch,
+    tmp_path,
+):
+    from bokeh.models import GlyphRenderer
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('bokeh.io.output_notebook', lambda: None)
+    show_mock = MagicMock()
+    monkeypatch.setattr('bokeh.plotting.show', show_mock)
+
+    rows = []
+    for index, (smiles, label) in enumerate(
+        [('CCO', 'EVAL'), ('CCN', 'TEST'), ('CCC', 'TRAIN')]
+    ):
+        folder = tmp_path / label
+        folder.mkdir()
+        molfile = folder / f'{smiles}.png'
+        molfile.write_text(smiles, encoding='utf-8')
+        rows.append({
+            'DIM_1': index + 0.1,
+            'DIM_2': index + 0.2,
+            'SMILES': smiles,
+            'NAME': f'name_{smiles}',
+            'NAME_SHORT': f'name_{smiles}',
+            'CLASS': label,
+            'MOLFILE': str(molfile),
+        })
+
+    cached = pd.DataFrame(rows)
+    chemical_space.df_compressed = cached
+    chemical_space.classnames = np.array(['EVAL', 'TEST', 'TRAIN'])
+    chemical_space.plot()
+
+    assert not (tmp_path / '.mlchem_structures').exists()
+    layout = show_mock.call_args.args[0]
+    plot = layout.children[0]
+    rendered_paths = []
+    for renderer in plot.renderers:
+        if isinstance(renderer, GlyphRenderer):
+            rendered_paths.extend(renderer.data_source.data['MOLFILE'])
+    assert rendered_paths == cached.MOLFILE.tolist()
+    assert all(Path(path).is_file() for path in rendered_paths)
 
 
 def test_prepare_rejects_ambiguous_smiles_before_generating_structures(

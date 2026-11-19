@@ -261,6 +261,22 @@ def test_create_structure_files(tmp_path):
     create_structure_files(df, "SMILES", str(folder))
     assert len(list(folder.iterdir())) == 2
 
+
+def test_create_structure_files_preserves_unrelated_existing_files(tmp_path):
+    df = pd.DataFrame({"SMILES": ["CCO"]})
+    folder = tmp_path / "structures"
+    folder.mkdir()
+    sentinel = folder / "keep.txt"
+    sentinel.write_text("unrelated", encoding="utf-8")
+    (folder / "stale.png").write_text("unrelated", encoding="utf-8")
+
+    create_structure_files(df, "SMILES", str(folder))
+
+    assert sentinel.read_text(encoding="utf-8") == "unrelated"
+    assert (folder / "stale.png").read_text(encoding="utf-8") == "unrelated"
+    assert (folder / "0.png").is_file()
+
+
 def test_prepare_dataframe(tmp_path):
     df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
     folder = tmp_path / "files"
