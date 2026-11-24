@@ -31,7 +31,7 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Literal, Callable, Iterable
+from typing import Literal, Callable, Iterable, Sequence
 import pandas as pd
 import numpy as np
 import warnings
@@ -1254,15 +1254,15 @@ class MajorityVote:
 
     def evaluate_cv(
         self,
-        metric: Callable,
-        metric_name: str,
-        use_continuous_probabilities: bool = False,
+        metric: Callable | Sequence[Callable],
+        metric_name: str | Sequence[str],
+        use_continuous_probabilities: bool | Sequence[bool] = False,
         cv_iter: int = 5,
         cv_splitter=None,
         cv_indices: Iterable | None = None,
         groups: np.ndarray | pd.Series | None = None,
         n_estimators_max: int = 5,
-        logic: Literal['lower', 'greater'] = 'greater',
+        logic: Literal['lower', 'greater'] | Sequence[Literal['lower', 'greater']] = 'greater',
         desired_performance_score: Literal['train', 'cv', 'train_cv_average'] = 'train_cv_average',
         shuffle: bool = False,
         random_state: int | None = None,
@@ -1275,16 +1275,19 @@ combination, ensuring fair fold-wise comparison.
 
 Parameters
 ----------
-metric : callable
-    Scoring function accepting ``(y_true, y_pred)``.
+metric : callable or sequence of callable
+    Scoring functions accepting ``(y_true, y_pred)``. Multiple metrics
+    share the same fitted estimators and fold predictions.
 
-metric_name : str
-    Label appended to generated combination identifiers.
+metric_name : str or sequence of str
+    Unique labels aligned with ``metric``, appended to combination identifiers.
 
-use_continuous_probabilities : bool, optional (default=False)
+use_continuous_probabilities : bool or sequence of bool, optional
     For classification soft-vote strategies, use mean predicted
     probabilities directly instead of rounding them to class labels. Enable
     this for binary ROC-AUC; the probability for ``classes_[1]`` is used.
+    A sequence supplies one setting per metric; a scalar applies to all.
+    Hard-vote strategies always use predicted class labels.
 
 cv_iter : int, optional (default=5)
     Number of folds used when ``cv_indices`` and ``cv_splitter`` are not
@@ -1303,8 +1306,9 @@ groups : array-like, optional
 n_estimators_max : int, optional (default=5)
     Maximum combination size passed to ``generate_combination_cascade``.
 
-logic : {'lower', 'greater'}, optional (default='greater')
-    Direction of optimization for reliability computation.
+logic : {'lower', 'greater'} or sequence, optional (default='greater')
+    Direction of optimization for reliability computation. A sequence supplies
+    one direction per metric; a scalar applies to all.
 
 desired_performance_score : {'train', 'cv', 'train_cv_average'}, optional
     Performance component used inside
@@ -1320,11 +1324,14 @@ Returns
 -------
 pandas.DataFrame
     One row per evaluated ensemble variant. Columns include:
-    ``combination``, ``train_mean``, ``train_se``,
-    ``validation_mean``, ``validation_se``,
-    ``reliability_mean``, ``reliability_se``,
+    ``combination``, ``train_mean``, ``train_se``, ``train_min``, ``train_max``,
+    ``validation_mean``, ``validation_se``, ``validation_min``, ``validation_max``,
+    ``reliability_mean``, ``reliability_se``, ``reliability_min``, ``reliability_max``,
     ``train_folds``, ``validation_folds``, ``reliability_folds``.
-    Results are ranked by ``reliability_mean`` descending.
+    Minima and maxima are calculated across the corresponding fold values.
+    Results are ranked by ``reliability_mean`` descending. With multiple
+    metrics, a ``metric`` column identifies each row and results are grouped
+    in metric input order, ranked separately within each group.
     Train/validation columns contain raw metric values. Reliability is
     computed per fold, then averaged: for ``logic='lower'`` it is the
     negative of the selected loss plus ``abs(train - validation)``;
@@ -1369,11 +1376,56 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
 ...     random_state=0,
 ... )
 >>> results_summary = results[["combination", "validation_mean"]].head()
+
+Multiple metrics can use different optimization directions and prediction
+types without refitting:
+
+>>> from sklearn.metrics import accuracy_score
+>>> results = ensemble.evaluate_cv(
+...     metric=[accuracy_score, roc_auc_score],
+...     metric_name=["accuracy", "AUC"],
+...     use_continuous_probabilities=[False, True],
+...     cv_iter=3,
+...     n_estimators_max=2,
+... )
 """
 
         from sklearn.base import clone
         from mlchem.helper import generate_combination_cascade
         from mlchem.metrics import get_reliability_score_components
+
+        metrics = list(metric) if isinstance(metric, Sequence) else [metric]
+        metric_names = (
+            list(metric_name)
+            if isinstance(metric_name, Sequence) and not isinstance(metric_name, str)
+            else [metric_name]
+        )
+        if not metrics or any(not callable(item) for item in metrics):
+            raise ValueError("'metric' must contain at least one callable.")
+        if len(metric_names) != len(metrics):
+            raise ValueError("'metric_name' must contain one name per metric.")
+        if any(not isinstance(name, str) or not name for name in metric_names):
+            raise ValueError("Metric names must be non-empty strings.")
+        if len(set(metric_names)) != len(metric_names):
+            raise ValueError("Metric names must be unique.")
+
+        logics = (
+            list(logic)
+            if isinstance(logic, Sequence) and not isinstance(logic, str)
+            else [logic] * len(metrics)
+        )
+        probabilities = (
+            list(use_continuous_probabilities)
+            if isinstance(use_continuous_probabilities, Sequence)
+            and not isinstance(use_continuous_probabilities, (str, bytes))
+            else [use_continuous_probabilities] * len(metrics)
+        )
+        if len(logics) != len(metrics) or any(item not in ('lower', 'greater') for item in logics):
+            raise ValueError("'logic' must specify 'lower' or 'greater' for each metric.")
+        if len(probabilities) != len(metrics) or any(
+            not isinstance(item, bool) for item in probabilities
+        ):
+            raise ValueError("'use_continuous_probabilities' must specify a bool for each metric.")
 
         y_all = np.asarray(self.y_train)
         resolved_pairs = generate_cv_indices(
@@ -1478,7 +1530,7 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
         if self.task_type == 'classification':
             combinations = [comb for comb in combinations if len(comb) % 2 != 0]
 
-        rows = []
+        rows_by_metric = [[] for _ in metrics]
 
         for combination in tqdm(
             combinations, desc="Evaluating combinations", disable=False
@@ -1489,8 +1541,8 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
                 strategies = ('mean',)
 
             for strategy in strategies:
-                train_scores = []
-                validation_scores = []
+                train_scores = [[] for _ in metrics]
+                validation_scores = [[] for _ in metrics]
 
                 for fold_idx in range(len(resolved_pairs)):
                     if self.task_type == 'classification':
@@ -1504,8 +1556,7 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
                         valid_dict, y_valid_fold = fold_valid_reg[fold_idx]
 
                     if any(name not in train_dict for name in combination):
-                        train_scores = []
-                        validation_scores = []
+                        train_scores = [[] for _ in metrics]
                         break
 
                     train_matrix = np.column_stack([train_dict[name] for name in combination])
@@ -1515,64 +1566,88 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
                         y_train_pred = self._hard_vote(train_matrix)
                         y_valid_pred = self._hard_vote(valid_matrix)
                     elif strategy == 'soft':
-                        if use_continuous_probabilities:
-                            y_train_pred = train_matrix.mean(axis=1)
-                            y_valid_pred = valid_matrix.mean(axis=1)
-                        else:
-                            y_train_pred = self._soft_vote(train_matrix)
-                            y_valid_pred = self._soft_vote(valid_matrix)
+                        y_train_pred = train_matrix.mean(axis=1)
+                        y_valid_pred = valid_matrix.mean(axis=1)
+                        if not all(probabilities):
+                            y_train_rounded = self._soft_vote(train_matrix)
+                            y_valid_rounded = self._soft_vote(valid_matrix)
                     else:
                         y_train_pred = self._mean_vote(train_matrix)
                         y_valid_pred = self._mean_vote(valid_matrix)
 
-                    train_scores.append(float(metric(y_train_fold, y_train_pred)))
-                    validation_scores.append(float(metric(y_valid_fold, y_valid_pred)))
+                    for metric_idx, metric_function in enumerate(metrics):
+                        metric_train_pred = y_train_pred
+                        metric_valid_pred = y_valid_pred
+                        if strategy == 'soft' and not probabilities[metric_idx]:
+                            metric_train_pred = y_train_rounded
+                            metric_valid_pred = y_valid_rounded
+                        train_scores[metric_idx].append(
+                            float(metric_function(y_train_fold, metric_train_pred))
+                        )
+                        validation_scores[metric_idx].append(
+                            float(metric_function(y_valid_fold, metric_valid_pred))
+                        )
 
-                if len(train_scores) == 0:
-                    continue
+                for metric_idx, name in enumerate(metric_names):
+                    if not train_scores[metric_idx]:
+                        continue
 
-                reliability_folds = []
-                for train_score, validation_score in zip(train_scores, validation_scores):
-                    comp = get_reliability_score_components(
-                        train_score=train_score,
-                        cv_score=validation_score,
-                        logic=logic,
-                        desired_performance_score=desired_performance_score,
-                    )
-                    reliability_folds.append(float(comp['reliability_score']))
+                    reliability_folds = []
+                    for train_score, validation_score in zip(
+                        train_scores[metric_idx], validation_scores[metric_idx]
+                    ):
+                        comp = get_reliability_score_components(
+                            train_score=train_score,
+                            cv_score=validation_score,
+                            logic=logics[metric_idx],
+                            desired_performance_score=desired_performance_score,
+                        )
+                        reliability_folds.append(float(comp['reliability_score']))
 
-                train_mean, train_se = self._mean_and_se(train_scores)
-                validation_mean, validation_se = self._mean_and_se(validation_scores)
-                reliability_mean, reliability_se = self._mean_and_se(reliability_folds)
+                    train_mean, train_se = self._mean_and_se(train_scores[metric_idx])
+                    validation_mean, validation_se = self._mean_and_se(validation_scores[metric_idx])
+                    reliability_mean, reliability_se = self._mean_and_se(reliability_folds)
 
-                if self.task_type == 'classification':
-                    comb_label = f"{combination}_{strategy}_{metric_name}"
-                else:
-                    comb_label = f"{combination}_{metric_name}"
+                    if self.task_type == 'classification':
+                        comb_label = f"{combination}_{strategy}_{name}"
+                    else:
+                        comb_label = f"{combination}_{name}"
 
-                rows.append({
-                    'combination': comb_label,
-                    'train_mean': train_mean,
-                    'train_se': train_se,
-                    'validation_mean': validation_mean,
-                    'validation_se': validation_se,
-                    'reliability_mean': reliability_mean,
-                    'reliability_se': reliability_se,
-                    'train_folds': np.asarray(train_scores),
-                    'validation_folds': np.asarray(validation_scores),
-                    'reliability_folds': np.asarray(reliability_folds),
-                })
+                    row = {
+                        'combination': comb_label,
+                        'train_mean': train_mean,
+                        'train_se': train_se,
+                        'train_min': float(np.min(train_scores[metric_idx])),
+                        'train_max': float(np.max(train_scores[metric_idx])),
+                        'validation_mean': validation_mean,
+                        'validation_se': validation_se,
+                        'validation_min': float(np.min(validation_scores[metric_idx])),
+                        'validation_max': float(np.max(validation_scores[metric_idx])),
+                        'reliability_mean': reliability_mean,
+                        'reliability_se': reliability_se,
+                        'reliability_min': float(np.min(reliability_folds)),
+                        'reliability_max': float(np.max(reliability_folds)),
+                        'train_folds': np.asarray(train_scores[metric_idx]),
+                        'validation_folds': np.asarray(validation_scores[metric_idx]),
+                        'reliability_folds': np.asarray(reliability_folds),
+                    }
+                    if len(metrics) > 1:
+                        row['metric'] = name
+                    rows_by_metric[metric_idx].append(row)
 
-        if len(rows) == 0:
+        if not any(rows_by_metric):
             raise RuntimeError(
                 "No ensemble combinations were successfully evaluated in "
                 "MajorityVote.evaluate_cv."
             )
 
-        self.final_results_cv = pd.DataFrame(rows)
-        self.final_results_cv = self.final_results_cv.sort_values(
-            by='reliability_mean', ascending=False
-        ).reset_index(drop=True)
+        self.final_results_cv = pd.concat(
+            [
+                pd.DataFrame(rows).sort_values(by='reliability_mean', ascending=False)
+                for rows in rows_by_metric
+            ],
+            ignore_index=True,
+        )
         return self.final_results_cv
 
 

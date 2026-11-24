@@ -36,7 +36,7 @@ from rdkit import Chem
 import numpy as np
 import pandas as pd
 import warnings
-from typing import Literal, Optional, Iterable, Callable
+from typing import Literal, Optional, Iterable, Callable, Sequence
 from IPython.display import display
 from functools import lru_cache
 
@@ -751,7 +751,7 @@ Conformation Methods
 
         @staticmethod
         def assign_atom_mapnumbers(mol: Chem.rdchem.Mol,
-                                   atom_ids: Iterable[int] = ()) -> None:
+                                   atom_ids: Sequence[int] = ()) -> None:
             """
             Assign map numbers to atoms in a molecule.
 
@@ -763,7 +763,7 @@ Conformation Methods
             ----------
             mol : rdkit.Chem.rdchem.Mol
                 The RDKit molecule object.
-            atom_ids : Iterable[int], optional
+            atom_ids : sequence of int, optional
                 Atom indices to assign map numbers to. Default is all atoms.
 
             Returns
@@ -782,8 +782,8 @@ Conformation Methods
         @staticmethod
         def assign_atom_labels(
             mol: Chem.rdchem.Mol,
-            prop_values: str | int | float | Iterable | None = None,
-            atom_ids: Iterable[int] = ()
+            prop_values: Sequence | np.ndarray | pd.Series | None = None,
+            atom_ids: Sequence[int] = ()
         ) -> None:
             """
             Assign labels to atoms in a molecule.
@@ -796,9 +796,9 @@ Conformation Methods
             ----------
             mol : rdkit.Chem.rdchem.Mol
                 The RDKit molecule object.
-            prop_values : str, int, float, Iterable, optional
+            prop_values : sequence, numpy.ndarray or pandas.Series, optional
                 Values to assign as labels. If None, atom indices are used.
-            atom_ids : Iterable[int], optional
+            atom_ids : sequence of int, optional
                 Atom indices to assign labels to. Default is all atoms.
 
             Returns
@@ -825,8 +825,8 @@ Conformation Methods
         @staticmethod
         def assign_atom_notes(
             mol: Chem.rdchem.Mol,
-            prop_values: str | int | float | Iterable | None = None,
-            atom_ids: Iterable[int] = ()
+            prop_values: Sequence | np.ndarray | pd.Series | None = None,
+            atom_ids: Sequence[int] = ()
         ) -> None:
             """
 Assign notes to atoms in a molecule.
@@ -839,9 +839,9 @@ Parameters
 ----------
 mol : rdkit.Chem.rdchem.Mol
     The RDKit molecule object.
-prop_values : str, int, float, Iterable, optional
+prop_values : sequence, numpy.ndarray or pandas.Series, optional
     Values to assign as notes. If None, atom indices are used.
-atom_ids : Iterable[int], optional
+atom_ids : sequence of int, optional
     Atom indices to assign notes to. Default is all atoms.
 
 Returns
@@ -868,8 +868,8 @@ None
         @staticmethod
         def assign_bond_notes(
             mol: Chem.rdchem.Mol,
-            prop_values: str | int | float | Iterable,
-            bond_ids: Iterable[int] = ()
+            prop_values: Sequence | np.ndarray | pd.Series,
+            bond_ids: Sequence[int] = ()
         ) -> None:
             """
 Assign notes to bonds in a molecule.
@@ -881,9 +881,9 @@ Parameters
 ----------
 mol : rdkit.Chem.rdchem.Mol
     The RDKit molecule object.
-prop_values : str, int, float, Iterable
+prop_values : sequence, numpy.ndarray or pandas.Series
     Values to assign as notes.
-bond_ids : Iterable[int], optional
+bond_ids : sequence of int, optional
     Bond indices to assign notes to. Default is all bonds.
 
 Returns
@@ -1316,7 +1316,7 @@ numpy.ndarray
 
         @staticmethod
         def get_gasteiger_charges(mol: Chem.rdchem.Mol,
-                                  atom_ids: int | Iterable[int] = [],
+                                  atom_ids: int | Sequence[int] = [],
                                   nIter: int = 12) -> list:
             """
 Compute Gasteiger charges for specified atoms in a molecule.
@@ -1325,7 +1325,7 @@ Parameters
 ----------
 mol : rdkit.Chem.rdchem.Mol
     The RDKit molecule object.
-atom_ids : int or Iterable[int], optional
+atom_ids : int or sequence of int, optional
     Atom indices to compute charges for. Default is all atoms.
 nIter : int, optional
     Number of iterations for charge computation. Default is 12.

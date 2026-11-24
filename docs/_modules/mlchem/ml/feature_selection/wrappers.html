@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.feature_selection.wrappers &#8212; mlchem 1.2.8 documentation</title>
+    <title>mlchem.ml.feature_selection.wrappers &#8212; mlchem 1.2.9 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=4d6f9085"></script>
+    <script src="../../../../_static/documentation_options.js?v=e917149c"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.wrappers</a></li> 
       </ul>
@@ -1981,6 +1981,13 @@
 <span class="sd">            A DataFrame containing the results of the second stage of</span>
 <span class="sd">            feature selection.</span>
 
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Stage-1 train/CV floors are based on cross-validation fold means and</span>
+<span class="sd">        are re-applied to the corresponding Stage-2 fold means. A full-data</span>
+<span class="sd">        training score is not comparable to the fold-training floor because</span>
+<span class="sd">        it is measured on a different sample size.</span>
+
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        Stage 2 requires a completed stage-1 search:</span>
@@ -2071,20 +2078,22 @@
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_set</span><span class="p">[</span><span class="n">subset</span><span class="p">]</span>
             <span class="n">estimator_copy</span> <span class="o">=</span> <span class="n">_clone_for_search</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span><span class="p">)</span>
             <span class="n">estimator_copy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
-            <span class="n">train_score</span> <span class="o">=</span> <span class="n">_score_estimator</span><span class="p">(</span>
+            <span class="n">full_fit_train_score</span> <span class="o">=</span> <span class="n">_score_estimator</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">,</span>
                 <span class="n">estimator_copy</span><span class="p">,</span>
                 <span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">response_method</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_at_least</span><span class="p">(</span><span class="n">train_score</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_threshold_2</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;Stage 2 rejected subset=</span><span class="si">{</span><span class="n">subset</span><span class="si">}</span><span class="s2"> by train threshold: </span><span class="si">{</span><span class="n">train_score</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log</span><span class="p">(</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;Stage 2 full-fit train metric=</span><span class="si">{</span><span class="n">full_fit_train_score</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">; &quot;</span>
+                <span class="s2">&quot;fold-mean floors are checked against CV fold means.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
 
+            <span class="c1"># Stage-1 floors are based on CV fold means; compare them below</span>
+            <span class="c1"># only with the corresponding Stage-2 fold means, not a full-fit</span>
+            <span class="c1"># training score computed on a different sample size.</span>
             <span class="n">cv_result</span> <span class="o">=</span> <span class="n">crossval</span><span class="p">(</span>
                 <span class="n">estimator_copy</span><span class="p">,</span>
                 <span class="n">x</span><span class="p">,</span>
@@ -2354,7 +2363,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.feature_selection.wrappers</a></li> 
       </ul>

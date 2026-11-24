@@ -34,17 +34,19 @@
 import pytest
 import logging
 import warnings
+from collections import UserList
+from typing import Literal
 from unittest.mock import patch
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.base import BaseEstimator
-from sklearn.dummy import DummyRegressor
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.datasets import make_classification
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import accuracy_score, mean_absolute_error, roc_auc_score
 from mlchem.ml.modelling.model_evaluation import (crossval,
                                                   y_scrambling,
                                                   ApplicabilityDomain,
@@ -857,6 +859,160 @@ def test_majority_vote_evaluate_cv_classification_outputs_fold_metrics(
     assert all(len(fold_scores) == 4 for fold_scores in results['train_folds'])
     assert all(len(fold_scores) == 4 for fold_scores in results['validation_folds'])
     assert all(len(fold_scores) == 4 for fold_scores in results['reliability_folds'])
+
+
+def test_majority_vote_multiple_metrics_reuse_fits_and_match_single_calls():
+    X = pd.DataFrame({'x': np.arange(20)})
+    y = np.array([0, 1] * 10)
+    mv = MajorityVote(
+        train_set=X, y_train=y, task_type='classification',
+        estimator_list=[DummyClassifier(strategy='prior')],
+        column_list=[['x']], estimator_names=['dummy'],
+    )
+    predictions = {'accuracy': [], 'auc': []}
+
+    def recorded_accuracy(y_true, y_pred):
+        predictions['accuracy'].append(np.asarray(y_pred))
+        return accuracy_score(y_true, y_pred)
+
+    def recorded_auc(y_true, y_pred):
+        predictions['auc'].append(np.asarray(y_pred))
+        return roc_auc_score(y_true, y_pred)
+
+    original_fit = DummyClassifier.fit
+    with patch.object(DummyClassifier, 'fit', autospec=True, side_effect=original_fit) as fit:
+        results = mv.evaluate_cv(
+            metric=[recorded_accuracy, recorded_auc],
+            metric_name=['accuracy', 'auc'],
+            use_continuous_probabilities=[False, True],
+            cv_iter=2, n_estimators_max=1,
+        )
+    assert fit.call_count == 2
+    assert all(np.isin(pred, [0, 1]).all() for pred in predictions['accuracy'])
+    assert any(np.any((pred > 0) & (pred < 1)) for pred in predictions['auc'])
+    assert results['metric'].tolist() == ['accuracy', 'accuracy', 'auc', 'auc']
+    for metric, name, continuous in [
+        (accuracy_score, 'accuracy', False),
+        (roc_auc_score, 'auc', True),
+    ]:
+        separate = mv.evaluate_cv(
+            metric=metric, metric_name=name,
+            use_continuous_probabilities=continuous, cv_iter=2, n_estimators_max=1,
+        )
+        combined = results.loc[results['metric'] == name].drop(columns='metric').reset_index(drop=True)
+        pd.testing.assert_frame_equal(combined, separate)
+
+
+def test_majority_vote_accepts_non_list_sequences():
+    X = pd.DataFrame({'x': np.arange(20)})
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0, 1] * 10), task_type='classification',
+        estimator_list=[DummyClassifier(strategy='prior')],
+        column_list=[['x']], estimator_names=['dummy'],
+    )
+    results = mv.evaluate_cv(
+        metric=UserList([accuracy_score, roc_auc_score]),
+        metric_name=UserList(['accuracy', 'auc']),
+        use_continuous_probabilities=UserList([False, True]),
+        logic=UserList[Literal['lower', 'greater']](['greater', 'greater']),
+        cv_iter=2, n_estimators_max=1,
+    )
+    assert results['metric'].tolist() == ['accuracy', 'accuracy', 'auc', 'auc']
+    assert np.isfinite(results['validation_mean']).all()
+
+
+def test_majority_vote_multiple_metrics_support_per_metric_logic():
+    X = pd.DataFrame({'x': np.zeros(4)})
+    y = np.array([-10.0, -10.0, 10.0, 10.0])
+    mv = MajorityVote(
+        train_set=X, y_train=y, task_type='regression',
+        estimator_list=[DummyRegressor(strategy='constant', constant=0.0),
+                        DummyRegressor(strategy='constant', constant=8.0)],
+        column_list=[['x'], ['x']], estimator_names=['stable', 'unstable'],
+    )
+    indices = [(np.array([0, 1]), np.array([2, 3])),
+               (np.array([2, 3]), np.array([0, 1]))]
+    score = lambda y_true, y_pred: -mean_absolute_error(y_true, y_pred)
+    results = mv.evaluate_cv(
+        metric=(get_rmse, score), metric_name=('rmse', 'negative_mae'),
+        logic=('lower', 'greater'), cv_indices=indices, n_estimators_max=1,
+    )
+    for metric, name, direction in [
+        (get_rmse, 'rmse', 'lower'), (score, 'negative_mae', 'greater'),
+    ]:
+        separate = mv.evaluate_cv(
+            metric=metric, metric_name=name, logic=direction,
+            cv_indices=indices, n_estimators_max=1,
+        )
+        combined = results.loc[results['metric'] == name].drop(columns='metric').reset_index(drop=True)
+        pd.testing.assert_frame_equal(combined, separate)
+
+
+@pytest.mark.parametrize('single_fold', [False, True])
+def test_majority_vote_fold_ranges(single_fold):
+    X = pd.DataFrame({'x': np.zeros(4)})
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0.0, 2.0, 4.0, 8.0]),
+        task_type='regression',
+        estimator_list=[DummyRegressor(strategy='constant', constant=0.0)],
+        column_list=[['x']], estimator_names=['dummy'],
+    )
+    folds = [
+        (np.array([0, 1]), np.array([2, 3])),
+        (np.array([0, 2]), np.array([1, 3])),
+        (np.array([1, 2]), np.array([0, 3])),
+    ]
+    kwargs = {
+        'metric': [mean_absolute_error, get_rmse],
+        'metric_name': ['mae', 'rmse'],
+        'logic': 'lower',
+        'cv_indices': folds[:1] if single_fold else folds,
+    }
+    if single_fold:
+        with pytest.warns(RuntimeWarning, match='never use'):
+            results = mv.evaluate_cv(**kwargs)
+    else:
+        results = mv.evaluate_cv(**kwargs)
+
+    assert set(results['metric']) == {'mae', 'rmse'}
+    for _, row in results.iterrows():
+        for prefix in ('train', 'validation', 'reliability'):
+            scores = row[f'{prefix}_folds']
+            assert row[f'{prefix}_min'] == pytest.approx(np.min(scores))
+            assert row[f'{prefix}_max'] == pytest.approx(np.max(scores))
+            if single_fold:
+                assert row[f'{prefix}_min'] == row[f'{prefix}_max']
+            else:
+                assert row[f'{prefix}_min'] < row[f'{prefix}_max']
+
+
+@pytest.mark.parametrize(
+    'kwargs',
+    [
+        {'metric': [], 'metric_name': []},
+        {'metric': [accuracy_score, roc_auc_score], 'metric_name': ['accuracy']},
+        {'metric': [accuracy_score, roc_auc_score], 'metric_name': ['same', 'same']},
+        {'metric': [accuracy_score, None], 'metric_name': ['accuracy', 'bad']},
+        {'metric': [accuracy_score, roc_auc_score], 'metric_name': ['accuracy', '']},
+        {'metric': [accuracy_score, roc_auc_score], 'metric_name': ['accuracy', 'auc'],
+         'logic': ['greater']},
+        {'metric': accuracy_score, 'metric_name': 'accuracy', 'logic': 'invalid'},
+        {'metric': [accuracy_score, roc_auc_score], 'metric_name': ['accuracy', 'auc'],
+         'use_continuous_probabilities': [False]},
+        {'metric': accuracy_score, 'metric_name': 'accuracy',
+         'use_continuous_probabilities': 'yes'},
+    ],
+)
+def test_majority_vote_invalid_metrics_fail_before_fitting(kwargs):
+    mv = MajorityVote(
+        train_set=pd.DataFrame({'x': [0, 1, 2, 3]}), y_train=[0, 1, 0, 1],
+        task_type='classification', estimator_list=[DummyClassifier()],
+        column_list=[['x']],
+    )
+    with patch.object(DummyClassifier, 'fit') as fit:
+        with pytest.raises(ValueError):
+            mv.evaluate_cv(**kwargs)
+    fit.assert_not_called()
 
 
 def test_majority_vote_evaluate_cv_reports_progress(majority_vote_classification):

@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.visualise.simmaps &#8212; mlchem 1.2.8 documentation</title>
+    <title>mlchem.chem.visualise.simmaps &#8212; mlchem 1.2.9 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=4d6f9085"></script>
+    <script src="../../../../_static/documentation_options.js?v=e917149c"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.simmaps</a></li> 
       </ul>
@@ -75,9 +75,10 @@
 <span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
 <span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Draw</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.figure</span><span class="w"> </span><span class="kn">import</span> <span class="n">Figure</span>
 
@@ -91,7 +92,7 @@
 	<span class="nd">@staticmethod</span>
 	<span class="k">def</span><span class="w"> </span><span class="nf">get_weights_from_model</span><span class="p">(</span>
 		<span class="n">mol_input</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span>
-		<span class="n">estimator_cols</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span>
+		<span class="n">estimator_cols</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
 		<span class="n">model_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;regression&#39;</span><span class="p">,</span> <span class="s1">&#39;classification&#39;</span><span class="p">],</span>
 		<span class="n">actual_val</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 		<span class="n">fp_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;ap&#39;</span><span class="p">,</span> <span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="s1">&#39;rk&#39;</span><span class="p">],</span>
@@ -110,7 +111,7 @@
 <span class="sd">    The input molecule as an RDKit Mol object or a SMILES string.</span>
 <span class="sd">estimator : sklearn.base.BaseEstimator</span>
 <span class="sd">    A trained scikit-learn estimator.</span>
-<span class="sd">estimator_cols : Iterable</span>
+<span class="sd">estimator_cols : sequence, numpy.ndarray, pandas.Index or pandas.Series</span>
 <span class="sd">    Feature names used by the estimator.</span>
 <span class="sd">model_type : {&#39;regression&#39;, &#39;classification&#39;}</span>
 <span class="sd">    Type of model. Must be either &#39;regression&#39; or &#39;classification&#39;.</span>
@@ -181,6 +182,9 @@
 		<span class="kn">from</span><span class="w"> </span><span class="nn">rdkit.Chem.Draw</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimilarityMaps</span>
 		<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalise_iterable</span>
 		<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_progressive_column_names</span>
+
+		<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">estimator_cols</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">estimator_cols</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+			<span class="n">estimator_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">estimator_cols</span><span class="p">)</span>
 
 		<span class="c1"># Dictionary to map fp_type to the corresponding function</span>
 		<span class="n">fp_function_dict</span> <span class="o">=</span> <span class="p">{</span>
@@ -555,7 +559,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.simmaps</a></li> 
       </ul>

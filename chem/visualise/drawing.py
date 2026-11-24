@@ -31,9 +31,10 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Iterable, Literal
+from typing import Iterable, Literal, Sequence
 from rdkit import Chem
 from PIL import Image
+import numpy as np
 
 class MolDrawer:
     """
@@ -73,7 +74,7 @@ mol : rdkit.Chem.rdchem.Mol or None
     Default molecule used by `draw_mol` when no molecule is passed.
 highlightAtoms : Iterable
     Default atom indices to highlight when `draw_mol` receives none.
-size : Iterable
+size : sequence of int or numpy.ndarray
     Default canvas size in pixels as `(width, height)`.
 legend : str
     Default legend used by `draw_mol` when none is passed.
@@ -396,7 +397,7 @@ draw_mol(...)
     def __init__(self,
                  mol: Chem.rdchem.Mol | None = None,
                  highlightAtoms: Iterable | None = None,
-                 size: Iterable | None = None,
+                 size: Sequence[int] | np.ndarray | None = None,
                  legend: str = '') -> None:
         """
 Initialise a `MolDrawer` instance and its default drawing state.
@@ -412,7 +413,7 @@ mol : rdkit.Chem.rdchem.Mol or None, optional
 highlightAtoms : Iterable or None, optional
     Default atom indices for highlighting in `draw_mol`. If `None`, no
     atoms are highlighted by default.
-size : Iterable or None, optional
+size : sequence of int, numpy.ndarray or None, optional
     Default canvas size as `(width, height)` in pixels. If `None`, uses
     `(300, 300)`.
 legend : str, optional
@@ -454,7 +455,7 @@ Examples
 
     def show_palette(
         self, palette: dict | None = None, save: bool = False,
-        filename: str = '', size: Iterable = (1000, 300)
+        filename: str = '', size: Sequence[int] = (1000, 300)
     ) -> Image.Image:
         """
 Display a colour palette as an image.
@@ -470,7 +471,7 @@ save : bool, optional
     If `True`, write the generated image to `filename`.
 filename : str, optional
     Output path used when `save=True`.
-size : Iterable, optional
+size : sequence of int, optional
     Output size in pixels as `(width, height)`.
 
 Returns
@@ -638,9 +639,9 @@ Examples
 
     def show_images_grid(
         self,
-        images: Iterable[Image.Image] = None,
+        images: Sequence[Image.Image] | np.ndarray | None = None,
         n_columns: int = 4,
-        size: Iterable = None,
+        size: Sequence[int] | np.ndarray | None = None,
         buffer: int = 5,
         empty_tile_colour: str = 'white',
         save: bool = False,
@@ -654,11 +655,11 @@ with `IPython.display.display` and can optionally be saved.
 
 Parameters
 ----------
-images : Iterable[PIL.Image.Image], optional
+images : sequence of PIL.Image.Image or numpy.ndarray, optional
     Images to arrange. If `None`, uses `self.img_list`.
 n_columns : int, default=4
     Number of columns in the grid layout.
-size : Iterable[int, int], optional
+size : sequence of int or numpy.ndarray, optional
     Size of each image in pixels as (width, height). If None, uses the
     default size from `self.size`.
 buffer : int, default=5
@@ -679,7 +680,7 @@ Raises
 ------
 AssertionError
     If `empty_tile_colour` is not in the colour dictionary or if `size`
-    is not a 2-element iterable.
+    is not a 2-element sequence.
 
 Examples
 --------
@@ -731,7 +732,7 @@ Examples
                  mol: Chem.rdchem.Mol = None,
                  legend: str = '',
                  highlightAtoms: Iterable | None = None,
-                 size: Iterable = None,
+                 size: Sequence[int] | np.ndarray | None = None,
                  ACS1996_mode: bool = False
                  ) -> Image.Image:
         """
@@ -772,7 +773,7 @@ legend : str, optional
     Legend text. If empty, `self.legend` is used.
 highlightAtoms : iterable of int, optional
     Atom indices to highlight. If `None` or empty, `self.highlightAtoms` is used.
-size : Iterable[int, int], optional
+size : sequence of int or numpy.ndarray, optional
     Canvas size `(width, height)`. If `None`, `self.size` is used.
 ACS1996_mode : bool, default=False
     If `True`, draw using `Draw.DrawMoleculeACS1996`.

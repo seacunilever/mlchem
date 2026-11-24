@@ -31,7 +31,7 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Literal, Iterable, Callable, Any
+from typing import Literal, Iterable, Callable, Any, Sequence, Collection
 import logging
 import hashlib
 import re
@@ -720,7 +720,7 @@ Examples
 
 
 
-def generate_cartesian_product(*lists: Iterable) -> list[list]:
+def generate_cartesian_product(*lists: Sequence) -> list[list]:
     """
 Generate the Cartesian product of multiple lists.
 
@@ -730,8 +730,8 @@ from each input list. For example, given lists A, B, and C, returns all tuples
 
 Parameters
 ----------
-*lists : iterable
-    Two or more iterables (lists, tuples, etc.) to combine.
+*lists : sequence
+    Two or more non-string sequences to combine.
 
 Returns
 -------
@@ -745,7 +745,7 @@ ValueError
     If fewer than two lists are provided, or if any list is empty.
 
 TypeError
-    If any argument is not a list or tuple.
+    If any argument is not a non-string sequence.
 
 Examples
 --------
@@ -762,8 +762,8 @@ Examples
         raise ValueError("At least two lists are required.")
     
     for idx, lst in enumerate(lists, start=1):
-        if not isinstance(lst, (list, tuple)):
-            raise TypeError(f"Argument {idx} must be a list or tuple.")
+        if not isinstance(lst, Sequence) or isinstance(lst, (str, bytes)):
+            raise TypeError(f"Argument {idx} must be a non-string sequence.")
         if len(lst) == 0:
             raise ValueError(f"List {idx} is empty; cannot generate combinations.")
     
@@ -811,16 +811,16 @@ True
 
 
 def generate_combination_cascade(
-    elements: Iterable,
+    elements: Collection,
     n: int
-) -> Iterable[Iterable]:
+) -> list[list]:
     """
 Generate all combinations of elements from size 1 to n.
 
 Parameters
 ----------
-elements : iterable
-    Input elements to combine.
+elements : collection
+    Re-iterable collection of elements to combine.
 
 n : int
     Maximum size of combinations.

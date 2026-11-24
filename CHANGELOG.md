@@ -2,12 +2,24 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.10] - 2026-11-24
+
+### Added
+
+- Evaluate multiple named metrics in one `MajorityVote.evaluate_cv()` call, reusing fitted estimators and allowing per-metric optimization directions and soft-vote probability settings.
+- Include minimum and maximum train, validation, and reliability fold scores in `MajorityVote.evaluate_cv()` results.
+
+### Changed
+
+- Accept non-list sequences for multiple `MajorityVote.evaluate_cv()` metrics and options, `generate_cartesian_product()` inputs, and similarity-map estimator columns. Clarified annotations for ordered molecule and drawing inputs and re-iterable combination inputs while retaining iterable annotations where arbitrary iterables are supported.
+
 ## [1.2.9] - 2026-11-19
 
 ### Fixed
 
 - Fixed lower-is-better reliability to maximize the negative of loss plus the train/CV gap, rather than rewarding instability by dividing a negative loss. Raw metrics, result-column names, higher-is-better scoring, and ranking directions are unchanged; lower-is-better selection results may change.
 - Saved generated ChemicalSpace structure images under portable, class-label-derived folders without clearing unrelated files. Rendering cached plot data continues to use its existing `MOLFILE` paths without generating another structure root.
+- In Combinatorial model search, removed the full-train score gate at Stage2. It is kept as diagnostics but it no longer affects downstream feature retention.
 
 ## [1.2.8] - 2026-11-19
 

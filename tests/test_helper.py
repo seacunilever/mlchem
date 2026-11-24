@@ -401,6 +401,10 @@ def test_generate_cartesian_product_with_tuples():
     expected = [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
     assert result == expected
 
+def test_generate_cartesian_product_with_other_sequences():
+    result = generate_cartesian_product(range(2), range(2, 4))
+    assert result == [[0, 2], [0, 3], [1, 2], [1, 3]]
+
 def test_generate_cartesian_product_mixed_types():
     """Test Cartesian product with mixed data types."""
     result = generate_cartesian_product([1, 2.5], ['a', None], [True])
@@ -424,12 +428,12 @@ def test_generate_cartesian_product_empty_list():
     with pytest.raises(ValueError, match="is empty"):
         generate_cartesian_product([], [1, 2])
 
-def test_generate_cartesian_product_non_list_argument():
-    """Test that TypeError is raised for non-list/tuple arguments."""
-    with pytest.raises(TypeError, match="must be a list or tuple"):
+def test_generate_cartesian_product_non_sequence_argument():
+    """Test that strings and non-sequence arguments are rejected."""
+    with pytest.raises(TypeError, match="must be a non-string sequence"):
         generate_cartesian_product([1, 2], 'abc')
     
-    with pytest.raises(TypeError, match="must be a list or tuple"):
+    with pytest.raises(TypeError, match="must be a non-string sequence"):
         generate_cartesian_product([1, 2], {'a': 1})
 
 def test_generate_cartesian_product_large_output():

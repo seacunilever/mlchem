@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.8 documentation</title>
+    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.9 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=4d6f9085"></script>
+    <script src="../../../../_static/documentation_options.js?v=e917149c"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>
@@ -75,7 +75,7 @@
 <span class="c1"># If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .</span>
 <span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
@@ -1323,15 +1323,15 @@
 <a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_cv</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">use_continuous_probabilities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
+        <span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">use_continuous_probabilities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">cv_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
         <span class="n">cv_splitter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">cv_indices</span><span class="p">:</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">groups</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_estimators_max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-        <span class="n">logic</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;greater&#39;</span><span class="p">,</span>
+        <span class="n">logic</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="s1">&#39;greater&#39;</span><span class="p">,</span>
         <span class="n">desired_performance_score</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;cv&#39;</span><span class="p">,</span> <span class="s1">&#39;train_cv_average&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;train_cv_average&#39;</span><span class="p">,</span>
         <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1344,16 +1344,19 @@
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
-<span class="sd">metric : callable</span>
-<span class="sd">    Scoring function accepting ``(y_true, y_pred)``.</span>
+<span class="sd">metric : callable or sequence of callable</span>
+<span class="sd">    Scoring functions accepting ``(y_true, y_pred)``. Multiple metrics</span>
+<span class="sd">    share the same fitted estimators and fold predictions.</span>
 
-<span class="sd">metric_name : str</span>
-<span class="sd">    Label appended to generated combination identifiers.</span>
+<span class="sd">metric_name : str or sequence of str</span>
+<span class="sd">    Unique labels aligned with ``metric``, appended to combination identifiers.</span>
 
-<span class="sd">use_continuous_probabilities : bool, optional (default=False)</span>
+<span class="sd">use_continuous_probabilities : bool or sequence of bool, optional</span>
 <span class="sd">    For classification soft-vote strategies, use mean predicted</span>
 <span class="sd">    probabilities directly instead of rounding them to class labels. Enable</span>
 <span class="sd">    this for binary ROC-AUC; the probability for ``classes_[1]`` is used.</span>
+<span class="sd">    A sequence supplies one setting per metric; a scalar applies to all.</span>
+<span class="sd">    Hard-vote strategies always use predicted class labels.</span>
 
 <span class="sd">cv_iter : int, optional (default=5)</span>
 <span class="sd">    Number of folds used when ``cv_indices`` and ``cv_splitter`` are not</span>
@@ -1372,8 +1375,9 @@
 <span class="sd">n_estimators_max : int, optional (default=5)</span>
 <span class="sd">    Maximum combination size passed to ``generate_combination_cascade``.</span>
 
-<span class="sd">logic : {&#39;lower&#39;, &#39;greater&#39;}, optional (default=&#39;greater&#39;)</span>
-<span class="sd">    Direction of optimization for reliability computation.</span>
+<span class="sd">logic : {&#39;lower&#39;, &#39;greater&#39;} or sequence, optional (default=&#39;greater&#39;)</span>
+<span class="sd">    Direction of optimization for reliability computation. A sequence supplies</span>
+<span class="sd">    one direction per metric; a scalar applies to all.</span>
 
 <span class="sd">desired_performance_score : {&#39;train&#39;, &#39;cv&#39;, &#39;train_cv_average&#39;}, optional</span>
 <span class="sd">    Performance component used inside</span>
@@ -1389,11 +1393,14 @@
 <span class="sd">-------</span>
 <span class="sd">pandas.DataFrame</span>
 <span class="sd">    One row per evaluated ensemble variant. Columns include:</span>
-<span class="sd">    ``combination``, ``train_mean``, ``train_se``,</span>
-<span class="sd">    ``validation_mean``, ``validation_se``,</span>
-<span class="sd">    ``reliability_mean``, ``reliability_se``,</span>
+<span class="sd">    ``combination``, ``train_mean``, ``train_se``, ``train_min``, ``train_max``,</span>
+<span class="sd">    ``validation_mean``, ``validation_se``, ``validation_min``, ``validation_max``,</span>
+<span class="sd">    ``reliability_mean``, ``reliability_se``, ``reliability_min``, ``reliability_max``,</span>
 <span class="sd">    ``train_folds``, ``validation_folds``, ``reliability_folds``.</span>
-<span class="sd">    Results are ranked by ``reliability_mean`` descending.</span>
+<span class="sd">    Minima and maxima are calculated across the corresponding fold values.</span>
+<span class="sd">    Results are ranked by ``reliability_mean`` descending. With multiple</span>
+<span class="sd">    metrics, a ``metric`` column identifies each row and results are grouped</span>
+<span class="sd">    in metric input order, ranked separately within each group.</span>
 <span class="sd">    Train/validation columns contain raw metric values. Reliability is</span>
 <span class="sd">    computed per fold, then averaged: for ``logic=&#39;lower&#39;`` it is the</span>
 <span class="sd">    negative of the selected loss plus ``abs(train - validation)``;</span>
@@ -1438,11 +1445,56 @@
 <span class="sd">...     random_state=0,</span>
 <span class="sd">... )</span>
 <span class="sd">&gt;&gt;&gt; results_summary = results[[&quot;combination&quot;, &quot;validation_mean&quot;]].head()</span>
+
+<span class="sd">Multiple metrics can use different optimization directions and prediction</span>
+<span class="sd">types without refitting:</span>
+
+<span class="sd">&gt;&gt;&gt; from sklearn.metrics import accuracy_score</span>
+<span class="sd">&gt;&gt;&gt; results = ensemble.evaluate_cv(</span>
+<span class="sd">...     metric=[accuracy_score, roc_auc_score],</span>
+<span class="sd">...     metric_name=[&quot;accuracy&quot;, &quot;AUC&quot;],</span>
+<span class="sd">...     use_continuous_probabilities=[False, True],</span>
+<span class="sd">...     cv_iter=3,</span>
+<span class="sd">...     n_estimators_max=2,</span>
+<span class="sd">... )</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">clone</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_combination_cascade</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_reliability_score_components</span>
+
+        <span class="n">metrics</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+        <span class="n">metric_names</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">metric_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">metric_name</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">metrics</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;metric&#39; must contain at least one callable.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;metric_name&#39; must contain one name per metric.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">metric_names</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Metric names must be non-empty strings.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">metric_names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metric_names</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Metric names must be unique.&quot;</span><span class="p">)</span>
+
+        <span class="n">logics</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">logic</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">logic</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">logic</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">probabilities</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">use_continuous_probabilities</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_continuous_probabilities</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">use_continuous_probabilities</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">))</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">use_continuous_probabilities</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">logics</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">logics</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;logic&#39; must specify &#39;lower&#39; or &#39;greater&#39; for each metric.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">probabilities</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">probabilities</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;use_continuous_probabilities&#39; must specify a bool for each metric.&quot;</span><span class="p">)</span>
 
         <span class="n">y_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
         <span class="n">resolved_pairs</span> <span class="o">=</span> <span class="n">generate_cv_indices</span><span class="p">(</span>
@@ -1547,7 +1599,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
             <span class="n">combinations</span> <span class="o">=</span> <span class="p">[</span><span class="n">comb</span> <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">combinations</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
 
-        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rows_by_metric</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
             <span class="n">combinations</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Evaluating combinations&quot;</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">False</span>
@@ -1558,8 +1610,8 @@
                 <span class="n">strategies</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">,)</span>
 
             <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">strategies</span><span class="p">:</span>
-                <span class="n">train_scores</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">validation_scores</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">train_scores</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
+                <span class="n">validation_scores</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
 
                 <span class="k">for</span> <span class="n">fold_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">resolved_pairs</span><span class="p">)):</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
@@ -1573,8 +1625,7 @@
                         <span class="n">valid_dict</span><span class="p">,</span> <span class="n">y_valid_fold</span> <span class="o">=</span> <span class="n">fold_valid_reg</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
 
                     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">train_dict</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">combination</span><span class="p">):</span>
-                        <span class="n">train_scores</span> <span class="o">=</span> <span class="p">[]</span>
-                        <span class="n">validation_scores</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">train_scores</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
                         <span class="k">break</span>
 
                     <span class="n">train_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">train_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">combination</span><span class="p">])</span>
@@ -1584,64 +1635,88 @@
                         <span class="n">y_train_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hard_vote</span><span class="p">(</span><span class="n">train_matrix</span><span class="p">)</span>
                         <span class="n">y_valid_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hard_vote</span><span class="p">(</span><span class="n">valid_matrix</span><span class="p">)</span>
                     <span class="k">elif</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s1">&#39;soft&#39;</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">use_continuous_probabilities</span><span class="p">:</span>
-                            <span class="n">y_train_pred</span> <span class="o">=</span> <span class="n">train_matrix</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                            <span class="n">y_valid_pred</span> <span class="o">=</span> <span class="n">valid_matrix</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">y_train_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_soft_vote</span><span class="p">(</span><span class="n">train_matrix</span><span class="p">)</span>
-                            <span class="n">y_valid_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_soft_vote</span><span class="p">(</span><span class="n">valid_matrix</span><span class="p">)</span>
+                        <span class="n">y_train_pred</span> <span class="o">=</span> <span class="n">train_matrix</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="n">y_valid_pred</span> <span class="o">=</span> <span class="n">valid_matrix</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">probabilities</span><span class="p">):</span>
+                            <span class="n">y_train_rounded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_soft_vote</span><span class="p">(</span><span class="n">train_matrix</span><span class="p">)</span>
+                            <span class="n">y_valid_rounded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_soft_vote</span><span class="p">(</span><span class="n">valid_matrix</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">y_train_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_vote</span><span class="p">(</span><span class="n">train_matrix</span><span class="p">)</span>
                         <span class="n">y_valid_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_vote</span><span class="p">(</span><span class="n">valid_matrix</span><span class="p">)</span>
 
-                    <span class="n">train_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">metric</span><span class="p">(</span><span class="n">y_train_fold</span><span class="p">,</span> <span class="n">y_train_pred</span><span class="p">)))</span>
-                    <span class="n">validation_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">metric</span><span class="p">(</span><span class="n">y_valid_fold</span><span class="p">,</span> <span class="n">y_valid_pred</span><span class="p">)))</span>
+                    <span class="k">for</span> <span class="n">metric_idx</span><span class="p">,</span> <span class="n">metric_function</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
+                        <span class="n">metric_train_pred</span> <span class="o">=</span> <span class="n">y_train_pred</span>
+                        <span class="n">metric_valid_pred</span> <span class="o">=</span> <span class="n">y_valid_pred</span>
+                        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s1">&#39;soft&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">probabilities</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]:</span>
+                            <span class="n">metric_train_pred</span> <span class="o">=</span> <span class="n">y_train_rounded</span>
+                            <span class="n">metric_valid_pred</span> <span class="o">=</span> <span class="n">y_valid_rounded</span>
+                        <span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="nb">float</span><span class="p">(</span><span class="n">metric_function</span><span class="p">(</span><span class="n">y_train_fold</span><span class="p">,</span> <span class="n">metric_train_pred</span><span class="p">))</span>
+                        <span class="p">)</span>
+                        <span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="nb">float</span><span class="p">(</span><span class="n">metric_function</span><span class="p">(</span><span class="n">y_valid_fold</span><span class="p">,</span> <span class="n">metric_valid_pred</span><span class="p">))</span>
+                        <span class="p">)</span>
 
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_scores</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">metric_idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">metric_names</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]:</span>
+                        <span class="k">continue</span>
 
-                <span class="n">reliability_folds</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">train_score</span><span class="p">,</span> <span class="n">validation_score</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">train_scores</span><span class="p">,</span> <span class="n">validation_scores</span><span class="p">):</span>
-                    <span class="n">comp</span> <span class="o">=</span> <span class="n">get_reliability_score_components</span><span class="p">(</span>
-                        <span class="n">train_score</span><span class="o">=</span><span class="n">train_score</span><span class="p">,</span>
-                        <span class="n">cv_score</span><span class="o">=</span><span class="n">validation_score</span><span class="p">,</span>
-                        <span class="n">logic</span><span class="o">=</span><span class="n">logic</span><span class="p">,</span>
-                        <span class="n">desired_performance_score</span><span class="o">=</span><span class="n">desired_performance_score</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="n">reliability_folds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">comp</span><span class="p">[</span><span class="s1">&#39;reliability_score&#39;</span><span class="p">]))</span>
+                    <span class="n">reliability_folds</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">train_score</span><span class="p">,</span> <span class="n">validation_score</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                        <span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">],</span> <span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span>
+                    <span class="p">):</span>
+                        <span class="n">comp</span> <span class="o">=</span> <span class="n">get_reliability_score_components</span><span class="p">(</span>
+                            <span class="n">train_score</span><span class="o">=</span><span class="n">train_score</span><span class="p">,</span>
+                            <span class="n">cv_score</span><span class="o">=</span><span class="n">validation_score</span><span class="p">,</span>
+                            <span class="n">logic</span><span class="o">=</span><span class="n">logics</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">],</span>
+                            <span class="n">desired_performance_score</span><span class="o">=</span><span class="n">desired_performance_score</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="n">reliability_folds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">comp</span><span class="p">[</span><span class="s1">&#39;reliability_score&#39;</span><span class="p">]))</span>
 
-                <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">train_scores</span><span class="p">)</span>
-                <span class="n">validation_mean</span><span class="p">,</span> <span class="n">validation_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">)</span>
-                <span class="n">reliability_mean</span><span class="p">,</span> <span class="n">reliability_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">)</span>
+                    <span class="n">train_mean</span><span class="p">,</span> <span class="n">train_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])</span>
+                    <span class="n">validation_mean</span><span class="p">,</span> <span class="n">validation_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])</span>
+                    <span class="n">reliability_mean</span><span class="p">,</span> <span class="n">reliability_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
-                    <span class="n">comb_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combination</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">comb_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combination</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">metric_name</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+                        <span class="n">comb_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combination</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">comb_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combination</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
 
-                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-                    <span class="s1">&#39;combination&#39;</span><span class="p">:</span> <span class="n">comb_label</span><span class="p">,</span>
-                    <span class="s1">&#39;train_mean&#39;</span><span class="p">:</span> <span class="n">train_mean</span><span class="p">,</span>
-                    <span class="s1">&#39;train_se&#39;</span><span class="p">:</span> <span class="n">train_se</span><span class="p">,</span>
-                    <span class="s1">&#39;validation_mean&#39;</span><span class="p">:</span> <span class="n">validation_mean</span><span class="p">,</span>
-                    <span class="s1">&#39;validation_se&#39;</span><span class="p">:</span> <span class="n">validation_se</span><span class="p">,</span>
-                    <span class="s1">&#39;reliability_mean&#39;</span><span class="p">:</span> <span class="n">reliability_mean</span><span class="p">,</span>
-                    <span class="s1">&#39;reliability_se&#39;</span><span class="p">:</span> <span class="n">reliability_se</span><span class="p">,</span>
-                    <span class="s1">&#39;train_folds&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">train_scores</span><span class="p">),</span>
-                    <span class="s1">&#39;validation_folds&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">),</span>
-                    <span class="s1">&#39;reliability_folds&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">),</span>
-                <span class="p">})</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;combination&#39;</span><span class="p">:</span> <span class="n">comb_label</span><span class="p">,</span>
+                        <span class="s1">&#39;train_mean&#39;</span><span class="p">:</span> <span class="n">train_mean</span><span class="p">,</span>
+                        <span class="s1">&#39;train_se&#39;</span><span class="p">:</span> <span class="n">train_se</span><span class="p">,</span>
+                        <span class="s1">&#39;train_min&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])),</span>
+                        <span class="s1">&#39;train_max&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])),</span>
+                        <span class="s1">&#39;validation_mean&#39;</span><span class="p">:</span> <span class="n">validation_mean</span><span class="p">,</span>
+                        <span class="s1">&#39;validation_se&#39;</span><span class="p">:</span> <span class="n">validation_se</span><span class="p">,</span>
+                        <span class="s1">&#39;validation_min&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])),</span>
+                        <span class="s1">&#39;validation_max&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])),</span>
+                        <span class="s1">&#39;reliability_mean&#39;</span><span class="p">:</span> <span class="n">reliability_mean</span><span class="p">,</span>
+                        <span class="s1">&#39;reliability_se&#39;</span><span class="p">:</span> <span class="n">reliability_se</span><span class="p">,</span>
+                        <span class="s1">&#39;reliability_min&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">)),</span>
+                        <span class="s1">&#39;reliability_max&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">)),</span>
+                        <span class="s1">&#39;train_folds&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]),</span>
+                        <span class="s1">&#39;validation_folds&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]),</span>
+                        <span class="s1">&#39;reliability_folds&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">),</span>
+                    <span class="p">}</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+                    <span class="n">rows_by_metric</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">rows_by_metric</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s2">&quot;No ensemble combinations were successfully evaluated in &quot;</span>
                 <span class="s2">&quot;MajorityVote.evaluate_cv.&quot;</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span>
-            <span class="n">by</span><span class="o">=</span><span class="s1">&#39;reliability_mean&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;reliability_mean&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">rows_by_metric</span>
+            <span class="p">],</span>
+            <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span></div>
 </div>
 
@@ -1758,7 +1833,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>

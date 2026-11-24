@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.manipulation &#8212; mlchem 1.2.8 documentation</title>
+    <title>mlchem.chem.manipulation &#8212; mlchem 1.2.9 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../_static/documentation_options.js?v=4d6f9085"></script>
+    <script src="../../../_static/documentation_options.js?v=e917149c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation</a></li> 
       </ul>
@@ -80,7 +80,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 
@@ -831,7 +831,7 @@
 <a class="viewcode-back" href="../../../mlchem.chem.html#mlchem.chem.manipulation.PropManager.Base.assign_atom_mapnumbers">[docs]</a>
         <span class="nd">@staticmethod</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">assign_atom_mapnumbers</span><span class="p">(</span><span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
-                                   <span class="n">atom_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                                   <span class="n">atom_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Assign map numbers to atoms in a molecule.</span>
 
@@ -843,7 +843,7 @@
 <span class="sd">            ----------</span>
 <span class="sd">            mol : rdkit.Chem.rdchem.Mol</span>
 <span class="sd">                The RDKit molecule object.</span>
-<span class="sd">            atom_ids : Iterable[int], optional</span>
+<span class="sd">            atom_ids : sequence of int, optional</span>
 <span class="sd">                Atom indices to assign map numbers to. Default is all atoms.</span>
 
 <span class="sd">            Returns</span>
@@ -865,8 +865,8 @@
         <span class="nd">@staticmethod</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">assign_atom_labels</span><span class="p">(</span>
             <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
-            <span class="n">prop_values</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">atom_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+            <span class="n">prop_values</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">atom_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Assign labels to atoms in a molecule.</span>
@@ -879,9 +879,9 @@
 <span class="sd">            ----------</span>
 <span class="sd">            mol : rdkit.Chem.rdchem.Mol</span>
 <span class="sd">                The RDKit molecule object.</span>
-<span class="sd">            prop_values : str, int, float, Iterable, optional</span>
+<span class="sd">            prop_values : sequence, numpy.ndarray or pandas.Series, optional</span>
 <span class="sd">                Values to assign as labels. If None, atom indices are used.</span>
-<span class="sd">            atom_ids : Iterable[int], optional</span>
+<span class="sd">            atom_ids : sequence of int, optional</span>
 <span class="sd">                Atom indices to assign labels to. Default is all atoms.</span>
 
 <span class="sd">            Returns</span>
@@ -911,8 +911,8 @@
         <span class="nd">@staticmethod</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">assign_atom_notes</span><span class="p">(</span>
             <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
-            <span class="n">prop_values</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">atom_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+            <span class="n">prop_values</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">atom_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Assign notes to atoms in a molecule.</span>
@@ -925,9 +925,9 @@
 <span class="sd">----------</span>
 <span class="sd">mol : rdkit.Chem.rdchem.Mol</span>
 <span class="sd">    The RDKit molecule object.</span>
-<span class="sd">prop_values : str, int, float, Iterable, optional</span>
+<span class="sd">prop_values : sequence, numpy.ndarray or pandas.Series, optional</span>
 <span class="sd">    Values to assign as notes. If None, atom indices are used.</span>
-<span class="sd">atom_ids : Iterable[int], optional</span>
+<span class="sd">atom_ids : sequence of int, optional</span>
 <span class="sd">    Atom indices to assign notes to. Default is all atoms.</span>
 
 <span class="sd">Returns</span>
@@ -957,8 +957,8 @@
         <span class="nd">@staticmethod</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">assign_bond_notes</span><span class="p">(</span>
             <span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
-            <span class="n">prop_values</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">,</span>
-            <span class="n">bond_ids</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+            <span class="n">prop_values</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+            <span class="n">bond_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Assign notes to bonds in a molecule.</span>
@@ -970,9 +970,9 @@
 <span class="sd">----------</span>
 <span class="sd">mol : rdkit.Chem.rdchem.Mol</span>
 <span class="sd">    The RDKit molecule object.</span>
-<span class="sd">prop_values : str, int, float, Iterable</span>
+<span class="sd">prop_values : sequence, numpy.ndarray or pandas.Series</span>
 <span class="sd">    Values to assign as notes.</span>
-<span class="sd">bond_ids : Iterable[int], optional</span>
+<span class="sd">bond_ids : sequence of int, optional</span>
 <span class="sd">    Bond indices to assign notes to. Default is all bonds.</span>
 
 <span class="sd">Returns</span>
@@ -1462,7 +1462,7 @@
 <a class="viewcode-back" href="../../../mlchem.chem.html#mlchem.chem.manipulation.PropManager.Mol.get_gasteiger_charges">[docs]</a>
         <span class="nd">@staticmethod</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">get_gasteiger_charges</span><span class="p">(</span><span class="n">mol</span><span class="p">:</span> <span class="n">Chem</span><span class="o">.</span><span class="n">rdchem</span><span class="o">.</span><span class="n">Mol</span><span class="p">,</span>
-                                  <span class="n">atom_ids</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+                                  <span class="n">atom_ids</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
                                   <span class="n">nIter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Compute Gasteiger charges for specified atoms in a molecule.</span>
@@ -1471,7 +1471,7 @@
 <span class="sd">----------</span>
 <span class="sd">mol : rdkit.Chem.rdchem.Mol</span>
 <span class="sd">    The RDKit molecule object.</span>
-<span class="sd">atom_ids : int or Iterable[int], optional</span>
+<span class="sd">atom_ids : int or sequence of int, optional</span>
 <span class="sd">    Atom indices to compute charges for. Default is all atoms.</span>
 <span class="sd">nIter : int, optional</span>
 <span class="sd">    Number of iterations for charge computation. Default is 12.</span>
@@ -11438,7 +11438,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.8 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.manipulation</a></li> 
       </ul>

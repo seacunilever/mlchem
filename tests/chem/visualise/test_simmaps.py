@@ -32,6 +32,7 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import pytest
+from collections import UserList
 from rdkit import Chem
 from rdkit.Chem import Draw
 import numpy as np
@@ -73,6 +74,18 @@ def test_get_weights_from_model(sample_molecule, sample_estimator):
     )
     assert isinstance(result, pd.DataFrame)
     assert 'Delta' in result.columns
+
+
+@pytest.mark.parametrize('columns', [('m1', 'm2'), UserList(['m1', 'm2'])])
+def test_get_weights_from_model_accepts_sequences(columns, sample_molecule, sample_estimator):
+    kwargs = {
+        'mol_input': sample_molecule, 'estimator': sample_estimator,
+        'model_type': 'classification', 'actual_val': 0.5,
+        'fp_type': 'm', 'return_df': True,
+    }
+    result = SimMaps.get_weights_from_model(estimator_cols=columns, **kwargs)
+    expected = SimMaps.get_weights_from_model(estimator_cols=['m1', 'm2'], **kwargs)
+    pd.testing.assert_frame_equal(result, expected)
 
 def test_get_weights_from_fingerprint(sample_molecule):
     result = SimMaps.get_weights_from_fingerprint(

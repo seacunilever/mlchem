@@ -31,9 +31,10 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
-from typing import Literal, Iterable
+from typing import Literal, Iterable, Sequence
 from rdkit import Chem
 from rdkit.Chem import Draw
+import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
@@ -43,7 +44,7 @@ class SimMaps:
 	@staticmethod
 	def get_weights_from_model(
 		mol_input: Chem.rdchem.Mol | str, estimator,
-		estimator_cols: Iterable,
+		estimator_cols: Sequence[str] | np.ndarray | pd.Index | pd.Series,
 		model_type: Literal['regression', 'classification'],
 		actual_val: float,
 		fp_type: Literal['m', 'ap', 'tt', 'rk'],
@@ -62,7 +63,7 @@ mol_input : rdkit.Chem.rdchem.Mol or str
     The input molecule as an RDKit Mol object or a SMILES string.
 estimator : sklearn.base.BaseEstimator
     A trained scikit-learn estimator.
-estimator_cols : Iterable
+estimator_cols : sequence, numpy.ndarray, pandas.Index or pandas.Series
     Feature names used by the estimator.
 model_type : {'regression', 'classification'}
     Type of model. Must be either 'regression' or 'classification'.
@@ -133,6 +134,9 @@ Examples
 		from rdkit.Chem.Draw import SimilarityMaps
 		from mlchem.helper import normalise_iterable
 		from mlchem.helper import create_progressive_column_names
+
+		if isinstance(estimator_cols, Sequence) and not isinstance(estimator_cols, str):
+			estimator_cols = list(estimator_cols)
 
 		# Dictionary to map fp_type to the corresponding function
 		fp_function_dict = {
