@@ -241,7 +241,7 @@ second stage reuses cached fold predictions; it does not fit the models again.
 ```python
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from mlchem.metrics import get_geometric_S
+from sklearn.metrics import accuracy_score, roc_auc_score
 from mlchem.ml.modelling.model_evaluation import MajorityVote, generate_cv_indices
 
 estimators = [
@@ -273,8 +273,9 @@ folds = generate_cv_indices(
 )
 
 individual = mv.evaluate_cv(
-  metric=get_geometric_S,
-  metric_name='G',
+  metric=[roc_auc_score, accuracy_score],
+  metric_name=['auc', 'accuracy'],
+  use_continuous_probabilities=[True, False],
   cv_indices=folds,
   logic='greater',
   desired_performance_score='train_cv_average',
@@ -282,23 +283,35 @@ individual = mv.evaluate_cv(
 )
 
 # Replace this example criterion with your own model selection.
-best_names = individual.groupby('estimator')['reliability_mean'].max().nlargest(3).index
-shortlist = individual[individual['estimator'].isin(best_names)].copy()
+shortlist = individual.loc[
+  (individual['strategy'] == 'soft')
+  & (individual['auc_validation_mean'] >= 0.5)
+  & (individual['accuracy_validation_mean'] >= 0.5)
+].copy()
 consensus = mv.evaluate_consensus_cv(shortlist, n_estimators_max=3)
-print(consensus[['combination', 'validation_mean', 'reliability_mean']].head())
+print(consensus[['combination', 'auc_validation_mean', 'accuracy_validation_mean']].head())
 
 # Separately refit the shortlisted estimators on the full training set.
 fit_report = mv.fit(
-  selected_estimators=best_names.tolist(),
+  selected_estimators=shortlist['estimator'].unique().tolist(),
   return_prediction_dataframes=True,
 )
 ```
 
 Filtering keeps each estimator represented by at least one remaining row;
 editing score or prediction values does not change the cached predictions.
+Consensus evaluates both hard and soft strategies for the retained estimators,
+even if the shortlist contains only soft rows.
+Adjust the example thresholds if they leave the shortlist empty.
 Keep the DataFrame's attributes when filtering or copying it. The individual
-results also contain per-fold prediction arrays; `mv.cv_indices_` gives their
-corresponding row positions.
+results also contain per-metric fold prediction arrays, such as
+`auc_validation_predictions_folds`; `mv.cv_indices_` gives their corresponding
+row positions. Each result has one row per combination and strategy, with
+metric-prefixed train, validation, reliability, and fold columns, even for a
+single metric. Results are sorted by the first metric's reliability mean;
+sort by a different metric's reliability column to change the ranking.
+Compared with earlier releases, metric names no longer appear in a separate
+`metric` column or in `combination`; use the prefixed columns instead.
 
 Without a screening step, call `evaluate_cv()` with its default
 `individual_only=False` to fit all configured models and score their
@@ -327,8 +340,8 @@ SFS selects the highest mean fold reliability (also its parsimony reference);
 its forward additions still optimize raw CV performance. Both combinatorial
 stages rank by mean fold reliability minus its standard error, and stage 2
 uses the first row as `best_record`. Majority-vote CV ranks by mean fold
-reliability. Scores are computed **before** fold aggregation, not from the
-displayed aggregate train/CV values. Existing result-column names are retained.
+reliability of the first supplied metric. Scores are computed **before** fold
+aggregation, not from the displayed aggregate train/CV values.
 
 ### Capture pipeline logs
 

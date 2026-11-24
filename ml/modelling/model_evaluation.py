@@ -1314,7 +1314,8 @@ metric : callable or sequence of callable
     share the same fitted estimators and fold predictions.
 
 metric_name : str or sequence of str
-    Unique labels aligned with ``metric``, appended to combination identifiers.
+    Unique labels aligned with ``metric``. Each label prefixes its result
+    columns, for example ``auc_validation_mean``.
 
 use_continuous_probabilities : bool or sequence of bool, optional
     For classification soft-vote strategies, use mean predicted
@@ -1367,31 +1368,29 @@ random_state : int or None, optional
 individual_only : bool, optional (default=False)
     Score only individual estimators and retain their fold predictions for
     ``evaluate_consensus_cv``. The returned DataFrame includes
-    ``estimator`` and ``strategy`` columns and per-fold train and validation
-    prediction arrays.
+    an ``estimator`` column and per-metric fold prediction arrays.
     The corresponding row positions are available in ``cv_indices_``.
 
 Returns
 -------
 pandas.DataFrame
-    One row per evaluated ensemble variant. Columns include:
-    ``combination``, ``train_mean``, ``train_se``, ``train_min``, ``train_max``,
-    ``validation_mean``, ``validation_se``, ``validation_min``, ``validation_max``,
-    ``reliability_mean``, ``reliability_se``, ``reliability_min``, ``reliability_max``,
-    ``train_folds``, ``validation_folds``, ``reliability_folds``.
+    One row per evaluated combination and voting ``strategy``. Columns include
+    ``combination`` and ``strategy``, plus metric-prefixed scores such as
+    ``accuracy_train_mean``, ``accuracy_validation_mean``, and
+    ``accuracy_reliability_mean``. Each metric has ``mean``, ``se``, ``min``,
+    ``max``, and ``folds`` columns for train, validation, and reliability.
     Minima and maxima are calculated across the corresponding fold values.
-    Results are ranked by ``reliability_mean`` descending. With multiple
-    metrics, a ``metric`` column identifies each row and results are grouped
-    in metric input order, ranked separately within each group.
+    Results are ranked by the first metric's reliability mean, descending.
+    Sort by another metric's reliability column to change the ranking.
     Train/validation columns contain raw metric values. Reliability is
     computed per fold, then averaged: for ``logic='lower'`` it is the
     negative of the selected loss plus ``abs(train - validation)``;
     for ``logic='greater'`` the existing performance divided by
     ``1 + abs(train - validation)`` is unchanged. Reliability is always
     maximized, is not raw RMSE, and is nonpositive for nonnegative losses.
-    In individual-only mode, ``train_predictions_folds`` and
-    ``validation_predictions_folds`` contain the predictions used by each
-    row's metric and strategy, in the order of ``cv_indices_``.
+    In individual-only mode, metric-prefixed ``train_predictions_folds`` and
+    ``validation_predictions_folds`` columns contain the predictions used by
+    that metric and strategy, in the order of ``cv_indices_``.
 
 Examples
 --------
@@ -1430,7 +1429,7 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
 ...     shuffle=True,
 ...     random_state=0,
 ... )
->>> results_summary = results[["combination", "validation_mean"]].head()
+>>> results_summary = results[["combination", "AUC_validation_mean"]].head()
 
 Multiple metrics can use different optimization directions and prediction
 types without refitting:
@@ -1450,7 +1449,7 @@ Shortlist individual models before evaluating ensemble combinations:
 ...     metric=accuracy_score, metric_name="accuracy", cv_iter=3,
 ...     individual_only=True,
 ... )
->>> best = individual.groupby("estimator")["validation_mean"].max().nlargest(3).index
+>>> best = individual.groupby("estimator")["accuracy_validation_mean"].max().nlargest(3).index
 >>> shortlist = individual.loc[individual["estimator"].isin(best)].copy()
 >>> consensus = ensemble.evaluate_consensus_cv(shortlist, n_estimators_max=3)
 """
@@ -1654,7 +1653,7 @@ Shortlist individual models before evaluating ensemble combinations:
             The DataFrame returned by the latest ``evaluate_cv`` call with
             ``individual_only=True``, optionally filtered to retain desired
             rows. Each retained ``estimator`` selects that model once, even
-            when several metric or strategy rows remain. Filtering or editing
+            when several strategy rows remain. Filtering or editing
             score and prediction columns does not alter cached predictions.
             DataFrame attributes must be preserved when filtering or copying.
         n_estimators_max : int, optional (default=5)
@@ -1708,7 +1707,7 @@ Shortlist individual models before evaluating ensemble combinations:
         metric_names = cache.metric_names
         probabilities = cache.probabilities
         logics = cache.logics
-        rows_by_metric = [[] for _ in metrics]
+        rows = []
 
         for combination in tqdm(
             combinations, desc="Evaluating combinations", disable=False
@@ -1765,10 +1764,17 @@ Shortlist individual models before evaluating ensemble combinations:
                             train_predictions[metric_idx].append(metric_train_pred.copy())
                             validation_predictions[metric_idx].append(metric_valid_pred.copy())
 
-                for metric_idx, name in enumerate(metric_names):
-                    if not train_scores[metric_idx]:
-                        continue
+                if not train_scores[0]:
+                    continue
+                if cache.task_type == 'classification':
+                    comb_label = f"{combination}_{strategy}"
+                else:
+                    comb_label = str(combination)
+                row: dict[str, object] = {'combination': comb_label, 'strategy': strategy}
+                if individual_only:
+                    row['estimator'] = combination[0]
 
+                for metric_idx, name in enumerate(metric_names):
                     reliability_folds = []
                     for train_score, validation_score in zip(
                         train_scores[metric_idx], validation_scores[metric_idx]
@@ -1785,51 +1791,37 @@ Shortlist individual models before evaluating ensemble combinations:
                     validation_mean, validation_se = self._mean_and_se(validation_scores[metric_idx])
                     reliability_mean, reliability_se = self._mean_and_se(reliability_folds)
 
-                    if cache.task_type == 'classification':
-                        comb_label = f"{combination}_{strategy}_{name}"
-                    else:
-                        comb_label = f"{combination}_{name}"
-
-                    row = {
-                        'combination': comb_label,
-                        'train_mean': train_mean,
-                        'train_se': train_se,
-                        'train_min': float(np.min(train_scores[metric_idx])),
-                        'train_max': float(np.max(train_scores[metric_idx])),
-                        'validation_mean': validation_mean,
-                        'validation_se': validation_se,
-                        'validation_min': float(np.min(validation_scores[metric_idx])),
-                        'validation_max': float(np.max(validation_scores[metric_idx])),
-                        'reliability_mean': reliability_mean,
-                        'reliability_se': reliability_se,
-                        'reliability_min': float(np.min(reliability_folds)),
-                        'reliability_max': float(np.max(reliability_folds)),
-                        'train_folds': np.asarray(train_scores[metric_idx]),
-                        'validation_folds': np.asarray(validation_scores[metric_idx]),
-                        'reliability_folds': np.asarray(reliability_folds),
-                    }
-                    if len(metrics) > 1:
-                        row['metric'] = name
+                    row.update({
+                        f'{name}_train_mean': train_mean,
+                        f'{name}_train_se': train_se,
+                        f'{name}_train_min': float(np.min(train_scores[metric_idx])),
+                        f'{name}_train_max': float(np.max(train_scores[metric_idx])),
+                        f'{name}_validation_mean': validation_mean,
+                        f'{name}_validation_se': validation_se,
+                        f'{name}_validation_min': float(np.min(validation_scores[metric_idx])),
+                        f'{name}_validation_max': float(np.max(validation_scores[metric_idx])),
+                        f'{name}_reliability_mean': reliability_mean,
+                        f'{name}_reliability_se': reliability_se,
+                        f'{name}_reliability_min': float(np.min(reliability_folds)),
+                        f'{name}_reliability_max': float(np.max(reliability_folds)),
+                        f'{name}_train_folds': np.asarray(train_scores[metric_idx]),
+                        f'{name}_validation_folds': np.asarray(validation_scores[metric_idx]),
+                        f'{name}_reliability_folds': np.asarray(reliability_folds),
+                    })
                     if individual_only:
-                        row['estimator'] = combination[0]
-                        row['strategy'] = strategy
-                        row['train_predictions_folds'] = train_predictions[metric_idx]
-                        row['validation_predictions_folds'] = validation_predictions[metric_idx]
-                    rows_by_metric[metric_idx].append(row)
+                        row[f'{name}_train_predictions_folds'] = train_predictions[metric_idx]
+                        row[f'{name}_validation_predictions_folds'] = validation_predictions[metric_idx]
+                rows.append(row)
 
-        if not any(rows_by_metric):
+        if not rows:
             raise RuntimeError(
                 "No ensemble combinations were successfully evaluated in "
                 "MajorityVote.evaluate_cv."
             )
 
-        return pd.concat(
-            [
-                pd.DataFrame(rows).sort_values(by='reliability_mean', ascending=False)
-                for rows in rows_by_metric
-            ],
-            ignore_index=True,
-        )
+        return pd.DataFrame(rows).sort_values(
+            by=f'{metric_names[0]}_reliability_mean', ascending=False
+        ).reset_index(drop=True)
 
 
 class ApplicabilityDomain:

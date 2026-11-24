@@ -2,19 +2,39 @@
 
 All notable user-facing changes are documented in this file.
 
+## Unreleased
+
+### Changed
+
+- **Breaking:** `MajorityVote.evaluate_cv()` and `evaluate_consensus_cv()` now return one row per combination and strategy, with metric-prefixed score and fold columns (including for a single metric). The separate `metric` column and metric suffix in `combination` were removed; individual prediction columns are also metric-prefixed.
+- Results are ranked by the first metric's reliability mean by default. Multiple metrics can be filtered together on the same row, and staged consensus still reuses cached predictions without refitting.
+
+### Docs
+
+- Updated the majority-vote README example and method docstrings for the wide results format.
+
+## [1.2.11] - 2026-11-24
+
+### Added
+
+- Added an individual-only CV stage with fold predictions and a separate `evaluate_consensus_cv()` stage that evaluates shortlisted estimators without refitting.
+
+### Docs
+
+- Clarified the one-call and staged `MajorityVote` CV workflows and when their options are ignored or inherited.
+- Documented model screening, cached consensus evaluation, and final hold-out fitting in the README.
+- Refreshed the generated API documentation for 1.2.11.
+
 ## [1.2.10] - 2026-11-24
 
 ### Added
 
 - Evaluate multiple named metrics in one `MajorityVote.evaluate_cv()` call, reusing fitted estimators and allowing per-metric optimization directions and soft-vote probability settings.
 - Include minimum and maximum train, validation, and reliability fold scores in `MajorityVote.evaluate_cv()` results.
-- Added an individual-only CV stage with fold predictions and a separate `evaluate_consensus_cv()` stage that evaluates shortlisted estimators without refitting.
 
 ### Changed
 
 - Accept non-list sequences for multiple `MajorityVote.evaluate_cv()` metrics and options, `generate_cartesian_product()` inputs, and similarity-map estimator columns. Clarified annotations for ordered molecule and drawing inputs and re-iterable combination inputs while retaining iterable annotations where arbitrary iterables are supported.
-- Clarified the one-call and staged `MajorityVote` CV workflows and when their options are ignored or inherited.
-- Documented model screening, cached consensus evaluation, and final hold-out fitting in the README.
 
 ## [1.2.9] - 2026-11-19
 

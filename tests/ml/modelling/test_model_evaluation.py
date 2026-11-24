@@ -844,21 +844,22 @@ def test_majority_vote_evaluate_cv_classification_outputs_fold_metrics(
     assert not results.empty
     expected_cols = {
         'combination',
-        'train_mean',
-        'train_se',
-        'validation_mean',
-        'validation_se',
-        'reliability_mean',
-        'reliability_se',
-        'train_folds',
-        'validation_folds',
-        'reliability_folds',
+        'strategy',
+        'accuracy_train_mean',
+        'accuracy_train_se',
+        'accuracy_validation_mean',
+        'accuracy_validation_se',
+        'accuracy_reliability_mean',
+        'accuracy_reliability_se',
+        'accuracy_train_folds',
+        'accuracy_validation_folds',
+        'accuracy_reliability_folds',
     }
     assert expected_cols.issubset(results.columns)
-    assert results['reliability_mean'].is_monotonic_decreasing
-    assert all(len(fold_scores) == 4 for fold_scores in results['train_folds'])
-    assert all(len(fold_scores) == 4 for fold_scores in results['validation_folds'])
-    assert all(len(fold_scores) == 4 for fold_scores in results['reliability_folds'])
+    assert results['accuracy_reliability_mean'].is_monotonic_decreasing
+    assert all(len(fold_scores) == 4 for fold_scores in results['accuracy_train_folds'])
+    assert all(len(fold_scores) == 4 for fold_scores in results['accuracy_validation_folds'])
+    assert all(len(fold_scores) == 4 for fold_scores in results['accuracy_reliability_folds'])
 
 
 def test_majority_vote_multiple_metrics_reuse_fits_and_match_single_calls():
@@ -890,7 +891,10 @@ def test_majority_vote_multiple_metrics_reuse_fits_and_match_single_calls():
     assert fit.call_count == 2
     assert all(np.isin(pred, [0, 1]).all() for pred in predictions['accuracy'])
     assert any(np.any((pred > 0) & (pred < 1)) for pred in predictions['auc'])
-    assert results['metric'].tolist() == ['accuracy', 'accuracy', 'auc', 'auc']
+    assert len(results) == 2
+    assert set(results['strategy']) == {'hard', 'soft'}
+    assert results['accuracy_reliability_mean'].is_monotonic_decreasing
+    assert 'metric' not in results.columns
     for metric, name, continuous in [
         (accuracy_score, 'accuracy', False),
         (roc_auc_score, 'auc', True),
@@ -899,7 +903,11 @@ def test_majority_vote_multiple_metrics_reuse_fits_and_match_single_calls():
             metric=metric, metric_name=name,
             use_continuous_probabilities=continuous, cv_iter=2, n_estimators_max=1,
         )
-        combined = results.loc[results['metric'] == name].drop(columns='metric').reset_index(drop=True)
+        columns = ['combination', 'strategy'] + [
+            column for column in results.columns if column.startswith(f'{name}_')
+        ]
+        combined = results[columns].sort_values('combination').reset_index(drop=True)
+        separate = separate[columns].sort_values('combination').reset_index(drop=True)
         pd.testing.assert_frame_equal(combined, separate)
 
 
@@ -917,8 +925,8 @@ def test_majority_vote_accepts_non_list_sequences():
         logic=UserList[Literal['lower', 'greater']](['greater', 'greater']),
         cv_iter=2, n_estimators_max=1,
     )
-    assert results['metric'].tolist() == ['accuracy', 'accuracy', 'auc', 'auc']
-    assert np.isfinite(results['validation_mean']).all()
+    assert len(results) == 2
+    assert np.isfinite(results[['accuracy_validation_mean', 'auc_validation_mean']]).all().all()
 
 
 def test_majority_vote_shortlist_cv_reuses_predictions():
@@ -941,24 +949,27 @@ def test_majority_vote_shortlist_cv_reuses_predictions():
         with patch('mlchem.helper.generate_combination_cascade', side_effect=AssertionError):
             individual = mv.evaluate_cv(individual_only=True, **kwargs)
         assert fit.call_count == len(names) * 2
-        assert len(individual) == len(names) * 2 * 2
+        assert len(individual) == len(names) * 2
         assert set(individual['strategy']) == {'hard', 'soft'}
         for _, row in individual.iterrows():
-            metric = accuracy_score if row['metric'] == 'accuracy' else roc_auc_score
-            for fold, (train_idx, valid_idx) in enumerate(mv.cv_indices_):
-                train_pred = row['train_predictions_folds'][fold]
-                valid_pred = row['validation_predictions_folds'][fold]
-                assert row['train_folds'][fold] == pytest.approx(metric(y[train_idx], train_pred))
-                assert row['validation_folds'][fold] == pytest.approx(metric(y[valid_idx], valid_pred))
+            for name, metric in [('accuracy', accuracy_score), ('auc', roc_auc_score)]:
+                for fold, (train_idx, valid_idx) in enumerate(mv.cv_indices_):
+                    train_pred = row[f'{name}_train_predictions_folds'][fold]
+                    valid_pred = row[f'{name}_validation_predictions_folds'][fold]
+                    assert row[f'{name}_train_folds'][fold] == pytest.approx(metric(y[train_idx], train_pred))
+                    assert row[f'{name}_validation_folds'][fold] == pytest.approx(metric(y[valid_idx], valid_pred))
 
         shortlist = individual.copy()
         shortlist.drop(
             shortlist.index[
-                (shortlist['estimator'] == 'discard') | (shortlist['metric'] != 'accuracy')
+                (shortlist['estimator'] == 'discard')
+                | (shortlist['strategy'] != 'hard')
+                | (shortlist['accuracy_validation_mean'] < 0.5)
+                | (shortlist['auc_validation_mean'] < 0.5)
             ],
             inplace=True,
         )
-        shortlist.iloc[0]['validation_predictions_folds'][0][:] = 99
+        shortlist.iloc[0]['accuracy_validation_predictions_folds'][0][:] = 99
         consensus = mv.evaluate_consensus_cv(shortlist, n_estimators_max=3)
         assert fit.call_count == len(names) * 2
         assert all('discard' not in label for label in consensus['combination'])
@@ -1035,6 +1046,10 @@ def test_majority_vote_multiple_metrics_support_per_metric_logic():
         metric=(get_rmse, score), metric_name=('rmse', 'negative_mae'),
         logic=('lower', 'greater'), cv_indices=indices, n_estimators_max=1,
     )
+    assert results['rmse_reliability_mean'].is_monotonic_decreasing
+    assert results.iloc[0]['combination'] == "['stable']"
+    by_negative_mae = results.sort_values('negative_mae_reliability_mean', ascending=False)
+    assert by_negative_mae.iloc[0]['combination'] == "['unstable']"
     for metric, name, direction in [
         (get_rmse, 'rmse', 'lower'), (score, 'negative_mae', 'greater'),
     ]:
@@ -1042,7 +1057,11 @@ def test_majority_vote_multiple_metrics_support_per_metric_logic():
             metric=metric, metric_name=name, logic=direction,
             cv_indices=indices, n_estimators_max=1,
         )
-        combined = results.loc[results['metric'] == name].drop(columns='metric').reset_index(drop=True)
+        columns = ['combination', 'strategy'] + [
+            column for column in results.columns if column.startswith(f'{name}_')
+        ]
+        combined = results[columns].sort_values('combination').reset_index(drop=True)
+        separate = separate[columns].sort_values('combination').reset_index(drop=True)
         pd.testing.assert_frame_equal(combined, separate)
 
 
@@ -1072,16 +1091,16 @@ def test_majority_vote_fold_ranges(single_fold):
     else:
         results = mv.evaluate_cv(**kwargs)
 
-    assert set(results['metric']) == {'mae', 'rmse'}
     for _, row in results.iterrows():
-        for prefix in ('train', 'validation', 'reliability'):
-            scores = row[f'{prefix}_folds']
-            assert row[f'{prefix}_min'] == pytest.approx(np.min(scores))
-            assert row[f'{prefix}_max'] == pytest.approx(np.max(scores))
-            if single_fold:
-                assert row[f'{prefix}_min'] == row[f'{prefix}_max']
-            else:
-                assert row[f'{prefix}_min'] < row[f'{prefix}_max']
+        for name in ('mae', 'rmse'):
+            for prefix in ('train', 'validation', 'reliability'):
+                scores = row[f'{name}_{prefix}_folds']
+                assert row[f'{name}_{prefix}_min'] == pytest.approx(np.min(scores))
+                assert row[f'{name}_{prefix}_max'] == pytest.approx(np.max(scores))
+                if single_fold:
+                    assert row[f'{name}_{prefix}_min'] == row[f'{name}_{prefix}_max']
+                else:
+                    assert row[f'{name}_{prefix}_min'] < row[f'{name}_{prefix}_max']
 
 
 @pytest.mark.parametrize(
@@ -1156,7 +1175,7 @@ def test_majority_vote_evaluate_cv_can_use_continuous_probabilities(
 
     assert not results.empty
     assert any(np.any((pred > 0) & (pred < 1)) for pred in predictions)
-    assert np.isfinite(results['validation_mean']).all()
+    assert np.isfinite(results['roc_auc_validation_mean']).all()
 
 
 def test_majority_vote_default_soft_vote_matches_explicit_false(
@@ -1204,7 +1223,7 @@ def test_majority_vote_soft_auc_handles_string_class_labels(
     )
 
     assert not results.empty
-    assert np.isfinite(results['validation_mean']).all()
+    assert np.isfinite(results['roc_auc_validation_mean']).all()
 
 
 def test_majority_vote_evaluate_cv_uses_explicit_cv_indices(
@@ -1229,8 +1248,8 @@ def test_majority_vote_evaluate_cv_uses_explicit_cv_indices(
     )
 
     assert not results.empty
-    assert all(len(fold_scores) == len(manifest) for fold_scores in results['train_folds'])
-    assert all(len(fold_scores) == len(manifest) for fold_scores in results['validation_folds'])
+    assert all(len(fold_scores) == len(manifest) for fold_scores in results['accuracy_train_folds'])
+    assert all(len(fold_scores) == len(manifest) for fold_scores in results['accuracy_validation_folds'])
 
 
 @pytest.fixture
@@ -1283,11 +1302,11 @@ def test_majority_vote_lower_reliability_ranks_stable_equal_rmse_first():
 
     assert 'unstable' not in results.iloc[0]['combination']
     assert 'stable' in results.iloc[0]['combination']
-    assert results['train_mean'].tolist() == pytest.approx([10.0, 10.0])
-    assert results['validation_mean'].tolist() == pytest.approx([10.0, 10.0])
-    assert results['reliability_mean'].tolist() == pytest.approx([-10.0, -26.0])
-    np.testing.assert_allclose(results.iloc[0]['reliability_folds'], [-10.0, -10.0])
-    np.testing.assert_allclose(results.iloc[1]['reliability_folds'], [-26.0, -26.0])
+    assert results['RMSE_train_mean'].tolist() == pytest.approx([10.0, 10.0])
+    assert results['RMSE_validation_mean'].tolist() == pytest.approx([10.0, 10.0])
+    assert results['RMSE_reliability_mean'].tolist() == pytest.approx([-10.0, -26.0])
+    np.testing.assert_allclose(results.iloc[0]['RMSE_reliability_folds'], [-10.0, -10.0])
+    np.testing.assert_allclose(results.iloc[1]['RMSE_reliability_folds'], [-26.0, -26.0])
 
 
 def test_majority_vote_evaluate_cv_regression_outputs_fold_metrics(
@@ -1304,10 +1323,10 @@ def test_majority_vote_evaluate_cv_regression_outputs_fold_metrics(
     )
 
     assert not results.empty
-    assert results['reliability_mean'].is_monotonic_decreasing
-    assert all(len(fold_scores) == 3 for fold_scores in results['train_folds'])
-    assert all(len(fold_scores) == 3 for fold_scores in results['validation_folds'])
-    assert all(len(fold_scores) == 3 for fold_scores in results['reliability_folds'])
+    assert results['mae_reliability_mean'].is_monotonic_decreasing
+    assert all(len(fold_scores) == 3 for fold_scores in results['mae_train_folds'])
+    assert all(len(fold_scores) == 3 for fold_scores in results['mae_validation_folds'])
+    assert all(len(fold_scores) == 3 for fold_scores in results['mae_reliability_folds'])
 
 
 def test_majority_vote_fit_skips_failed_regression_estimator(sample_data):
