@@ -230,7 +230,13 @@ Returned diagnostics include:
 
 See
 [`MajorityVote.evaluate_cv`](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_cv)
+and
+[`MajorityVote.evaluate_consensus_cv`](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_consensus_cv)
 for soft-vote probabilities, fold definitions, and reliability ranking.
+
+To screen models before evaluating ensembles, first score individuals, filter
+the results, and then evaluate combinations of the retained models. The
+second stage reuses cached fold predictions; it does not fit the models again.
 
 ```python
 from sklearn.linear_model import LogisticRegression
@@ -241,20 +247,20 @@ from mlchem.ml.modelling.model_evaluation import MajorityVote, generate_cv_indic
 estimators = [
   LogisticRegression(random_state=1),
   RandomForestClassifier(random_state=1),
+  LogisticRegression(C=0.5, random_state=1),
 ]
 
-columns = [
-  X_train.columns.tolist(),
-  X_train.columns.tolist(),
-]
+columns = [X_train.columns.tolist() for _ in estimators]
 
 mv = MajorityVote(
   train_set=X_train,
   y_train=y_train,
+  test_set=X_test,
+  y_test=y_test,
   task_type='classification',
   estimator_list=estimators,
   column_list=columns,
-  estimator_names=['LR', 'RF'],
+  estimator_names=['LR', 'RF', 'LR_regularized'],
 )
 
 folds = generate_cv_indices(
@@ -266,24 +272,41 @@ folds = generate_cv_indices(
   random_state=42,
 )
 
-df_mv = mv.evaluate_cv(
+individual = mv.evaluate_cv(
   metric=get_geometric_S,
   metric_name='G',
   cv_indices=folds,
   logic='greater',
   desired_performance_score='train_cv_average',
+  individual_only=True,
 )
 
-# Ranked by reliability_mean (descending)
-print(df_mv[['combination', 'validation_mean', 'reliability_mean']].head())
+# Replace this example criterion with your own model selection.
+best_names = individual.groupby('estimator')['reliability_mean'].max().nlargest(3).index
+shortlist = individual[individual['estimator'].isin(best_names)].copy()
+consensus = mv.evaluate_consensus_cv(shortlist, n_estimators_max=3)
+print(consensus[['combination', 'validation_mean', 'reliability_mean']].head())
 
-# Final consensus stage: fit shortlisted estimators on full train set
-# and generate train/test prediction tables.
-
-fit_report = mv.fit(return_prediction_dataframes=True)
+# Separately refit the shortlisted estimators on the full training set.
+fit_report = mv.fit(
+  selected_estimators=best_names.tolist(),
+  return_prediction_dataframes=True,
+)
 ```
 
-`fit()` is the final consensus step after model selection.
+Filtering keeps each estimator represented by at least one remaining row;
+editing score or prediction values does not change the cached predictions.
+Keep the DataFrame's attributes when filtering or copying it. The individual
+results also contain per-fold prediction arrays; `mv.cv_indices_` gives their
+corresponding row positions.
+
+Without a screening step, call `evaluate_cv()` with its default
+`individual_only=False` to fit all configured models and score their
+combinations in one call. Calling `evaluate_cv()` again starts a new fit and
+discards the previous screening cache; it does not use a filtered table.
+Classification evaluates only odd-sized combinations, so a shortlist needs at
+least three estimators for a multi-model consensus. `fit()` is a separate final
+hold-out stage and requires `test_set` and `y_test`.
 
 ### Reliability objectives
 

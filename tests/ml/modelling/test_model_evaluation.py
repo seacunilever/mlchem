@@ -921,6 +921,104 @@ def test_majority_vote_accepts_non_list_sequences():
     assert np.isfinite(results['validation_mean']).all()
 
 
+def test_majority_vote_shortlist_cv_reuses_predictions():
+    X = pd.DataFrame({'x': np.arange(20)})
+    y = np.array([0, 1] * 10)
+    names = ['model_1', 'model_2', 'model_3', 'discard']
+    mv = MajorityVote(
+        train_set=X, y_train=y, task_type='classification',
+        estimator_list=[_FastPredictionEstimator() for _ in names],
+        column_list=[['x']] * len(names), estimator_names=names,
+    )
+    kwargs = {
+        'metric': [accuracy_score, roc_auc_score],
+        'metric_name': ['accuracy', 'auc'],
+        'use_continuous_probabilities': [False, True],
+        'cv_iter': 2,
+    }
+    original_fit = _FastPredictionEstimator.fit
+    with patch.object(_FastPredictionEstimator, 'fit', autospec=True, side_effect=original_fit) as fit:
+        with patch('mlchem.helper.generate_combination_cascade', side_effect=AssertionError):
+            individual = mv.evaluate_cv(individual_only=True, **kwargs)
+        assert fit.call_count == len(names) * 2
+        assert len(individual) == len(names) * 2 * 2
+        assert set(individual['strategy']) == {'hard', 'soft'}
+        for _, row in individual.iterrows():
+            metric = accuracy_score if row['metric'] == 'accuracy' else roc_auc_score
+            for fold, (train_idx, valid_idx) in enumerate(mv.cv_indices_):
+                train_pred = row['train_predictions_folds'][fold]
+                valid_pred = row['validation_predictions_folds'][fold]
+                assert row['train_folds'][fold] == pytest.approx(metric(y[train_idx], train_pred))
+                assert row['validation_folds'][fold] == pytest.approx(metric(y[valid_idx], valid_pred))
+
+        shortlist = individual.copy()
+        shortlist.drop(
+            shortlist.index[
+                (shortlist['estimator'] == 'discard') | (shortlist['metric'] != 'accuracy')
+            ],
+            inplace=True,
+        )
+        shortlist.iloc[0]['validation_predictions_folds'][0][:] = 99
+        consensus = mv.evaluate_consensus_cv(shortlist, n_estimators_max=3)
+        assert fit.call_count == len(names) * 2
+        assert all('discard' not in label for label in consensus['combination'])
+        assert any(all(name in label for name in names[:3]) for label in consensus['combination'])
+
+    reference = MajorityVote(
+        train_set=X, y_train=y, task_type='classification',
+        estimator_list=[_FastPredictionEstimator() for _ in names[:3]],
+        column_list=[['x']] * 3, estimator_names=names[:3],
+    ).evaluate_cv(n_estimators_max=3, **kwargs)
+    pd.testing.assert_frame_equal(consensus, reference)
+
+
+def test_majority_vote_shortlist_cv_regression_matches_one_call():
+    X = pd.DataFrame({'x': np.arange(6)})
+    y = np.array([0., 1., 2., 3., 4., 5.])
+    mv = MajorityVote(
+        train_set=X, y_train=y, task_type='regression',
+        estimator_list=[DummyRegressor(strategy='mean'), DummyRegressor(strategy='median')],
+        column_list=[['x'], ['x']], estimator_names=['mean', 'median'],
+    )
+    kwargs = {
+        'metric': mean_absolute_error, 'metric_name': 'mae',
+        'logic': 'lower', 'cv_iter': 3,
+    }
+    individual = mv.evaluate_cv(individual_only=True, **kwargs)
+    with patch.object(DummyRegressor, 'fit', side_effect=AssertionError):
+        consensus = mv.evaluate_consensus_cv(individual, n_estimators_max=2)
+    reference = mv.evaluate_cv(n_estimators_max=2, **kwargs)
+    pd.testing.assert_frame_equal(consensus, reference)
+    assert any('mean' in label and 'median' in label for label in consensus['combination'])
+
+
+def test_majority_vote_shortlist_cv_rejects_invalid_or_stale_tables():
+    X = pd.DataFrame({'x': np.arange(8)})
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0, 1] * 4), task_type='classification',
+        estimator_list=[_FastPredictionEstimator()], column_list=[['x']],
+        estimator_names=['model'],
+    )
+    with pytest.raises(ValueError, match='individual_only=True'):
+        mv.evaluate_consensus_cv(pd.DataFrame())
+    kwargs = {'metric': accuracy_score, 'metric_name': 'accuracy', 'cv_iter': 2}
+    individual = mv.evaluate_cv(individual_only=True, **kwargs)
+    with pytest.raises(ValueError, match='at least one estimator'):
+        mv.evaluate_consensus_cv(individual.iloc[:0])
+    with pytest.raises(ValueError, match="'estimator' column"):
+        mv.evaluate_consensus_cv(individual.drop(columns='estimator'))
+    unknown = individual.copy()
+    unknown['estimator'] = 'unknown'
+    with pytest.raises(ValueError, match='unknown estimator'):
+        mv.evaluate_consensus_cv(unknown)
+    mv.evaluate_cv(individual_only=True, **kwargs)
+    with pytest.raises(ValueError, match='latest individual evaluation'):
+        mv.evaluate_consensus_cv(individual)
+    mv.evaluate_cv(**kwargs)
+    with pytest.raises(ValueError, match='individual_only=True'):
+        mv.evaluate_consensus_cv(individual)
+
+
 def test_majority_vote_multiple_metrics_support_per_metric_logic():
     X = pd.DataFrame({'x': np.zeros(4)})
     y = np.array([-10.0, -10.0, 10.0, 10.0])

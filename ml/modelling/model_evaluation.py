@@ -32,6 +32,8 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 from typing import Literal, Callable, Iterable, Sequence
+from dataclasses import dataclass
+from uuid import uuid4
 import pandas as pd
 import numpy as np
 import warnings
@@ -209,7 +211,7 @@ def generate_cv_indices(
 
     y : numpy.ndarray, pandas.DataFrame, or None, optional
         Target vector, forwarded to ``cv_splitter.split`` when needed
-        (e.g. for stratified splitters).
+        (e.g. for stratified splitters). Ignored when ``cv_indices`` is supplied.
 
     cv_iter : int, optional (default=5)
         Number of folds to generate when neither ``cv_splitter`` nor
@@ -218,19 +220,22 @@ def generate_cv_indices(
     cv_splitter : object, optional
         A scikit-learn compatible cross-validation splitter (e.g.
         ``GroupKFold``, ``StratifiedGroupKFold``, ``PredefinedSplit``)
-        exposing a ``split(X, y, groups)`` method.
+        exposing a ``split(X, y, groups)`` method. Ignored when ``cv_indices``
+        is supplied.
 
     cv_indices : iterable of (array-like, array-like), optional
         Explicit, pre-computed ``(train_idx, valid_idx)`` pairs. Takes
-        precedence over ``cv_splitter`` and ``cv_iter`` when provided.
+        precedence over fold generation when provided; ``cv_iter``,
+        ``cv_splitter``, ``groups``, ``task_type``, ``shuffle`` and
+        ``random_state`` are then ignored.
         This is the most generic API and is suitable for externally
         generated fold manifests (scaffold-based folds, UMAP-cluster
         folds, etc.).
 
     groups : array-like, optional
-        Group labels used by group-aware splitters such as
-        ``GroupKFold`` or ``StratifiedGroupKFold``. Ignored unless
-        ``cv_splitter`` is provided and supports grouping.
+        Group labels forwarded to the splitter when ``cv_indices`` is not
+        supplied. The default splitters do not use groups; a custom
+        ``cv_splitter`` determines whether to use them.
 
     task_type : {'classification', 'regression'}, optional (default='classification')
         Used only to pick the default splitter (``StratifiedKFold`` or
@@ -238,11 +243,13 @@ def generate_cv_indices(
 
     shuffle : bool, optional (default=False)
         Whether to shuffle samples before splitting, for the default
-        ``cv_iter``-based splitter.
+        ``cv_iter``-based splitter. Ignored when ``cv_splitter`` or
+        ``cv_indices`` is supplied.
 
     random_state : int or None, optional (default=None)
         Random seed for the default ``cv_iter``-based splitter when
-        ``shuffle=True``.
+        ``shuffle=True``. Ignored when ``shuffle=False``, or when
+        ``cv_splitter`` or ``cv_indices`` is supplied.
 
     strict_coverage : bool, optional (default=False)
         Forwarded to :func:`validate_cv_indices`.
@@ -781,14 +788,33 @@ def y_scrambling(estimator,
             'safety_multiplier': safety_multiplier,
             }
 
+@dataclass
+class _MajorityVoteCVCache:
+    task_type: Literal['classification', 'regression']
+    estimator_names: list[str]
+    metrics: list[Callable]
+    metric_names: list[str]
+    probabilities: list[bool]
+    logics: list[Literal['lower', 'greater']]
+    desired_performance_score: Literal['train', 'cv', 'train_cv_average']
+    folds: dict[str, tuple[
+        list[tuple[dict[str, np.ndarray], np.ndarray]],
+        list[tuple[dict[str, np.ndarray], np.ndarray]],
+    ]]
+    cv_indices: list[tuple[np.ndarray, np.ndarray]]
+    token: str
+
+
 class MajorityVote:
     """
     MajorityVote ensemble evaluation utility.
 
-    This class supports two workflows:
-
-    1. ``evaluate_cv()`` for fold-based evaluation and estimator ranking.
-    2. ``fit()`` for final consensus fitting on full train/test data.
+    ``evaluate_cv()`` fits estimators on CV folds and can score individual
+    estimators and ensemble combinations in one call. Alternatively, use
+    ``individual_only=True`` to screen individual estimators, then pass the
+    filtered results to ``evaluate_consensus_cv()`` to score shortlisted
+    combinations using the same fold predictions without refitting.
+    ``fit()`` separately fits the final consensus on full train/test data.
 
     Parameters
     ----------
@@ -842,6 +868,8 @@ class MajorityVote:
         self.y_test = y_test
         self.n_jobs = resolve_n_jobs(n_jobs)
         self.log_level = coerce_log_level(log_level)
+        self._cv_cache: _MajorityVoteCVCache | None = None
+        self.cv_indices_: list[tuple[np.ndarray, np.ndarray]] | None = None
         _configure_module_logging(self.log_level)
 
     def _log(self, level: int, msg: str, *args) -> None:
@@ -1266,12 +1294,18 @@ class MajorityVote:
         desired_performance_score: Literal['train', 'cv', 'train_cv_average'] = 'train_cv_average',
         shuffle: bool = False,
         random_state: int | None = None,
+        individual_only: bool = False,
     ) -> pd.DataFrame:
         """
 Evaluate ensemble combinations using fold-level cross-validation.
 
 The same explicit fold definitions are reused for every estimator and
-combination, ensuring fair fold-wise comparison.
+combination, ensuring fair fold-wise comparison. By default this method fits
+the estimators and scores both individual estimators and their combinations
+in one call. For a screening step before choosing combinations, set
+``individual_only=True`` and pass the filtered results to
+``evaluate_consensus_cv``. Calling ``evaluate_cv`` again starts a new fit
+and replaces the cached screening predictions.
 
 Parameters
 ----------
@@ -1287,24 +1321,30 @@ use_continuous_probabilities : bool or sequence of bool, optional
     probabilities directly instead of rounding them to class labels. Enable
     this for binary ROC-AUC; the probability for ``classes_[1]`` is used.
     A sequence supplies one setting per metric; a scalar applies to all.
-    Hard-vote strategies always use predicted class labels.
+    Does not affect regression or hard-vote predictions, which use predicted
+    class labels for classification. Values are still validated.
 
 cv_iter : int, optional (default=5)
     Number of folds used when ``cv_indices`` and ``cv_splitter`` are not
-    supplied.
+    supplied. Ignored if either is supplied.
 
 cv_splitter : object, optional
     Scikit-learn compatible splitter exposing ``split(X, y, groups)``.
+    Ignored when ``cv_indices`` is supplied.
 
 cv_indices : iterable of (train_idx, valid_idx), optional
     Explicit precomputed fold manifest. When supplied, all combinations
-    are evaluated on exactly these folds.
+    are evaluated on exactly these folds, and ``cv_iter``, ``cv_splitter``,
+    ``groups``, ``shuffle`` and ``random_state`` are ignored.
 
 groups : array-like, optional
-    Group labels forwarded to group-aware ``cv_splitter`` objects.
+    Group labels forwarded to the splitter unless ``cv_indices`` is supplied.
+    Default splitters do not use groups; a custom splitter determines whether
+    to use them.
 
 n_estimators_max : int, optional (default=5)
     Maximum combination size passed to ``generate_combination_cascade``.
+    Ignored when ``individual_only=True``.
 
 logic : {'lower', 'greater'} or sequence, optional (default='greater')
     Direction of optimization for reliability computation. A sequence supplies
@@ -1312,13 +1352,24 @@ logic : {'lower', 'greater'} or sequence, optional (default='greater')
 
 desired_performance_score : {'train', 'cv', 'train_cv_average'}, optional
     Performance component used inside
-    ``get_reliability_score_components``.
+    ``get_reliability_score_components``. Also used in individual-only mode
+    and reused by ``evaluate_consensus_cv``.
 
 shuffle : bool, optional (default=False)
     Whether generated CV folds are shuffled when using ``cv_iter``.
+    Ignored when ``cv_splitter`` or ``cv_indices`` is supplied.
 
 random_state : int or None, optional
-    Random seed used with generated shuffled folds.
+    Random seed used with generated shuffled folds. Ignored when
+    ``shuffle=False``, or when ``cv_splitter`` or ``cv_indices`` is supplied.
+    Configure a custom splitter's randomness on the splitter itself.
+
+individual_only : bool, optional (default=False)
+    Score only individual estimators and retain their fold predictions for
+    ``evaluate_consensus_cv``. The returned DataFrame includes
+    ``estimator`` and ``strategy`` columns and per-fold train and validation
+    prediction arrays.
+    The corresponding row positions are available in ``cv_indices_``.
 
 Returns
 -------
@@ -1338,6 +1389,9 @@ pandas.DataFrame
     for ``logic='greater'`` the existing performance divided by
     ``1 + abs(train - validation)`` is unchanged. Reliability is always
     maximized, is not raw RMSE, and is nonpositive for nonnegative losses.
+    In individual-only mode, ``train_predictions_folds`` and
+    ``validation_predictions_folds`` contain the predictions used by each
+    row's metric and strategy, in the order of ``cv_indices_``.
 
 Examples
 --------
@@ -1362,9 +1416,10 @@ probability option keeps soft-vote scores suitable for ROC-AUC:
 ...     estimator_list=[
 ...         LogisticRegression(max_iter=1000),
 ...         RandomForestClassifier(n_estimators=20, random_state=0),
+...         LogisticRegression(C=0.5, max_iter=1000),
 ...     ],
-...     column_list=[columns, columns],
-...     estimator_names=["logistic", "forest"],
+...     column_list=[columns, columns, columns],
+...     estimator_names=["logistic", "forest", "logistic_alt"],
 ... )
 >>> results = ensemble.evaluate_cv(
 ...     metric=roc_auc_score,
@@ -1388,11 +1443,25 @@ types without refitting:
 ...     cv_iter=3,
 ...     n_estimators_max=2,
 ... )
+
+Shortlist individual models before evaluating ensemble combinations:
+
+>>> individual = ensemble.evaluate_cv(
+...     metric=accuracy_score, metric_name="accuracy", cv_iter=3,
+...     individual_only=True,
+... )
+>>> best = individual.groupby("estimator")["validation_mean"].max().nlargest(3).index
+>>> shortlist = individual.loc[individual["estimator"].isin(best)].copy()
+>>> consensus = ensemble.evaluate_consensus_cv(shortlist, n_estimators_max=3)
 """
 
         from sklearn.base import clone
-        from mlchem.helper import generate_combination_cascade
-        from mlchem.metrics import get_reliability_score_components
+
+        self._cv_cache = None
+        self.cv_indices_ = None
+
+        if not isinstance(individual_only, bool):
+            raise ValueError("'individual_only' must be a bool.")
 
         metrics = list(metric) if isinstance(metric, Sequence) else [metric]
         metric_names = (
@@ -1526,16 +1595,125 @@ types without refitting:
                 "No estimators were successfully fitted in MajorityVote.evaluate_cv."
             )
 
-        combinations = generate_combination_cascade(valid_estimators, n_estimators_max)
-        if self.task_type == 'classification':
-            combinations = [comb for comb in combinations if len(comb) % 2 != 0]
+        cache = _MajorityVoteCVCache(
+            task_type=self.task_type,
+            estimator_names=valid_estimators,
+            metrics=metrics,
+            metric_names=metric_names,
+            probabilities=probabilities,
+            logics=logics,
+            desired_performance_score=desired_performance_score,
+            folds={
+                'hard': (fold_train_hard, fold_valid_hard),
+                'soft': (fold_train_soft, fold_valid_soft),
+                'mean': (fold_train_reg, fold_valid_reg),
+            },
+            cv_indices=resolved_pairs,
+            token=uuid4().hex,
+        )
+        if individual_only:
+            combinations = [[name] for name in valid_estimators]
+        else:
+            combinations = self._cv_combinations(cache, valid_estimators, n_estimators_max)
+        results = self._score_cv_combinations(cache, combinations, individual_only)
+        if individual_only:
+            results.attrs['majority_vote_cv_token'] = cache.token
+            self._cv_cache = cache
+            self.cv_indices_ = [(train.copy(), valid.copy()) for train, valid in resolved_pairs]
+        self.final_results_cv = results
+        return results
 
+    @staticmethod
+    def _cv_combinations(
+        cache: _MajorityVoteCVCache,
+        estimator_names: list[str],
+        n_estimators_max: int,
+    ) -> list[list[str]]:
+        from mlchem.helper import generate_combination_cascade
+
+        combinations = generate_combination_cascade(estimator_names, n_estimators_max)
+        if cache.task_type == 'classification':
+            combinations = [comb for comb in combinations if len(comb) % 2 != 0]
+        return combinations
+
+    def evaluate_consensus_cv(
+        self,
+        estimator_results: pd.DataFrame,
+        n_estimators_max: int = 5,
+    ) -> pd.DataFrame:
+        """
+        Evaluate combinations of shortlisted estimators without refitting.
+
+        This is the second stage of ``evaluate_cv(individual_only=True)``.
+        For a one-call evaluation without screening, use ``evaluate_cv``
+        with its default ``individual_only=False`` instead.
+
+        Parameters
+        ----------
+        estimator_results : pandas.DataFrame
+            The DataFrame returned by the latest ``evaluate_cv`` call with
+            ``individual_only=True``, optionally filtered to retain desired
+            rows. Each retained ``estimator`` selects that model once, even
+            when several metric or strategy rows remain. Filtering or editing
+            score and prediction columns does not alter cached predictions.
+            DataFrame attributes must be preserved when filtering or copying.
+        n_estimators_max : int, optional (default=5)
+            Maximum ensemble size. Classification uses only odd sizes.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Fold metrics for shortlisted combinations, including individual
+            estimators. Metrics, folds, and prediction settings are inherited
+            from the individual evaluation; settings used to generate those
+            folds cannot be overridden in this stage.
+
+        Raises
+        ------
+        ValueError
+            If no current individual evaluation exists, the table is empty,
+            contains unknown estimators, or came from a different evaluation.
+        TypeError
+            If ``estimator_results`` is not a DataFrame.
+        """
+        cache = self._cv_cache
+        if cache is None:
+            raise ValueError("Run evaluate_cv(individual_only=True) before evaluating consensus.")
+        if not isinstance(estimator_results, pd.DataFrame):
+            raise TypeError("'estimator_results' must be a pandas DataFrame.")
+        if estimator_results.attrs.get('majority_vote_cv_token') != cache.token:
+            raise ValueError("'estimator_results' must come from the latest individual evaluation.")
+        if 'estimator' not in estimator_results.columns:
+            raise ValueError("'estimator_results' must contain the 'estimator' column.")
+        selected = estimator_results['estimator'].tolist()
+        if not selected:
+            raise ValueError("'estimator_results' must contain at least one estimator.")
+        if any(not isinstance(name, str) or name not in cache.estimator_names for name in selected):
+            raise ValueError("'estimator_results' contains an unknown estimator.")
+        selected_names = set(selected)
+        names = [name for name in cache.estimator_names if name in selected_names]
+        combinations = self._cv_combinations(cache, names, n_estimators_max)
+        self.final_results_cv = self._score_cv_combinations(cache, combinations)
+        return self.final_results_cv
+
+    def _score_cv_combinations(
+        self,
+        cache: _MajorityVoteCVCache,
+        combinations: list[list[str]],
+        individual_only: bool = False,
+    ) -> pd.DataFrame:
+        from mlchem.metrics import get_reliability_score_components
+
+        metrics = cache.metrics
+        metric_names = cache.metric_names
+        probabilities = cache.probabilities
+        logics = cache.logics
         rows_by_metric = [[] for _ in metrics]
 
         for combination in tqdm(
             combinations, desc="Evaluating combinations", disable=False
         ):
-            if self.task_type == 'classification':
+            if cache.task_type == 'classification':
                 strategies = ('hard', 'soft')
             else:
                 strategies = ('mean',)
@@ -1543,17 +1721,13 @@ types without refitting:
             for strategy in strategies:
                 train_scores = [[] for _ in metrics]
                 validation_scores = [[] for _ in metrics]
+                train_predictions = [[] for _ in metrics]
+                validation_predictions = [[] for _ in metrics]
 
-                for fold_idx in range(len(resolved_pairs)):
-                    if self.task_type == 'classification':
-                        train_dict, y_train_fold = fold_train_hard[fold_idx]
-                        valid_dict, y_valid_fold = fold_valid_hard[fold_idx]
-                        if strategy == 'soft':
-                            train_dict, y_train_fold = fold_train_soft[fold_idx]
-                            valid_dict, y_valid_fold = fold_valid_soft[fold_idx]
-                    else:
-                        train_dict, y_train_fold = fold_train_reg[fold_idx]
-                        valid_dict, y_valid_fold = fold_valid_reg[fold_idx]
+                fold_train, fold_valid = cache.folds[strategy]
+                for fold_idx in range(len(cache.cv_indices)):
+                    train_dict, y_train_fold = fold_train[fold_idx]
+                    valid_dict, y_valid_fold = fold_valid[fold_idx]
 
                     if any(name not in train_dict for name in combination):
                         train_scores = [[] for _ in metrics]
@@ -1587,6 +1761,9 @@ types without refitting:
                         validation_scores[metric_idx].append(
                             float(metric_function(y_valid_fold, metric_valid_pred))
                         )
+                        if individual_only:
+                            train_predictions[metric_idx].append(metric_train_pred.copy())
+                            validation_predictions[metric_idx].append(metric_valid_pred.copy())
 
                 for metric_idx, name in enumerate(metric_names):
                     if not train_scores[metric_idx]:
@@ -1600,7 +1777,7 @@ types without refitting:
                             train_score=train_score,
                             cv_score=validation_score,
                             logic=logics[metric_idx],
-                            desired_performance_score=desired_performance_score,
+                            desired_performance_score=cache.desired_performance_score,
                         )
                         reliability_folds.append(float(comp['reliability_score']))
 
@@ -1608,7 +1785,7 @@ types without refitting:
                     validation_mean, validation_se = self._mean_and_se(validation_scores[metric_idx])
                     reliability_mean, reliability_se = self._mean_and_se(reliability_folds)
 
-                    if self.task_type == 'classification':
+                    if cache.task_type == 'classification':
                         comb_label = f"{combination}_{strategy}_{name}"
                     else:
                         comb_label = f"{combination}_{name}"
@@ -1633,6 +1810,11 @@ types without refitting:
                     }
                     if len(metrics) > 1:
                         row['metric'] = name
+                    if individual_only:
+                        row['estimator'] = combination[0]
+                        row['strategy'] = strategy
+                        row['train_predictions_folds'] = train_predictions[metric_idx]
+                        row['validation_predictions_folds'] = validation_predictions[metric_idx]
                     rows_by_metric[metric_idx].append(row)
 
         if not any(rows_by_metric):
@@ -1641,14 +1823,13 @@ types without refitting:
                 "MajorityVote.evaluate_cv."
             )
 
-        self.final_results_cv = pd.concat(
+        return pd.concat(
             [
                 pd.DataFrame(rows).sort_values(by='reliability_mean', ascending=False)
                 for rows in rows_by_metric
             ],
             ignore_index=True,
         )
-        return self.final_results_cv
 
 
 class ApplicabilityDomain:
