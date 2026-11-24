@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem &#8212; mlchem 1.2.11 documentation</title>
+    <title>mlchem &#8212; mlchem 1.2.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=b68a8a9d"></script>
+    <script src="_static/documentation_options.js?v=817200f7"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.11 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.12 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
@@ -272,7 +272,7 @@ the results, and then evaluate combinations of the retained models. The
 second stage reuses cached fold predictions; it does not fit the models again.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_geometric_S</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">roc_auc_score</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.ml.modelling.model_evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">MajorityVote</span><span class="p">,</span> <span class="n">generate_cv_indices</span>
 
 <span class="n">estimators</span> <span class="o">=</span> <span class="p">[</span>
@@ -304,8 +304,9 @@ second stage reuses cached fold predictions; it does not fit the models again.</
 <span class="p">)</span>
 
 <span class="n">individual</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">evaluate_cv</span><span class="p">(</span>
-  <span class="n">metric</span><span class="o">=</span><span class="n">get_geometric_S</span><span class="p">,</span>
-  <span class="n">metric_name</span><span class="o">=</span><span class="s1">&#39;G&#39;</span><span class="p">,</span>
+  <span class="n">metric</span><span class="o">=</span><span class="p">[</span><span class="n">roc_auc_score</span><span class="p">,</span> <span class="n">accuracy_score</span><span class="p">],</span>
+  <span class="n">metric_name</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;auc&#39;</span><span class="p">,</span> <span class="s1">&#39;accuracy&#39;</span><span class="p">],</span>
+  <span class="n">use_continuous_probabilities</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span>
   <span class="n">cv_indices</span><span class="o">=</span><span class="n">folds</span><span class="p">,</span>
   <span class="n">logic</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">,</span>
   <span class="n">desired_performance_score</span><span class="o">=</span><span class="s1">&#39;train_cv_average&#39;</span><span class="p">,</span>
@@ -313,27 +314,40 @@ second stage reuses cached fold predictions; it does not fit the models again.</
 <span class="p">)</span>
 
 <span class="c1"># Replace this example criterion with your own model selection.</span>
-<span class="n">best_names</span> <span class="o">=</span> <span class="n">individual</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;estimator&#39;</span><span class="p">)[</span><span class="s1">&#39;reliability_mean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
-<span class="n">shortlist</span> <span class="o">=</span> <span class="n">individual</span><span class="p">[</span><span class="n">individual</span><span class="p">[</span><span class="s1">&#39;estimator&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">best_names</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">shortlist</span> <span class="o">=</span> <span class="n">individual</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span>
+  <span class="p">(</span><span class="n">individual</span><span class="p">[</span><span class="s1">&#39;strategy&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;soft&#39;</span><span class="p">)</span>
+  <span class="o">&amp;</span> <span class="p">(</span><span class="n">individual</span><span class="p">[</span><span class="s1">&#39;auc_validation_mean&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)</span>
+  <span class="o">&amp;</span> <span class="p">(</span><span class="n">individual</span><span class="p">[</span><span class="s1">&#39;accuracy_validation_mean&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="n">consensus</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">evaluate_consensus_cv</span><span class="p">(</span><span class="n">shortlist</span><span class="p">,</span> <span class="n">n_estimators_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">consensus</span><span class="p">[[</span><span class="s1">&#39;combination&#39;</span><span class="p">,</span> <span class="s1">&#39;validation_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;reliability_mean&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">consensus</span><span class="p">[[</span><span class="s1">&#39;combination&#39;</span><span class="p">,</span> <span class="s1">&#39;auc_validation_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;accuracy_validation_mean&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 
 <span class="c1"># Separately refit the shortlisted estimators on the full training set.</span>
 <span class="n">fit_report</span> <span class="o">=</span> <span class="n">mv</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-  <span class="n">selected_estimators</span><span class="o">=</span><span class="n">best_names</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+  <span class="n">selected_estimators</span><span class="o">=</span><span class="n">shortlist</span><span class="p">[</span><span class="s1">&#39;estimator&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
   <span class="n">return_prediction_dataframes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>Filtering keeps each estimator represented by at least one remaining row;
 editing score or prediction values does not change the cached predictions.
+Consensus evaluates both hard and soft strategies for the retained estimators,
+even if the shortlist contains only soft rows.
+Adjust the example thresholds if they leave the shortlist empty.
 Keep the DataFrame’s attributes when filtering or copying it. The individual
-results also contain per-fold prediction arrays; <code class="docutils literal notranslate"><span class="pre">mv.cv_indices_</span></code> gives their
-corresponding row positions.</p>
+results also contain per-metric fold prediction arrays, such as
+<code class="docutils literal notranslate"><span class="pre">auc_validation_predictions_folds</span></code>; <code class="docutils literal notranslate"><span class="pre">mv.cv_indices_</span></code> gives their corresponding
+row positions. Each result has one row per combination and strategy, with
+metric-prefixed train, validation, reliability, and fold columns, even for a
+single metric. Results are sorted by the first metric’s reliability mean;
+sort by a different metric’s reliability column to change the ranking.
+Compared with earlier releases, metric names no longer appear in a separate
+<code class="docutils literal notranslate"><span class="pre">metric</span></code> column or in <code class="docutils literal notranslate"><span class="pre">combination</span></code>; use the prefixed columns instead.</p>
 <p>Without a screening step, call <code class="docutils literal notranslate"><span class="pre">evaluate_cv()</span></code> with its default
 <code class="docutils literal notranslate"><span class="pre">individual_only=False</span></code> to fit all configured models and score their
 combinations in one call. Calling <code class="docutils literal notranslate"><span class="pre">evaluate_cv()</span></code> again starts a new fit and
-discards the previous screening cache; it does not use a filtered table.
+replaces the previous screening cache if it succeeds; it does not use a
+filtered table. A failed evaluation leaves the previous screening cache usable.
 Classification evaluates only odd-sized combinations, so a shortlist needs at
 least three estimators for a multi-model consensus. <code class="docutils literal notranslate"><span class="pre">fit()</span></code> is a separate final
 hold-out stage and requires <code class="docutils literal notranslate"><span class="pre">test_set</span></code> and <code class="docutils literal notranslate"><span class="pre">y_test</span></code>.</p>
@@ -356,8 +370,8 @@ the original metric, not this selection objective.</p>
 its forward additions still optimize raw CV performance. Both combinatorial
 stages rank by mean fold reliability minus its standard error, and stage 2
 uses the first row as <code class="docutils literal notranslate"><span class="pre">best_record</span></code>. Majority-vote CV ranks by mean fold
-reliability. Scores are computed <strong>before</strong> fold aggregation, not from the
-displayed aggregate train/CV values. Existing result-column names are retained.</p>
+reliability of the first supplied metric. Scores are computed <strong>before</strong> fold
+aggregation, not from the displayed aggregate train/CV values.</p>
 </section>
 <section id="capture-pipeline-logs">
 <h3>Capture pipeline logs<a class="headerlink" href="#capture-pipeline-logs" title="Link to this heading">¶</a></h3>
@@ -760,7 +774,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
         <li class="right" >
           <a href="index.html" title="Contents"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.11 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.12 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>

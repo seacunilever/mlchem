@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem.ml.modelling package &#8212; mlchem 1.2.11 documentation</title>
+    <title>mlchem.ml.modelling package &#8212; mlchem 1.2.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=b68a8a9d"></script>
+    <script src="_static/documentation_options.js?v=817200f7"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="mlchem.ml.feature_selection.html" title="mlchem.ml.feature_selection package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.11 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.12 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" accesskey="U"><strong>mlchem.ml package</strong></a> &#187;</li>
@@ -176,10 +176,11 @@ with its default <code class="docutils literal notranslate"><span class="pre">in
 <li><p><strong>estimator_results</strong> (<em>pandas.DataFrame</em>) – The DataFrame returned by the latest <code class="docutils literal notranslate"><span class="pre">evaluate_cv</span></code> call with
 <code class="docutils literal notranslate"><span class="pre">individual_only=True</span></code>, optionally filtered to retain desired
 rows. Each retained <code class="docutils literal notranslate"><span class="pre">estimator</span></code> selects that model once, even
-when several metric or strategy rows remain. Filtering or editing
+when several strategy rows remain. Filtering or editing
 score and prediction columns does not alter cached predictions.
 DataFrame attributes must be preserved when filtering or copying.</p></li>
-<li><p><strong>n_estimators_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – Maximum ensemble size. Classification uses only odd sizes.</p></li>
+<li><p><strong>n_estimators_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – Positive maximum ensemble size. Classification uses only odd sizes;
+even-sized combinations are not generated.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -211,13 +212,15 @@ the estimators and scores both individual estimators and their combinations
 in one call. For a screening step before choosing combinations, set
 <code class="docutils literal notranslate"><span class="pre">individual_only=True</span></code> and pass the filtered results to
 <code class="docutils literal notranslate"><span class="pre">evaluate_consensus_cv</span></code>. Calling <code class="docutils literal notranslate"><span class="pre">evaluate_cv</span></code> again starts a new fit
-and replaces the cached screening predictions.</p>
+and replaces the cached screening predictions only if the new evaluation
+succeeds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>metric</strong> (<em>callable</em><em> or </em><em>sequence</em><em> of </em><em>callable</em>) – Scoring functions accepting <code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_pred)</span></code>. Multiple metrics
 share the same fitted estimators and fold predictions.</p></li>
-<li><p><strong>metric_name</strong> (<em>str</em><em> or </em><em>sequence</em><em> of </em><em>str</em>) – Unique labels aligned with <code class="docutils literal notranslate"><span class="pre">metric</span></code>, appended to combination identifiers.</p></li>
+<li><p><strong>metric_name</strong> (<em>str</em><em> or </em><em>sequence</em><em> of </em><em>str</em>) – Unique labels aligned with <code class="docutils literal notranslate"><span class="pre">metric</span></code>. Each label prefixes its result
+columns, for example <code class="docutils literal notranslate"><span class="pre">auc_validation_mean</span></code>.</p></li>
 <li><p><strong>use_continuous_probabilities</strong> (<em>bool</em><em> or </em><em>sequence</em><em> of </em><em>bool</em><em>, </em><em>optional</em>) – For classification soft-vote strategies, use mean predicted
 probabilities directly instead of rounding them to class labels. Enable
 this for binary ROC-AUC; the probability for <code class="docutils literal notranslate"><span class="pre">classes_[1]</span></code> is used.
@@ -234,13 +237,14 @@ are evaluated on exactly these folds, and <code class="docutils literal notransl
 <li><p><strong>groups</strong> (<em>array-like</em><em>, </em><em>optional</em>) – Group labels forwarded to the splitter unless <code class="docutils literal notranslate"><span class="pre">cv_indices</span></code> is supplied.
 Default splitters do not use groups; a custom splitter determines whether
 to use them.</p></li>
-<li><p><strong>n_estimators_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – Maximum combination size passed to <code class="docutils literal notranslate"><span class="pre">generate_combination_cascade</span></code>.
-Ignored when <code class="docutils literal notranslate"><span class="pre">individual_only=True</span></code>.</p></li>
+<li><p><strong>n_estimators_max</strong> (<em>int</em><em>, </em><em>optional</em><em> (</em><em>default=5</em><em>)</em>) – Positive maximum number of estimators in a combination. Classification
+generates only odd-sized combinations. Ignored when
+<code class="docutils literal notranslate"><span class="pre">individual_only=True</span></code>; otherwise validated before fitting.</p></li>
 <li><p><strong>logic</strong> (<em>{'lower'</em><em>, </em><em>'greater'}</em><em> or </em><em>sequence</em><em>, </em><em>optional</em><em> (</em><em>default='greater'</em><em>)</em>) – Direction of optimization for reliability computation. A sequence supplies
 one direction per metric; a scalar applies to all.</p></li>
 <li><p><strong>desired_performance_score</strong> (<em>{'train'</em><em>, </em><em>'cv'</em><em>, </em><em>'train_cv_average'}</em><em>, </em><em>optional</em>) – Performance component used inside
 <code class="docutils literal notranslate"><span class="pre">get_reliability_score_components</span></code>. Also used in individual-only mode
-and reused by <code class="docutils literal notranslate"><span class="pre">evaluate_consensus_cv</span></code>.</p></li>
+and reused by <code class="docutils literal notranslate"><span class="pre">evaluate_consensus_cv</span></code>. Validated before fitting.</p></li>
 <li><p><strong>shuffle</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – Whether generated CV folds are shuffled when using <code class="docutils literal notranslate"><span class="pre">cv_iter</span></code>.
 Ignored when <code class="docutils literal notranslate"><span class="pre">cv_splitter</span></code> or <code class="docutils literal notranslate"><span class="pre">cv_indices</span></code> is supplied.</p></li>
 <li><p><strong>random_state</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Random seed used with generated shuffled folds. Ignored when
@@ -248,30 +252,28 @@ Ignored when <code class="docutils literal notranslate"><span class="pre">cv_spl
 Configure a custom splitter’s randomness on the splitter itself.</p></li>
 <li><p><strong>individual_only</strong> (<em>bool</em><em>, </em><em>optional</em><em> (</em><em>default=False</em><em>)</em>) – Score only individual estimators and retain their fold predictions for
 <code class="docutils literal notranslate"><span class="pre">evaluate_consensus_cv</span></code>. The returned DataFrame includes
-<code class="docutils literal notranslate"><span class="pre">estimator</span></code> and <code class="docutils literal notranslate"><span class="pre">strategy</span></code> columns and per-fold train and validation
-prediction arrays.
+an <code class="docutils literal notranslate"><span class="pre">estimator</span></code> column and per-metric fold prediction arrays.
 The corresponding row positions are available in <code class="docutils literal notranslate"><span class="pre">cv_indices_</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>One row per evaluated ensemble variant. Columns include:
-<code class="docutils literal notranslate"><span class="pre">combination</span></code>, <code class="docutils literal notranslate"><span class="pre">train_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">train_se</span></code>, <code class="docutils literal notranslate"><span class="pre">train_min</span></code>, <code class="docutils literal notranslate"><span class="pre">train_max</span></code>,
-<code class="docutils literal notranslate"><span class="pre">validation_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_se</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_min</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_max</span></code>,
-<code class="docutils literal notranslate"><span class="pre">reliability_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">reliability_se</span></code>, <code class="docutils literal notranslate"><span class="pre">reliability_min</span></code>, <code class="docutils literal notranslate"><span class="pre">reliability_max</span></code>,
-<code class="docutils literal notranslate"><span class="pre">train_folds</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_folds</span></code>, <code class="docutils literal notranslate"><span class="pre">reliability_folds</span></code>.
+<dd class="field-even"><p>One row per evaluated combination and voting <code class="docutils literal notranslate"><span class="pre">strategy</span></code>. Columns include
+<code class="docutils literal notranslate"><span class="pre">combination</span></code> and <code class="docutils literal notranslate"><span class="pre">strategy</span></code>, plus metric-prefixed scores such as
+<code class="docutils literal notranslate"><span class="pre">accuracy_train_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">accuracy_validation_mean</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">accuracy_reliability_mean</span></code>. Each metric has <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">se</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>,
+<code class="docutils literal notranslate"><span class="pre">max</span></code>, and <code class="docutils literal notranslate"><span class="pre">folds</span></code> columns for train, validation, and reliability.
 Minima and maxima are calculated across the corresponding fold values.
-Results are ranked by <code class="docutils literal notranslate"><span class="pre">reliability_mean</span></code> descending. With multiple
-metrics, a <code class="docutils literal notranslate"><span class="pre">metric</span></code> column identifies each row and results are grouped
-in metric input order, ranked separately within each group.
+Results are ranked by the first metric’s reliability mean, descending.
+Sort by another metric’s reliability column to change the ranking.
 Train/validation columns contain raw metric values. Reliability is
 computed per fold, then averaged: for <code class="docutils literal notranslate"><span class="pre">logic='lower'</span></code> it is the
 negative of the selected loss plus <code class="docutils literal notranslate"><span class="pre">abs(train</span> <span class="pre">-</span> <span class="pre">validation)</span></code>;
 for <code class="docutils literal notranslate"><span class="pre">logic='greater'</span></code> the existing performance divided by
 <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">+</span> <span class="pre">abs(train</span> <span class="pre">-</span> <span class="pre">validation)</span></code> is unchanged. Reliability is always
 maximized, is not raw RMSE, and is nonpositive for nonnegative losses.
-In individual-only mode, <code class="docutils literal notranslate"><span class="pre">train_predictions_folds</span></code> and
-<code class="docutils literal notranslate"><span class="pre">validation_predictions_folds</span></code> contain the predictions used by each
-row’s metric and strategy, in the order of <code class="docutils literal notranslate"><span class="pre">cv_indices_</span></code>.</p>
+In individual-only mode, metric-prefixed <code class="docutils literal notranslate"><span class="pre">train_predictions_folds</span></code> and
+<code class="docutils literal notranslate"><span class="pre">validation_predictions_folds</span></code> columns contain the predictions used by
+that metric and strategy, in the order of <code class="docutils literal notranslate"><span class="pre">cv_indices_</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pandas.DataFrame</p>
@@ -312,7 +314,7 @@ probability option keeps soft-vote scores suitable for ROC-AUC:</p>
 <span class="gp">... </span>    <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">results_summary</span> <span class="o">=</span> <span class="n">results</span><span class="p">[[</span><span class="s2">&quot;combination&quot;</span><span class="p">,</span> <span class="s2">&quot;validation_mean&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results_summary</span> <span class="o">=</span> <span class="n">results</span><span class="p">[[</span><span class="s2">&quot;combination&quot;</span><span class="p">,</span> <span class="s2">&quot;AUC_validation_mean&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Multiple metrics can use different optimization directions and prediction
@@ -332,7 +334,7 @@ types without refitting:</p>
 <span class="gp">... </span>    <span class="n">metric</span><span class="o">=</span><span class="n">accuracy_score</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="n">cv_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">individual_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">best</span> <span class="o">=</span> <span class="n">individual</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;estimator&quot;</span><span class="p">)[</span><span class="s2">&quot;validation_mean&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">best</span> <span class="o">=</span> <span class="n">individual</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;estimator&quot;</span><span class="p">)[</span><span class="s2">&quot;accuracy_validation_mean&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">nlargest</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shortlist</span> <span class="o">=</span> <span class="n">individual</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">individual</span><span class="p">[</span><span class="s2">&quot;estimator&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">best</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">consensus</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">evaluate_consensus_cv</span><span class="p">(</span><span class="n">shortlist</span><span class="p">,</span> <span class="n">n_estimators_max</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
@@ -1581,7 +1583,7 @@ categorical fallback uses PermutationExplainer and supports this plot.</p>
         <li class="right" >
           <a href="mlchem.ml.feature_selection.html" title="mlchem.ml.feature_selection package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.11 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.12 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" ><strong>mlchem package</strong></a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="mlchem.html" ><strong>chem and ml subpackages</strong></a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="mlchem.ml.html" ><strong>mlchem.ml package</strong></a> &#187;</li>
