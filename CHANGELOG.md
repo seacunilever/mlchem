@@ -8,10 +8,13 @@ All notable user-facing changes are documented in this file.
 
 - Evaluate multiple named metrics in one `MajorityVote.evaluate_cv()` call, reusing fitted estimators and allowing per-metric optimization directions and soft-vote probability settings.
 - Include minimum and maximum train, validation, and reliability fold scores in `MajorityVote.evaluate_cv()` results.
+- Added an individual-only CV stage with fold predictions and a separate `evaluate_consensus_cv()` stage that evaluates shortlisted estimators without refitting.
 
 ### Changed
 
 - Accept non-list sequences for multiple `MajorityVote.evaluate_cv()` metrics and options, `generate_cartesian_product()` inputs, and similarity-map estimator columns. Clarified annotations for ordered molecule and drawing inputs and re-iterable combination inputs while retaining iterable annotations where arbitrary iterables are supported.
+- Clarified the one-call and staged `MajorityVote` CV workflows and when their options are ignored or inherited.
+- Documented model screening, cached consensus evaluation, and final hold-out fitting in the README.
 
 ## [1.2.9] - 2026-11-19
 

@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.9 documentation</title>
+    <title>mlchem.ml.modelling.model_evaluation &#8212; mlchem 1.2.11 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=e917149c"></script>
+    <script src="../../../../_static/documentation_options.js?v=b68a8a9d"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.11 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>
@@ -76,6 +76,8 @@
 <span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
@@ -258,7 +260,7 @@
 
 <span class="sd">    y : numpy.ndarray, pandas.DataFrame, or None, optional</span>
 <span class="sd">        Target vector, forwarded to ``cv_splitter.split`` when needed</span>
-<span class="sd">        (e.g. for stratified splitters).</span>
+<span class="sd">        (e.g. for stratified splitters). Ignored when ``cv_indices`` is supplied.</span>
 
 <span class="sd">    cv_iter : int, optional (default=5)</span>
 <span class="sd">        Number of folds to generate when neither ``cv_splitter`` nor</span>
@@ -267,19 +269,22 @@
 <span class="sd">    cv_splitter : object, optional</span>
 <span class="sd">        A scikit-learn compatible cross-validation splitter (e.g.</span>
 <span class="sd">        ``GroupKFold``, ``StratifiedGroupKFold``, ``PredefinedSplit``)</span>
-<span class="sd">        exposing a ``split(X, y, groups)`` method.</span>
+<span class="sd">        exposing a ``split(X, y, groups)`` method. Ignored when ``cv_indices``</span>
+<span class="sd">        is supplied.</span>
 
 <span class="sd">    cv_indices : iterable of (array-like, array-like), optional</span>
 <span class="sd">        Explicit, pre-computed ``(train_idx, valid_idx)`` pairs. Takes</span>
-<span class="sd">        precedence over ``cv_splitter`` and ``cv_iter`` when provided.</span>
+<span class="sd">        precedence over fold generation when provided; ``cv_iter``,</span>
+<span class="sd">        ``cv_splitter``, ``groups``, ``task_type``, ``shuffle`` and</span>
+<span class="sd">        ``random_state`` are then ignored.</span>
 <span class="sd">        This is the most generic API and is suitable for externally</span>
 <span class="sd">        generated fold manifests (scaffold-based folds, UMAP-cluster</span>
 <span class="sd">        folds, etc.).</span>
 
 <span class="sd">    groups : array-like, optional</span>
-<span class="sd">        Group labels used by group-aware splitters such as</span>
-<span class="sd">        ``GroupKFold`` or ``StratifiedGroupKFold``. Ignored unless</span>
-<span class="sd">        ``cv_splitter`` is provided and supports grouping.</span>
+<span class="sd">        Group labels forwarded to the splitter when ``cv_indices`` is not</span>
+<span class="sd">        supplied. The default splitters do not use groups; a custom</span>
+<span class="sd">        ``cv_splitter`` determines whether to use them.</span>
 
 <span class="sd">    task_type : {&#39;classification&#39;, &#39;regression&#39;}, optional (default=&#39;classification&#39;)</span>
 <span class="sd">        Used only to pick the default splitter (``StratifiedKFold`` or</span>
@@ -287,11 +292,13 @@
 
 <span class="sd">    shuffle : bool, optional (default=False)</span>
 <span class="sd">        Whether to shuffle samples before splitting, for the default</span>
-<span class="sd">        ``cv_iter``-based splitter.</span>
+<span class="sd">        ``cv_iter``-based splitter. Ignored when ``cv_splitter`` or</span>
+<span class="sd">        ``cv_indices`` is supplied.</span>
 
 <span class="sd">    random_state : int or None, optional (default=None)</span>
 <span class="sd">        Random seed for the default ``cv_iter``-based splitter when</span>
-<span class="sd">        ``shuffle=True``.</span>
+<span class="sd">        ``shuffle=True``. Ignored when ``shuffle=False``, or when</span>
+<span class="sd">        ``cv_splitter`` or ``cv_indices`` is supplied.</span>
 
 <span class="sd">    strict_coverage : bool, optional (default=False)</span>
 <span class="sd">        Forwarded to :func:`validate_cv_indices`.</span>
@@ -840,16 +847,35 @@
             <span class="p">}</span></div>
 
 
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_MajorityVoteCVCache</span><span class="p">:</span>
+    <span class="n">task_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span> <span class="s1">&#39;regression&#39;</span><span class="p">]</span>
+    <span class="n">estimator_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span>
+    <span class="n">metric_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">probabilities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span>
+    <span class="n">logics</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="s1">&#39;greater&#39;</span><span class="p">]]</span>
+    <span class="n">desired_performance_score</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;cv&#39;</span><span class="p">,</span> <span class="s1">&#39;train_cv_average&#39;</span><span class="p">]</span>
+    <span class="n">folds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span>
+        <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+        <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+    <span class="p">]]</span>
+    <span class="n">cv_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span>
+    <span class="n">token</span><span class="p">:</span> <span class="nb">str</span>
+
+
 <div class="viewcode-block" id="MajorityVote">
 <a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MajorityVote</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    MajorityVote ensemble evaluation utility.</span>
 
-<span class="sd">    This class supports two workflows:</span>
-
-<span class="sd">    1. ``evaluate_cv()`` for fold-based evaluation and estimator ranking.</span>
-<span class="sd">    2. ``fit()`` for final consensus fitting on full train/test data.</span>
+<span class="sd">    ``evaluate_cv()`` fits estimators on CV folds and can score individual</span>
+<span class="sd">    estimators and ensemble combinations in one call. Alternatively, use</span>
+<span class="sd">    ``individual_only=True`` to screen individual estimators, then pass the</span>
+<span class="sd">    filtered results to ``evaluate_consensus_cv()`` to score shortlisted</span>
+<span class="sd">    combinations using the same fold predictions without refitting.</span>
+<span class="sd">    ``fit()`` separately fits the final consensus on full train/test data.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -905,6 +931,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span> <span class="o">=</span> <span class="n">y_test</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_jobs</span> <span class="o">=</span> <span class="n">resolve_n_jobs</span><span class="p">(</span><span class="n">n_jobs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">coerce_log_level</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cv_cache</span><span class="p">:</span> <span class="n">_MajorityVoteCVCache</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_indices_</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">_configure_module_logging</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_level</span><span class="p">)</span></div>
 
 
@@ -1335,12 +1363,18 @@
         <span class="n">desired_performance_score</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;cv&#39;</span><span class="p">,</span> <span class="s1">&#39;train_cv_average&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;train_cv_average&#39;</span><span class="p">,</span>
         <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">individual_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Evaluate ensemble combinations using fold-level cross-validation.</span>
 
 <span class="sd">The same explicit fold definitions are reused for every estimator and</span>
-<span class="sd">combination, ensuring fair fold-wise comparison.</span>
+<span class="sd">combination, ensuring fair fold-wise comparison. By default this method fits</span>
+<span class="sd">the estimators and scores both individual estimators and their combinations</span>
+<span class="sd">in one call. For a screening step before choosing combinations, set</span>
+<span class="sd">``individual_only=True`` and pass the filtered results to</span>
+<span class="sd">``evaluate_consensus_cv``. Calling ``evaluate_cv`` again starts a new fit</span>
+<span class="sd">and replaces the cached screening predictions.</span>
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
@@ -1356,24 +1390,30 @@
 <span class="sd">    probabilities directly instead of rounding them to class labels. Enable</span>
 <span class="sd">    this for binary ROC-AUC; the probability for ``classes_[1]`` is used.</span>
 <span class="sd">    A sequence supplies one setting per metric; a scalar applies to all.</span>
-<span class="sd">    Hard-vote strategies always use predicted class labels.</span>
+<span class="sd">    Does not affect regression or hard-vote predictions, which use predicted</span>
+<span class="sd">    class labels for classification. Values are still validated.</span>
 
 <span class="sd">cv_iter : int, optional (default=5)</span>
 <span class="sd">    Number of folds used when ``cv_indices`` and ``cv_splitter`` are not</span>
-<span class="sd">    supplied.</span>
+<span class="sd">    supplied. Ignored if either is supplied.</span>
 
 <span class="sd">cv_splitter : object, optional</span>
 <span class="sd">    Scikit-learn compatible splitter exposing ``split(X, y, groups)``.</span>
+<span class="sd">    Ignored when ``cv_indices`` is supplied.</span>
 
 <span class="sd">cv_indices : iterable of (train_idx, valid_idx), optional</span>
 <span class="sd">    Explicit precomputed fold manifest. When supplied, all combinations</span>
-<span class="sd">    are evaluated on exactly these folds.</span>
+<span class="sd">    are evaluated on exactly these folds, and ``cv_iter``, ``cv_splitter``,</span>
+<span class="sd">    ``groups``, ``shuffle`` and ``random_state`` are ignored.</span>
 
 <span class="sd">groups : array-like, optional</span>
-<span class="sd">    Group labels forwarded to group-aware ``cv_splitter`` objects.</span>
+<span class="sd">    Group labels forwarded to the splitter unless ``cv_indices`` is supplied.</span>
+<span class="sd">    Default splitters do not use groups; a custom splitter determines whether</span>
+<span class="sd">    to use them.</span>
 
 <span class="sd">n_estimators_max : int, optional (default=5)</span>
 <span class="sd">    Maximum combination size passed to ``generate_combination_cascade``.</span>
+<span class="sd">    Ignored when ``individual_only=True``.</span>
 
 <span class="sd">logic : {&#39;lower&#39;, &#39;greater&#39;} or sequence, optional (default=&#39;greater&#39;)</span>
 <span class="sd">    Direction of optimization for reliability computation. A sequence supplies</span>
@@ -1381,13 +1421,24 @@
 
 <span class="sd">desired_performance_score : {&#39;train&#39;, &#39;cv&#39;, &#39;train_cv_average&#39;}, optional</span>
 <span class="sd">    Performance component used inside</span>
-<span class="sd">    ``get_reliability_score_components``.</span>
+<span class="sd">    ``get_reliability_score_components``. Also used in individual-only mode</span>
+<span class="sd">    and reused by ``evaluate_consensus_cv``.</span>
 
 <span class="sd">shuffle : bool, optional (default=False)</span>
 <span class="sd">    Whether generated CV folds are shuffled when using ``cv_iter``.</span>
+<span class="sd">    Ignored when ``cv_splitter`` or ``cv_indices`` is supplied.</span>
 
 <span class="sd">random_state : int or None, optional</span>
-<span class="sd">    Random seed used with generated shuffled folds.</span>
+<span class="sd">    Random seed used with generated shuffled folds. Ignored when</span>
+<span class="sd">    ``shuffle=False``, or when ``cv_splitter`` or ``cv_indices`` is supplied.</span>
+<span class="sd">    Configure a custom splitter&#39;s randomness on the splitter itself.</span>
+
+<span class="sd">individual_only : bool, optional (default=False)</span>
+<span class="sd">    Score only individual estimators and retain their fold predictions for</span>
+<span class="sd">    ``evaluate_consensus_cv``. The returned DataFrame includes</span>
+<span class="sd">    ``estimator`` and ``strategy`` columns and per-fold train and validation</span>
+<span class="sd">    prediction arrays.</span>
+<span class="sd">    The corresponding row positions are available in ``cv_indices_``.</span>
 
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
@@ -1407,6 +1458,9 @@
 <span class="sd">    for ``logic=&#39;greater&#39;`` the existing performance divided by</span>
 <span class="sd">    ``1 + abs(train - validation)`` is unchanged. Reliability is always</span>
 <span class="sd">    maximized, is not raw RMSE, and is nonpositive for nonnegative losses.</span>
+<span class="sd">    In individual-only mode, ``train_predictions_folds`` and</span>
+<span class="sd">    ``validation_predictions_folds`` contain the predictions used by each</span>
+<span class="sd">    row&#39;s metric and strategy, in the order of ``cv_indices_``.</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -1431,9 +1485,10 @@
 <span class="sd">...     estimator_list=[</span>
 <span class="sd">...         LogisticRegression(max_iter=1000),</span>
 <span class="sd">...         RandomForestClassifier(n_estimators=20, random_state=0),</span>
+<span class="sd">...         LogisticRegression(C=0.5, max_iter=1000),</span>
 <span class="sd">...     ],</span>
-<span class="sd">...     column_list=[columns, columns],</span>
-<span class="sd">...     estimator_names=[&quot;logistic&quot;, &quot;forest&quot;],</span>
+<span class="sd">...     column_list=[columns, columns, columns],</span>
+<span class="sd">...     estimator_names=[&quot;logistic&quot;, &quot;forest&quot;, &quot;logistic_alt&quot;],</span>
 <span class="sd">... )</span>
 <span class="sd">&gt;&gt;&gt; results = ensemble.evaluate_cv(</span>
 <span class="sd">...     metric=roc_auc_score,</span>
@@ -1457,11 +1512,25 @@
 <span class="sd">...     cv_iter=3,</span>
 <span class="sd">...     n_estimators_max=2,</span>
 <span class="sd">... )</span>
+
+<span class="sd">Shortlist individual models before evaluating ensemble combinations:</span>
+
+<span class="sd">&gt;&gt;&gt; individual = ensemble.evaluate_cv(</span>
+<span class="sd">...     metric=accuracy_score, metric_name=&quot;accuracy&quot;, cv_iter=3,</span>
+<span class="sd">...     individual_only=True,</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; best = individual.groupby(&quot;estimator&quot;)[&quot;validation_mean&quot;].max().nlargest(3).index</span>
+<span class="sd">&gt;&gt;&gt; shortlist = individual.loc[individual[&quot;estimator&quot;].isin(best)].copy()</span>
+<span class="sd">&gt;&gt;&gt; consensus = ensemble.evaluate_consensus_cv(shortlist, n_estimators_max=3)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">clone</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_combination_cascade</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_reliability_score_components</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cv_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cv_indices_</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">individual_only</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;individual_only&#39; must be a bool.&quot;</span><span class="p">)</span>
 
         <span class="n">metrics</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">metric</span><span class="p">]</span>
         <span class="n">metric_names</span> <span class="o">=</span> <span class="p">(</span>
@@ -1595,16 +1664,129 @@
                 <span class="s2">&quot;No estimators were successfully fitted in MajorityVote.evaluate_cv.&quot;</span>
             <span class="p">)</span>
 
-        <span class="n">combinations</span> <span class="o">=</span> <span class="n">generate_combination_cascade</span><span class="p">(</span><span class="n">valid_estimators</span><span class="p">,</span> <span class="n">n_estimators_max</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
-            <span class="n">combinations</span> <span class="o">=</span> <span class="p">[</span><span class="n">comb</span> <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">combinations</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="n">_MajorityVoteCVCache</span><span class="p">(</span>
+            <span class="n">task_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_type</span><span class="p">,</span>
+            <span class="n">estimator_names</span><span class="o">=</span><span class="n">valid_estimators</span><span class="p">,</span>
+            <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+            <span class="n">metric_names</span><span class="o">=</span><span class="n">metric_names</span><span class="p">,</span>
+            <span class="n">probabilities</span><span class="o">=</span><span class="n">probabilities</span><span class="p">,</span>
+            <span class="n">logics</span><span class="o">=</span><span class="n">logics</span><span class="p">,</span>
+            <span class="n">desired_performance_score</span><span class="o">=</span><span class="n">desired_performance_score</span><span class="p">,</span>
+            <span class="n">folds</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;hard&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">fold_train_hard</span><span class="p">,</span> <span class="n">fold_valid_hard</span><span class="p">),</span>
+                <span class="s1">&#39;soft&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">fold_train_soft</span><span class="p">,</span> <span class="n">fold_valid_soft</span><span class="p">),</span>
+                <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">fold_train_reg</span><span class="p">,</span> <span class="n">fold_valid_reg</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">cv_indices</span><span class="o">=</span><span class="n">resolved_pairs</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">=</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">individual_only</span><span class="p">:</span>
+            <span class="n">combinations</span> <span class="o">=</span> <span class="p">[[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">valid_estimators</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">combinations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cv_combinations</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span> <span class="n">valid_estimators</span><span class="p">,</span> <span class="n">n_estimators_max</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score_cv_combinations</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span> <span class="n">combinations</span><span class="p">,</span> <span class="n">individual_only</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">individual_only</span><span class="p">:</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;majority_vote_cv_token&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">token</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cv_cache</span> <span class="o">=</span> <span class="n">cache</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cv_indices_</span> <span class="o">=</span> <span class="p">[(</span><span class="n">train</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">valid</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="k">for</span> <span class="n">train</span><span class="p">,</span> <span class="n">valid</span> <span class="ow">in</span> <span class="n">resolved_pairs</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span> <span class="o">=</span> <span class="n">results</span>
+        <span class="k">return</span> <span class="n">results</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cv_combinations</span><span class="p">(</span>
+        <span class="n">cache</span><span class="p">:</span> <span class="n">_MajorityVoteCVCache</span><span class="p">,</span>
+        <span class="n">estimator_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">n_estimators_max</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_combination_cascade</span>
+
+        <span class="n">combinations</span> <span class="o">=</span> <span class="n">generate_combination_cascade</span><span class="p">(</span><span class="n">estimator_names</span><span class="p">,</span> <span class="n">n_estimators_max</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+            <span class="n">combinations</span> <span class="o">=</span> <span class="p">[</span><span class="n">comb</span> <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">combinations</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comb</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">combinations</span>
+
+<div class="viewcode-block" id="MajorityVote.evaluate_consensus_cv">
+<a class="viewcode-back" href="../../../../mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.MajorityVote.evaluate_consensus_cv">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_consensus_cv</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">estimator_results</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">n_estimators_max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate combinations of shortlisted estimators without refitting.</span>
+
+<span class="sd">        This is the second stage of ``evaluate_cv(individual_only=True)``.</span>
+<span class="sd">        For a one-call evaluation without screening, use ``evaluate_cv``</span>
+<span class="sd">        with its default ``individual_only=False`` instead.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        estimator_results : pandas.DataFrame</span>
+<span class="sd">            The DataFrame returned by the latest ``evaluate_cv`` call with</span>
+<span class="sd">            ``individual_only=True``, optionally filtered to retain desired</span>
+<span class="sd">            rows. Each retained ``estimator`` selects that model once, even</span>
+<span class="sd">            when several metric or strategy rows remain. Filtering or editing</span>
+<span class="sd">            score and prediction columns does not alter cached predictions.</span>
+<span class="sd">            DataFrame attributes must be preserved when filtering or copying.</span>
+<span class="sd">        n_estimators_max : int, optional (default=5)</span>
+<span class="sd">            Maximum ensemble size. Classification uses only odd sizes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            Fold metrics for shortlisted combinations, including individual</span>
+<span class="sd">            estimators. Metrics, folds, and prediction settings are inherited</span>
+<span class="sd">            from the individual evaluation; settings used to generate those</span>
+<span class="sd">            folds cannot be overridden in this stage.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no current individual evaluation exists, the table is empty,</span>
+<span class="sd">            contains unknown estimators, or came from a different evaluation.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``estimator_results`` is not a DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cv_cache</span>
+        <span class="k">if</span> <span class="n">cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Run evaluate_cv(individual_only=True) before evaluating consensus.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">estimator_results</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;&#39;estimator_results&#39; must be a pandas DataFrame.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">estimator_results</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;majority_vote_cv_token&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">cache</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;estimator_results&#39; must come from the latest individual evaluation.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;estimator&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">estimator_results</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;estimator_results&#39; must contain the &#39;estimator&#39; column.&quot;</span><span class="p">)</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">estimator_results</span><span class="p">[</span><span class="s1">&#39;estimator&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">selected</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;estimator_results&#39; must contain at least one estimator.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="o">.</span><span class="n">estimator_names</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">selected</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;estimator_results&#39; contains an unknown estimator.&quot;</span><span class="p">)</span>
+        <span class="n">selected_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">cache</span><span class="o">.</span><span class="n">estimator_names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">selected_names</span><span class="p">]</span>
+        <span class="n">combinations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cv_combinations</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">n_estimators_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_score_cv_combinations</span><span class="p">(</span><span class="n">cache</span><span class="p">,</span> <span class="n">combinations</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_score_cv_combinations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">cache</span><span class="p">:</span> <span class="n">_MajorityVoteCVCache</span><span class="p">,</span>
+        <span class="n">combinations</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">individual_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_reliability_score_components</span>
+
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">metrics</span>
+        <span class="n">metric_names</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">metric_names</span>
+        <span class="n">probabilities</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">probabilities</span>
+        <span class="n">logics</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">logics</span>
         <span class="n">rows_by_metric</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
             <span class="n">combinations</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Evaluating combinations&quot;</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cache</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
                 <span class="n">strategies</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;hard&#39;</span><span class="p">,</span> <span class="s1">&#39;soft&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">strategies</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">,)</span>
@@ -1612,17 +1794,13 @@
             <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">strategies</span><span class="p">:</span>
                 <span class="n">train_scores</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
                 <span class="n">validation_scores</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
+                <span class="n">train_predictions</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
+                <span class="n">validation_predictions</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
 
-                <span class="k">for</span> <span class="n">fold_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">resolved_pairs</span><span class="p">)):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
-                        <span class="n">train_dict</span><span class="p">,</span> <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">fold_train_hard</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
-                        <span class="n">valid_dict</span><span class="p">,</span> <span class="n">y_valid_fold</span> <span class="o">=</span> <span class="n">fold_valid_hard</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
-                        <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s1">&#39;soft&#39;</span><span class="p">:</span>
-                            <span class="n">train_dict</span><span class="p">,</span> <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">fold_train_soft</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
-                            <span class="n">valid_dict</span><span class="p">,</span> <span class="n">y_valid_fold</span> <span class="o">=</span> <span class="n">fold_valid_soft</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">train_dict</span><span class="p">,</span> <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">fold_train_reg</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
-                        <span class="n">valid_dict</span><span class="p">,</span> <span class="n">y_valid_fold</span> <span class="o">=</span> <span class="n">fold_valid_reg</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
+                <span class="n">fold_train</span><span class="p">,</span> <span class="n">fold_valid</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">folds</span><span class="p">[</span><span class="n">strategy</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">fold_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cache</span><span class="o">.</span><span class="n">cv_indices</span><span class="p">)):</span>
+                    <span class="n">train_dict</span><span class="p">,</span> <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">fold_train</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
+                    <span class="n">valid_dict</span><span class="p">,</span> <span class="n">y_valid_fold</span> <span class="o">=</span> <span class="n">fold_valid</span><span class="p">[</span><span class="n">fold_idx</span><span class="p">]</span>
 
                     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">train_dict</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">combination</span><span class="p">):</span>
                         <span class="n">train_scores</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
@@ -1656,6 +1834,9 @@
                         <span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                             <span class="nb">float</span><span class="p">(</span><span class="n">metric_function</span><span class="p">(</span><span class="n">y_valid_fold</span><span class="p">,</span> <span class="n">metric_valid_pred</span><span class="p">))</span>
                         <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">individual_only</span><span class="p">:</span>
+                            <span class="n">train_predictions</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_train_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+                            <span class="n">validation_predictions</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_valid_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
 
                 <span class="k">for</span> <span class="n">metric_idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">metric_names</span><span class="p">):</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">train_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]:</span>
@@ -1669,7 +1850,7 @@
                             <span class="n">train_score</span><span class="o">=</span><span class="n">train_score</span><span class="p">,</span>
                             <span class="n">cv_score</span><span class="o">=</span><span class="n">validation_score</span><span class="p">,</span>
                             <span class="n">logic</span><span class="o">=</span><span class="n">logics</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">],</span>
-                            <span class="n">desired_performance_score</span><span class="o">=</span><span class="n">desired_performance_score</span><span class="p">,</span>
+                            <span class="n">desired_performance_score</span><span class="o">=</span><span class="n">cache</span><span class="o">.</span><span class="n">desired_performance_score</span><span class="p">,</span>
                         <span class="p">)</span>
                         <span class="n">reliability_folds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">comp</span><span class="p">[</span><span class="s1">&#39;reliability_score&#39;</span><span class="p">]))</span>
 
@@ -1677,7 +1858,7 @@
                     <span class="n">validation_mean</span><span class="p">,</span> <span class="n">validation_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">validation_scores</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">])</span>
                     <span class="n">reliability_mean</span><span class="p">,</span> <span class="n">reliability_se</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean_and_se</span><span class="p">(</span><span class="n">reliability_folds</span><span class="p">)</span>
 
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">cache</span><span class="o">.</span><span class="n">task_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
                         <span class="n">comb_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combination</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">comb_label</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">combination</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -1702,6 +1883,11 @@
                     <span class="p">}</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="n">row</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+                    <span class="k">if</span> <span class="n">individual_only</span><span class="p">:</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;estimator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">combination</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;strategy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">strategy</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;train_predictions_folds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">train_predictions</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;validation_predictions_folds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">validation_predictions</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span>
                     <span class="n">rows_by_metric</span><span class="p">[</span><span class="n">metric_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">rows_by_metric</span><span class="p">):</span>
@@ -1710,15 +1896,13 @@
                 <span class="s2">&quot;MajorityVote.evaluate_cv.&quot;</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;reliability_mean&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">rows_by_metric</span>
             <span class="p">],</span>
             <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">final_results_cv</span></div>
-</div>
+        <span class="p">)</span></div>
 
 
 
@@ -1833,7 +2017,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.11 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.ml.modelling.model_evaluation</a></li> 
       </ul>
