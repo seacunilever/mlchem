@@ -35,6 +35,7 @@ import pytest
 import logging
 import warnings
 from collections import UserList
+from itertools import combinations
 from typing import Literal
 from unittest.mock import patch
 import pandas as pd
@@ -946,7 +947,7 @@ def test_majority_vote_shortlist_cv_reuses_predictions():
     }
     original_fit = _FastPredictionEstimator.fit
     with patch.object(_FastPredictionEstimator, 'fit', autospec=True, side_effect=original_fit) as fit:
-        with patch('mlchem.helper.generate_combination_cascade', side_effect=AssertionError):
+        with patch('mlchem.ml.modelling.model_evaluation.combinations', side_effect=AssertionError):
             individual = mv.evaluate_cv(individual_only=True, **kwargs)
         assert fit.call_count == len(names) * 2
         assert len(individual) == len(names) * 2
@@ -996,8 +997,11 @@ def test_majority_vote_shortlist_cv_regression_matches_one_call():
         'logic': 'lower', 'cv_iter': 3,
     }
     individual = mv.evaluate_cv(individual_only=True, **kwargs)
-    with patch.object(DummyRegressor, 'fit', side_effect=AssertionError):
+    with patch.object(DummyRegressor, 'fit', side_effect=AssertionError), patch(
+        'mlchem.ml.modelling.model_evaluation.combinations', wraps=combinations
+    ) as generate:
         consensus = mv.evaluate_consensus_cv(individual, n_estimators_max=2)
+    assert [call.args[1] for call in generate.call_args_list] == [1, 2]
     reference = mv.evaluate_cv(n_estimators_max=2, **kwargs)
     pd.testing.assert_frame_equal(consensus, reference)
     assert any('mean' in label and 'median' in label for label in consensus['combination'])
@@ -1028,6 +1032,91 @@ def test_majority_vote_shortlist_cv_rejects_invalid_or_stale_tables():
     mv.evaluate_cv(**kwargs)
     with pytest.raises(ValueError, match='individual_only=True'):
         mv.evaluate_consensus_cv(individual)
+
+
+@pytest.mark.parametrize('bad_size', [0, -1, 1.5, True, '2', None])
+def test_majority_vote_rejects_invalid_combination_sizes_before_fitting(bad_size):
+    X = pd.DataFrame({'x': np.arange(8)})
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0, 1] * 4), task_type='classification',
+        estimator_list=[_FastPredictionEstimator()], column_list=[['x']],
+        estimator_names=['model'],
+    )
+    kwargs = {'metric': accuracy_score, 'metric_name': 'accuracy', 'cv_iter': 2}
+    with patch.object(_FastPredictionEstimator, 'fit', side_effect=AssertionError):
+        with pytest.raises(ValueError, match='n_estimators_max'):
+            mv.evaluate_cv(n_estimators_max=bad_size, **kwargs)
+
+    individual = mv.evaluate_cv(individual_only=True, n_estimators_max=bad_size, **kwargs)
+    with pytest.raises(ValueError, match='n_estimators_max'):
+        mv.evaluate_consensus_cv(individual, n_estimators_max=bad_size)
+
+
+def test_majority_vote_rejects_invalid_performance_score_before_fitting():
+    X = pd.DataFrame({'x': np.arange(8)})
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0, 1] * 4), task_type='classification',
+        estimator_list=[_FastPredictionEstimator()], column_list=[['x']],
+    )
+    with patch.object(_FastPredictionEstimator, 'fit', side_effect=AssertionError):
+        with pytest.raises(ValueError, match='desired_performance_score'):
+            mv.evaluate_cv(
+                metric=accuracy_score, metric_name='accuracy',
+                desired_performance_score='invalid',
+            )
+
+
+def test_majority_vote_classification_skips_even_combinations():
+    X = pd.DataFrame({'x': np.arange(8)})
+    names = ['a', 'b', 'c', 'd']
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0, 1] * 4), task_type='classification',
+        estimator_list=[_FastPredictionEstimator() for _ in names],
+        column_list=[['x']] * len(names), estimator_names=names,
+    )
+    individual = mv.evaluate_cv(
+        metric=accuracy_score, metric_name='accuracy', cv_iter=2, individual_only=True,
+    )
+    with patch(
+        'mlchem.ml.modelling.model_evaluation.combinations', wraps=combinations
+    ) as generate:
+        results = mv.evaluate_consensus_cv(individual, n_estimators_max=np.int64(5))
+    assert [call.args[1] for call in generate.call_args_list] == [1, 3]
+    assert len(results) == 2 * (len(names) + 4)
+    expected = {
+        f"{list(group)}_{strategy}"
+        for size in (1, 3)
+        for group in combinations(names, size)
+        for strategy in ('hard', 'soft')
+    }
+    assert set(results['combination']) == expected
+
+
+def test_majority_vote_failed_evaluation_preserves_screening_cache():
+    X = pd.DataFrame({'x': np.arange(8)})
+    mv = MajorityVote(
+        train_set=X, y_train=np.array([0, 1] * 4), task_type='classification',
+        estimator_list=[_FastPredictionEstimator()], column_list=[['x']],
+        estimator_names=['model'],
+    )
+    individual = mv.evaluate_cv(
+        metric=accuracy_score, metric_name='accuracy', cv_iter=2, individual_only=True,
+    )
+    original_indices = mv.cv_indices_
+
+    def failing_metric(y_true, y_pred):
+        raise RuntimeError('metric failed')
+
+    with pytest.raises(ValueError, match='n_estimators_max'):
+        mv.evaluate_cv(metric=accuracy_score, metric_name='accuracy', n_estimators_max=0)
+    with pytest.raises(RuntimeError, match='metric failed'):
+        mv.evaluate_cv(metric=failing_metric, metric_name='bad', cv_iter=2)
+
+    assert mv.cv_indices_ is original_indices
+    assert mv.final_results_cv is individual
+    with patch.object(_FastPredictionEstimator, 'fit', side_effect=AssertionError):
+        results = mv.evaluate_consensus_cv(individual, n_estimators_max=1)
+    assert len(results) == 2
 
 
 def test_majority_vote_multiple_metrics_support_per_metric_logic():

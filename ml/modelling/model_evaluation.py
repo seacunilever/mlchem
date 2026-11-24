@@ -33,6 +33,8 @@
 
 from typing import Literal, Callable, Iterable, Sequence
 from dataclasses import dataclass
+from itertools import combinations
+from numbers import Integral
 from uuid import uuid4
 import pandas as pd
 import numpy as np
@@ -1305,7 +1307,8 @@ the estimators and scores both individual estimators and their combinations
 in one call. For a screening step before choosing combinations, set
 ``individual_only=True`` and pass the filtered results to
 ``evaluate_consensus_cv``. Calling ``evaluate_cv`` again starts a new fit
-and replaces the cached screening predictions.
+and replaces the cached screening predictions only if the new evaluation
+succeeds.
 
 Parameters
 ----------
@@ -1344,8 +1347,9 @@ groups : array-like, optional
     to use them.
 
 n_estimators_max : int, optional (default=5)
-    Maximum combination size passed to ``generate_combination_cascade``.
-    Ignored when ``individual_only=True``.
+    Positive maximum number of estimators in a combination. Classification
+    generates only odd-sized combinations. Ignored when
+    ``individual_only=True``; otherwise validated before fitting.
 
 logic : {'lower', 'greater'} or sequence, optional (default='greater')
     Direction of optimization for reliability computation. A sequence supplies
@@ -1354,7 +1358,7 @@ logic : {'lower', 'greater'} or sequence, optional (default='greater')
 desired_performance_score : {'train', 'cv', 'train_cv_average'}, optional
     Performance component used inside
     ``get_reliability_score_components``. Also used in individual-only mode
-    and reused by ``evaluate_consensus_cv``.
+    and reused by ``evaluate_consensus_cv``. Validated before fitting.
 
 shuffle : bool, optional (default=False)
     Whether generated CV folds are shuffled when using ``cv_iter``.
@@ -1456,11 +1460,14 @@ Shortlist individual models before evaluating ensemble combinations:
 
         from sklearn.base import clone
 
-        self._cv_cache = None
-        self.cv_indices_ = None
-
         if not isinstance(individual_only, bool):
             raise ValueError("'individual_only' must be a bool.")
+        if not individual_only:
+            self._validate_n_estimators_max(n_estimators_max)
+        if desired_performance_score not in ('train', 'cv', 'train_cv_average'):
+            raise ValueError(
+                "'desired_performance_score' must be 'train', 'cv', or 'train_cv_average'."
+            )
 
         metrics = list(metric) if isinstance(metric, Sequence) else [metric]
         metric_names = (
@@ -1619,8 +1626,20 @@ Shortlist individual models before evaluating ensemble combinations:
             results.attrs['majority_vote_cv_token'] = cache.token
             self._cv_cache = cache
             self.cv_indices_ = [(train.copy(), valid.copy()) for train, valid in resolved_pairs]
+        else:
+            self._cv_cache = None
+            self.cv_indices_ = None
         self.final_results_cv = results
         return results
+
+    @staticmethod
+    def _validate_n_estimators_max(n_estimators_max: int) -> None:
+        if (
+            isinstance(n_estimators_max, bool)
+            or not isinstance(n_estimators_max, Integral)
+            or n_estimators_max < 1
+        ):
+            raise ValueError("'n_estimators_max' must be a positive integer.")
 
     @staticmethod
     def _cv_combinations(
@@ -1628,12 +1647,14 @@ Shortlist individual models before evaluating ensemble combinations:
         estimator_names: list[str],
         n_estimators_max: int,
     ) -> list[list[str]]:
-        from mlchem.helper import generate_combination_cascade
-
-        combinations = generate_combination_cascade(estimator_names, n_estimators_max)
-        if cache.task_type == 'classification':
-            combinations = [comb for comb in combinations if len(comb) % 2 != 0]
-        return combinations
+        MajorityVote._validate_n_estimators_max(n_estimators_max)
+        step = 2 if cache.task_type == 'classification' else 1
+        max_size = min(n_estimators_max, len(estimator_names))
+        return [
+            list(combination)
+            for size in range(1, max_size + 1, step)
+            for combination in combinations(estimator_names, size)
+        ]
 
     def evaluate_consensus_cv(
         self,
@@ -1657,7 +1678,8 @@ Shortlist individual models before evaluating ensemble combinations:
             score and prediction columns does not alter cached predictions.
             DataFrame attributes must be preserved when filtering or copying.
         n_estimators_max : int, optional (default=5)
-            Maximum ensemble size. Classification uses only odd sizes.
+            Positive maximum ensemble size. Classification uses only odd sizes;
+            even-sized combinations are not generated.
 
         Returns
         -------

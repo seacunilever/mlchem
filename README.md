@@ -316,7 +316,8 @@ Compared with earlier releases, metric names no longer appear in a separate
 Without a screening step, call `evaluate_cv()` with its default
 `individual_only=False` to fit all configured models and score their
 combinations in one call. Calling `evaluate_cv()` again starts a new fit and
-discards the previous screening cache; it does not use a filtered table.
+replaces the previous screening cache if it succeeds; it does not use a
+filtered table. A failed evaluation leaves the previous screening cache usable.
 Classification evaluates only odd-sized combinations, so a shortlist needs at
 least three estimators for a multi-model consensus. `fit()` is a separate final
 hold-out stage and requires `test_set` and `y_test`.

@@ -2,12 +2,17 @@
 
 All notable user-facing changes are documented in this file.
 
-## Unreleased
+## [1.2.12] - 2026-11-24
 
 ### Changed
 
 - **Breaking:** `MajorityVote.evaluate_cv()` and `evaluate_consensus_cv()` now return one row per combination and strategy, with metric-prefixed score and fold columns (including for a single metric). The separate `metric` column and metric suffix in `combination` were removed; individual prediction columns are also metric-prefixed.
 - Results are ranked by the first metric's reliability mean by default. Multiple metrics can be filtered together on the same row, and staged consensus still reuses cached predictions without refitting.
+- Generate only eligible odd-sized classification combinations, avoiding the cost of constructing combinations that would be discarded.
+
+### Fixed
+
+- Reject invalid ensemble-size and performance-score settings before fitting, and preserve the previous screening cache if a new CV evaluation fails.
 
 ### Docs
 
