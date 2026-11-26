@@ -120,11 +120,26 @@ Replace the example categories with those in your dataframe. Every observed
 category must have a mapping; extra keys are allowed for reuse after filtering.
 Opacities must be finite in `[0, 1]`, sizes finite and positive, and colours and
 marker names valid Bokeh values. Missing values and unknown columns raise errors.
-Legend keys identify the encoding and column, using one actual glyph sample
-rather than overlapping shapes. Opacity keys also state alpha, and size keys
-state the mapped pixel size (Bokeh normalises legend glyph dimensions, so
-size swatches are not to scale). Zero opacity is intentionally transparent.
-The default figure remains 866 by 650 pixels.
+Legend labels identify both the encoding and source column. Colour swatches use
+the mapped colour with a uniform circle, opacity, and size; shape swatches use
+the mapped shape with a uniform neutral colour, opacity, and size. Opacity and
+size keys are markerless text, for example `Opacity (METADATA): test = 0.9` and
+`Size (METADATA): test = 14 px`. Continuous colour retains its colour bar and
+does not add categorical colour swatches. The default figure remains 866 by
+650 pixels, with all legend keys in one compact area.
+
+Proxy appearance and legend width can be adjusted without changing
+`ChemicalSpace.plot()`:
+
+```python
+space.update_bokeh_options(
+    legend_proxy_size=12,
+    legend_proxy_alpha=0.9,
+    legend_colour_proxy_marker='circle',
+    legend_shape_proxy_colour='black',
+    legend_ncols=2,
+)
+```
 
 Numeric colours remain categorical unless continuous colour is explicitly enabled:
 
@@ -163,7 +178,7 @@ platforms; original labels in plots and data are unchanged. Inspect
 `space.df_compressed['MOLFILE']` for image paths. Do not reconstruct paths from
 class labels or rename folders behind the prepared dataframe.
 
-Version 1.2.13 must be installed in the **notebook kernel's** environment, not
+Version 1.2.14 must be installed in the **notebook kernel's** environment, not
 just the shell's default Python. Before publication, install this source checkout
 from a Python 3.12 notebook (substitute your actual repository path):
 
@@ -177,11 +192,11 @@ Restart the kernel, then verify the installed version and imported location:
 from importlib.metadata import version
 import mlchem
 
-print(version('mlchem-ul'))  # 1.2.13
+print(version('mlchem-ul'))  # 1.2.14
 print(mlchem.__file__)
 ```
 
-After 1.2.13 is published, use `%pip install --upgrade mlchem-ul==1.2.13`
+After 1.2.14 is published, use `%pip install --upgrade mlchem-ul==1.2.14`
 instead. Updating the source/version alone does not publish to PyPI or update
 another notebook environment.
 
@@ -649,7 +664,7 @@ update the badges; maintainers refresh and commit them locally.
 
 ### Release refresh
 
-1. Update `version=` in `setup.py`.
+1. Update `__version__` in `_version.py`; package imports, wheel metadata, and Sphinx all read this single source.
 2. Run the local matrix with `--refresh-badges` as described above.
 3. [Build and publish the documentation](#building-the-documentation).
 4. Commit the code, tests, documentation, and refreshed badges.

@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.helper &#8212; mlchem 1.2.13 documentation</title>
+    <title>mlchem.helper &#8212; mlchem 1.2.14 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../_static/documentation_options.js?v=250a84ee"></script>
+    <script src="../../_static/documentation_options.js?v=ee831423"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.13 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.14 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.helper</a></li> 
       </ul>
@@ -1915,6 +1915,82 @@
 
 
 
+<div class="viewcode-block" id="add_encoding_legend">
+<a class="viewcode-back" href="../../mlchem.html#mlchem.helper.add_encoding_legend">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_encoding_legend</span><span class="p">(</span>
+    <span class="n">plot</span><span class="p">:</span> <span class="n">figure</span><span class="p">,</span>
+    <span class="n">colour_entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="n">shape_entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="n">text_entries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">proxy_x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">proxy_y</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">proxy_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">proxy_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">colour_proxy_marker</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;circle&#39;</span><span class="p">,</span>
+    <span class="n">shape_proxy_colour</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;grey&#39;</span><span class="p">,</span>
+    <span class="n">ncols</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add an encoding legend with isolated proxy glyphs and text-only entries.</span>
+
+<span class="sd">    Colour and shape proxies are invisible plot renderers located at a real</span>
+<span class="sd">    data coordinate; they draw only in the legend. Text entries use</span>
+<span class="sd">    ``LegendItem(renderers=[])`` and therefore have no glyph swatch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Legend</span><span class="p">,</span> <span class="n">LegendItem</span>
+
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">colour</span> <span class="ow">in</span> <span class="n">colour_entries</span><span class="p">:</span>
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">proxy_x</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">proxy_y</span><span class="p">],</span>
+            <span class="n">marker</span><span class="o">=</span><span class="n">colour_proxy_marker</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">proxy_size</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">colour</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">proxy_alpha</span><span class="p">,</span>
+            <span class="n">line_color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span>
+            <span class="n">line_alpha</span><span class="o">=</span><span class="n">proxy_alpha</span><span class="p">,</span>
+            <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;chemical-space-colour-legend-proxy&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LegendItem</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">renderers</span><span class="o">=</span><span class="p">[</span><span class="n">renderer</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shape_entries</span><span class="p">:</span>
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">proxy_x</span><span class="p">],</span>
+            <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">proxy_y</span><span class="p">],</span>
+            <span class="n">marker</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">proxy_size</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">shape_proxy_colour</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="n">proxy_alpha</span><span class="p">,</span>
+            <span class="n">line_color</span><span class="o">=</span><span class="n">shape_proxy_colour</span><span class="p">,</span>
+            <span class="n">line_alpha</span><span class="o">=</span><span class="n">proxy_alpha</span><span class="p">,</span>
+            <span class="n">visible</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;chemical-space-shape-legend-proxy&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LegendItem</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">renderers</span><span class="o">=</span><span class="p">[</span><span class="n">renderer</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="n">LegendItem</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">renderers</span><span class="o">=</span><span class="p">[])</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">text_entries</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">legend</span> <span class="o">=</span> <span class="n">Legend</span><span class="p">(</span>
+        <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
+        <span class="n">ncols</span><span class="o">=</span><span class="n">ncols</span><span class="p">,</span>
+        <span class="n">glyph_width</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="n">glyph_height</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+        <span class="n">label_standoff</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">spacing</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">padding</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">margin</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">plot</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">legend</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">legend</span></div>
+
+
+
 <div class="viewcode-block" id="create_mask">
 <a class="viewcode-back" href="../../mlchem.html#mlchem.helper.create_mask">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">create_mask</span><span class="p">(</span>
@@ -2088,7 +2164,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.13 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mlchem 1.2.14 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.helper</a></li> 
       </ul>

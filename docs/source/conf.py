@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os
-import re
+import ast
 import sys
 from pathlib import Path
 
@@ -17,13 +17,25 @@ project = 'mlchem'
 copyright = '2025, Leonardo Contreas'
 author = 'Leonardo Contreas'
 
-# Read the version straight from setup.py so `release` never drifts out of
-# sync with the package's actual version between manual doc edits.
-_setup_text = (Path(__file__).resolve().parents[2] / 'setup.py').read_text(encoding='utf-8')
-_version_match = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", _setup_text)
-if not _version_match:
-    raise RuntimeError("Could not find version in setup.py")
-release = _version_match.group(1)
+# The package, wheel metadata, and docs all read the same version source.
+_version_path = Path(__file__).resolve().parents[2] / '_version.py'
+_version_tree = ast.parse(_version_path.read_text(encoding='utf-8'))
+_version_assignment = next(
+    (
+        node for node in _version_tree.body
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == '__version__'
+            for target in node.targets
+        )
+    ),
+    None,
+)
+if _version_assignment is None:
+    raise RuntimeError(f"Could not find __version__ in {_version_path}.")
+release = ast.literal_eval(_version_assignment.value)
+if not isinstance(release, str):
+    raise RuntimeError(f"Expected __version__ in {_version_path} to be a string.")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

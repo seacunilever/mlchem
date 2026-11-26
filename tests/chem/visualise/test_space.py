@@ -281,7 +281,7 @@ def test_prepare_and_plot_keep_structure_rows_aligned(
     plot = layout.children[0]
     renderers = [
         renderer for renderer in plot.renderers
-        if isinstance(renderer, GlyphRenderer)
+        if isinstance(renderer, GlyphRenderer) and renderer.visible
     ]
     plotted_smiles = set()
     for renderer in renderers:
@@ -419,7 +419,9 @@ def test_prepare_legacy_metadata_keeps_unsortable_categories_in_input_order(
     space.plot()
     renderers = [
         renderer for renderer in show.call_args.args[0].children[0].renderers
-        if hasattr(renderer, 'glyph') and hasattr(renderer.glyph, 'marker')
+        if renderer.visible
+        and hasattr(renderer, 'glyph')
+        and hasattr(renderer.glyph, 'marker')
     ]
     assert [renderer.glyph.marker for renderer in renderers] == ['circle', 'triangle']
 
@@ -480,7 +482,7 @@ def test_plot_cached_molfiles_does_not_generate_structure_root(
     plot = layout.children[0]
     rendered_paths = []
     for renderer in plot.renderers:
-        if isinstance(renderer, GlyphRenderer):
+        if isinstance(renderer, GlyphRenderer) and renderer.visible:
             rendered_paths.extend(renderer.data_source.data['MOLFILE'])
     assert rendered_paths == cached.MOLFILE.tolist()
     assert all(Path(path).is_file() for path in rendered_paths)
@@ -633,7 +635,10 @@ def assert_plot_groups(space, show_mock, opacities, sizes):
 
     show_mock.assert_called_once()
     plot = show_mock.call_args.args[0].children[0]
-    renderers = [r for r in plot.renderers if isinstance(r, GlyphRenderer)]
+    renderers = [
+        r for r in plot.renderers
+        if isinstance(r, GlyphRenderer) and r.visible
+    ]
     metadata_groups = space.metadata_names if space.metadata_categorical else [None]
     assert len(renderers) == len(space.classnames) * len(metadata_groups)
     for i, classname in enumerate(space.classnames):
@@ -779,7 +784,9 @@ def encoding_space(monkeypatch, tmp_path):
 
 
 @pytest.mark.parametrize('rotation', range(3))
-def test_plot_independent_encodings_and_real_legend_glyphs(encoding_space, rotation):
+def test_plot_independent_encodings_use_isolated_and_text_only_legend_keys(
+    encoding_space, rotation,
+):
     from bokeh.embed import file_html
     from bokeh.models import GlyphRenderer, HoverTool
     from bokeh.resources import INLINE
@@ -801,7 +808,10 @@ def test_plot_independent_encodings_and_real_legend_glyphs(encoding_space, rotat
     space.plot(title='Independent encodings', **kwargs)
     plot = show.call_args.args[0].children[0]
     assert (plot.width, plot.height) == (866, 650)
-    renderers = [r for r in plot.renderers if isinstance(r, GlyphRenderer)]
+    renderers = [
+        r for r in plot.renderers
+        if isinstance(r, GlyphRenderer) and r.visible
+    ]
     plotted = []
     for renderer in renderers:
         source = renderer.data_source.data
@@ -816,6 +826,7 @@ def test_plot_independent_encodings_and_real_legend_glyphs(encoding_space, rotat
         assert renderer.glyph.line_alpha == renderer.glyph.fill_alpha
     assert sorted(plotted) == sorted(before.SMILES)
     keys = {item.label.value: item for item in plot.legend[0].items}
+    assert plot.legend[0].ncols == 2
     for encoding, label in [
         ('colour', 'Colour'), ('shape', 'Shape'), ('opacity', 'Opacity'), ('marker_size', 'Size'),
     ]:
@@ -823,21 +834,37 @@ def test_plot_independent_encodings_and_real_legend_glyphs(encoding_space, rotat
         for value in space.df_compressed[column].unique():
             key = f'{label} ({column}): {value}'
             if encoding == 'opacity':
-                key += f' (alpha={kwargs["opacity_map"][value]:g})'
+                key += f' = {kwargs["opacity_map"][value]}'
             elif encoding == 'marker_size':
-                key += f' ({kwargs["marker_size_map"][value]:g} px)'
+                key += f' = {kwargs["marker_size_map"][value]} px'
             item = keys[key]
+            if encoding in ('opacity', 'marker_size'):
+                assert item.renderers == []
+                continue
             assert len(item.renderers) == 1
             renderer = item.renderers[0]
-            assert renderer in renderers
-            assert len(renderer.data_source.data['SMILES']) > 0
-            assert renderer.data_source.data[column][item.index] == value
+            assert renderer not in renderers
+            assert renderer.visible is False
+            assert list(renderer.data_source.data) == ['x', 'y']
+            assert item.index == 0
+            assert renderer.glyph.size == space.bokeh_dictionary['legend_proxy_size']
+            assert renderer.glyph.fill_alpha == space.bokeh_dictionary['legend_proxy_alpha']
+            if encoding == 'colour':
+                assert renderer.glyph.marker == 'circle'
+                assert renderer.glyph.fill_color == kwargs['colour_map'][value]
+                assert renderer.glyph.line_color == 'grey'
+            else:
+                assert renderer.glyph.fill_color == 'grey'
+                assert renderer.glyph.marker == kwargs['shape_map'][value]
     hover = next(tool for tool in plot.tools if isinstance(tool, HoverTool))
     assert set(hover.renderers) == set(renderers)
     assert '@MOLFILE' in hover.tooltips and '@NAME_SHORT' in hover.tooltips
     html = file_html(show.call_args.args[0], INLINE, 'Independent encodings')
     assert 'Independent encodings' in html and 'Scatter' in html
     assert 'score[0]' in html and 'MOLFILE' in html
+    if rotation == 0:
+        assert 'Opacity (SCORE): 0.1 = 0.35' in html
+        assert 'Size (CLASS): score[0] = 7 px' in html
     pd.testing.assert_frame_equal(space.df_compressed, before)
 
 
@@ -867,12 +894,41 @@ def test_plot_continuous_colour_and_html_export(encoding_space, monkeypatch, tmp
     assert (bar.color_mapper.low, bar.color_mapper.high) == (0.1, 0.9)
     assert bar.color_mapper.palette == ['navy', 'gold']
     for renderer in plot.renderers:
-        if isinstance(renderer, GlyphRenderer):
+        if isinstance(renderer, GlyphRenderer) and renderer.visible:
             assert renderer.glyph.fill_color.field == 'SCORE'
             assert renderer.glyph.fill_color.transform is bar.color_mapper
     assert not any(item.label.value.startswith('Colour') for item in plot.legend[0].items)
     html = (tmp_path / 'continuous.html').read_text(encoding='utf-8')
     assert 'ColorBar' in html and 'LinearColorMapper' in html and 'MOLFILE' in html
+
+
+def test_legend_proxy_options_are_customizable_outside_plot(encoding_space):
+    from bokeh.models import GlyphRenderer
+
+    space, show = encoding_space
+    space.update_bokeh_options(
+        legend_proxy_size=13,
+        legend_proxy_alpha=0.8,
+        legend_colour_proxy_marker='square',
+        legend_shape_proxy_colour='black',
+        legend_ncols=1,
+    )
+    space.plot(
+        colour_by='CLASS', colour_map={'score[0]': 'red', 'score[1]': 'blue'},
+        shape_by='METADATA', shape_map={'train': 'square', 'test': 'triangle'},
+    )
+    plot = show.call_args.args[0].children[0]
+    assert plot.legend[0].ncols == 1
+    proxies = [
+        renderer for renderer in plot.renderers
+        if isinstance(renderer, GlyphRenderer) and not renderer.visible
+    ]
+    colour_proxy = next(renderer for renderer in proxies if 'colour' in renderer.name)
+    shape_proxy = next(renderer for renderer in proxies if 'shape' in renderer.name)
+    assert colour_proxy.glyph.marker == 'square'
+    assert colour_proxy.glyph.size == shape_proxy.glyph.size == 13
+    assert colour_proxy.glyph.fill_alpha == shape_proxy.glyph.fill_alpha == 0.8
+    assert shape_proxy.glyph.fill_color == 'black'
 
 
 def test_continuous_colour_only_does_not_configure_missing_legend(
@@ -955,16 +1011,26 @@ def test_plot_continuous_colour_rejects_nonfinite_values(encoding_space, bad_sco
 
 
 def test_legacy_legends_do_not_overlay_shape_renderers(plotting_space):
+    from bokeh.models import GlyphRenderer
+
     space, show = plotting_space
     space.plot()
     plot = show.call_args.args[0].children[0]
     for item in plot.legend[0].items:
         assert len(item.renderers) == 1
-        assert item.index is not None
-        assert len(item.renderers[0].data_source.data['SMILES']) > item.index
+        assert item.index == 0
+        assert item.renderers[0].visible is False
+        assert list(item.renderers[0].data_source.data) == ['x', 'y']
     if space.metadata_categorical:
         shape_keys = [item for item in plot.legend[0].items if item.label.value.startswith('Shape')]
         assert len(shape_keys) == len(space.metadata_names)
+        assert all(item.renderers[0].glyph.fill_color == 'grey' for item in shape_keys)
+    colour_keys = [item for item in plot.legend[0].items if item.label.value.startswith('Colour')]
+    assert all(item.renderers[0].glyph.marker == 'circle' for item in colour_keys)
+    assert all(
+        item.renderers[0].glyph.size == space.bokeh_dictionary['legend_proxy_size']
+        for item in colour_keys
+    )
 
 
 def test_plot_legacy_lists_and_notebook_output_order(plotting_space, monkeypatch):
@@ -978,6 +1044,19 @@ def test_plot_legacy_lists_and_notebook_output_order(plotting_space, monkeypatch
     )
     assert calls == ['reset', 'notebook']
     assert_plot_groups(space, show, [0.25, 0.75], [8, 18])
+    text_items = [
+        item for item in show.call_args.args[0].children[0].legend[0].items
+        if item.label.value.startswith(('Opacity', 'Size'))
+    ]
+    assert {
+        item.label.value for item in text_items
+    } == {
+        'Opacity (CLASS): CLASS_A = 0.25',
+        'Opacity (CLASS): CLASS_B = 0.75',
+        'Size (CLASS): CLASS_A = 8 px',
+        'Size (CLASS): CLASS_B = 18 px',
+    }
+    assert all(item.renderers == [] for item in text_items)
 
 
 def test_plot_explicit_mapping_without_metadata_flags(encoding_space):
@@ -997,17 +1076,37 @@ def test_plot_explicit_mapping_without_metadata_flags(encoding_space):
                 if item.label.value.startswith('Colour')}) == 2
 
 
-def test_plot_legend_prefers_visible_representative(encoding_space):
+def test_opacity_and_size_legend_entries_are_text_only(encoding_space):
     space, show = encoding_space
     space.plot(
         opacity_by='METADATA', opacity_map={'train': 0.0, 'test': 1.0},
+        marker_size_by='METADATA', marker_size_map={'train': 8, 'test': 14},
     )
     items = show.call_args.args[0].children[0].legend[0].items
-    for item in items:
-        if item.label.value.startswith('Colour'):
-            assert item.renderers[0].glyph.fill_alpha == 1.0
-    transparent = next(item for item in items if 'alpha=0)' in item.label.value)
-    assert transparent.renderers[0].glyph.fill_alpha == 0.0
+    text_items = [item for item in items if item.label.value.startswith(('Opacity', 'Size'))]
+    assert {item.label.value for item in text_items} == {
+        'Opacity (METADATA): train = 0.0',
+        'Opacity (METADATA): test = 1.0',
+        'Size (METADATA): train = 8 px',
+        'Size (METADATA): test = 14 px',
+    }
+    assert all(item.renderers == [] for item in text_items)
+
+
+@pytest.mark.parametrize('options', [
+    {'legend_proxy_size': 0},
+    {'legend_proxy_alpha': 0},
+    {'legend_proxy_alpha': 1.1},
+    {'legend_colour_proxy_marker': 'not-a-marker'},
+    {'legend_shape_proxy_colour': 'not-a-colour'},
+    {'legend_ncols': 0},
+])
+def test_plot_rejects_invalid_legend_proxy_options(encoding_space, options):
+    space, show = encoding_space
+    space.update_bokeh_options(**options)
+    with pytest.raises(ValueError, match='legend_'):
+        space.plot()
+    show.assert_not_called()
 
 
 @pytest.mark.parametrize('bad_columns,metadata_exists', [

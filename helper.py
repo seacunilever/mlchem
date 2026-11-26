@@ -1745,6 +1745,79 @@ Examples
     bp.show(bp.column(p, *tables))
 
 
+def add_encoding_legend(
+    plot: figure,
+    colour_entries: Sequence[tuple[str, str]],
+    shape_entries: Sequence[tuple[str, str]],
+    text_entries: Sequence[str],
+    proxy_x: float,
+    proxy_y: float,
+    proxy_size: int | float = 10,
+    proxy_alpha: float = 1.0,
+    colour_proxy_marker: str = 'circle',
+    shape_proxy_colour: str = 'grey',
+    ncols: int = 2,
+):
+    """Add an encoding legend with isolated proxy glyphs and text-only entries.
+
+    Colour and shape proxies are invisible plot renderers located at a real
+    data coordinate; they draw only in the legend. Text entries use
+    ``LegendItem(renderers=[])`` and therefore have no glyph swatch.
+    """
+    from bokeh.models import Legend, LegendItem
+
+    items = []
+    for label, colour in colour_entries:
+        renderer = plot.scatter(
+            x=[proxy_x],
+            y=[proxy_y],
+            marker=colour_proxy_marker,
+            size=proxy_size,
+            color=colour,
+            alpha=proxy_alpha,
+            line_color='grey',
+            line_alpha=proxy_alpha,
+            visible=False,
+            name='chemical-space-colour-legend-proxy',
+        )
+        items.append(LegendItem(label=label, renderers=[renderer], index=0))
+
+    for label, shape in shape_entries:
+        renderer = plot.scatter(
+            x=[proxy_x],
+            y=[proxy_y],
+            marker=shape,
+            size=proxy_size,
+            color=shape_proxy_colour,
+            alpha=proxy_alpha,
+            line_color=shape_proxy_colour,
+            line_alpha=proxy_alpha,
+            visible=False,
+            name='chemical-space-shape-legend-proxy',
+        )
+        items.append(LegendItem(label=label, renderers=[renderer], index=0))
+
+    items.extend(
+        LegendItem(label=label, renderers=[])
+        for label in text_entries
+    )
+    if not items:
+        return None
+
+    legend = Legend(
+        items=items,
+        ncols=ncols,
+        glyph_width=16,
+        glyph_height=16,
+        label_standoff=4,
+        spacing=2,
+        padding=4,
+        margin=4,
+    )
+    plot.add_layout(legend)
+    return legend
+
+
 def create_mask(
     array: np.ndarray,
     lower: float | int,

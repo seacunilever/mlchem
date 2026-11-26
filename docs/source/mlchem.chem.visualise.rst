@@ -70,10 +70,17 @@ keep their legacy defaults: colour, opacity, and size by CLASS; shapes by
 METADATA when both metadata flags are enabled. Scalar ``marker_size`` is
 overridden by a size list or map. The classic 866 by 650 pixel plot, hover
 details, tables, notebook display, and HTML export remain available.
-Categorical legend keys name the encoding and column and use one actual glyph
-sample, avoiding overlaid shape samples. Opacity keys state alpha and size
-keys state the mapped pixel size: Bokeh normalises legend glyph dimensions,
-so size swatches are not to scale. Zero opacity is intentionally transparent.
+
+Legend labels identify both the encoding and source column. Colour swatches
+use the mapped colour and a uniform circle, opacity, and size; shape swatches
+use the mapped shape and a uniform neutral colour, opacity, and size. Opacity
+and size keys are markerless text, such as ``Opacity (METADATA): test = 0.9``
+and ``Size (METADATA): test = 14 px``. Continuous colour retains its colour bar
+without categorical colour swatches. The compact legend remains in one plot
+area. Its proxy appearance and column count can be changed through
+``space.update_bokeh_options()`` using ``legend_proxy_size``,
+``legend_proxy_alpha``, ``legend_colour_proxy_marker``,
+``legend_shape_proxy_colour``, and ``legend_ncols``.
 The ``metadata_exists`` and ``metadata_categorical`` constructor options are
 legacy controls for the special ``METADATA`` column and its default shape
 behavior. They are not required for other extra columns or explicit ``*_by``

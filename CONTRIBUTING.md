@@ -122,14 +122,15 @@ make.bat html
 The html target mirrors docs/build/html into docs/ via docs/_publish.py.
 Commit regenerated docs output when documentation content changes.
 
-Version note: docs version strings are sourced from `setup.py` during the docs build.
-There is no CI write-back step for docs-version metadata.
+Version note: `_version.py` is the single source for the package's import version,
+wheel metadata, and Sphinx release. There is no separate version to synchronize
+manually in `setup.py` or the docs configuration.
 
 ## Maintainer release refresh checklist (local)
 
 Use this flow when preparing a release PR/tag:
 
-1. Update `version=` in `setup.py`.
+1. Update `__version__` in `_version.py`.
 2. Regenerate docs locally:
 
 ```bash

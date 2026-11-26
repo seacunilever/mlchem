@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.13 documentation</title>
+    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.14 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=250a84ee"></script>
+    <script src="../../../../_static/documentation_options.js?v=ee831423"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.13 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.14 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>
@@ -77,7 +77,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integral</span><span class="p">,</span> <span class="n">Real</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -337,6 +337,13 @@
 <span class="sd">stable digest prevents different labels from collapsing to the same folder;</span>
 <span class="sd">display labels are unchanged. Always use the prepared ``MOLFILE`` column</span>
 <span class="sd">rather than reconstructing paths from class labels.</span>
+<span class="sd">When legacy categorical metadata shapes are enabled, ``metadata_names`` is</span>
+<span class="sd">derived only from the rows in this compressed dataframe; missing metadata</span>
+<span class="sd">values are ignored here so explicit ``shape_by`` encodings can still be used.</span>
+<span class="sd">Sortable metadata categories retain their sorted order; incomparable</span>
+<span class="sd">categories use their first-appearance order. The legacy metadata shape path</span>
+<span class="sd">reports an error if plotted rows have missing metadata, since those rows</span>
+<span class="sd">cannot be assigned a shape.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -394,7 +401,11 @@
           <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
       <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">METADATA</span><span class="p">)</span>
+          <span class="n">metadata_values</span> <span class="o">=</span> <span class="n">source_rows</span><span class="o">.</span><span class="n">METADATA</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+          <span class="k">try</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">metadata_values</span><span class="p">)</span>
+          <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">metadata_values</span><span class="p">)</span>
 
       <span class="n">prepared</span> <span class="o">=</span> <span class="n">df_compressed</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
       <span class="n">prepared</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">prepared</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">)</span>
@@ -479,7 +490,11 @@
 
 <span class="sd">This method allows customisation of various Bokeh plot parameters</span>
 <span class="sd">for visualisations. Users can pass keyword arguments to set options</span>
-<span class="sd">such as title properties, legend properties, and axis properties.</span>
+<span class="sd">such as title properties, legend properties, and axis properties. Only</span>
+<span class="sd">documented keys are accepted; unknown keys raise ``ValueError`` instead of</span>
+<span class="sd">being stored without affecting the plot. Updated settings persist on this</span>
+<span class="sd">instance until changed again or reset with ``reset_bokeh_options()``. They</span>
+<span class="sd">are used by ``plot()`` unless an option is explicitly supplied to that call.</span>
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
@@ -515,6 +530,16 @@
 <span class="sd">    Background colour of the legend.</span>
 <span class="sd">legend_background_fill_alpha : float, optional</span>
 <span class="sd">    Transparency of the legend background (0 to 1).</span>
+<span class="sd">legend_proxy_size : float, optional</span>
+<span class="sd">    Uniform marker size for colour and shape legend swatches. Default is 10.</span>
+<span class="sd">legend_proxy_alpha : float, optional</span>
+<span class="sd">    Uniform visible opacity for colour and shape legend swatches. Default is 1.</span>
+<span class="sd">legend_colour_proxy_marker : str, optional</span>
+<span class="sd">    Neutral marker used by all categorical colour swatches. Default is &#39;circle&#39;.</span>
+<span class="sd">legend_shape_proxy_colour : str, optional</span>
+<span class="sd">    Neutral colour used by all categorical shape swatches. Default is &#39;grey&#39;.</span>
+<span class="sd">legend_ncols : int, optional</span>
+<span class="sd">    Number of compact columns in the encoding legend. Default is 2.</span>
 <span class="sd">xaxis_label : str, optional</span>
 <span class="sd">    Label of the x-axis.</span>
 <span class="sd">xaxis_line_width : int, optional</span>
@@ -555,6 +580,17 @@
 <span class="sd">... )</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+        <span class="n">unknown</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unknown Bokeh option(s): </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Supported options are: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;title_fontsize&#39;</span> <span class="ow">in</span> <span class="n">args</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;title_fontsize&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;title_fontsize&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;title_fontsize&#39; must be a non-empty Bokeh font-size string.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
 
 
@@ -665,7 +701,7 @@
              <span class="n">shape_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
              <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
              <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-             <span class="n">title_fontsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+             <span class="n">title_fontsize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
              <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">650</span><span class="p">,</span>
              <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">650</span><span class="o">/</span><span class="mf">0.75</span><span class="p">),</span>
              <span class="n">marker_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
@@ -687,8 +723,9 @@
 <span class="sd">Generate a 2D scatter plot of the chemical space using Bokeh.</span>
 
 <span class="sd">This method visualises the compressed chemical space using a scatter plot,</span>
-<span class="sd">with options to customise colours, shapes, size, and layout. It supports</span>
-<span class="sd">categorical metadata and can optionally save the plot as an HTML file.</span>
+<span class="sd">with independently configurable colour, shape, opacity, and marker size.</span>
+<span class="sd">Colour can be categorical or continuous, and the plot can optionally be saved</span>
+<span class="sd">as an HTML file.</span>
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
@@ -705,8 +742,12 @@
 <span class="sd">    Name of the file to save the plot as (without extension).</span>
 <span class="sd">title : str, optional</span>
 <span class="sd">    Title of the plot.</span>
-<span class="sd">title_fontsize : int, optional</span>
-<span class="sd">    Font size of the plot title. Default is 25.</span>
+<span class="sd">title_fontsize : int or str, optional</span>
+<span class="sd">    Font size of the plot title in pixels. An integer is interpreted as</span>
+<span class="sd">    pixels; a string is passed to Bokeh as a CSS font size. If omitted,</span>
+<span class="sd">    uses ``self.bokeh_dictionary[&#39;title_fontsize&#39;]`` (25px by default).</span>
+<span class="sd">    An explicit ``plot(title_fontsize=...)`` overrides the configured value</span>
+<span class="sd">    for that call.</span>
 <span class="sd">height : int, optional</span>
 <span class="sd">    Height of the plot in pixels. Default is 650.</span>
 <span class="sd">width : int, optional</span>
@@ -752,15 +793,17 @@
 <span class="sd">Raises</span>
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
-<span class="sd">    If columns, mappings, style values, or conflicting arguments are invalid.</span>
+<span class="sd">    If columns, mappings, style values, conflicting arguments, or required</span>
+<span class="sd">    legacy categorical metadata values are invalid.</span>
 
 <span class="sd">Notes</span>
 <span class="sd">-----</span>
-<span class="sd">Each categorical legend key uses one non-empty plotted renderer and a single</span>
-<span class="sd">sample index, not overlapping samples from all shape subgroups. Keys identify</span>
-<span class="sd">the encoding and source column. Opacity and size keys include their style</span>
-<span class="sd">values; Bokeh normalises legend glyph dimensions rather than drawing marker</span>
-<span class="sd">sizes to scale. A zero-opacity key is intentionally transparent. The figure</span>
+<span class="sd">Colour and shape keys use dedicated invisible proxy renderers with unrelated</span>
+<span class="sd">glyph properties held constant. Opacity and size keys are text-only Bokeh</span>
+<span class="sd">legend items and include the mapped values. All labels identify the encoding</span>
+<span class="sd">and source column. The legend is kept in one compact area; continuous colour</span>
+<span class="sd">uses the colour bar without categorical colour swatches. Proxy appearance and</span>
+<span class="sd">legend columns can be changed through ``update_bokeh_options()``. The figure</span>
 <span class="sd">keeps its 866 by 650 pixel default.</span>
 <span class="sd">Hover details and exported HTML use ``MOLFILE`` paths supplied by ``prepare()``.</span>
 
@@ -779,10 +822,10 @@
 
 
         <span class="kn">from</span><span class="w"> </span><span class="nn">mlchem.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">prepare_datatable</span><span class="p">,</span> <span class="n">compute_alpha</span><span class="p">,</span>
-                                   <span class="n">size_ratio</span><span class="p">,</span> <span class="n">bokeh_plot</span><span class="p">)</span>
+                                   <span class="n">size_ratio</span><span class="p">,</span> <span class="n">bokeh_plot</span><span class="p">,</span> <span class="n">add_encoding_legend</span><span class="p">)</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">bokeh.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bp</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">output_notebook</span><span class="p">,</span> <span class="n">reset_output</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">HoverTool</span><span class="p">,</span> <span class="n">Legend</span><span class="p">,</span> <span class="n">LegendItem</span><span class="p">,</span> <span class="n">ColorBar</span><span class="p">,</span> <span class="n">LinearColorMapper</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">HoverTool</span><span class="p">,</span> <span class="n">ColorBar</span><span class="p">,</span> <span class="n">LinearColorMapper</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.palettes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Viridis256</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span>
 
@@ -790,12 +833,35 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df_compressed&#39; must contain at least one datapoint.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df_compressed&#39; must have unique column names.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">title_fontsize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">title_fontsize</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">title_fontsize</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">title_fontsize</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">title_fontsize</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="n">title_fontsize</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;title_fontsize&#39; must be a positive integer or non-empty string.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colour_continuous</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_continuous&#39; must be a bool.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">colour_continuous</span> <span class="ow">and</span> <span class="n">colour_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_continuous&#39; requires &#39;colour_by&#39;.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">colour_palette</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">colour_continuous</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_palette&#39; requires &#39;colour_continuous=True&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">proxy_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_proxy_size&#39;</span><span class="p">]</span>
+        <span class="n">proxy_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_proxy_alpha&#39;</span><span class="p">]</span>
+        <span class="n">proxy_marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_colour_proxy_marker&#39;</span><span class="p">]</span>
+        <span class="n">proxy_colour</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_shape_proxy_colour&#39;</span><span class="p">]</span>
+        <span class="n">legend_ncols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_ncols&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;marker_size&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">proxy_size</span><span class="p">],</span> <span class="s1">&#39;legend_proxy_size&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;opacity&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">proxy_alpha</span><span class="p">],</span> <span class="s1">&#39;legend_proxy_alpha&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">proxy_alpha</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;legend_proxy_alpha&#39; must be greater than zero.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">proxy_marker</span><span class="p">],</span> <span class="s1">&#39;legend_colour_proxy_marker&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">proxy_colour</span><span class="p">],</span> <span class="s1">&#39;legend_shape_proxy_colour&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">legend_ncols</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">legend_ncols</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">legend_ncols</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;legend_ncols&#39; must be a positive integer.&quot;</span><span class="p">)</span>
         <span class="n">encoding_specs</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span> <span class="n">colour_by</span><span class="p">,</span> <span class="n">colour_map</span><span class="p">,</span> <span class="n">colour_list</span><span class="p">),</span>
             <span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="n">shape_by</span><span class="p">,</span> <span class="n">shape_map</span><span class="p">,</span> <span class="n">shape_list</span><span class="p">),</span>
@@ -809,6 +875,14 @@
             <span class="p">)</span>
             <span class="k">for</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">legacy</span> <span class="ow">in</span> <span class="n">encoding_specs</span>
         <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">shape_by</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">METADATA</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;METADATA&#39; contains missing values required by legacy categorical &quot;</span>
+                <span class="s2">&quot;shapes; provide &#39;shape_by&#39; or fill the missing values.&quot;</span>
+            <span class="p">)</span>
         <span class="n">colour_mapper</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">colour_continuous</span><span class="p">:</span>
             <span class="n">palette</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Viridis256</span> <span class="k">if</span> <span class="n">colour_palette</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">colour_palette</span><span class="p">)</span>
@@ -965,68 +1039,102 @@
                             <span class="n">alpha</span><span class="o">=</span><span class="n">opacities</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
                 <span class="n">plotted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
 
-        <span class="n">legend_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">colour_legend_entries</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">colour_continuous</span><span class="p">:</span>
-            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Colour&#39;</span><span class="p">,</span> <span class="n">colour_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">))</span>
+            <span class="n">colour_column</span> <span class="o">=</span> <span class="n">colour_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">colour_column</span><span class="p">]):</span>
+                <span class="n">colour</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;colour&#39;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="k">if</span> <span class="n">colour_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">category</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="n">colour_legend_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Colour (</span><span class="si">{</span><span class="n">colour_column</span><span class="si">}</span><span class="s1">): </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">colour</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">shape_legend_entries</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">shape_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">):</span>
-            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Shape&#39;</span><span class="p">,</span> <span class="n">shape_by</span> <span class="ow">or</span> <span class="s1">&#39;METADATA&#39;</span><span class="p">))</span>
+            <span class="n">shape_column</span> <span class="o">=</span> <span class="n">shape_by</span> <span class="ow">or</span> <span class="s1">&#39;METADATA&#39;</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">shape_column</span><span class="p">]):</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="k">if</span> <span class="n">shape_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">category</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="n">shape_legend_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Shape (</span><span class="si">{</span><span class="n">shape_column</span><span class="si">}</span><span class="s1">): </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">text_legend_entries</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">opacity_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">opacity_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Opacity&#39;</span><span class="p">,</span> <span class="n">opacity_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">))</span>
+            <span class="n">opacity_column</span> <span class="o">=</span> <span class="n">opacity_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">opacity_column</span><span class="p">]):</span>
+                <span class="n">opacity</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;opacity&#39;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="k">if</span> <span class="n">opacity_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">opacity_list</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">category</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="n">text_legend_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Opacity (</span><span class="si">{</span><span class="n">opacity_column</span><span class="si">}</span><span class="s1">): </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">opacity</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="p">)</span>
         <span class="k">if</span> <span class="n">marker_size_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">marker_size_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Size&#39;</span><span class="p">,</span> <span class="n">marker_size_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">))</span>
-        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">legend_renderers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="n">plotted</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">renderer</span><span class="p">:</span> <span class="n">renderer</span><span class="o">.</span><span class="n">glyph</span><span class="o">.</span><span class="n">fill_alpha</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="k">for</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">legend_columns</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">column</span><span class="p">]):</span>
-                <span class="k">for</span> <span class="n">renderer</span> <span class="ow">in</span> <span class="n">legend_renderers</span><span class="p">:</span>
-                    <span class="n">values</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span>
-                    <span class="n">index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                        <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">category</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s1">): </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s1">&#39;</span>
-                        <span class="k">if</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;Opacity&#39;</span><span class="p">:</span>
-                            <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (alpha=</span><span class="si">{</span><span class="n">renderer</span><span class="o">.</span><span class="n">glyph</span><span class="o">.</span><span class="n">fill_alpha</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1">)&#39;</span>
-                        <span class="k">elif</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;Size&#39;</span><span class="p">:</span>
-                            <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (</span><span class="si">{</span><span class="n">renderer</span><span class="o">.</span><span class="n">glyph</span><span class="o">.</span><span class="n">size</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1"> px)&#39;</span>
-                        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LegendItem</span><span class="p">(</span>
-                            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">renderers</span><span class="o">=</span><span class="p">[</span><span class="n">renderer</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                        <span class="p">))</span>
-                        <span class="k">break</span>
-        <span class="k">if</span> <span class="n">items</span><span class="p">:</span>
-            <span class="n">plot</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">Legend</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">))</span>
+            <span class="n">size_column</span> <span class="o">=</span> <span class="n">marker_size_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">size_column</span><span class="p">]):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;marker_size&#39;</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="k">if</span> <span class="n">marker_size_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">marker_size_list</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">category</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="n">text_legend_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Size (</span><span class="si">{</span><span class="n">size_column</span><span class="si">}</span><span class="s1">): </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s1"> = </span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s1"> px&#39;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">colour_legend_entries</span> <span class="ow">or</span> <span class="n">shape_legend_entries</span> <span class="ow">or</span> <span class="n">text_legend_entries</span><span class="p">:</span>
+            <span class="n">add_encoding_legend</span><span class="p">(</span>
+                <span class="n">plot</span><span class="p">,</span>
+                <span class="n">colour_entries</span><span class="o">=</span><span class="n">colour_legend_entries</span><span class="p">,</span>
+                <span class="n">shape_entries</span><span class="o">=</span><span class="n">shape_legend_entries</span><span class="p">,</span>
+                <span class="n">text_entries</span><span class="o">=</span><span class="n">text_legend_entries</span><span class="p">,</span>
+                <span class="n">proxy_x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">DIM_1</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">proxy_y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">DIM_2</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">proxy_size</span><span class="o">=</span><span class="n">proxy_size</span><span class="p">,</span>
+                <span class="n">proxy_alpha</span><span class="o">=</span><span class="n">proxy_alpha</span><span class="p">,</span>
+                <span class="n">colour_proxy_marker</span><span class="o">=</span><span class="n">proxy_marker</span><span class="p">,</span>
+                <span class="n">shape_proxy_colour</span><span class="o">=</span><span class="n">proxy_colour</span><span class="p">,</span>
+                <span class="n">ncols</span><span class="o">=</span><span class="n">legend_ncols</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">colour_mapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">plot</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">ColorBar</span><span class="p">(</span><span class="n">color_mapper</span><span class="o">=</span><span class="n">colour_mapper</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">colour_by</span><span class="p">),</span> <span class="s1">&#39;right&#39;</span><span class="p">)</span>
 
         <span class="c1"># Title</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">title_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_location&#39;</span><span class="p">]</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">title</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_font_size</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">px&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">title_fontsize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">title_fontsize</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_font_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_fontsize&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">title_fontsize</span><span class="p">,</span> <span class="n">Integral</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">title_fontsize</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_font_size</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">title_fontsize</span><span class="p">)</span><span class="si">}</span><span class="s1">px&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_font_size</span> <span class="o">=</span> <span class="n">title_fontsize</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">align</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_align&#39;</span><span class="p">]</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">background_fill_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
             <span class="s1">&#39;title_background_fill_colour&#39;</span><span class="p">]</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_text_colour&#39;</span><span class="p">]</span>
         <span class="c1"># Legend</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_location&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_title&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_font</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_label_text_font&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_font_style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_label_text_font_style&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_label_text_colour&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_border_line_width&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_border_line_colour&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_border_line_alpha&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">background_fill_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_background_fill_colour&#39;</span><span class="p">]</span>
-        <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">background_fill_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
-            <span class="s1">&#39;legend_background_fill_alpha&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="p">:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_location&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;legend_title&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_font</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_label_text_font&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_font_style</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_label_text_font_style&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">label_text_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_label_text_colour&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_border_line_width&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_border_line_colour&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">border_line_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_border_line_alpha&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">background_fill_color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_background_fill_colour&#39;</span><span class="p">]</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">legend</span><span class="o">.</span><span class="n">background_fill_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span>
+                <span class="s1">&#39;legend_background_fill_alpha&#39;</span><span class="p">]</span>
         <span class="c1"># Axes</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;xaxis_label&#39;</span><span class="p">]</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_line_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;xaxis_line_width&#39;</span><span class="p">]</span>
@@ -1086,7 +1194,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.13 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.14 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>

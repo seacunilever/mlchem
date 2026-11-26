@@ -473,6 +473,16 @@ legend_background_fill_colour : str, optional
     Background colour of the legend.
 legend_background_fill_alpha : float, optional
     Transparency of the legend background (0 to 1).
+legend_proxy_size : float, optional
+    Uniform marker size for colour and shape legend swatches. Default is 10.
+legend_proxy_alpha : float, optional
+    Uniform visible opacity for colour and shape legend swatches. Default is 1.
+legend_colour_proxy_marker : str, optional
+    Neutral marker used by all categorical colour swatches. Default is 'circle'.
+legend_shape_proxy_colour : str, optional
+    Neutral colour used by all categorical shape swatches. Default is 'grey'.
+legend_ncols : int, optional
+    Number of compact columns in the encoding legend. Default is 2.
 xaxis_label : str, optional
     Label of the x-axis.
 xaxis_line_width : int, optional
@@ -647,8 +657,9 @@ Examples
 Generate a 2D scatter plot of the chemical space using Bokeh.
 
 This method visualises the compressed chemical space using a scatter plot,
-with options to customise colours, shapes, size, and layout. It supports
-categorical metadata and can optionally save the plot as an HTML file.
+with independently configurable colour, shape, opacity, and marker size.
+Colour can be categorical or continuous, and the plot can optionally be saved
+as an HTML file.
 
 Parameters
 ----------
@@ -721,11 +732,12 @@ ValueError
 
 Notes
 -----
-Each categorical legend key uses one non-empty plotted renderer and a single
-sample index, not overlapping samples from all shape subgroups. Keys identify
-the encoding and source column. Opacity and size keys include their style
-values; Bokeh normalises legend glyph dimensions rather than drawing marker
-sizes to scale. A zero-opacity key is intentionally transparent. The figure
+Colour and shape keys use dedicated invisible proxy renderers with unrelated
+glyph properties held constant. Opacity and size keys are text-only Bokeh
+legend items and include the mapped values. All labels identify the encoding
+and source column. The legend is kept in one compact area; continuous colour
+uses the colour bar without categorical colour swatches. Proxy appearance and
+legend columns can be changed through ``update_bokeh_options()``. The figure
 keeps its 866 by 650 pixel default.
 Hover details and exported HTML use ``MOLFILE`` paths supplied by ``prepare()``.
 
@@ -744,10 +756,10 @@ Examples
 
 
         from mlchem.helper import (prepare_datatable, compute_alpha,
-                                   size_ratio, bokeh_plot)
+                                   size_ratio, bokeh_plot, add_encoding_legend)
         import bokeh.plotting as bp
         from bokeh.io import output_notebook, reset_output
-        from bokeh.models import HoverTool, Legend, LegendItem, ColorBar, LinearColorMapper
+        from bokeh.models import HoverTool, ColorBar, LinearColorMapper
         from bokeh.palettes import Viridis256
         from bokeh.transform import transform
 
@@ -767,6 +779,23 @@ Examples
             raise ValueError("'colour_continuous' requires 'colour_by'.")
         if colour_palette is not None and not colour_continuous:
             raise ValueError("'colour_palette' requires 'colour_continuous=True'.")
+        proxy_size = self.bokeh_dictionary['legend_proxy_size']
+        proxy_alpha = self.bokeh_dictionary['legend_proxy_alpha']
+        proxy_marker = self.bokeh_dictionary['legend_colour_proxy_marker']
+        proxy_colour = self.bokeh_dictionary['legend_shape_proxy_colour']
+        legend_ncols = self.bokeh_dictionary['legend_ncols']
+        self._validate_encoding_values('marker_size', [proxy_size], 'legend_proxy_size')
+        self._validate_encoding_values('opacity', [proxy_alpha], 'legend_proxy_alpha')
+        if proxy_alpha == 0:
+            raise ValueError("'legend_proxy_alpha' must be greater than zero.")
+        self._validate_encoding_values('shape', [proxy_marker], 'legend_colour_proxy_marker')
+        self._validate_encoding_values('colour', [proxy_colour], 'legend_shape_proxy_colour')
+        if (
+            not isinstance(legend_ncols, Integral)
+            or isinstance(legend_ncols, bool)
+            or legend_ncols < 1
+        ):
+            raise ValueError("'legend_ncols' must be a positive integer.")
         encoding_specs = [
             ('colour', colour_by, colour_map, colour_list),
             ('shape', shape_by, shape_map, shape_list),
@@ -944,38 +973,66 @@ Examples
                             alpha=opacities[i])
                 plotted.append(renderer)
 
-        legend_columns = []
+        colour_legend_entries = []
         if not colour_continuous:
-            legend_columns.append(('Colour', colour_by or 'CLASS'))
+            colour_column = colour_by or 'CLASS'
+            for category in pd.unique(self.df_compressed[colour_column]):
+                colour = (
+                    mappings['colour'][category] if colour_by is not None
+                    else self.colour_list[list(self.classnames).index(category)]
+                )
+                colour_legend_entries.append(
+                    (f'Colour ({colour_column}): {category}', colour)
+                )
+
+        shape_legend_entries = []
         if shape_by is not None or (self.metadata_exists and self.metadata_categorical):
-            legend_columns.append(('Shape', shape_by or 'METADATA'))
+            shape_column = shape_by or 'METADATA'
+            for category in pd.unique(self.df_compressed[shape_column]):
+                shape = (
+                    mappings['shape'][category] if shape_by is not None
+                    else self.shape_list[list(self.metadata_names).index(category)]
+                )
+                shape_legend_entries.append(
+                    (f'Shape ({shape_column}): {category}', shape)
+                )
+
+        text_legend_entries = []
         if opacity_by is not None or opacity_list is not None:
-            legend_columns.append(('Opacity', opacity_by or 'CLASS'))
+            opacity_column = opacity_by or 'CLASS'
+            for category in pd.unique(self.df_compressed[opacity_column]):
+                opacity = (
+                    mappings['opacity'][category] if opacity_by is not None
+                    else opacity_list[list(self.classnames).index(category)]
+                )
+                text_legend_entries.append(
+                    f'Opacity ({opacity_column}): {category} = {opacity}'
+                )
         if marker_size_by is not None or marker_size_list is not None:
-            legend_columns.append(('Size', marker_size_by or 'CLASS'))
-        items = []
-        legend_renderers = sorted(
-            plotted, key=lambda renderer: renderer.glyph.fill_alpha, reverse=True,
-        )
-        for encoding, column in legend_columns:
-            for category in pd.unique(self.df_compressed[column]):
-                for renderer in legend_renderers:
-                    values = renderer.data_source.data[column]
-                    index = next(
-                        (i for i, value in enumerate(values) if value == category), None,
-                    )
-                    if index is not None:
-                        label = f'{encoding} ({column}): {category}'
-                        if encoding == 'Opacity':
-                            label += f' (alpha={renderer.glyph.fill_alpha:g})'
-                        elif encoding == 'Size':
-                            label += f' ({renderer.glyph.size:g} px)'
-                        items.append(LegendItem(
-                            label=label, renderers=[renderer], index=index,
-                        ))
-                        break
-        if items:
-            plot.add_layout(Legend(items=items))
+            size_column = marker_size_by or 'CLASS'
+            for category in pd.unique(self.df_compressed[size_column]):
+                size = (
+                    mappings['marker_size'][category] if marker_size_by is not None
+                    else marker_size_list[list(self.classnames).index(category)]
+                )
+                text_legend_entries.append(
+                    f'Size ({size_column}): {category} = {size} px'
+                )
+
+        if colour_legend_entries or shape_legend_entries or text_legend_entries:
+            add_encoding_legend(
+                plot,
+                colour_entries=colour_legend_entries,
+                shape_entries=shape_legend_entries,
+                text_entries=text_legend_entries,
+                proxy_x=self.df_compressed.DIM_1.iloc[0],
+                proxy_y=self.df_compressed.DIM_2.iloc[0],
+                proxy_size=proxy_size,
+                proxy_alpha=proxy_alpha,
+                colour_proxy_marker=proxy_marker,
+                shape_proxy_colour=proxy_colour,
+                ncols=legend_ncols,
+            )
         if colour_mapper is not None:
             plot.add_layout(ColorBar(color_mapper=colour_mapper, title=colour_by), 'right')
 

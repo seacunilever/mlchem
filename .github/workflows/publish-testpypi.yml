@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Optionally override setup.py version for TestPyPI
+      - name: Optionally override package version for TestPyPI
         if: ${{ inputs.version_override != '' }}
         shell: bash
         run: |
@@ -40,19 +40,19 @@ jobs:
           if not override:
               raise SystemExit(0)
 
-          setup_path = Path("setup.py")
-          setup_text = setup_path.read_text(encoding="utf-8")
+          version_path = Path("_version.py")
+          version_text = version_path.read_text(encoding="utf-8")
           updated = re.sub(
-              r"version\s*=\s*['\"][^'\"]+['\"]",
-              f"version='{override}'",
-              setup_text,
+              r"__version__\s*=\s*['\"][^'\"]+['\"]",
+              f"__version__ = '{override}'",
+              version_text,
               count=1,
           )
 
-          if updated == setup_text:
-              raise SystemExit("Could not update version in setup.py")
+          if updated == version_text:
+              raise SystemExit("Could not update __version__ in _version.py")
 
-          setup_path.write_text(updated, encoding="utf-8")
+          version_path.write_text(updated, encoding="utf-8")
           print(f"Using overridden version: {override}")
           PY
 

@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mlchem &#8212; mlchem 1.2.13 documentation</title>
+    <title>mlchem &#8212; mlchem 1.2.14 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=250a84ee"></script>
+    <script src="_static/documentation_options.js?v=ee831423"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="index.html" title="Contents"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.13 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.14 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>  
@@ -159,11 +159,24 @@ columns by SMILES, even if the embedded coordinates are in a different order.</p
 category must have a mapping; extra keys are allowed for reuse after filtering.
 Opacities must be finite in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>, sizes finite and positive, and colours and
 marker names valid Bokeh values. Missing values and unknown columns raise errors.
-Legend keys identify the encoding and column, using one actual glyph sample
-rather than overlapping shapes. Opacity keys also state alpha, and size keys
-state the mapped pixel size (Bokeh normalises legend glyph dimensions, so
-size swatches are not to scale). Zero opacity is intentionally transparent.
-The default figure remains 866 by 650 pixels.</p>
+Legend labels identify both the encoding and source column. Colour swatches use
+the mapped colour with a uniform circle, opacity, and size; shape swatches use
+the mapped shape with a uniform neutral colour, opacity, and size. Opacity and
+size keys are markerless text, for example <code class="docutils literal notranslate"><span class="pre">Opacity</span> <span class="pre">(METADATA):</span> <span class="pre">test</span> <span class="pre">=</span> <span class="pre">0.9</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Size</span> <span class="pre">(METADATA):</span> <span class="pre">test</span> <span class="pre">=</span> <span class="pre">14</span> <span class="pre">px</span></code>. Continuous colour retains its colour bar and
+does not add categorical colour swatches. The default figure remains 866 by
+650 pixels, with all legend keys in one compact area.</p>
+<p>Proxy appearance and legend width can be adjusted without changing
+<code class="docutils literal notranslate"><span class="pre">ChemicalSpace.plot()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">space</span><span class="o">.</span><span class="n">update_bokeh_options</span><span class="p">(</span>
+    <span class="n">legend_proxy_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">legend_proxy_alpha</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+    <span class="n">legend_colour_proxy_marker</span><span class="o">=</span><span class="s1">&#39;circle&#39;</span><span class="p">,</span>
+    <span class="n">legend_shape_proxy_colour</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+    <span class="n">legend_ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 <p>Numeric colours remain categorical unless continuous colour is explicitly enabled:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">space</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
     <span class="n">colour_by</span><span class="o">=</span><span class="s1">&#39;SCORE&#39;</span><span class="p">,</span>
@@ -197,7 +210,7 @@ platforms; original labels in plots and data are unchanged. Inspect
 <code class="docutils literal notranslate"><span class="pre">space.class_structure_folders</span></code> for the label-to-folder mapping and always use
 <code class="docutils literal notranslate"><span class="pre">space.df_compressed['MOLFILE']</span></code> for image paths. Do not reconstruct paths from
 class labels or rename folders behind the prepared dataframe.</p>
-<p>Version 1.2.13 must be installed in the <strong>notebook kernel’s</strong> environment, not
+<p>Version 1.2.14 must be installed in the <strong>notebook kernel’s</strong> environment, not
 just the shell’s default Python. Before publication, install this source checkout
 from a Python 3.12 notebook (substitute your actual repository path):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="s2">&quot;C:\path</span><span class="se">\t</span><span class="s2">o\mlchem&quot;</span>
@@ -207,11 +220,11 @@ from a Python 3.12 notebook (substitute your actual repository path):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">mlchem</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;mlchem-ul&#39;</span><span class="p">))</span>  <span class="c1"># 1.2.13</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">version</span><span class="p">(</span><span class="s1">&#39;mlchem-ul&#39;</span><span class="p">))</span>  <span class="c1"># 1.2.14</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">mlchem</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>After 1.2.13 is published, use <code class="docutils literal notranslate"><span class="pre">%pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">mlchem-ul==1.2.13</span></code>
+<p>After 1.2.14 is published, use <code class="docutils literal notranslate"><span class="pre">%pip</span> <span class="pre">install</span> <span class="pre">--upgrade</span> <span class="pre">mlchem-ul==1.2.14</span></code>
 instead. Updating the source/version alone does not publish to PyPI or update
 another notebook environment.</p>
 </section>
@@ -662,7 +675,7 @@ update the badges; maintainers refresh and commit them locally.</p>
 <section id="release-refresh">
 <h3>Release refresh<a class="headerlink" href="#release-refresh" title="Link to this heading">¶</a></h3>
 <ol class="arabic simple">
-<li><p>Update <code class="docutils literal notranslate"><span class="pre">version=</span></code> in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">__version__</span></code> in <code class="docutils literal notranslate"><span class="pre">_version.py</span></code>; package imports, wheel metadata, and Sphinx all read this single source.</p></li>
 <li><p>Run the local matrix with <code class="docutils literal notranslate"><span class="pre">--refresh-badges</span></code> as described above.</p></li>
 <li><p><a class="reference internal" href="#building-the-documentation">Build and publish the documentation</a>.</p></li>
 <li><p>Commit the code, tests, documentation, and refreshed badges.</p></li>
@@ -862,7 +875,7 @@ SELFIES is licensed under the <a class="reference external" href="https://www.ap
         <li class="right" >
           <a href="index.html" title="Contents"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.13 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mlchem 1.2.14 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem</a></li> 
       </ul>
     </div>

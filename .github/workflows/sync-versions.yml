@@ -25,10 +25,25 @@ jobs:
           python -m pip install -e .
           python -m pip install sphinx myst-parser
 
-      - name: Extract version from setup.py
+      - name: Extract package version
         id: version
         run: |
-          VERSION=$(grep "version=" setup.py | sed "s/.*version='\([^']*\)'.*/\1/")
+          VERSION=$(python - <<'PY'
+          import ast
+          from pathlib import Path
+
+          tree = ast.parse(Path("_version.py").read_text(encoding="utf-8"))
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and any(
+                  isinstance(target, ast.Name) and target.id == "__version__"
+                  for target in node.targets
+              ):
+                  print(ast.literal_eval(node.value))
+                  break
+          else:
+              raise SystemExit("Could not find __version__ in _version.py")
+          PY
+          )
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
@@ -38,6 +53,6 @@ jobs:
           make clean
           make html
 
-      - name: Assert docs release uses setup.py version
+      - name: Assert docs release uses package version
         run: |
           grep -R "mlchem ${{ steps.version.outputs.version }} documentation" docs -n >/dev/null

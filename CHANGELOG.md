@@ -2,6 +2,23 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.14] - 2026-11-26
+
+### Changed
+
+- Rebuild categorical colour and shape legend swatches with dedicated invisible proxies so unrelated datapoint styles no longer leak into the keys.
+- Render opacity and marker-size legend entries as Bokeh-supported text-only items with the value and source column in each label.
+- Keep legend keys compact in one plot area, retain continuous colour bars without categorical colour swatches, and expose proxy styling/column count through `update_bokeh_options()`.
+
+### Fixed
+
+- Avoid requiring dummy glyphs for opacity/size keys; hidden legend proxy renderers are used only for colour/shape swatches and are excluded from hover.
+- Read the package, build, and documentation version from one `_version.py` source to prevent version drift.
+
+### Docs
+
+- Added the new legend key behavior and customization options to the public ChemicalSpace plotting documentation.
+
 ## [1.2.13] - 2026-11-25
 
 ### Added

@@ -31,10 +31,28 @@
 # If not, see https://interoperable-europe.ec.europa.eu/licence/bsd-3-clause-new-or-revised-license .
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
+import ast
 from pathlib import Path
 from setuptools import setup, find_packages
 
 BASE_DIR = Path(__file__).resolve().parent
+
+
+def _read_version():
+    version_path = BASE_DIR / '_version.py'
+    version_tree = ast.parse(version_path.read_text(encoding='utf-8'))
+    for node in version_tree.body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == '__version__'
+            for target in node.targets
+        ):
+            version = ast.literal_eval(node.value)
+            if isinstance(version, str):
+                return version
+    raise RuntimeError(f"Could not find a string __version__ in {version_path}.")
+
+
+package_version = _read_version()
 requirements_path = BASE_DIR / 'requirements.txt'
 readme_path = BASE_DIR / 'README.md'
 if not requirements_path.exists():
@@ -57,7 +75,7 @@ _subpkgs = find_packages(exclude=['tests', 'tests.*', 'docs', 'docs.*'])
 
 setup(
     name='mlchem-ul',
-    version='1.2.13',
+    version=package_version,
     description='A Python cheminformatics toolkit for molecular analysis and machine learning.',
     long_description=long_description,
     long_description_content_type='text/markdown',

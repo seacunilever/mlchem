@@ -26,21 +26,26 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Verify tag matches setup.py version
+      - name: Verify tag matches package version
         shell: bash
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           TAG_VERSION="${RELEASE_TAG#v}"
           PACKAGE_VERSION=$(python - <<'PY'
-          import re
+          import ast
           from pathlib import Path
 
-          setup_text = Path("setup.py").read_text(encoding="utf-8")
-          match = re.search(r"version\s*=\s*['\"]([^'\"]+)['\"]", setup_text)
-          if not match:
-              raise SystemExit("Could not find version in setup.py")
-          print(match.group(1))
+          tree = ast.parse(Path("_version.py").read_text(encoding="utf-8"))
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and any(
+                  isinstance(target, ast.Name) and target.id == "__version__"
+                  for target in node.targets
+              ):
+                  print(ast.literal_eval(node.value))
+                  break
+          else:
+              raise SystemExit("Could not find __version__ in _version.py")
           PY
           )
 
@@ -48,7 +53,7 @@ jobs:
           echo "Package version: ${PACKAGE_VERSION}"
 
           if [ "${TAG_VERSION}" != "${PACKAGE_VERSION}" ]; then
-            echo "Tag version and setup.py version do not match."
+            echo "Tag version and package version do not match."
             exit 1
           fi
 
