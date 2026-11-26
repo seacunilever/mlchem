@@ -32,7 +32,8 @@
 # It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.
 
 import logging
-from numbers import Real
+from collections.abc import Mapping, Sequence
+from numbers import Integral, Real
 
 import pandas as pd
 import numpy as np
@@ -51,16 +52,20 @@ and preparation of molecular data for interactive visualisation.
 Parameters
 ----------
 data : pd.DataFrame
-    A DataFrame with 3 or 4 columns: 'SMILES', 'NAME', 'CLASS',
-    and optionally 'METADATA'.
+    A DataFrame with 'SMILES', 'NAME', 'CLASS', and optional extra columns
+    for independent plot encodings. ``prepare()`` aligns them by SMILES.
 needs_cleaning : bool, optional
     Whether the data requires cleaning. Default is False.
 df_descriptors : pd.DataFrame, optional
     A DataFrame with SMILES as index and descriptor columns.
 metadata_exists : bool, optional
-    True if a 4th column is present in `data`. Default is False.
+    Enable backwards-compatible handling of the special 'METADATA' column.
+    This is not required for other optional columns or their plot encodings.
+    Default is False.
 metadata_categorical : bool, optional
-    True if the 4th column is categorical. Default is False.
+    Treat 'METADATA' as categorical for legacy marker shapes. This only affects
+    the legacy shape behavior when no 'shape_by' mapping is supplied.
+    Default is False.
 
 Raises
 ------
@@ -80,25 +85,28 @@ Initialise a ChemicalSpace object for visualising molecular datasets
 in a compressed embedded space.
 
 This constructor sets up the molecular data, descriptor matrix,
-and metadata flags. It also validates the structure of the input
+legacy metadata options, and validates the structure of the input
 data and loads default Bokeh visualisation settings.
 
 Parameters
 ----------
 data : pd.DataFrame
-    A DataFrame with either 3 or 4 columns:
-    - 'SMILES': SMILES strings of the molecules.
-    - 'NAME': Names or identifiers of the molecules.
-    - 'CLASS': Class labels for grouping or colouring.
-    - 'METADATA' (optional): Additional metadata for further grouping.
+    A DataFrame with required 'SMILES', 'NAME', and 'CLASS' columns. Any
+    additional columns are available for independent plot encodings after
+    ``prepare()``. 'METADATA' remains a special legacy column; other optional
+    columns do not require metadata flags.
 needs_cleaning : bool, optional
     Whether the data requires cleaning before processing. Default is False.
 df_descriptors : pd.DataFrame, optional
     A DataFrame with SMILES as index and molecular descriptors as columns.
 metadata_exists : bool, optional
-    True if a fourth column ('METADATA') is present in `data`. Default is False.
+    Enable backwards-compatible handling of the special 'METADATA' column;
+    when True, that column is required in ``data``. It is not needed to use
+    other optional columns with ``plot()`` encodings. Default is False.
 metadata_categorical : bool, optional
-    True if the metadata column is categorical. Default is False.
+    Treat 'METADATA' as categorical for legacy marker shapes. It only affects
+    plotting when ``shape_by`` is omitted; explicit ``shape_by`` can select
+    any prepared column without enabling either metadata flag. Default is False.
 
 Raises
 ------
@@ -109,6 +117,11 @@ Notes
 -----
 If `df_descriptors` is not provided, a warning is logged to remind the
 user to supply descriptors before visualisation.
+
+The metadata flags predate independent dataframe-column plot encodings and
+remain for compatibility with callers that use the special `METADATA`
+column and its legacy marker-shape behavior. They do not designate which
+columns are available for the new `*_by` plot arguments.
 
 Examples
 --------
@@ -127,17 +140,17 @@ Examples
         self.bokeh_dictionary = dict(bokeh_dictionary)
         self.bokeh_tooltips = bokeh_tooltips
 
-        if self.metadata_exists is False:
-            if list(self.data.columns) != ['SMILES', 'NAME', 'CLASS']:
-                raise ValueError("Please make sure data has only 3 "
-                                 "columns called 'SMILES','NAME','CLASS'.")
-        else:
-            if list(self.data.columns) != [
-                'SMILES', 'NAME', 'CLASS', 'METADATA'
-                    ]:
-                raise ValueError(
-                    "Please make sure data has only 4 "
-                    "columns called 'SMILES','NAME','CLASS','METADATA.")
+        required = ['SMILES', 'NAME', 'CLASS']
+        if self.metadata_exists:
+            required.append('METADATA')
+        missing = [column for column in required if column not in data.columns]
+        if missing or not data.columns.is_unique:
+            raise ValueError(
+                f"'data' must have unique columns including {required}; missing: {missing}."
+            )
+        reserved = {'DIM_1', 'DIM_2', 'MOLFILE', 'NAME_SHORT'}.intersection(data.columns)
+        if reserved:
+            raise ValueError(f"'data' contains reserved prepared columns: {sorted(reserved)}.")
 
         if self.df_descriptors is None:
             logger.warning(
@@ -225,8 +238,8 @@ Examples
       """
 Prepare the compressed dataframe for visualisation.
 
-This method adds molecular structure files, names, and metadata
-to the compressed coordinates.
+This method adds molecular structure files, names, metadata, and all extra
+source columns to the compressed coordinates, aligned by SMILES.
 
 Parameters
 ----------
@@ -265,6 +278,18 @@ other labels use deterministic encoded folder names, available in
 ``self.class_structure_folders``. The dedicated ``.mlchem_structures`` root
 keeps generated files separate from existing working-directory folders.
 ``plot()`` renders existing ``MOLFILE`` paths and does not generate images.
+Spaces, punctuation, reserved Windows names, and case-insensitive collisions
+require encoding for portable, unambiguous paths. The readable slug plus
+stable digest prevents different labels from collapsing to the same folder;
+display labels are unchanged. Always use the prepared ``MOLFILE`` column
+rather than reconstructing paths from class labels.
+When legacy categorical metadata shapes are enabled, ``metadata_names`` is
+derived only from the rows in this compressed dataframe; missing metadata
+values are ignored here so explicit ``shape_by`` encodings can still be used.
+Sortable metadata categories retain their sorted order; incomparable
+categories use their first-appearance order. The legacy metadata shape path
+reports an error if plotted rows have missing metadata, since those rows
+cannot be assigned a shape.
 """
 
 
@@ -322,7 +347,11 @@ keeps generated files separate from existing working-directory folders.
           ) from error
 
       if self.metadata_categorical and self.metadata_exists:
-          self.metadata_names = np.unique(self.data[self.data.columns[-1]])
+          metadata_values = source_rows.METADATA.dropna()
+          try:
+              self.metadata_names = np.unique(metadata_values)
+          except TypeError:
+              self.metadata_names = pd.unique(metadata_values)
 
       prepared = df_compressed.copy()
       prepared.index = pd.Index(prepared.index, name='SMILES')
@@ -330,8 +359,9 @@ keeps generated files separate from existing working-directory folders.
       source_by_smiles = source_rows.set_index('SMILES')
       prepared['CLASS'] = prepared.SMILES.map(source_by_smiles.CLASS)
       prepared['NAME'] = prepared.SMILES.map(source_by_smiles.NAME)
-      if self.metadata_exists:
-          prepared['METADATA'] = prepared.SMILES.map(source_by_smiles.METADATA)
+      for column in source_by_smiles.columns:
+          if column not in ('CLASS', 'NAME'):
+              prepared[column] = prepared.SMILES.map(source_by_smiles[column])
 
       self.molfiles = []
       self.names = []
@@ -403,7 +433,11 @@ Update the Bokeh plot options.
 
 This method allows customisation of various Bokeh plot parameters
 for visualisations. Users can pass keyword arguments to set options
-such as title properties, legend properties, and axis properties.
+such as title properties, legend properties, and axis properties. Only
+documented keys are accepted; unknown keys raise ``ValueError`` instead of
+being stored without affecting the plot. Updated settings persist on this
+instance until changed again or reset with ``reset_bokeh_options()``. They
+are used by ``plot()`` unless an option is explicitly supplied to that call.
 
 Parameters
 ----------
@@ -479,6 +513,17 @@ Examples
 ... )
 """
 
+        unknown = set(args).difference(self.bokeh_dictionary)
+        if unknown:
+            raise ValueError(
+                f"Unknown Bokeh option(s): {sorted(unknown)}. "
+                f"Supported options are: {sorted(self.bokeh_dictionary)}."
+            )
+        if 'title_fontsize' in args and (
+            not isinstance(args['title_fontsize'], str)
+            or not args['title_fontsize'].strip()
+        ):
+            raise ValueError("'title_fontsize' must be a non-empty Bokeh font-size string.")
         self.bokeh_dictionary.update(args)
 
     def reset_bokeh_options(self):
@@ -515,18 +560,89 @@ Examples
 
         self.bokeh_tooltips = bokeh_tooltips
 
+    @staticmethod
+    def _validate_encoding_values(encoding: str, values, argument: str) -> None:
+        from bokeh.core.enums import MarkerType
+        from bokeh.core.properties import Color
+
+        for value in values:
+            if encoding == 'colour':
+                try:
+                    Color().validate(value)
+                except ValueError as error:
+                    raise ValueError(f"'{argument}' contains an invalid colour: {value!r}.") from error
+                if value is None:
+                    raise ValueError(f"'{argument}' colours must not be missing.")
+            elif encoding == 'shape':
+                if not isinstance(value, str) or value not in MarkerType:
+                    raise ValueError(f"'{argument}' contains an invalid marker shape: {value!r}.")
+            elif (
+                not isinstance(value, Real) or isinstance(value, (bool, np.bool_))
+                or not np.isfinite(value)
+                or not (0 <= value <= 1 if encoding == 'opacity' else value > 0)
+            ):
+                bounds = 'in [0, 1]' if encoding == 'opacity' else 'positive'
+                raise ValueError(f"'{argument}' values must be finite numbers {bounds}.")
+
+    def _encoding_map(self, encoding: str, column: str | None, mapping, legacy,
+                      continuous: bool = False):
+        if column is None:
+            if mapping is not None:
+                raise ValueError(f"'{encoding}_map' requires '{encoding}_by'.")
+            return None
+        if legacy is not None:
+            raise ValueError(f"Use either '{encoding}_list' or '{encoding}_by', not both.")
+        if not isinstance(column, str) or column not in self.df_compressed.columns:
+            raise ValueError(f"Unknown '{encoding}_by' column: {column!r}.")
+        series = self.df_compressed[column]
+        if series.isna().any():
+            raise ValueError(f"'{encoding}_by' column {column!r} contains missing values.")
+        if continuous:
+            if mapping is not None:
+                raise ValueError("'colour_continuous' conflicts with 'colour_map'.")
+            if (
+                not pd.api.types.is_numeric_dtype(series)
+                or pd.api.types.is_bool_dtype(series)
+                or pd.api.types.is_complex_dtype(series)
+                or not np.isfinite(series.to_numpy(dtype=float)).all()
+            ):
+                raise ValueError("'colour_by' must contain finite numeric values for continuous colour.")
+            return None
+        if not isinstance(mapping, Mapping):
+            raise ValueError(f"'{encoding}_by' requires a categorical '{encoding}_map'.")
+        try:
+            categories = list(pd.unique(series))
+            missing = [category for category in categories if category not in mapping]
+        except TypeError as error:
+            raise ValueError(f"'{encoding}_by' categories must be hashable.") from error
+        if missing:
+            raise ValueError(f"'{encoding}_map' is missing categories: {missing!r}.")
+        self._validate_encoding_values(encoding, mapping.values(), f'{encoding}_map')
+        return mapping
+
     def plot(self,
              colour_list: list = None,
              shape_list: list = None,
              filename: str = '',
              title: str = '',
-             title_fontsize: int = 25,
+             title_fontsize: int | str | None = None,
              height: int = 650,
              width: int = int(650/0.75),
              marker_size: int = 10,
              save_html: bool = False,
              opacity_list: list[float] | None = None,
-             marker_size_list: list[float] | None = None) -> None:
+             marker_size_list: list[float] | None = None,
+             *,
+             colour_by: str | None = None,
+             colour_map: Mapping | None = None,
+             shape_by: str | None = None,
+             shape_map: Mapping | None = None,
+             opacity_by: str | None = None,
+             opacity_map: Mapping | None = None,
+             marker_size_by: str | None = None,
+             marker_size_map: Mapping | None = None,
+             colour_continuous: bool = False,
+             colour_palette: Sequence[str] | None = None) -> None:
         """
 Generate a 2D scatter plot of the chemical space using Bokeh.
 
@@ -549,8 +665,12 @@ filename : str, optional
     Name of the file to save the plot as (without extension).
 title : str, optional
     Title of the plot.
-title_fontsize : int, optional
-    Font size of the plot title. Default is 25.
+title_fontsize : int or str, optional
+    Font size of the plot title in pixels. An integer is interpreted as
+    pixels; a string is passed to Bokeh as a CSS font size. If omitted,
+    uses ``self.bokeh_dictionary['title_fontsize']`` (25px by default).
+    An explicit ``plot(title_fontsize=...)`` overrides the configured value
+    for that call.
 height : int, optional
     Height of the plot in pixels. Default is 650.
 width : int, optional
@@ -570,6 +690,23 @@ marker_size_list : list of float, optional
     ``opacity_list``. Overrides ``marker_size``. With categorical metadata,
     all metadata subgroups within a class share its opacity and size;
     these lists do not follow ``shape_list``.
+colour_by, shape_by, opacity_by, marker_size_by : str, optional
+    Independently select any prepared dataframe column for each encoding.
+    Categorical values require the corresponding ``*_map``. Missing column
+    values or unmapped categories raise errors. A ``*_by`` argument conflicts
+    with the legacy ``*_list`` for that same encoding only. Other encodings
+    retain their legacy defaults. ``marker_size_map`` overrides scalar
+    ``marker_size``, just as ``marker_size_list`` does.
+colour_map, shape_map, opacity_map, marker_size_map : mapping, optional
+    Category-to-style dictionaries. Extra keys are allowed for reuse on
+    filtered data. Colours and Bokeh marker names must be valid; opacities
+    must be finite in [0, 1], and sizes finite and positive.
+colour_continuous : bool, optional (default=False)
+    Explicitly map finite numeric ``colour_by`` values to a continuous palette
+    with a colour bar. Conflicts with ``colour_map`` and ``colour_list``.
+    Numeric columns otherwise use categorical mappings.
+colour_palette : sequence of str, optional
+    At least two valid colours for continuous colour only. Defaults to Viridis256.
 
 Returns
 -------
@@ -579,8 +716,18 @@ None
 Raises
 ------
 ValueError
-    If a style list does not contain exactly one value per class, or contains
-    an invalid opacity or marker size.
+    If columns, mappings, style values, conflicting arguments, or required
+    legacy categorical metadata values are invalid.
+
+Notes
+-----
+Each categorical legend key uses one non-empty plotted renderer and a single
+sample index, not overlapping samples from all shape subgroups. Keys identify
+the encoding and source column. Opacity and size keys include their style
+values; Bokeh normalises legend glyph dimensions rather than drawing marker
+sizes to scale. A zero-opacity key is intentionally transparent. The figure
+keeps its 866 by 650 pixel default.
+Hover details and exported HTML use ``MOLFILE`` paths supplied by ``prepare()``.
 
 Examples
 --------
@@ -600,7 +747,58 @@ Examples
                                    size_ratio, bokeh_plot)
         import bokeh.plotting as bp
         from bokeh.io import output_notebook, reset_output
-        from bokeh.models import HoverTool
+        from bokeh.models import HoverTool, Legend, LegendItem, ColorBar, LinearColorMapper
+        from bokeh.palettes import Viridis256
+        from bokeh.transform import transform
+
+        if self.df_compressed.empty:
+            raise ValueError("'df_compressed' must contain at least one datapoint.")
+        if not self.df_compressed.columns.is_unique:
+            raise ValueError("'df_compressed' must have unique column names.")
+        if title_fontsize is not None and not (
+            isinstance(title_fontsize, str) and title_fontsize.strip()
+            or isinstance(title_fontsize, Integral)
+            and not isinstance(title_fontsize, bool) and title_fontsize > 0
+        ):
+            raise ValueError("'title_fontsize' must be a positive integer or non-empty string.")
+        if not isinstance(colour_continuous, bool):
+            raise ValueError("'colour_continuous' must be a bool.")
+        if colour_continuous and colour_by is None:
+            raise ValueError("'colour_continuous' requires 'colour_by'.")
+        if colour_palette is not None and not colour_continuous:
+            raise ValueError("'colour_palette' requires 'colour_continuous=True'.")
+        encoding_specs = [
+            ('colour', colour_by, colour_map, colour_list),
+            ('shape', shape_by, shape_map, shape_list),
+            ('opacity', opacity_by, opacity_map, opacity_list),
+            ('marker_size', marker_size_by, marker_size_map, marker_size_list),
+        ]
+        mappings = {
+            encoding: self._encoding_map(
+                encoding, column, mapping, legacy,
+                continuous=encoding == 'colour' and colour_continuous,
+            )
+            for encoding, column, mapping, legacy in encoding_specs
+        }
+        if (
+            shape_by is None and self.metadata_exists and self.metadata_categorical
+            and self.df_compressed.METADATA.isna().any()
+        ):
+            raise ValueError(
+                "'METADATA' contains missing values required by legacy categorical "
+                "shapes; provide 'shape_by' or fill the missing values."
+            )
+        colour_mapper = None
+        if colour_continuous:
+            palette = list(Viridis256 if colour_palette is None else colour_palette)
+            if len(palette) < 2:
+                raise ValueError("'colour_palette' must contain at least two colours.")
+            self._validate_encoding_values('colour', palette, 'colour_palette')
+            colour_mapper = LinearColorMapper(
+                palette=palette,
+                low=float(self.df_compressed[colour_by].min()),
+                high=float(self.df_compressed[colour_by].max()),
+            )
 
         for name, values in (
                 ('opacity_list', opacity_list),
@@ -634,16 +832,6 @@ Examples
             if marker_size_list is None else marker_size_list
         )
 
-        # TODO: implement other functions using  other modules:
-        # from bokeh.models import (ColorBar, LinearColorMapper, Div,
-        # RangeSlider, Spinner, TabPanel, Tabs, NumberEditor,
-        # NumberFormatter, SelectEditor, StringEditor, StringFormatter)
-        # from bokeh.palettes import Turbo256, Spectral6, RedBu
-        # from bokeh.transform import linear_cmap, transform
-
-        output_notebook()
-        reset_output()
-        
         self.height = height
         self.width = width
         self.filename = filename
@@ -657,6 +845,19 @@ Examples
         if self.shape_list is None:
             self.shape_list = ['circle', 'triangle', 'square', 'star',
                                'diamond', 'cross', 'x', 'asterisk']
+        if colour_by is None:
+            if len(self.colour_list) < len(self.classnames):
+                raise ValueError("'colour_list' must contain at least one colour per class.")
+            self._validate_encoding_values('colour', self.colour_list, 'colour_list')
+        if shape_by is None and self.metadata_exists and self.metadata_categorical:
+            if len(self.shape_list) < len(self.metadata_names):
+                raise ValueError("'shape_list' must contain at least one shape per metadata category.")
+            self._validate_encoding_values('shape', self.shape_list, 'shape_list')
+        if marker_size_by is None and marker_size_list is None:
+            self._validate_encoding_values('marker_size', [marker_size], 'marker_size')
+
+        reset_output()
+        output_notebook()
 
         plot = bp.figure(title='%s' % (filename),
                          width=self.width,
@@ -667,8 +868,50 @@ Examples
             self.df_compressed, height=500, width=self.width)
 
         self.dict_datatables = {}
+        plotted = []
 
-        if self.metadata_exists and self.metadata_categorical:
+        if any(column is not None for _, column, _, _ in encoding_specs):
+            group_columns = ['CLASS']
+            for encoding, column, _, _ in encoding_specs:
+                if column is not None and not (encoding == 'colour' and colour_continuous):
+                    if column not in group_columns:
+                        group_columns.append(column)
+            if shape_by is None and self.metadata_exists and self.metadata_categorical:
+                if 'METADATA' not in group_columns:
+                    group_columns.append('METADATA')
+            for _, group in self.df_compressed.groupby(
+                group_columns, sort=False, observed=True, dropna=False,
+            ):
+                row = group.iloc[0]
+                class_index = list(self.classnames).index(row.CLASS)
+                colour = (
+                    transform(colour_by, colour_mapper) if colour_continuous
+                    else mappings['colour'][row[colour_by]] if colour_by is not None
+                    else self.colour_list[class_index]
+                )
+                shape = (
+                    mappings['shape'][row[shape_by]] if shape_by is not None
+                    else self.shape_list[list(self.metadata_names).index(row.METADATA)]
+                    if self.metadata_exists and self.metadata_categorical else 'circle'
+                )
+                alpha = (
+                    mappings['opacity'][row[opacity_by]] if opacity_by is not None
+                    else opacities[class_index]
+                )
+                size = (
+                    mappings['marker_size'][row[marker_size_by]] if marker_size_by is not None
+                    else marker_sizes[class_index]
+                )
+                data_table = prepare_datatable(group)
+                renderer = plot.scatter(
+                    x='DIM_1', y='DIM_2', source=data_table.source,
+                    color=colour, marker=shape, alpha=alpha, size=size, line_color='grey',
+                )
+                plotted.append(renderer)
+            for c in self.classnames:
+                self.dict_datatables[c] = prepare_datatable(
+                    self.df_compressed[self.df_compressed.CLASS == c])
+        elif self.metadata_exists and self.metadata_categorical:
 
             for i, c in enumerate(self.classnames):
                 for i2, c2 in enumerate(self.metadata_names):
@@ -676,15 +919,15 @@ Examples
                         self.df_compressed[
                             (self.df_compressed.METADATA == c2) &
                             (self.df_compressed.CLASS == c)])
-                    plot.scatter(x="DIM_1", y='DIM_2',
+                    renderer = plot.scatter(x="DIM_1", y='DIM_2',
                                  source=data_table.source,
                                  color=self.colour_list[i],
                                  size=marker_sizes[i],
                                  marker=self.shape_list[i2],
                                  line_color='grey',
-                                 legend_label=str(c),
                                  alpha=opacities[i]
                                  )
+                    plotted.append(renderer)
                 self.dict_datatables[c] = prepare_datatable(
                     self.df_compressed[self.df_compressed.CLASS == c])
         else:
@@ -692,42 +935,83 @@ Examples
                 data_table = prepare_datatable(
                     self.df_compressed[self.df_compressed.CLASS == c])
                 self.dict_datatables[c] = data_table
-                plot.scatter(x="DIM_1",
+                renderer = plot.scatter(x="DIM_1",
                             y='DIM_2',
                             source=data_table.source,
                             color=self.colour_list[i],
                             size=marker_sizes[i],
                             line_color='grey',
-                            legend_label=str(c),
                             alpha=opacities[i])
+                plotted.append(renderer)
+
+        legend_columns = []
+        if not colour_continuous:
+            legend_columns.append(('Colour', colour_by or 'CLASS'))
+        if shape_by is not None or (self.metadata_exists and self.metadata_categorical):
+            legend_columns.append(('Shape', shape_by or 'METADATA'))
+        if opacity_by is not None or opacity_list is not None:
+            legend_columns.append(('Opacity', opacity_by or 'CLASS'))
+        if marker_size_by is not None or marker_size_list is not None:
+            legend_columns.append(('Size', marker_size_by or 'CLASS'))
+        items = []
+        legend_renderers = sorted(
+            plotted, key=lambda renderer: renderer.glyph.fill_alpha, reverse=True,
+        )
+        for encoding, column in legend_columns:
+            for category in pd.unique(self.df_compressed[column]):
+                for renderer in legend_renderers:
+                    values = renderer.data_source.data[column]
+                    index = next(
+                        (i for i, value in enumerate(values) if value == category), None,
+                    )
+                    if index is not None:
+                        label = f'{encoding} ({column}): {category}'
+                        if encoding == 'Opacity':
+                            label += f' (alpha={renderer.glyph.fill_alpha:g})'
+                        elif encoding == 'Size':
+                            label += f' ({renderer.glyph.size:g} px)'
+                        items.append(LegendItem(
+                            label=label, renderers=[renderer], index=index,
+                        ))
+                        break
+        if items:
+            plot.add_layout(Legend(items=items))
+        if colour_mapper is not None:
+            plot.add_layout(ColorBar(color_mapper=colour_mapper, title=colour_by), 'right')
 
         # Title
         plot.title_location = self.bokeh_dictionary['title_location']
         plot.title.text = title
-        plot.title.text_font_size = "%dpx" % (title_fontsize)
+        if title_fontsize is None:
+            plot.title.text_font_size = self.bokeh_dictionary['title_fontsize']
+        elif isinstance(title_fontsize, Integral) and not isinstance(title_fontsize, bool):
+            plot.title.text_font_size = f'{int(title_fontsize)}px'
+        else:
+            plot.title.text_font_size = title_fontsize
         plot.title.align = self.bokeh_dictionary['title_align']
         plot.title.background_fill_color = self.bokeh_dictionary[
             'title_background_fill_colour']
         plot.title.text_color = self.bokeh_dictionary['title_text_colour']
         # Legend
-        plot.legend.location = self.bokeh_dictionary['legend_location']
-        plot.legend.title = self.bokeh_dictionary['legend_title']
-        plot.legend.label_text_font = self.bokeh_dictionary[
-            'legend_label_text_font']
-        plot.legend.label_text_font_style = self.bokeh_dictionary[
-            'legend_label_text_font_style']
-        plot.legend.label_text_color = self.bokeh_dictionary[
-            'legend_label_text_colour']
-        plot.legend.border_line_width = self.bokeh_dictionary[
-            'legend_border_line_width']
-        plot.legend.border_line_color = self.bokeh_dictionary[
-            'legend_border_line_colour']
-        plot.legend.border_line_alpha = self.bokeh_dictionary[
-            'legend_border_line_alpha']
-        plot.legend.background_fill_color = self.bokeh_dictionary[
-            'legend_background_fill_colour']
-        plot.legend.background_fill_alpha = self.bokeh_dictionary[
-            'legend_background_fill_alpha']
+        if plot.legend:
+            plot.legend.location = self.bokeh_dictionary['legend_location']
+            plot.legend.title = self.bokeh_dictionary['legend_title']
+            plot.legend.label_text_font = self.bokeh_dictionary[
+                'legend_label_text_font']
+            plot.legend.label_text_font_style = self.bokeh_dictionary[
+                'legend_label_text_font_style']
+            plot.legend.label_text_color = self.bokeh_dictionary[
+                'legend_label_text_colour']
+            plot.legend.border_line_width = self.bokeh_dictionary[
+                'legend_border_line_width']
+            plot.legend.border_line_color = self.bokeh_dictionary[
+                'legend_border_line_colour']
+            plot.legend.border_line_alpha = self.bokeh_dictionary[
+                'legend_border_line_alpha']
+            plot.legend.background_fill_color = self.bokeh_dictionary[
+                'legend_background_fill_colour']
+            plot.legend.background_fill_alpha = self.bokeh_dictionary[
+                'legend_background_fill_alpha']
         # Axes
         plot.xaxis.axis_label = self.bokeh_dictionary['xaxis_label']
         plot.xaxis.axis_line_width = self.bokeh_dictionary['xaxis_line_width']
@@ -746,7 +1030,7 @@ Examples
         plot.axis.minor_tick_in = self.bokeh_dictionary['axis_minor_tick_in']
         plot.axis.minor_tick_out = self.bokeh_dictionary['axis_minor_tick_out']
 
-        hover = HoverTool(tooltips=self.bokeh_tooltips)
+        hover = HoverTool(tooltips=self.bokeh_tooltips, renderers=plotted)
         plot.add_tools(hover)
 
         if save_html is True:     # save html

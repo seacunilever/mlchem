@@ -360,6 +360,86 @@ def test_prepare_uses_safe_label_derived_structure_folders(
         assert Path(molfile).read_text(encoding='utf-8') == smiles
 
 
+def test_prepare_legacy_metadata_categories_use_only_compressed_rows(
+    monkeypatch, tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('bokeh.io.output_notebook', lambda: None)
+    show = MagicMock()
+    monkeypatch.setattr('bokeh.plotting.show', show)
+    monkeypatch.setattr('mlchem.helper.create_structure_files', MagicMock())
+    smiles = ['C', 'CC'] + ['C' * length for length in range(3, 12)]
+    data = pd.DataFrame({
+        'SMILES': smiles,
+        'NAME': smiles,
+        'CLASS': ['A'] * len(smiles),
+        'METADATA': [f'set_{i}' for i in range(len(smiles) - 1)] + [np.nan],
+    })
+    descriptors = pd.DataFrame({'descriptor': range(len(smiles))}, index=smiles)
+    space = ChemicalSpace(
+        data, df_descriptors=descriptors,
+        metadata_exists=True, metadata_categorical=True,
+    )
+    space.df_processed = descriptors
+    compressed = pd.DataFrame(
+        {'DIM_1': [0.0, 1.0], 'DIM_2': [1.0, 0.0]}, index=smiles[:2],
+    )
+
+    space.prepare(compressed)
+    assert space.metadata_names.tolist() == ['set_0', 'set_1']
+    space.plot()
+    assert show.call_count == 1
+
+
+def test_prepare_legacy_metadata_keeps_unsortable_categories_in_input_order(
+    monkeypatch, tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('mlchem.helper.create_structure_files', MagicMock())
+    monkeypatch.setattr('bokeh.io.output_notebook', lambda: None)
+    show = MagicMock()
+    monkeypatch.setattr('bokeh.plotting.show', show)
+    data = pd.DataFrame({
+        'SMILES': ['C', 'CC'],
+        'NAME': ['methane', 'ethane'],
+        'CLASS': ['A', 'A'],
+        'METADATA': ['train', 1],
+    })
+    descriptors = pd.DataFrame({'descriptor': [1, 2]}, index=data.SMILES)
+    space = ChemicalSpace(
+        data, df_descriptors=descriptors,
+        metadata_exists=True, metadata_categorical=True,
+    )
+    space.df_processed = descriptors
+
+    space.prepare(pd.DataFrame(
+        {'DIM_1': [0.0, 1.0], 'DIM_2': [1.0, 0.0]}, index=data.SMILES,
+    ))
+    assert space.metadata_names.tolist() == ['train', 1]
+    space.plot()
+    renderers = [
+        renderer for renderer in show.call_args.args[0].children[0].renderers
+        if hasattr(renderer, 'glyph') and hasattr(renderer.glyph, 'marker')
+    ]
+    assert [renderer.glyph.marker for renderer in renderers] == ['circle', 'triangle']
+
+
+def test_legacy_shape_encoding_rejects_missing_metadata_but_explicit_shape_works(
+    encoding_space,
+):
+    space, show = encoding_space
+    space.df_compressed.loc[space.df_compressed.index[0], 'METADATA'] = None
+    with pytest.raises(ValueError, match='METADATA.*missing values'):
+        space.plot()
+    show.assert_not_called()
+
+    space.plot(
+        shape_by='SCORE',
+        shape_map={0.1: 'circle', 0.9: 'triangle'},
+    )
+    assert show.call_count == 1
+
+
 def test_plot_cached_molfiles_does_not_generate_structure_root(
     chemical_space,
     monkeypatch,
@@ -458,6 +538,47 @@ def test_update_bokeh_options(chemical_space):
     chemical_space.update_bokeh_options(**new_options)
     assert chemical_space.bokeh_dictionary['title_location'] == 'below'
     assert chemical_space.bokeh_dictionary['title_fontsize'] == '20px'
+
+
+def test_update_bokeh_options_rejects_unknown_key_without_mutation(chemical_space):
+    before = chemical_space.bokeh_dictionary.copy()
+    with pytest.raises(ValueError, match='Unknown Bokeh option'):
+        chemical_space.update_bokeh_options(legend_lcation='top_right')
+    assert chemical_space.bokeh_dictionary == before
+
+
+@pytest.mark.parametrize('bad_value', [None, '', 20])
+def test_update_bokeh_options_validates_title_fontsize(chemical_space, bad_value):
+    before = chemical_space.bokeh_dictionary.copy()
+    with pytest.raises(ValueError, match='title_fontsize'):
+        chemical_space.update_bokeh_options(title_fontsize=bad_value)
+    assert chemical_space.bokeh_dictionary == before
+
+
+def test_plot_uses_updated_title_fontsize_and_explicit_override(plotting_space):
+    space, show = plotting_space
+    space.update_bokeh_options(title_fontsize='20px')
+    space.plot()
+    plot = show.call_args.args[0].children[0]
+    assert plot.title.text_font_size == '20px'
+
+    space.plot(title_fontsize=18)
+    plot = show.call_args.args[0].children[0]
+    assert plot.title.text_font_size == '18px'
+
+    space.plot(title_fontsize=np.int64(19))
+    plot = show.call_args.args[0].children[0]
+    assert plot.title.text_font_size == '19px'
+
+    space.plot(title_fontsize='1.5em')
+    plot = show.call_args.args[0].children[0]
+    assert plot.title.text_font_size == '1.5em'
+
+    space.reset_bokeh_options()
+    space.plot()
+    plot = show.call_args.args[0].children[0]
+    assert plot.title.text_font_size == '25px'
+
 
 def test_reset_bokeh_options(chemical_space):
     chemical_space.update_bokeh_options(title_location='below')
@@ -626,6 +747,278 @@ def test_plot_rejects_style_values(plotting_space, name, value):
     with pytest.raises(ValueError, match=name):
         space.plot(**{name: [0.5, value]})
     show_mock.assert_not_called()
+
+
+@pytest.fixture
+def encoding_space(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr('bokeh.io.output_notebook', lambda: None)
+    show = MagicMock()
+    monkeypatch.setattr('bokeh.plotting.show', show)
+    monkeypatch.setattr('mlchem.helper.create_structure_files', MagicMock())
+    data = pd.DataFrame({
+        'SMILES': ['CCO', 'CCN', 'CCC', 'CCOC'],
+        'NAME': ['ethanol', 'ethylamine', 'propane', 'ether'],
+        'CLASS': ['score[0]', 'score[0]', 'score[1]', 'score[1]'],
+        'METADATA': ['train', 'test', 'train', 'test'],
+        'SCORE': [0.1, 0.9, 0.9, 0.1],
+    })
+    space = ChemicalSpace(
+        data=data, df_descriptors=data.set_index('SMILES')[['SCORE']],
+        metadata_exists=True, metadata_categorical=True,
+    )
+    space.df_processed = space.df_descriptors
+    compressed = pd.DataFrame({
+        'DIM_1': [1., 2., 3., 4.], 'DIM_2': [2., 3., 4., 5.],
+    }, index=['CCOC', 'CCN', 'CCO', 'CCC'])
+    space.prepare(compressed)
+    expected = data.set_index('SMILES').loc[compressed.SMILES]
+    np.testing.assert_array_equal(compressed.SCORE, expected.SCORE)
+    assert set(space.metadata_names) == {'train', 'test'}
+    return space, show
+
+
+@pytest.mark.parametrize('rotation', range(3))
+def test_plot_independent_encodings_and_real_legend_glyphs(encoding_space, rotation):
+    from bokeh.embed import file_html
+    from bokeh.models import GlyphRenderer, HoverTool
+    from bokeh.resources import INLINE
+
+    space, show = encoding_space
+    columns = ['CLASS', 'METADATA', 'SCORE']
+    styles = {
+        'colour': ['#1565c0', '#ef6c00'],
+        'shape': ['circle', 'triangle'],
+        'opacity': [0.35, 0.9],
+        'marker_size': [7, 16],
+    }
+    kwargs = {}
+    for i, (encoding, values) in enumerate(styles.items()):
+        column = columns[(i + rotation) % len(columns)]
+        kwargs[f'{encoding}_by'] = column
+        kwargs[f'{encoding}_map'] = dict(zip(sorted(space.df_compressed[column].unique()), values))
+    before = space.df_compressed.copy(deep=True)
+    space.plot(title='Independent encodings', **kwargs)
+    plot = show.call_args.args[0].children[0]
+    assert (plot.width, plot.height) == (866, 650)
+    renderers = [r for r in plot.renderers if isinstance(r, GlyphRenderer)]
+    plotted = []
+    for renderer in renderers:
+        source = renderer.data_source.data
+        plotted.extend(source['SMILES'])
+        for encoding, property_name in [
+            ('colour', 'fill_color'), ('shape', 'marker'),
+            ('opacity', 'fill_alpha'), ('marker_size', 'size'),
+        ]:
+            column = kwargs[f'{encoding}_by']
+            mapping = kwargs[f'{encoding}_map']
+            assert all(getattr(renderer.glyph, property_name) == mapping[value] for value in source[column])
+        assert renderer.glyph.line_alpha == renderer.glyph.fill_alpha
+    assert sorted(plotted) == sorted(before.SMILES)
+    keys = {item.label.value: item for item in plot.legend[0].items}
+    for encoding, label in [
+        ('colour', 'Colour'), ('shape', 'Shape'), ('opacity', 'Opacity'), ('marker_size', 'Size'),
+    ]:
+        column = kwargs[f'{encoding}_by']
+        for value in space.df_compressed[column].unique():
+            key = f'{label} ({column}): {value}'
+            if encoding == 'opacity':
+                key += f' (alpha={kwargs["opacity_map"][value]:g})'
+            elif encoding == 'marker_size':
+                key += f' ({kwargs["marker_size_map"][value]:g} px)'
+            item = keys[key]
+            assert len(item.renderers) == 1
+            renderer = item.renderers[0]
+            assert renderer in renderers
+            assert len(renderer.data_source.data['SMILES']) > 0
+            assert renderer.data_source.data[column][item.index] == value
+    hover = next(tool for tool in plot.tools if isinstance(tool, HoverTool))
+    assert set(hover.renderers) == set(renderers)
+    assert '@MOLFILE' in hover.tooltips and '@NAME_SHORT' in hover.tooltips
+    html = file_html(show.call_args.args[0], INLINE, 'Independent encodings')
+    assert 'Independent encodings' in html and 'Scatter' in html
+    assert 'score[0]' in html and 'MOLFILE' in html
+    pd.testing.assert_frame_equal(space.df_compressed, before)
+
+
+def test_plot_continuous_colour_and_html_export(encoding_space, monkeypatch, tmp_path):
+    from bokeh.io import save
+    from bokeh.models import ColorBar, GlyphRenderer
+    from bokeh.resources import INLINE
+
+    space, _ = encoding_space
+    saved = []
+
+    def save_plot(layout):
+        saved.append(layout.children[0])
+        save(layout, resources=INLINE)
+
+    monkeypatch.setattr('bokeh.plotting.show', save_plot)
+    space.plot(
+        colour_by='SCORE', colour_continuous=True, colour_palette=['navy', 'gold'],
+        shape_by='METADATA', shape_map={'train': 'square', 'test': 'triangle'},
+        opacity_by='CLASS', opacity_map={'score[0]': 0.5, 'score[1]': 1.0},
+        marker_size_by='METADATA', marker_size_map={'train': 8, 'test': 14},
+        filename='continuous', save_html=True,
+    )
+    plot = saved[0]
+    bar = next(item for item in plot.right if isinstance(item, ColorBar))
+    assert bar.title == 'SCORE'
+    assert (bar.color_mapper.low, bar.color_mapper.high) == (0.1, 0.9)
+    assert bar.color_mapper.palette == ['navy', 'gold']
+    for renderer in plot.renderers:
+        if isinstance(renderer, GlyphRenderer):
+            assert renderer.glyph.fill_color.field == 'SCORE'
+            assert renderer.glyph.fill_color.transform is bar.color_mapper
+    assert not any(item.label.value.startswith('Colour') for item in plot.legend[0].items)
+    html = (tmp_path / 'continuous.html').read_text(encoding='utf-8')
+    assert 'ColorBar' in html and 'LinearColorMapper' in html and 'MOLFILE' in html
+
+
+def test_continuous_colour_only_does_not_configure_missing_legend(
+    encoding_space,
+):
+    import warnings
+    from bokeh.models import ColorBar
+
+    space, show = encoding_space
+    space.metadata_exists = space.metadata_categorical = False
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        space.plot(colour_by='SCORE', colour_continuous=True)
+
+    plot = show.call_args.args[0].children[0]
+    assert len(plot.legend) == 0
+    assert any(isinstance(item, ColorBar) for item in plot.right)
+    assert not any('plot.legend.' in str(item.message) for item in caught)
+
+
+@pytest.mark.parametrize('encoding', ['colour', 'shape', 'opacity', 'marker_size'])
+def test_plot_mapping_validation(encoding_space, encoding):
+    space, show = encoding_space
+    column = 'METADATA'
+    good = {'colour': 'red', 'shape': 'circle', 'opacity': 0.5, 'marker_size': 10}[encoding]
+    by, mapping = f'{encoding}_by', f'{encoding}_map'
+    for kwargs, message in [
+        ({by: 'missing', mapping: {}}, 'Unknown'),
+        ({mapping: {'train': good}}, 'requires'),
+        ({by: column}, 'requires'),
+        ({by: column, mapping: {'train': good}}, 'missing categories'),
+        ({by: column, mapping: {'train': good, 'test': good}, f'{encoding}_list': [good, good]}, 'either'),
+    ]:
+        with pytest.raises(ValueError, match=message):
+            space.plot(**kwargs)
+    space.df_compressed.loc[space.df_compressed.index[0], column] = None
+    with pytest.raises(ValueError, match='missing values'):
+        space.plot(**{by: column, mapping: {'train': good, 'test': good}})
+    show.assert_not_called()
+
+
+@pytest.mark.parametrize('encoding,value', [
+    ('colour', 'not-a-colour'), ('colour', None), ('shape', 'not-a-marker'),
+    ('opacity', -0.01), ('opacity', 1.01), ('opacity', float('nan')),
+    ('opacity', True), ('marker_size', 0), ('marker_size', -1),
+    ('marker_size', float('inf')), ('marker_size', 'large'),
+])
+def test_plot_mapping_rejects_invalid_styles(encoding_space, encoding, value):
+    space, show = encoding_space
+    with pytest.raises(ValueError, match=f'{encoding}_map'):
+        space.plot(**{
+            f'{encoding}_by': 'CLASS',
+            f'{encoding}_map': {'score[0]': value, 'score[1]': value},
+        })
+    show.assert_not_called()
+
+
+@pytest.mark.parametrize('kwargs,message', [
+    ({'colour_continuous': True}, 'requires'),
+    ({'colour_palette': ['red', 'blue']}, 'requires'),
+    ({'colour_by': 'CLASS', 'colour_continuous': True}, 'numeric'),
+    ({'colour_by': 'SCORE', 'colour_continuous': True, 'colour_map': {}}, 'conflicts'),
+    ({'colour_by': 'SCORE', 'colour_continuous': True, 'colour_list': ['red']}, 'either'),
+    ({'colour_by': 'SCORE', 'colour_continuous': True, 'colour_palette': ['red']}, 'at least two'),
+])
+def test_plot_continuous_colour_validation(encoding_space, kwargs, message):
+    space, show = encoding_space
+    with pytest.raises(ValueError, match=message):
+        space.plot(**kwargs)
+    show.assert_not_called()
+
+
+@pytest.mark.parametrize('bad_score', [float('nan'), float('inf')])
+def test_plot_continuous_colour_rejects_nonfinite_values(encoding_space, bad_score):
+    space, show = encoding_space
+    space.df_compressed['SCORE'] = bad_score
+    with pytest.raises(ValueError, match='missing|finite'):
+        space.plot(colour_by='SCORE', colour_continuous=True)
+    show.assert_not_called()
+
+
+def test_legacy_legends_do_not_overlay_shape_renderers(plotting_space):
+    space, show = plotting_space
+    space.plot()
+    plot = show.call_args.args[0].children[0]
+    for item in plot.legend[0].items:
+        assert len(item.renderers) == 1
+        assert item.index is not None
+        assert len(item.renderers[0].data_source.data['SMILES']) > item.index
+    if space.metadata_categorical:
+        shape_keys = [item for item in plot.legend[0].items if item.label.value.startswith('Shape')]
+        assert len(shape_keys) == len(space.metadata_names)
+
+
+def test_plot_legacy_lists_and_notebook_output_order(plotting_space, monkeypatch):
+    space, show = plotting_space
+    calls = []
+    monkeypatch.setattr('bokeh.io.reset_output', lambda: calls.append('reset'))
+    monkeypatch.setattr('bokeh.io.output_notebook', lambda: calls.append('notebook'))
+    space.plot(
+        colour_list=['purple', 'gold'], shape_list=['square', 'circle', 'triangle'],
+        opacity_list=[0.25, 0.75], marker_size_list=[8, 18],
+    )
+    assert calls == ['reset', 'notebook']
+    assert_plot_groups(space, show, [0.25, 0.75], [8, 18])
+
+
+def test_plot_explicit_mapping_without_metadata_flags(encoding_space):
+    space, show = encoding_space
+    space.metadata_exists = space.metadata_categorical = False
+    space.df_compressed['PAIR'] = [('a', 1), ('b', 2), ('a', 1), ('b', 2)]
+    space.plot(
+        shape_by='PAIR',
+        shape_map={('a', 1): 'square', ('b', 2): 'triangle', ('extra', 3): 'circle'},
+        colour_list=['navy', 'gold'],
+    )
+    plot = show.call_args.args[0].children[0]
+    shape_items = [item for item in plot.legend[0].items if item.label.value.startswith('Shape')]
+    assert len(shape_items) == 2
+    assert {item.renderers[0].glyph.marker for item in shape_items} == {'square', 'triangle'}
+    assert len({item.renderers[0].glyph.fill_color for item in plot.legend[0].items
+                if item.label.value.startswith('Colour')}) == 2
+
+
+def test_plot_legend_prefers_visible_representative(encoding_space):
+    space, show = encoding_space
+    space.plot(
+        opacity_by='METADATA', opacity_map={'train': 0.0, 'test': 1.0},
+    )
+    items = show.call_args.args[0].children[0].legend[0].items
+    for item in items:
+        if item.label.value.startswith('Colour'):
+            assert item.renderers[0].glyph.fill_alpha == 1.0
+    transparent = next(item for item in items if 'alpha=0)' in item.label.value)
+    assert transparent.renderers[0].glyph.fill_alpha == 0.0
+
+
+@pytest.mark.parametrize('bad_columns,metadata_exists', [
+    (['SMILES', 'NAME'], False),
+    (['SMILES', 'NAME', 'CLASS'], True),
+    (['SMILES', 'NAME', 'CLASS', 'CLASS'], False),
+    (['SMILES', 'NAME', 'CLASS', 'MOLFILE'], False),
+])
+def test_constructor_rejects_missing_duplicate_or_reserved_columns(bad_columns, metadata_exists):
+    with pytest.raises(ValueError, match='columns'):
+        ChemicalSpace(pd.DataFrame(columns=bad_columns), metadata_exists=metadata_exists)
 
 
 def test_process_invalid_diversity_filter_raises(chemical_space):

@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.12 documentation</title>
+    <title>mlchem.chem.visualise.space &#8212; mlchem 1.2.13 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=b853d5b0" />
     
-    <script src="../../../../_static/documentation_options.js?v=817200f7"></script>
+    <script src="../../../../_static/documentation_options.js?v=250a84ee"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.13 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>
@@ -76,6 +76,7 @@
 <span class="c1"># It is the responsibility of mlchem users to familiarise themselves with all dependencies and their associated licenses.</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Real</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -97,16 +98,20 @@
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
 <span class="sd">data : pd.DataFrame</span>
-<span class="sd">    A DataFrame with 3 or 4 columns: &#39;SMILES&#39;, &#39;NAME&#39;, &#39;CLASS&#39;,</span>
-<span class="sd">    and optionally &#39;METADATA&#39;.</span>
+<span class="sd">    A DataFrame with &#39;SMILES&#39;, &#39;NAME&#39;, &#39;CLASS&#39;, and optional extra columns</span>
+<span class="sd">    for independent plot encodings. ``prepare()`` aligns them by SMILES.</span>
 <span class="sd">needs_cleaning : bool, optional</span>
 <span class="sd">    Whether the data requires cleaning. Default is False.</span>
 <span class="sd">df_descriptors : pd.DataFrame, optional</span>
 <span class="sd">    A DataFrame with SMILES as index and descriptor columns.</span>
 <span class="sd">metadata_exists : bool, optional</span>
-<span class="sd">    True if a 4th column is present in `data`. Default is False.</span>
+<span class="sd">    Enable backwards-compatible handling of the special &#39;METADATA&#39; column.</span>
+<span class="sd">    This is not required for other optional columns or their plot encodings.</span>
+<span class="sd">    Default is False.</span>
 <span class="sd">metadata_categorical : bool, optional</span>
-<span class="sd">    True if the 4th column is categorical. Default is False.</span>
+<span class="sd">    Treat &#39;METADATA&#39; as categorical for legacy marker shapes. This only affects</span>
+<span class="sd">    the legacy shape behavior when no &#39;shape_by&#39; mapping is supplied.</span>
+<span class="sd">    Default is False.</span>
 
 <span class="sd">Raises</span>
 <span class="sd">------</span>
@@ -128,25 +133,28 @@
 <span class="sd">in a compressed embedded space.</span>
 
 <span class="sd">This constructor sets up the molecular data, descriptor matrix,</span>
-<span class="sd">and metadata flags. It also validates the structure of the input</span>
+<span class="sd">legacy metadata options, and validates the structure of the input</span>
 <span class="sd">data and loads default Bokeh visualisation settings.</span>
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
 <span class="sd">data : pd.DataFrame</span>
-<span class="sd">    A DataFrame with either 3 or 4 columns:</span>
-<span class="sd">    - &#39;SMILES&#39;: SMILES strings of the molecules.</span>
-<span class="sd">    - &#39;NAME&#39;: Names or identifiers of the molecules.</span>
-<span class="sd">    - &#39;CLASS&#39;: Class labels for grouping or colouring.</span>
-<span class="sd">    - &#39;METADATA&#39; (optional): Additional metadata for further grouping.</span>
+<span class="sd">    A DataFrame with required &#39;SMILES&#39;, &#39;NAME&#39;, and &#39;CLASS&#39; columns. Any</span>
+<span class="sd">    additional columns are available for independent plot encodings after</span>
+<span class="sd">    ``prepare()``. &#39;METADATA&#39; remains a special legacy column; other optional</span>
+<span class="sd">    columns do not require metadata flags.</span>
 <span class="sd">needs_cleaning : bool, optional</span>
 <span class="sd">    Whether the data requires cleaning before processing. Default is False.</span>
 <span class="sd">df_descriptors : pd.DataFrame, optional</span>
 <span class="sd">    A DataFrame with SMILES as index and molecular descriptors as columns.</span>
 <span class="sd">metadata_exists : bool, optional</span>
-<span class="sd">    True if a fourth column (&#39;METADATA&#39;) is present in `data`. Default is False.</span>
+<span class="sd">    Enable backwards-compatible handling of the special &#39;METADATA&#39; column;</span>
+<span class="sd">    when True, that column is required in ``data``. It is not needed to use</span>
+<span class="sd">    other optional columns with ``plot()`` encodings. Default is False.</span>
 <span class="sd">metadata_categorical : bool, optional</span>
-<span class="sd">    True if the metadata column is categorical. Default is False.</span>
+<span class="sd">    Treat &#39;METADATA&#39; as categorical for legacy marker shapes. It only affects</span>
+<span class="sd">    plotting when ``shape_by`` is omitted; explicit ``shape_by`` can select</span>
+<span class="sd">    any prepared column without enabling either metadata flag. Default is False.</span>
 
 <span class="sd">Raises</span>
 <span class="sd">------</span>
@@ -157,6 +165,11 @@
 <span class="sd">-----</span>
 <span class="sd">If `df_descriptors` is not provided, a warning is logged to remind the</span>
 <span class="sd">user to supply descriptors before visualisation.</span>
+
+<span class="sd">The metadata flags predate independent dataframe-column plot encodings and</span>
+<span class="sd">remain for compatibility with callers that use the special `METADATA`</span>
+<span class="sd">column and its legacy marker-shape behavior. They do not designate which</span>
+<span class="sd">columns are available for the new `*_by` plot arguments.</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -175,17 +188,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">bokeh_dictionary</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span> <span class="o">=</span> <span class="n">bokeh_tooltips</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please make sure data has only 3 &quot;</span>
-                                 <span class="s2">&quot;columns called &#39;SMILES&#39;,&#39;NAME&#39;,&#39;CLASS&#39;.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="p">[</span>
-                <span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">,</span> <span class="s1">&#39;METADATA&#39;</span>
-                    <span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Please make sure data has only 4 &quot;</span>
-                    <span class="s2">&quot;columns called &#39;SMILES&#39;,&#39;NAME&#39;,&#39;CLASS&#39;,&#39;METADATA.&quot;</span><span class="p">)</span>
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SMILES&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">,</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span><span class="p">:</span>
+            <span class="n">required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;METADATA&#39;</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">required</span> <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;data&#39; must have unique columns including </span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s2">; missing: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">reserved</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">,</span> <span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span> <span class="s1">&#39;MOLFILE&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME_SHORT&#39;</span><span class="p">}</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reserved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;data&#39; contains reserved prepared columns: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">reserved</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_descriptors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
@@ -279,8 +292,8 @@
 <span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Prepare the compressed dataframe for visualisation.</span>
 
-<span class="sd">This method adds molecular structure files, names, and metadata</span>
-<span class="sd">to the compressed coordinates.</span>
+<span class="sd">This method adds molecular structure files, names, metadata, and all extra</span>
+<span class="sd">source columns to the compressed coordinates, aligned by SMILES.</span>
 
 <span class="sd">Parameters</span>
 <span class="sd">----------</span>
@@ -319,6 +332,11 @@
 <span class="sd">``self.class_structure_folders``. The dedicated ``.mlchem_structures`` root</span>
 <span class="sd">keeps generated files separate from existing working-directory folders.</span>
 <span class="sd">``plot()`` renders existing ``MOLFILE`` paths and does not generate images.</span>
+<span class="sd">Spaces, punctuation, reserved Windows names, and case-insensitive collisions</span>
+<span class="sd">require encoding for portable, unambiguous paths. The readable slug plus</span>
+<span class="sd">stable digest prevents different labels from collapsing to the same folder;</span>
+<span class="sd">display labels are unchanged. Always use the prepared ``MOLFILE`` column</span>
+<span class="sd">rather than reconstructing paths from class labels.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 
@@ -376,7 +394,7 @@
           <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
 
       <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span><span class="p">:</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">METADATA</span><span class="p">)</span>
 
       <span class="n">prepared</span> <span class="o">=</span> <span class="n">df_compressed</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
       <span class="n">prepared</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">prepared</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;SMILES&#39;</span><span class="p">)</span>
@@ -384,8 +402,9 @@
       <span class="n">source_by_smiles</span> <span class="o">=</span> <span class="n">source_rows</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;SMILES&#39;</span><span class="p">)</span>
       <span class="n">prepared</span><span class="p">[</span><span class="s1">&#39;CLASS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">SMILES</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">source_by_smiles</span><span class="o">.</span><span class="n">CLASS</span><span class="p">)</span>
       <span class="n">prepared</span><span class="p">[</span><span class="s1">&#39;NAME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">SMILES</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">source_by_smiles</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
-      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span><span class="p">:</span>
-          <span class="n">prepared</span><span class="p">[</span><span class="s1">&#39;METADATA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">SMILES</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">source_by_smiles</span><span class="o">.</span><span class="n">METADATA</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">source_by_smiles</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;CLASS&#39;</span><span class="p">,</span> <span class="s1">&#39;NAME&#39;</span><span class="p">):</span>
+              <span class="n">prepared</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepared</span><span class="o">.</span><span class="n">SMILES</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">source_by_smiles</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
 
       <span class="bp">self</span><span class="o">.</span><span class="n">molfiles</span> <span class="o">=</span> <span class="p">[]</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
@@ -579,6 +598,66 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span> <span class="o">=</span> <span class="n">bokeh_tooltips</span></div>
 
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_encoding_values</span><span class="p">(</span><span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">argument</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.core.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarkerType</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.core.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">Color</span>
+
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;colour&#39;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">Color</span><span class="p">()</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">&#39; contains an invalid colour: </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">&#39; colours must not be missing.&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;shape&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MarkerType</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">&#39; contains an invalid marker shape: </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">))</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;opacity&#39;</span> <span class="k">else</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="s1">&#39;in [0, 1]&#39;</span> <span class="k">if</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;opacity&#39;</span> <span class="k">else</span> <span class="s1">&#39;positive&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">&#39; values must be finite numbers </span><span class="si">{</span><span class="n">bounds</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_encoding_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">legacy</span><span class="p">,</span>
+                      <span class="n">continuous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_map&#39; requires &#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_by&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">legacy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Use either &#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_list&#39; or &#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_by&#39;, not both.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown &#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_by&#39; column: </span><span class="si">{</span><span class="n">column</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">column</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">series</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_by&#39; column </span><span class="si">{</span><span class="n">column</span><span class="si">!r}</span><span class="s2"> contains missing values.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">continuous</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_continuous&#39; conflicts with &#39;colour_map&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_bool_dtype</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_complex_dtype</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">series</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_by&#39; must contain finite numeric values for continuous colour.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_by&#39; requires a categorical &#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_map&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">categories</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">series</span><span class="p">))</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">category</span> <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories</span> <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_by&#39; categories must be hashable.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s2">_map&#39; is missing categories: </span><span class="si">{</span><span class="n">missing</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">mapping</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s1">_map&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mapping</span>
+
 <div class="viewcode-block" id="ChemicalSpace.plot">
 <a class="viewcode-back" href="../../../../mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.plot">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -592,7 +671,18 @@
              <span class="n">marker_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
              <span class="n">save_html</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
              <span class="n">opacity_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-             <span class="n">marker_size_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+             <span class="n">marker_size_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="o">*</span><span class="p">,</span>
+             <span class="n">colour_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">colour_map</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">shape_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">shape_map</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">opacity_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">opacity_map</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">marker_size_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">marker_size_map</span><span class="p">:</span> <span class="n">Mapping</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+             <span class="n">colour_continuous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+             <span class="n">colour_palette</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Generate a 2D scatter plot of the chemical space using Bokeh.</span>
 
@@ -636,6 +726,23 @@
 <span class="sd">    ``opacity_list``. Overrides ``marker_size``. With categorical metadata,</span>
 <span class="sd">    all metadata subgroups within a class share its opacity and size;</span>
 <span class="sd">    these lists do not follow ``shape_list``.</span>
+<span class="sd">colour_by, shape_by, opacity_by, marker_size_by : str, optional</span>
+<span class="sd">    Independently select any prepared dataframe column for each encoding.</span>
+<span class="sd">    Categorical values require the corresponding ``*_map``. Missing column</span>
+<span class="sd">    values or unmapped categories raise errors. A ``*_by`` argument conflicts</span>
+<span class="sd">    with the legacy ``*_list`` for that same encoding only. Other encodings</span>
+<span class="sd">    retain their legacy defaults. ``marker_size_map`` overrides scalar</span>
+<span class="sd">    ``marker_size``, just as ``marker_size_list`` does.</span>
+<span class="sd">colour_map, shape_map, opacity_map, marker_size_map : mapping, optional</span>
+<span class="sd">    Category-to-style dictionaries. Extra keys are allowed for reuse on</span>
+<span class="sd">    filtered data. Colours and Bokeh marker names must be valid; opacities</span>
+<span class="sd">    must be finite in [0, 1], and sizes finite and positive.</span>
+<span class="sd">colour_continuous : bool, optional (default=False)</span>
+<span class="sd">    Explicitly map finite numeric ``colour_by`` values to a continuous palette</span>
+<span class="sd">    with a colour bar. Conflicts with ``colour_map`` and ``colour_list``.</span>
+<span class="sd">    Numeric columns otherwise use categorical mappings.</span>
+<span class="sd">colour_palette : sequence of str, optional</span>
+<span class="sd">    At least two valid colours for continuous colour only. Defaults to Viridis256.</span>
 
 <span class="sd">Returns</span>
 <span class="sd">-------</span>
@@ -645,8 +752,17 @@
 <span class="sd">Raises</span>
 <span class="sd">------</span>
 <span class="sd">ValueError</span>
-<span class="sd">    If a style list does not contain exactly one value per class, or contains</span>
-<span class="sd">    an invalid opacity or marker size.</span>
+<span class="sd">    If columns, mappings, style values, or conflicting arguments are invalid.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">Each categorical legend key uses one non-empty plotted renderer and a single</span>
+<span class="sd">sample index, not overlapping samples from all shape subgroups. Keys identify</span>
+<span class="sd">the encoding and source column. Opacity and size keys include their style</span>
+<span class="sd">values; Bokeh normalises legend glyph dimensions rather than drawing marker</span>
+<span class="sd">sizes to scale. A zero-opacity key is intentionally transparent. The figure</span>
+<span class="sd">keeps its 866 by 650 pixel default.</span>
+<span class="sd">Hover details and exported HTML use ``MOLFILE`` paths supplied by ``prepare()``.</span>
 
 <span class="sd">Examples</span>
 <span class="sd">--------</span>
@@ -666,7 +782,44 @@
                                    <span class="n">size_ratio</span><span class="p">,</span> <span class="n">bokeh_plot</span><span class="p">)</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">bokeh.plotting</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">bp</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">output_notebook</span><span class="p">,</span> <span class="n">reset_output</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">HoverTool</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">HoverTool</span><span class="p">,</span> <span class="n">Legend</span><span class="p">,</span> <span class="n">LegendItem</span><span class="p">,</span> <span class="n">ColorBar</span><span class="p">,</span> <span class="n">LinearColorMapper</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.palettes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Viridis256</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df_compressed&#39; must contain at least one datapoint.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;df_compressed&#39; must have unique column names.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colour_continuous</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_continuous&#39; must be a bool.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">colour_continuous</span> <span class="ow">and</span> <span class="n">colour_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_continuous&#39; requires &#39;colour_by&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">colour_palette</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">colour_continuous</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_palette&#39; requires &#39;colour_continuous=True&#39;.&quot;</span><span class="p">)</span>
+        <span class="n">encoding_specs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span> <span class="n">colour_by</span><span class="p">,</span> <span class="n">colour_map</span><span class="p">,</span> <span class="n">colour_list</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="n">shape_by</span><span class="p">,</span> <span class="n">shape_map</span><span class="p">,</span> <span class="n">shape_list</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;opacity&#39;</span><span class="p">,</span> <span class="n">opacity_by</span><span class="p">,</span> <span class="n">opacity_map</span><span class="p">,</span> <span class="n">opacity_list</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;marker_size&#39;</span><span class="p">,</span> <span class="n">marker_size_by</span><span class="p">,</span> <span class="n">marker_size_map</span><span class="p">,</span> <span class="n">marker_size_list</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="n">mappings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">encoding</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encoding_map</span><span class="p">(</span>
+                <span class="n">encoding</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">legacy</span><span class="p">,</span>
+                <span class="n">continuous</span><span class="o">=</span><span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;colour&#39;</span> <span class="ow">and</span> <span class="n">colour_continuous</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">mapping</span><span class="p">,</span> <span class="n">legacy</span> <span class="ow">in</span> <span class="n">encoding_specs</span>
+        <span class="p">}</span>
+        <span class="n">colour_mapper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">colour_continuous</span><span class="p">:</span>
+            <span class="n">palette</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Viridis256</span> <span class="k">if</span> <span class="n">colour_palette</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">colour_palette</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">palette</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_palette&#39; must contain at least two colours.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span> <span class="n">palette</span><span class="p">,</span> <span class="s1">&#39;colour_palette&#39;</span><span class="p">)</span>
+            <span class="n">colour_mapper</span> <span class="o">=</span> <span class="n">LinearColorMapper</span><span class="p">(</span>
+                <span class="n">palette</span><span class="o">=</span><span class="n">palette</span><span class="p">,</span>
+                <span class="n">low</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">colour_by</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()),</span>
+                <span class="n">high</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">colour_by</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span>
+            <span class="p">)</span>
 
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="p">(</span>
                 <span class="p">(</span><span class="s1">&#39;opacity_list&#39;</span><span class="p">,</span> <span class="n">opacity_list</span><span class="p">),</span>
@@ -700,16 +853,6 @@
             <span class="k">if</span> <span class="n">marker_size_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">marker_size_list</span>
         <span class="p">)</span>
 
-        <span class="c1"># TODO: implement other functions using  other modules:</span>
-        <span class="c1"># from bokeh.models import (ColorBar, LinearColorMapper, Div,</span>
-        <span class="c1"># RangeSlider, Spinner, TabPanel, Tabs, NumberEditor,</span>
-        <span class="c1"># NumberFormatter, SelectEditor, StringEditor, StringFormatter)</span>
-        <span class="c1"># from bokeh.palettes import Turbo256, Spectral6, RedBu</span>
-        <span class="c1"># from bokeh.transform import linear_cmap, transform</span>
-
-        <span class="n">output_notebook</span><span class="p">()</span>
-        <span class="n">reset_output</span><span class="p">()</span>
-        
         <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
@@ -723,6 +866,19 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;circle&#39;</span><span class="p">,</span> <span class="s1">&#39;triangle&#39;</span><span class="p">,</span> <span class="s1">&#39;square&#39;</span><span class="p">,</span> <span class="s1">&#39;star&#39;</span><span class="p">,</span>
                                <span class="s1">&#39;diamond&#39;</span><span class="p">,</span> <span class="s1">&#39;cross&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;asterisk&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">colour_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;colour_list&#39; must contain at least one colour per class.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;colour&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">,</span> <span class="s1">&#39;colour_list&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shape_by</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;shape_list&#39; must contain at least one shape per metadata category.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span><span class="p">,</span> <span class="s1">&#39;shape_list&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">marker_size_by</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">marker_size_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_encoding_values</span><span class="p">(</span><span class="s1">&#39;marker_size&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">marker_size</span><span class="p">],</span> <span class="s1">&#39;marker_size&#39;</span><span class="p">)</span>
+
+        <span class="n">reset_output</span><span class="p">()</span>
+        <span class="n">output_notebook</span><span class="p">()</span>
 
         <span class="n">plot</span> <span class="o">=</span> <span class="n">bp</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">),</span>
                          <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span>
@@ -733,8 +889,50 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">plotted</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">column</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">encoding_specs</span><span class="p">):</span>
+            <span class="n">group_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CLASS&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">encoding_specs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">column</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;colour&#39;</span> <span class="ow">and</span> <span class="n">colour_continuous</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">group_columns</span><span class="p">:</span>
+                        <span class="n">group_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">shape_by</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;METADATA&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">group_columns</span><span class="p">:</span>
+                    <span class="n">group_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;METADATA&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span>
+                <span class="n">group_columns</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">class_index</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">CLASS</span><span class="p">)</span>
+                <span class="n">colour</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">transform</span><span class="p">(</span><span class="n">colour_by</span><span class="p">,</span> <span class="n">colour_mapper</span><span class="p">)</span> <span class="k">if</span> <span class="n">colour_continuous</span>
+                    <span class="k">else</span> <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;colour&#39;</span><span class="p">][</span><span class="n">row</span><span class="p">[</span><span class="n">colour_by</span><span class="p">]]</span> <span class="k">if</span> <span class="n">colour_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">[</span><span class="n">class_index</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">][</span><span class="n">row</span><span class="p">[</span><span class="n">shape_by</span><span class="p">]]</span> <span class="k">if</span> <span class="n">shape_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">METADATA</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span> <span class="k">else</span> <span class="s1">&#39;circle&#39;</span>
+                <span class="p">)</span>
+                <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;opacity&#39;</span><span class="p">][</span><span class="n">row</span><span class="p">[</span><span class="n">opacity_by</span><span class="p">]]</span> <span class="k">if</span> <span class="n">opacity_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">opacities</span><span class="p">[</span><span class="n">class_index</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mappings</span><span class="p">[</span><span class="s1">&#39;marker_size&#39;</span><span class="p">][</span><span class="n">row</span><span class="p">[</span><span class="n">marker_size_by</span><span class="p">]]</span> <span class="k">if</span> <span class="n">marker_size_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">marker_sizes</span><span class="p">[</span><span class="n">class_index</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">data_table</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+                <span class="n">renderer</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="s1">&#39;DIM_1&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">data_table</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="n">colour</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">line_color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">plotted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">:</span>
 
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classnames</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">i2</span><span class="p">,</span> <span class="n">c2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_names</span><span class="p">):</span>
@@ -742,15 +940,15 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span>
                             <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">METADATA</span> <span class="o">==</span> <span class="n">c2</span><span class="p">)</span> <span class="o">&amp;</span>
                             <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">)])</span>
-                    <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;DIM_1&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span>
+                    <span class="n">renderer</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;DIM_1&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span>
                                  <span class="n">source</span><span class="o">=</span><span class="n">data_table</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
                                  <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                                  <span class="n">size</span><span class="o">=</span><span class="n">marker_sizes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                                  <span class="n">marker</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_list</span><span class="p">[</span><span class="n">i2</span><span class="p">],</span>
                                  <span class="n">line_color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span>
-                                 <span class="n">legend_label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">),</span>
                                  <span class="n">alpha</span><span class="o">=</span><span class="n">opacities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                                  <span class="p">)</span>
+                    <span class="n">plotted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
@@ -758,14 +956,49 @@
                 <span class="n">data_table</span> <span class="o">=</span> <span class="n">prepare_datatable</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="o">.</span><span class="n">CLASS</span> <span class="o">==</span> <span class="n">c</span><span class="p">])</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dict_datatables</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_table</span>
-                <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;DIM_1&quot;</span><span class="p">,</span>
+                <span class="n">renderer</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;DIM_1&quot;</span><span class="p">,</span>
                             <span class="n">y</span><span class="o">=</span><span class="s1">&#39;DIM_2&#39;</span><span class="p">,</span>
                             <span class="n">source</span><span class="o">=</span><span class="n">data_table</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
                             <span class="n">color</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">colour_list</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                             <span class="n">size</span><span class="o">=</span><span class="n">marker_sizes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                             <span class="n">line_color</span><span class="o">=</span><span class="s1">&#39;grey&#39;</span><span class="p">,</span>
-                            <span class="n">legend_label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">),</span>
                             <span class="n">alpha</span><span class="o">=</span><span class="n">opacities</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">plotted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+
+        <span class="n">legend_columns</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">colour_continuous</span><span class="p">:</span>
+            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Colour&#39;</span><span class="p">,</span> <span class="n">colour_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">shape_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata_exists</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata_categorical</span><span class="p">):</span>
+            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Shape&#39;</span><span class="p">,</span> <span class="n">shape_by</span> <span class="ow">or</span> <span class="s1">&#39;METADATA&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">opacity_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">opacity_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Opacity&#39;</span><span class="p">,</span> <span class="n">opacity_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">marker_size_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">marker_size_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">legend_columns</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;Size&#39;</span><span class="p">,</span> <span class="n">marker_size_by</span> <span class="ow">or</span> <span class="s1">&#39;CLASS&#39;</span><span class="p">))</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">legend_renderers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="n">plotted</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">renderer</span><span class="p">:</span> <span class="n">renderer</span><span class="o">.</span><span class="n">glyph</span><span class="o">.</span><span class="n">fill_alpha</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">encoding</span><span class="p">,</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">legend_columns</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">pd</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df_compressed</span><span class="p">[</span><span class="n">column</span><span class="p">]):</span>
+                <span class="k">for</span> <span class="n">renderer</span> <span class="ow">in</span> <span class="n">legend_renderers</span><span class="p">:</span>
+                    <span class="n">values</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">data_source</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">column</span><span class="p">]</span>
+                    <span class="n">index</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="n">category</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">encoding</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s1">): </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s1">&#39;</span>
+                        <span class="k">if</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;Opacity&#39;</span><span class="p">:</span>
+                            <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (alpha=</span><span class="si">{</span><span class="n">renderer</span><span class="o">.</span><span class="n">glyph</span><span class="o">.</span><span class="n">fill_alpha</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1">)&#39;</span>
+                        <span class="k">elif</span> <span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;Size&#39;</span><span class="p">:</span>
+                            <span class="n">label</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; (</span><span class="si">{</span><span class="n">renderer</span><span class="o">.</span><span class="n">glyph</span><span class="o">.</span><span class="n">size</span><span class="si">:</span><span class="s1">g</span><span class="si">}</span><span class="s1"> px)&#39;</span>
+                        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LegendItem</span><span class="p">(</span>
+                            <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">,</span> <span class="n">renderers</span><span class="o">=</span><span class="p">[</span><span class="n">renderer</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                        <span class="p">))</span>
+                        <span class="k">break</span>
+        <span class="k">if</span> <span class="n">items</span><span class="p">:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">Legend</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">colour_mapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">add_layout</span><span class="p">(</span><span class="n">ColorBar</span><span class="p">(</span><span class="n">color_mapper</span><span class="o">=</span><span class="n">colour_mapper</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">colour_by</span><span class="p">),</span> <span class="s1">&#39;right&#39;</span><span class="p">)</span>
 
         <span class="c1"># Title</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">title_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;title_location&#39;</span><span class="p">]</span>
@@ -812,7 +1045,7 @@
         <span class="n">plot</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">minor_tick_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;axis_minor_tick_in&#39;</span><span class="p">]</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">minor_tick_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bokeh_dictionary</span><span class="p">[</span><span class="s1">&#39;axis_minor_tick_out&#39;</span><span class="p">]</span>
 
-        <span class="n">hover</span> <span class="o">=</span> <span class="n">HoverTool</span><span class="p">(</span><span class="n">tooltips</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span><span class="p">)</span>
+        <span class="n">hover</span> <span class="o">=</span> <span class="n">HoverTool</span><span class="p">(</span><span class="n">tooltips</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bokeh_tooltips</span><span class="p">,</span> <span class="n">renderers</span><span class="o">=</span><span class="n">plotted</span><span class="p">)</span>
         <span class="n">plot</span><span class="o">.</span><span class="n">add_tools</span><span class="p">(</span><span class="n">hover</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">save_html</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>     <span class="c1"># save html</span>
@@ -853,7 +1086,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">mlchem 1.2.13 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">mlchem.chem.visualise.space</a></li> 
       </ul>

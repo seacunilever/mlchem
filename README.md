@@ -90,6 +90,101 @@ for fingerprint options and the
 [`crossval` API](https://seacunilever.github.io/mlchem/mlchem.ml.modelling.html#mlchem.ml.modelling.model_evaluation.crossval)
 for splitters, explicit folds, and response methods.
 
+## Chemical-space visual encodings
+
+`ChemicalSpace` accepts `SMILES`, `NAME`, and `CLASS` columns plus optional
+columns such as `METADATA` and `SCORE`. Each visual property can independently
+use any column in the prepared dataframe. `prepare()` aligns extra input
+columns by SMILES, even if the embedded coordinates are in a different order.
+
+After processing/compressing your descriptors and calling
+`space.prepare(embedded_coordinates)`, categorical mappings can be combined:
+
+```python
+space.plot(
+    colour_by='CLASS',
+    colour_map={'score[0]': 'navy', 'score[1]': 'orange'},
+    shape_by='METADATA',
+    shape_map={'train': 'circle', 'test': 'triangle'},
+    opacity_by='METADATA',
+    opacity_map={'train': 0.4, 'test': 0.9},
+    marker_size_by='SCORE',
+    marker_size_map={0.1: 7, 0.9: 14},
+    title='Score bins and datasets',
+    filename='chemical_space',
+    save_html=True,
+)
+```
+
+Replace the example categories with those in your dataframe. Every observed
+category must have a mapping; extra keys are allowed for reuse after filtering.
+Opacities must be finite in `[0, 1]`, sizes finite and positive, and colours and
+marker names valid Bokeh values. Missing values and unknown columns raise errors.
+Legend keys identify the encoding and column, using one actual glyph sample
+rather than overlapping shapes. Opacity keys also state alpha, and size keys
+state the mapped pixel size (Bokeh normalises legend glyph dimensions, so
+size swatches are not to scale). Zero opacity is intentionally transparent.
+The default figure remains 866 by 650 pixels.
+
+Numeric colours remain categorical unless continuous colour is explicitly enabled:
+
+```python
+space.plot(
+    colour_by='SCORE',
+    colour_continuous=True,
+    colour_palette=['navy', 'cyan', 'gold'],  # Optional; defaults to Viridis256.
+    shape_by='METADATA',
+    shape_map={'train': 'circle', 'test': 'triangle'},
+    title='Continuous score',
+)
+```
+
+Continuous colour requires finite numeric values and displays a colour bar.
+For each encoding, `*_by` conflicts with its corresponding legacy `*_list`;
+`colour_continuous=True` also excludes `colour_map`. Unspecified encodings keep
+their previous defaults: colours/opacity/size by `CLASS`, and shapes by
+`METADATA` when `metadata_exists=True, metadata_categorical=True`. These
+metadata flags are legacy options for the special `METADATA` column; they are
+not needed to make other columns available to `*_by` encodings. Set
+`metadata_exists=True` only when retaining the legacy handling of a
+`METADATA` column (it then must be present in the input). Explicit `shape_by`
+can use any prepared column regardless of these flags. Existing
+`colour_list`, `shape_list`, `opacity_list`, and `marker_size_list` calls still
+work. `marker_size_map` or `marker_size_list` overrides scalar `marker_size`.
+
+### Structure folders and notebook installation
+
+`prepare()` keeps safe, unambiguous class labels such as `TRAIN` directly as
+folder names. Labels containing spaces/punctuation (for example `score[0]`),
+Windows-reserved names, or case-insensitive collisions get a portable encoded
+name with a stable digest. This prevents path traversal and collisions across
+platforms; original labels in plots and data are unchanged. Inspect
+`space.class_structure_folders` for the label-to-folder mapping and always use
+`space.df_compressed['MOLFILE']` for image paths. Do not reconstruct paths from
+class labels or rename folders behind the prepared dataframe.
+
+Version 1.2.13 must be installed in the **notebook kernel's** environment, not
+just the shell's default Python. Before publication, install this source checkout
+from a Python 3.12 notebook (substitute your actual repository path):
+
+```python
+%pip install --upgrade "C:\path\to\mlchem"
+```
+
+Restart the kernel, then verify the installed version and imported location:
+
+```python
+from importlib.metadata import version
+import mlchem
+
+print(version('mlchem-ul'))  # 1.2.13
+print(mlchem.__file__)
+```
+
+After 1.2.13 is published, use `%pip install --upgrade mlchem-ul==1.2.13`
+instead. Updating the source/version alone does not publish to PyPI or update
+another notebook environment.
+
 ## Usage
 
 Here are some basic examples of how to use **mlchem**:

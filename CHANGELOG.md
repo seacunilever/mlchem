@@ -2,6 +2,26 @@
 
 All notable user-facing changes are documented in this file.
 
+## [1.2.13] - 2026-11-25
+
+### Added
+
+- Independent `ChemicalSpace.plot()` colour, shape, opacity, and marker-size encodings through `*_by` columns and categorical `*_map` dictionaries. Extra input columns are preserved and aligned by SMILES during `prepare()`.
+- Explicit continuous numeric colour mapping with `colour_continuous=True`, an optional palette, and a labelled colour bar.
+- Validate encoding columns, complete category mappings, style bounds, and conflicts with legacy style lists, whose class/metadata-based behavior remains available.
+
+### Fixed
+
+- Use one real, non-empty renderer per legend key instead of overlaying all metadata shapes, preferring visible representatives. Keys identify each encoding and source column, including explicit alpha/pixel-size values because Bokeh normalises legend glyph dimensions.
+- Read legacy shape categories from `METADATA` rather than the last input column, and reset Bokeh output before activating notebook output.
+- Apply configured `title_fontsize` values in `ChemicalSpace.plot()` and reject unknown Bokeh option names instead of silently ignoring them.
+- Derive legacy categorical `METADATA` shapes from prepared rows only, use first-appearance order for incomparable categories, and reject missing values when legacy shapes are actually plotted.
+- Avoid Bokeh warnings from applying legend styling when a continuous-colour-only plot has no categorical legend.
+
+### Docs
+
+- Added categorical and continuous plotting examples, documented portable class-folder names and prepare-generated `MOLFILE` paths, and explained installation into a Python 3.12 notebook kernel.
+
 ## [1.2.12] - 2026-11-24
 
 ### Changed

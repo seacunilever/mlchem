@@ -6,12 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contents &#8212; mlchem 1.2.12 documentation</title>
+    <title>Contents &#8212; mlchem 1.2.13 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css?v=5283bb3d" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b853d5b0" />
     
-    <script src="_static/documentation_options.js?v=817200f7"></script>
+    <script src="_static/documentation_options.js?v=250a84ee"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/bizstyle.js"></script>
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="welcome.html" title="mlchem"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.13 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Contents</a></li> 
       </ul>
     </div>  
@@ -55,6 +55,10 @@
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#architecture">Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#quickstart">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="welcome.html#chemical-space-visual-encodings">Chemical-space visual encodings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="welcome.html#structure-folders-and-notebook-installation">Structure folders and notebook installation</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="welcome.html#usage">Usage</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-rdkit-descriptors">Calculate RDKit descriptors</a></li>
 <li class="toctree-l3"><a class="reference internal" href="welcome.html#calculate-fingerprints">Calculate fingerprints</a></li>
@@ -177,15 +181,19 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l7"><a class="reference internal" href="mlchem.chem.visualise.html#module-mlchem.chem.visualise.space">mlchem.chem.visualise.space module</a><ul>
-<li class="toctree-l8"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace"><code class="docutils literal notranslate"><span class="pre">ChemicalSpace</span></code></a><ul>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.prepare"><code class="docutils literal notranslate"><span class="pre">prepare()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.process"><code class="docutils literal notranslate"><span class="pre">process()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.reset_bokeh_options"><code class="docutils literal notranslate"><span class="pre">reset_bokeh_options()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.reset_bokeh_tooltips"><code class="docutils literal notranslate"><span class="pre">reset_bokeh_tooltips()</span></code></a></li>
-<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.update_bokeh_options"><code class="docutils literal notranslate"><span class="pre">update_bokeh_options()</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem-chem-visualise-space-module">mlchem.chem.visualise.space module</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="mlchem.chem.visualise.html#independent-visual-encodings">Independent visual encodings</a></li>
+<li class="toctree-l8"><a class="reference internal" href="mlchem.chem.visualise.html#structure-paths">Structure paths</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace"><code class="docutils literal notranslate"><span class="pre">ChemicalSpace</span></code></a><ul>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.prepare"><code class="docutils literal notranslate"><span class="pre">prepare()</span></code></a></li>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.process"><code class="docutils literal notranslate"><span class="pre">process()</span></code></a></li>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.reset_bokeh_options"><code class="docutils literal notranslate"><span class="pre">reset_bokeh_options()</span></code></a></li>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.reset_bokeh_tooltips"><code class="docutils literal notranslate"><span class="pre">reset_bokeh_tooltips()</span></code></a></li>
+<li class="toctree-l10"><a class="reference internal" href="mlchem.chem.visualise.html#mlchem.chem.visualise.space.ChemicalSpace.update_bokeh_options"><code class="docutils literal notranslate"><span class="pre">update_bokeh_options()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -831,7 +839,7 @@
         <li class="right" >
           <a href="welcome.html" title="mlchem"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">mlchem 1.2.13 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Contents</a></li> 
       </ul>
     </div>
